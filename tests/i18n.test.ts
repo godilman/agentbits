@@ -91,7 +91,7 @@ function walk(dir: string, out: string[] = []): string[] {
 }
 for (const file of [...walk(join(root, 'src/main')), ...walk(join(root, 'src/renderer/src')), ...walk(join(root, 'src/shared'))]) {
   const src = readFileSync(file, 'utf8').replace(/\/\*[\s\S]*?\*\//g, (m) => m.replace(/[^\n]/g, ' '))
-  src.split('\n').forEach((line, i) => {
+  src.split(/\r?\n/).forEach((line, i) => {
     if (/\/\/\s*i18n-ignore\b/.test(line)) return
     const code = line.replace(/(^|\s)\/\/.*$/, '')
     if (TURKISH.test(code)) errors.push(`${relative(root, file)}:${i + 1}: hard-coded Turkish text → move it to a locale file`)

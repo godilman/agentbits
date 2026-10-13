@@ -1,0 +1,13 @@
+# Keep LF everywhere (tests and tooling read sources line by line; Windows checkouts would otherwise get CRLF).
+* text=auto eol=lf
+
+# Binary assets
+*.png binary
+*.ico binary
+*.icns binary
+*.jpg binary
+*.pdf binary
+*.zip binary
+*.xlsx binary
+*.docx binary
+*.pptx binary

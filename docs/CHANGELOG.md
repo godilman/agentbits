@@ -16,6 +16,8 @@
 - `.gitignore`: veritabanı / WAL, yedek ve MCP klasörleri, `.env*`, anahtar/sertifika dosyaları, loglar, döküm ve geçici
   dosyalar, editör/işletim sistemi dosyaları.
 - İş akışı adları İngilizce (`CI`, `Build packages`); taslak sürüm notu İngilizce.
+- Windows CI'da `test:unit` düşüyordu: git CRLF'ye çeviriyor, `tests/i18n.test.ts` yorum satırlarını tanımıyordu. Test artık
+  `\r?\n` ile bölüyor; `.gitattributes` her yerde LF tutar. `release.yml`'deki iki nokta içeren `run` satırı düzeltildi.
 - Türkçe arayüzde çevrilmemiş kalan sol panel metinleri: "Çalışan işler", "Canlı sohbet", "çalışıyor", "duraklatıldı"
   (`tr/layout.json`). `AGENTS.md`: `test:unit` her değişiklikte zorunlu.
 - Belgelerdeki yerel depo yolu genel `git clone` + `cd agentbits` ile değişti; `npm install` → `npm ci`.
