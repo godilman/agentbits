@@ -30,7 +30,7 @@ for (const i of items) out += `| ${i.name} | ${i.version} | ${i.license} |\n`
 out += '\n---\n'
 for (const i of items) {
   const f = readdirSync(i.dir).find((x) => /^(licen[cs]e|copying)(\.|$|-)/i.test(x))
-  const text = f ? readFileSync(join(i.dir, f), 'utf8').trim() : `(No license file in the package; declared license: ${i.license}${i.repo ? `, source: ${i.repo}` : ''})`
+  const text = f ? readFileSync(join(i.dir, f), 'utf8').replace(/\r\n?/g, '\n').trim() : `(No license file in the package; declared license: ${i.license}${i.repo ? `, source: ${i.repo}` : ''})`
   out += `\n## ${i.name} ${i.version} — ${i.license}\n\n\`\`\`\n${text.replace(/```/g, "'''")}\n\`\`\`\n`
 }
 writeFileSync(process.argv[3] ?? join(root, 'THIRD_PARTY_NOTICES.md'), out)
