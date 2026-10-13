@@ -214,6 +214,13 @@ Kurulum sorunları (Electron binary eksik, siyah pencere, execution policy, Clau
     doğrulayın. Bağlantıları yalnızca Development/Staging sunucularında ve salt-okunur DB kullanıcısıyla deneyin. Electron uygulamasını ve Claude Code /
     Codex CLI'ını ajan oturumundan **çalıştırmayın**.
 
+17. **Depo GitHub'da herkese açık** (<https://github.com/godilman/agentbits>, `main`). Commit edilen her şey herkese
+    görünür ve geçmişte kalır: sır, kişisel veri/yol, veritabanı, derleme çıktısı (`release/`, `out/`) commit etmeyin;
+    commit'ten önce `git status`. Yerel klasörün GitHub'a bağlanması, günlük akış (`pull` → değişiklik → doğrulama →
+    `commit` → `push`), sürüm yayınlama (etiket → taslak Release) ve **sahibin elle yapacağı açık işler** →
+    [docs/DEVELOPMENT.md §9](docs/DEVELOPMENT.md#9-github-deposu-günlük-iş-akışı-ve-sürüm-yayınlama). Sahibe yol gösterirken
+    oradaki komutları kullanın; tamamlanan maddeleri oradan işaretleyin.
+
 ## Belgeler
 
 | Belge | İçerik |

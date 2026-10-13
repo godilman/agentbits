@@ -319,3 +319,84 @@ kaldırmada korunur (`deleteAppDataOnUninstall: false`); şema açılışta migr
 (node-pty), SQLite ve dosya çıkarma (worker) kontrol edilmeli. Otomatik güncelleme yok (`publish` yalnızca ileride
 `electron-updater` eklenirse kullanılır).
 
+
+## 9. GitHub deposu, günlük iş akışı ve sürüm yayınlama
+
+**Depo:** <https://github.com/godilman/agentbits> — **herkese açık (Public)**, varsayılan dal `main`, lisans PolyForm Strict
+1.0.0. İlk yayın 2026-10-13. Commit yazar e-postası `godilman@users.noreply.github.com` (GitHub'ın gizli adresi; kişisel
+e-posta herkese açık geçmişe girmesin diye — bu adrese mail gitmez, yalnızca commit'i hesaba bağlar).
+
+**Repoya hiçbir zaman girmemesi gerekenler** (`.gitignore` bunları dışarıda tutar, yine de commit'ten önce
+`git status` ile bakın): `node_modules/`, `out/`, `release/` (derleme çıktısı; kurulum dosyaları git'e değil GitHub
+**Releases**'e konur — GitHub 100 MB üstü dosyayı reddeder, git geçmişi de sonsuza kadar şişer), veritabanı / yedek
+dosyaları (`*.db`, `*.sqlite*`), `.env*`, anahtar ve sertifikalar, loglar. Ekran görüntülerinde gerçek veri, API anahtarı,
+kişisel yol görünmemeli (Demo + ayrı `AGENTBITS_DATA_DIR` ile çekin; README görselleri `docs/screenshots/` ve `tr/`).
+
+### 9.1 Yerel klasörü GitHub'a bağlamak (bir kez)
+
+Sahibin yerel klasörü ilk yayından önce git deposu değildi; içerik GitHub'dakiyle aynıdır (yalnızca `.github/` eksik
+olabilir ve ekran görüntüleri baytça farklı, piksel olarak aynı olabilir). Bağlamak için klasörde PowerShell
+(Git for Windows kurulu olmalı: `git --version`):
+
+```powershell
+git init -b main
+git remote add origin https://github.com/godilman/agentbits.git
+git fetch origin
+git reset origin/main                      # dosyalara dokunmaz, yalnızca git'e "şu an origin/main'deyiz" der
+git checkout -- .github docs/screenshots   # eksik .github klasörünü ve görselleri GitHub'daki haliyle getirir
+git config user.name "Gökhan Dilman"
+git config user.email "godilman@users.noreply.github.com"
+git status                                 # "nothing to commit, working tree clean" görmelisiniz
+```
+
+`git status` başka değişiklik gösterirse bunlar yerelde yapılmış ve henüz GitHub'a gitmemiş değişikliklerdir; körlemesine
+silmeyin, inceleyip commit edin.
+
+### 9.2 Günlük iş akışı
+
+```powershell
+git pull                                   # başka bir yerde (ör. bir ajan oturumunda) yapılan değişiklikleri al
+# … değişiklik …
+npm run typecheck; npm run test:unit; npm run build
+git status                                 # yalnızca beklenen dosyalar mı?
+git add -A
+git commit -m "Kısa açıklama"
+git push                                   # ilk seferde tarayıcıda GitHub girişi ister (Git Credential Manager)
+```
+
+Her push'ta **CI** (`.github/workflows/ci.yml`) Windows + Ubuntu'da `npm ci`, typecheck, `test:unit`, build ve
+`npm audit --omit=dev --audit-level=critical` çalıştırır; sonuç repo sayfasındaki CI rozetinde ve Actions sekmesinde.
+Satır sonları `.gitattributes` ile her yerde LF'dir (Windows'ta CRLF'ye dönüşen dosyalar `tests/i18n.test.ts`'i
+bozuyordu).
+
+### 9.3 Sürüm yayınlama (GitHub Releases)
+
+Kurulum dosyasını kendi bilgisayarınızda derlemeniz **gerekmez**; GitHub Actions temiz kurulumla (`npm ci`) derler:
+
+1. `package.json` → `version`'ı artırın (ör. `0.1.1`), `docs/CHANGELOG.md`'ye yazın, commit + push.
+2. Etiket gönderin: `git tag v0.1.1` → `git push origin v0.1.1`. **Build packages** iş akışı
+   (`release.yml`) Windows + macOS paketlerini ve `SHA256SUMS-*.txt`'yi derleyip **taslak** bir Release'e ekler (yalnızca
+   sahip görür).
+3. Taslaktaki exe'yi indirip kurun, açılışı deneyin; notları `docs/RELEASE_TEMPLATE.md` ile yazın; **Publish** deyin.
+   README'deki "henüz kurulum dosyası yok" cümlelerini (İngilizce + Türkçe) Releases bağlantısıyla güncelleyin.
+
+macOS paketi henüz doğrulanmadı: macOS işi düşse de Windows paketi başarılıysa taslak Release yine oluşur (yalnızca
+Windows dosyalarıyla). 2026-10-13'teki ilk elle çalıştırmada Windows işi geçti, macOS'ta `npm run dist:mac` adımı düştü
+(nedeni henüz bakılmadı — Actions → çalışma → macos → "Run npm run dist:mac" logu).
+
+Yalnızca denemek için: Actions → **Build packages** → *Run workflow* (Release oluşturmaz; dosyalar çalışmanın
+"Artifacts" bölümünde). Yerelde derlenecekse önce **`npm ci`** (eski `node_modules` eski bağımlılıklarla paketler — 2026-10-13'te
+bu yüzden eski MCP SDK 1.30.1 pakete giriyordu), sonra `npm run dist:win`.
+
+### 9.4 Sahibin GitHub'da elle yapması gerekenler (açık)
+
+Ajan oturumları repo **ayarlarını** değiştiremez (yalnızca kod gönderebilir). 2026-10-13 itibarıyla açık olanlar:
+
+- [ ] Settings → Security → **Private vulnerability reporting** → Enable (`SECURITY.md`'deki bildirim bağlantısı buna bağlı).
+- [ ] Repo sayfası → About ⚙ → **Topics**: `ai-agents`, `multi-agent`, `agent-orchestration`, `electron`, `typescript`,
+  `react`, `pixel-art`, `sqlite`, `desktop-app`, `mcp`.
+- [ ] İlk sürüm (`v0.1.0`) — §9.3. Yerelde duran eski `release\Agentbits-Setup-0.1.0.exe` SDK 1.30.1 içerir; yayımlamayın.
+- [ ] (İsteğe bağlı) Uygulamadaki geri bildirim adresi (`src/shared/support.ts` → `FEEDBACK_EMAIL`) kişisel Gmail'dir ve
+  artık herkese açık kodda; ayrı bir destek adresi düşünülebilir.
+
+Bunlar yapıldıkça bu listeyi güncelleyin.

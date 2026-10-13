@@ -17,12 +17,15 @@
   dosyalar, editör/işletim sistemi dosyaları.
 - İş akışı adları İngilizce (`CI`, `Build packages`); taslak sürüm notu İngilizce.
 - Windows CI'da `test:unit` düşüyordu: git CRLF'ye çeviriyor, `tests/i18n.test.ts` yorum satırlarını tanımıyordu. Test artık
-  `\r?\n` ile bölüyor; `.gitattributes` her yerde LF tutar. `release.yml`'deki iki nokta içeren `run` satırı düzeltildi.
+  `\r?\n` ile bölüyor; `.gitattributes` her yerde LF tutar. `release.yml`'deki iki nokta içeren `run` satırı düzeltildi. `release.yml`: macOS paketi düşse de Windows
+  paketiyle taslak Release oluşur.
 - Türkçe arayüzde çevrilmemiş kalan sol panel metinleri: "Çalışan işler", "Canlı sohbet", "çalışıyor", "duraklatıldı"
   (`tr/layout.json`). `AGENTS.md`: `test:unit` her değişiklikte zorunlu.
 - Belgelerdeki yerel depo yolu genel `git clone` + `cd agentbits` ile değişti; `npm install` → `npm ci`.
 
 ### Eklendi
+- `docs/DEVELOPMENT.md` §9: GitHub deposu, yerel klasörü bağlama komutları, günlük git akışı, sürüm yayınlama ve
+  sahibin elle yapacağı açık işler; CLAUDE.md kural 17 buraya yönlendirir.
 - `README.md` (İngilizce, varsayılan) ve `README.tr.md` (Türkçe): ürün sayfası, kullanım senaryoları (her birinin hangi
   sağlayıcı/izni gerektirdiği yazılı), ekran görüntüleri, sağlayıcılar, kurulum, hızlı başlangıç, güvenlik, sınırlamalar,
   FEATURES'taki ⏳ maddelerinden yol haritası, lisans, Buy Me a Coffee. Henüz yayımlanmış kurulum dosyası olmadığı için
