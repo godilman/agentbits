@@ -9,6 +9,7 @@
 <p align="center"><strong>Sen yönet, yapay zeka ekibin işi bitirsin.</strong></p>
 
 <p align="center">
+  <a href="https://github.com/godilman/agentbits/actions/workflows/ci.yml"><img alt="CI" src="https://github.com/godilman/agentbits/actions/workflows/ci.yml/badge.svg"></a>
   <img alt="Platform: Windows" src="https://img.shields.io/badge/platform-Windows-0078D6?logo=windows&logoColor=white">
   <img alt="macOS: deneysel" src="https://img.shields.io/badge/macOS-deneysel-555?logo=apple&logoColor=white">
   <img alt="Sürüm 0.1.0 (MVP)" src="https://img.shields.io/badge/s%C3%BCr%C3%BCm-0.1.0%20MVP-6366f1">

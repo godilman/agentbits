@@ -9,6 +9,7 @@
 <p align="center"><strong>You lead. Your AI team gets things done.</strong></p>
 
 <p align="center">
+  <a href="https://github.com/godilman/agentbits/actions/workflows/ci.yml"><img alt="CI" src="https://github.com/godilman/agentbits/actions/workflows/ci.yml/badge.svg"></a>
   <img alt="Platform: Windows" src="https://img.shields.io/badge/platform-Windows-0078D6?logo=windows&logoColor=white">
   <img alt="macOS: experimental" src="https://img.shields.io/badge/macOS-experimental-555?logo=apple&logoColor=white">
   <img alt="Version 0.1.0 (MVP)" src="https://img.shields.io/badge/version-0.1.0%20MVP-6366f1">
