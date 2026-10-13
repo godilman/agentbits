@@ -1,0 +1,389 @@
+{
+  "defaults": {
+    "organization": "Organization",
+    "project": "Default Project",
+    "projectDescription": "Project created at first setup.",
+    "coreTeam": "Core Team",
+    "coreTeamDescription": "The starter team from the first setup.",
+    "teamLead": "Team lead"
+  },
+  "errors": {
+    "providerNotFound": "Provider not found",
+    "leadCannotBeDeleted": "The lead agent can't be deleted; make another agent the lead first",
+    "unitNameEmpty": "Unit name can't be empty",
+    "rootCannotMove": "The organization root can't be moved",
+    "unitCycle": "A unit can't be moved into its own sub-unit",
+    "rootCannotDelete": "The organization root can't be deleted",
+    "projectNameEmpty": "Project name can't be empty",
+    "projectNotFound": "Project not found",
+    "projectNotFoundDeleted": "Project not found; it may have been deleted",
+    "onlyProject": "This is the only project; create another project before deleting it (or remove its folder and rename it)",
+    "invalidResetMode": "Invalid reset type",
+    "agentNotFound": "Agent not found",
+    "taskNotFound": "Task not found",
+    "messageEmpty": "Message is empty",
+    "modelsTimeout": "Model list request timed out.",
+    "noSecureStorage": "This computer has no secure key storage (OS keychain), so Agentbits does not store passwords, keys or tokens. On Linux install and unlock a keyring (GNOME Keyring / KWallet).",
+    "badRequest": "Invalid request",
+    "untrustedSender": "This request did not come from the Agentbits window and was refused"
+  },
+  "dialogs": {
+    "pickFile": "Choose a file",
+    "addFiles": "Add files",
+    "saveAs": "Save as"
+  },
+  "chat": {
+    "filesOnly_one": "📎 {{count}} file",
+    "filesOnly_other": "📎 {{count}} files"
+  },
+  "memory": {
+    "decision": "Decision ADR-{{seq}}: {{title}}. {{decision}} Rationale: {{rationale}}"
+  },
+  "folders": {
+    "pathEmpty": "Folder path is empty",
+    "notFound": "Folder not found: {{path}}",
+    "notAFolder": "This is not a folder: {{path}}",
+    "appFolder": "This folder is the Agentbits application itself. It can't be chosen as a project folder, so agents don't change the app's code.",
+    "inUse": "This folder is already used by the project “{{name}}”",
+    "otherProject": "another project",
+    "tooBroad": "This folder is too broad for agents (a drive root, your home folder or a folder that holds Agentbits' data). Pick the project's own folder."
+  },
+  "steering": {
+    "resume": "The current step is interrupted; the same Claude Code conversation continues with the instruction (--resume).",
+    "simulated": "Demo provider: the instruction is handled in a simulation.",
+    "restart": "This provider has no live session: the current step is interrupted and restarts with the partial output + the instruction."
+  },
+  "usageReporting": {
+    "full": "Actual values reported by the provider",
+    "partial": "The provider only reports the total (in the input column)",
+    "none": "The provider doesn't report tokens",
+    "simulated": "Demo: estimated values"
+  },
+  "connections": {
+    "kind": {
+      "ssh": "SSH server"
+    },
+    "level": {
+      "none": "No access",
+      "read": "Read only",
+      "write": "Read / write",
+      "execute": "Execute",
+      "admin": "Admin"
+    },
+    "hint": {
+      "db": {
+        "none": "Can't see or use the connection",
+        "read": "Only SELECT / SHOW / EXPLAIN; runs in a read-only transaction that is rolled back",
+        "write": "Read + INSERT / UPDATE / DELETE / MERGE",
+        "execute": "Read / write + stored procedures (CALL / EXEC)",
+        "admin": "Everything: DDL (CREATE / ALTER / DROP), GRANT, multiple statements"
+      },
+      "ssh": {
+        "none": "Can't see or use the server",
+        "read": "Only commands in the read list",
+        "write": "Commands in the read + write lists",
+        "execute": "Commands in the read + write + execute lists",
+        "admin": "Any command (still limited by the server user's own permissions)"
+      }
+    },
+    "ssh": {
+      "emptyCommand": "Empty command",
+      "chaining": "Command chaining / redirection (; & > < ` $( ) is admin-only",
+      "findExec": "find -exec / -delete is admin-only",
+      "notAllowed": "“{{segment}}” is not in the allowed command lists",
+      "unsafeRead": "“{{segment}}” can run other programs or change files, so it never counts as a read"
+    },
+    "newName": "New connection",
+    "errors": {
+      "notFound": "Connection not found",
+      "nameEmpty": "Connection name can't be empty",
+      "invalidKind": "Invalid connection type",
+      "kindLocked": "The connection type can't be changed later; create a new connection",
+      "invalidPort": "Port must be between 1 and 65535",
+      "nameTaken": "A connection named “{{name}}” already exists",
+      "connOrAgentNotFound": "Connection or agent not found",
+      "invalidLevel": "Invalid access level",
+      "approvalNotFound": "Approval request not found (it may have expired)",
+      "noHost": "No host entered",
+      "schemaDbOnly": "Only database connections have a schema",
+      "noKeyFile": "No private key file selected",
+      "noSshAgent": "SSH agent not found (SSH_AUTH_SOCK)",
+      "hostKeyChanged": "The server key has changed (expected {{expected}}, got {{got}}). If the server really changed, reset the key in the connection settings.",
+      "hostKeyNotPinned": "The server key isn't verified yet ({{got}}). Open the connection in Organization → Connections and click \"Test\" to check and pin it.",
+      "productionNeedsTls": "A Production database must use an encrypted connection (TLS / SSL) unless it runs on this computer. Turn on \"SSL / encrypt\".",
+      "tooManyRows": "The query returned more than {{max}} rows and was stopped; add a LIMIT / WHERE",
+      "noAnswer": "The server did not answer within {{seconds}} seconds"
+    },
+    "audit": {
+      "user": "User",
+      "fields": "fields: {{list}}",
+      "secretChanged": "password/key changed",
+      "readOnlySecretChanged": "read-only password changed",
+      "awaitingApproval": "Waiting for user approval (Production)",
+      "approved": "User approved",
+      "connections_one": "{{count}} connection",
+      "connections_other": "{{count}} connections",
+      "tables_one": "{{count}} table",
+      "tables_other": "{{count}} tables",
+      "allTables": "(all)",
+      "rows_one": "{{count}} row",
+      "rows_other": "{{count}} rows",
+      "rowsFirst_one": "{{count}} row (first {{max}})",
+      "rowsFirst_other": "{{count}} rows (first {{max}})",
+      "affected_one": "{{count}} row affected",
+      "affected_other": "{{count}} rows affected",
+      "exitCode": "exit code {{code}}",
+      "exitCodeTimedOut": "exit code {{code}} (timed out)"
+    },
+    "denied": {
+      "noAccess": "This connection doesn't exist or you have no access to it",
+      "statementNeeds": "This statement needs “{{needs}}” access; yours is “{{have}}”",
+      "commandNeeds": "This command needs “{{needs}}” access; yours is “{{have}}”",
+      "notApproved": "The user did not approve the Production operation (or it timed out)",
+      "changedWhileWaiting": "Access to this connection changed while the request was waiting for approval; it was not run",
+      "readOnlyLoginRequired": "Agents can only read through a read-only database user, and this connection has none. Ask the user to add one under Connections → this connection → Read-only user."
+    },
+    "log": {
+      "awaitingApproval": "⏳ Waiting for your approval for {{name}} (Production): {{detail}}",
+      "schema": "🔌 {{name}} · schema{{filter}} → {{tables}}"
+    },
+    "toast": {
+      "approvalRequested": "{{agent}} is asking for approval for an operation on {{name}} (Production)"
+    },
+    "test": {
+      "sshOk": "SSH connection successful",
+      "sshOkKey": "SSH connection successful · server key {{key}}",
+      "ok": "Connection successful",
+      "okReadOnly": "Connection successful · read-only user verified too"
+    }
+  },
+  "files": {
+    "kind": {
+      "text": "Text",
+      "image": "Image",
+      "other": "Other"
+    },
+    "origin": {
+      "user": "Uploaded",
+      "agent": "Produced by an agent",
+      "workspace": "Changed in the project folder"
+    },
+    "status": {
+      "processing": "Processing…",
+      "ready": "Ready",
+      "partial": "Partially read",
+      "unsupported": "Content can't be read",
+      "failed": "Couldn't be processed"
+    },
+    "defaultName": "file",
+    "pastedName": "pasted",
+    "errors": {
+      "timeout": "Processing took too long (2 min); the file may be too complex or damaged",
+      "unknown": "Unknown error",
+      "memory": "Memory limit exceeded; the file couldn't be processed",
+      "workerExited": "The processor exited unexpectedly ({{code}})",
+      "originalMissing": "Original file not found",
+      "tooManyAtOnce": "At most {{max}} files can be added at once",
+      "isFolder": "folders can't be added",
+      "tooLarge": "too large ({{size}} MB; at most {{max}} MB)",
+      "pathNotFound": "not found",
+      "noReadPermission": "no read permission",
+      "notAdded": "Files not added: {{list}}",
+      "invalidData": "Invalid file data",
+      "dataTooLarge": "File is too large (at most {{max}} MB)",
+      "attachmentMissing": "One of the attachments was not found (it may have been deleted)",
+      "attachmentOtherProject": "An attachment belongs to another project",
+      "tooManyPerMessage": "At most {{max}} files per message",
+      "noAgentsInTeam": "This team has no agents",
+      "fileOrAgentNotFound": "File or agent not found",
+      "notFound": "File not found",
+      "originalGone": "The file's original no longer exists (deleted or moved)",
+      "originalGoneShort": "The file's original no longer exists",
+      "unsafeOpen": ".{{ext}} files aren't opened directly for security reasons; download them with “Save as”",
+      "revealWorkspaceOnly": "Only files in the project folder can be shown"
+    },
+    "largeNotExtracted": "Large file; content not extracted (open it from the folder)",
+    "audit": {
+      "genericName": "📎 file",
+      "recordDeleted": "Record deleted (the file in the project folder was not touched)",
+      "deleted": "File deleted",
+      "canRead": "{{agent}}: can read",
+      "accessRemoved": "{{agent}}: access removed",
+      "sharedProject": "The whole project team can read it",
+      "unsharedProject": "Project-wide sharing removed",
+      "noAccess": "No access permission",
+      "saved": "{{size}} KB saved"
+    },
+    "links": {
+      "deletedTask": "Deleted task",
+      "run": "Run",
+      "runOf": "{{agent}} · {{task}} run",
+      "agent": "Agent",
+      "agentLower": "agent",
+      "task": "task",
+      "instruction": "Instruction",
+      "instructionTo": "Instruction → {{agent}}: {{text}}",
+      "chatMessage": "Chat message",
+      "taskThread": "task thread",
+      "chat": "Chat ({{where}}): {{text}}"
+    },
+    "log": {
+      "accessDenied": "📎 Access denied: {{name}} (not shared with this agent)",
+      "listed_one": "📎 files_list → {{count}} file",
+      "listed_other": "📎 files_list → {{count}} files",
+      "readImage": "📎 file_read {{name}} (image)",
+      "readParts": "📎 file_read {{name}} · part {{range}}/{{total}}",
+      "search_one": "📎 file_search “{{query}}” → {{count}} result",
+      "search_other": "📎 file_search “{{query}}” → {{count}} results",
+      "saved": "📎 file_save {{name}} ({{size}} KB) → Files",
+      "workspaceMany": "📁 {{total}} files changed in the project folder; the latest 40 were recorded"
+    },
+    "extract": {
+      "zipError": "Couldn't read ZIP: {{message}}",
+      "zipBomb": "The archive exceeds the allowed size when unpacked (possibly a zip bomb); not processed",
+      "row": "row {{range}}",
+      "rows": "rows {{range}}",
+      "page": "Page {{n}}",
+      "pageRange": "Pages {{from}}–{{to}}",
+      "slide": "Slide {{n}}",
+      "slideRange": "Slides {{from}}–{{to}}",
+      "pdfPassword": "The PDF is password-protected; it couldn't be opened",
+      "pdfError": "Couldn't read the PDF: {{message}}",
+      "pdfPagesLimited": "The PDF has {{total}} pages; only the first {{n}} were read",
+      "textLimitPage": "Text limit reached; nothing after page {{n}} was read",
+      "pdfNoText": "The PDF has no text layer (it may be a scanned document). The app doesn't do OCR; the content can't be given to agents as text.",
+      "pdfEmptyPages": "No text on {{n}} pages (they may be scanned; no OCR is done)",
+      "docxInvalid": "Not a valid Word (.docx) document (no word/document.xml)",
+      "docStart": "Start of document",
+      "textLimitDoc": "Text limit reached; the rest of the document was not read",
+      "footnotes": "Footnotes and endnotes were not included",
+      "xlsxInvalid": "Not a valid Excel (.xlsx) file (no xl/workbook.xml)",
+      "sheet": "Sheet {{n}}",
+      "hiddenSheet": "“{{name}}” is a hidden sheet",
+      "sheetRowLimit": "Row limit reached in sheet “{{name}}”; nothing after row {{row}} was read",
+      "pptxInvalid": "Not a valid PowerPoint (.pptx) file",
+      "speakerNotes": "Speaker notes",
+      "csvRowLimit": "Nothing after {{max}} rows was read",
+      "csvBadRows": "Format errors in {{n}} rows (quotes / column count)",
+      "tab": "tab",
+      "delimiter": "Delimiter: {{delim}}",
+      "table": "Table",
+      "intro": "Introduction",
+      "jsonLines": "JSON lines",
+      "jsonBadLines": "{{n}} lines are not valid JSON",
+      "jsonInvalidLabel": "JSON (invalid)",
+      "jsonInvalid": "Not valid JSON: {{message}}",
+      "image": "Image: no text is extracted (no OCR); it is given as an image to models that support images",
+      "imageMismatch": "The extension says image, but the content is not a recognized image format",
+      "unsupported": "Content can't be extracted from the “.{{ext}}” format. Supported: PDF, DOCX, XLSX, PPTX, CSV, TXT/code, Markdown, JSON, images.",
+      "text": "Text",
+      "truncated": "Text cut off at {{max}} characters",
+      "encoding": "Character encoding: {{encoding}}",
+      "noText": "No readable text was found in the file"
+    }
+  },
+  "feedback": {
+    "subject": {
+      "idea": "[Agentbits] Suggestion",
+      "bug": "[Agentbits] Bug report",
+      "thanks": "[Agentbits] Thanks"
+    },
+    "body": {
+      "idea": "Hi Gökhan,\n\nMy suggestion:\n\nWhy it would help:\n\nHow I imagine it working:\n",
+      "bug": "Hi Gökhan,\n\nWhat I was doing (step by step):\n1. \n2. \n\nWhere it happened (screen / tab / button):\n\nWhat I expected:\n\nWhat happened instead (exact error message, a screenshot if possible):\n\nDoes it happen every time?\n",
+      "thanks": "Hi Gökhan,\n\n",
+      "thanksRated": "Hi Gökhan,\n\nMy rating: {{rating}}/5\n\n"
+    },
+    "environment": "---\nAgentbits {{version}}\nSystem: {{os}}\nLanguage: {{language}}",
+    "badKind": "Unknown feedback type."
+  },
+  "skills": {
+    "errors": {
+      "badArchive": "Couldn't read the archive: {{message}}",
+      "tooLarge": "Too large (downloads up to 50 MB, a skill up to 10 MB, a file up to 2 MB).",
+      "notFound": "Not found. Check the address and that the repository is public.",
+      "download": "Download failed ({{status}}).",
+      "timeout": "The download timed out.",
+      "badUrl": "Not a GitHub address. Use e.g. https://github.com/owner/repo, a folder or file link inside it, or owner/repo.",
+      "tooManyFiles": "This folder has too many files to be a skill.",
+      "pathMissing": "Not found: {{path}}",
+      "badFile": "Pick a folder, a .zip or a .md file.",
+      "noSkillMd": "No SKILL.md here. A skill is a folder with a SKILL.md file — or pick a single .md file.",
+      "previewExpired": "The preview expired; read the source again.",
+      "notInstalled": "Skill not found.",
+      "noSource": "This skill was written in the app; there is no source to update it from.",
+      "goneFromSource": "This skill is no longer in its source.",
+      "nameTaken": "A skill named \"{{name}}\" already exists.",
+      "empty": "SKILL.md is empty.",
+      "needFrontmatter": "SKILL.md must start with a front matter block:\n---\nname: my-skill\ndescription: When to use it\n---",
+      "needDescription": "Add a description: agents use it to decide when to use the skill."
+    },
+    "notes": {
+      "skippedLarge_one": "{{count}} file over 2 MB was skipped.",
+      "skippedLarge_other": "{{count}} files over 2 MB were skipped.",
+      "droppedFiles_one": "{{count}} file left out (limit: 300 files / 10 MB per skill).",
+      "droppedFiles_other": "{{count}} files left out (limit: 300 files / 10 MB per skill).",
+      "noFrontmatter": "SKILL.md has no front matter; the name and description were guessed.",
+      "noDescription": "No description: agents won't know when to use it — add one after installing.",
+      "generatedFrontmatter": "A front matter block (name, description) was added to the Markdown file."
+    },
+    "warnings": {
+      "binaries": "Contains program files (.exe, .dll…). They are stored but Agentbits never runs them.",
+      "scripts": "Contains scripts. Only agents allowed to run commands (terminal permission, CLI providers) can run them.",
+      "suspicious_one": "{{count}} line looks like an attempt to override instructions — read the skill before assigning it.",
+      "suspicious_other": "{{count}} lines look like attempts to override instructions — read the skill before assigning it."
+    },
+    "log": {
+      "read": "📘 Skill read: {{name}} · {{path}}"
+    },
+    "dialogs": {
+      "folder": "Choose a skill folder",
+      "file": "Choose a .zip or .md file"
+    }
+  },
+  "apps": {
+    "errors": {
+      "needsSignIn": "This app needs a sign-in. Open Organization → Apps and click \"Sign in\".",
+      "badAuthUrl": "The app sent an invalid sign-in address.",
+      "signInFailed": "Sign-in failed ({{error}}).",
+      "signInTimeout": "Sign-in was not completed within 5 minutes.",
+      "noCommand": "No command set for this app.",
+      "noUrl": "No address set for this app.",
+      "connectTimeout": "The app didn't respond within 30 seconds.",
+      "notFound": "App not found.",
+      "commandNotFound": "Program not found: {{command}}. Is it installed and on PATH (e.g. Node.js for npx, uv for uvx)?",
+      "noClaudeConfig": "Claude Desktop's settings file was not found ({{path}}).",
+      "badJson": "Not valid JSON: {{message}}",
+      "noServers": "No MCP servers in this configuration.",
+      "nameRequired": "Give the app a name.",
+      "nameTaken": "An app named \"{{name}}\" already exists.",
+      "badUrl": "Enter a full http(s) address.",
+      "sdkOutdated": "The installed MCP library is out of date ({{version}}; needs 1.31.0 or newer for safe sign-in). Run \"npm ci\" in the Agentbits folder (or install the latest Agentbits) and start again.",
+      "shuttingDown": "The app connection was closed (edited, deleted or Agentbits is quitting). Try again.",
+      "reSignIn": "Sign in again: the stored sign-in was not bound to its authorization server (security update)."
+    },
+    "oauth": {
+      "done": "Signed in. You can close this tab and return to Agentbits.",
+      "failed": "Sign-in failed. You can close this tab and try again in Agentbits."
+    },
+    "audit": {
+      "awaitingApproval": "Waiting for the user's approval",
+      "rejected": "Rejected by the user",
+      "changedWhileWaiting": "Access changed while waiting for approval; not run"
+    },
+    "log": {
+      "awaitingApproval": "⏸ {{app}} · {{tool}} is waiting for your approval",
+      "rejected": "✋ {{app}} · {{tool}} was not approved",
+      "call": "🧩 {{app}} · {{tool}}",
+      "done": "✓ {{app}} · {{tool}} ({{ms}} ms)",
+      "failed": "✗ {{app}} · {{tool}} failed ({{ms}} ms)"
+    },
+    "test": {
+      "ok_one": "Connected · {{count}} tool",
+      "ok_other": "Connected · {{count}} tools"
+    },
+    "toast": {
+      "approvalRequested": "{{agent}} wants to use {{tool}} on {{app}} — approve it in the bottom-left panel"
+    }
+  }
+}

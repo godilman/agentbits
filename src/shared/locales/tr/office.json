@@ -1,0 +1,32 @@
+{
+  "canvas": {
+    "away": "başka projede"
+  },
+  "allTime": "Tüm zamanlar",
+  "emptyOrg": "Ofis boş: henüz hiç ajanın yok. Takımını kur, ajanları ekle; buraya otururlar.",
+  "templates": "Şablonlar",
+  "guide": "Kılavuz",
+  "noTeam": "Bu projeye henüz takım atanmadı.",
+  "noTeamWithLead": "Bu projeye henüz takım atanmadı — şimdilik yalnızca lider ({{name}}) var.",
+  "team": "Ekip",
+  "panel": {
+    "title": "Ofis",
+    "hint": "Detay için haritada bir ajana tıkla.",
+    "awayIn": "başka projede · {{name}}",
+    "editProfile": "Profili düzenle",
+    "done": "Biten",
+    "queued": "Sırada",
+    "workingElsewhere": "Başka projede çalışıyor",
+    "goToProject": "Projeye geç",
+    "currentWork": "Şu anki iş",
+    "resume": "Devam",
+    "pause": "Duraklat",
+    "stop": "Durdur",
+    "activity": "Aktivite",
+    "noLogs": "Henüz kayıt yok.",
+    "message": "Mesaj",
+    "goOffline": "Çevrimdışı yap",
+    "goOnline": "Çevrimiçi yap",
+    "tokens": "Token"
+  }
+}

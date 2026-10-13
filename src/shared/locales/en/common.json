@@ -1,0 +1,136 @@
+{
+  "app": {
+    "name": "Agentbits",
+    "support": "Enjoying Agentbits? Buy me a coffee! ☕",
+    "supportLabel": "Buy me a coffee"
+  },
+  "actions": {
+    "save": "Save",
+    "cancel": "Cancel",
+    "close": "Close",
+    "delete": "Delete",
+    "deleteEllipsis": "Delete…",
+    "edit": "Edit",
+    "add": "Add",
+    "create": "Create",
+    "open": "Open",
+    "back": "Back",
+    "next": "Next",
+    "retry": "Retry",
+    "copy": "Copy",
+    "copied": "Copied",
+    "confirm": "Confirm",
+    "yesDelete": "Yes, delete",
+    "remove": "Remove",
+    "change": "Change",
+    "test": "Test",
+    "search": "Search",
+    "refresh": "Refresh",
+    "apply": "Apply",
+    "reset": "Reset",
+    "start": "Start",
+    "stop": "Stop",
+    "send": "Send",
+    "approve": "Approve",
+    "reject": "Reject",
+    "chooseFolder": "Choose folder",
+    "showAll": "Show all",
+    "showLess": "Show less"
+  },
+  "status": {
+    "idle": "Idle",
+    "working": "Working",
+    "waiting": "Waiting",
+    "error": "Error",
+    "offline": "Offline",
+    "paused": "Paused",
+    "loading": "Loading…",
+    "saving": "Saving…",
+    "saved": "Saved",
+    "none": "None",
+    "unknown": "Unknown",
+    "on": "On",
+    "off": "Off",
+    "yes": "Yes",
+    "no": "No"
+  },
+  "time": {
+    "now": "now",
+    "minutesShort": "{{count}} min",
+    "hoursShort": "{{count}} h",
+    "daysShort": "{{count}} d",
+    "secondsUnit": "{{count}}s",
+    "minutesSeconds": "{{m}}m {{s}}s",
+    "hoursMinutes": "{{h}}h {{m}}m",
+    "ago": "{{time}} ago",
+    "justNow": "just now"
+  },
+  "language": {
+    "label": "Language",
+    "auto": "System ({{name}})",
+    "hint": "Interface language. Agents answer in the language you write to them."
+  },
+  "statusBar": {
+    "paused": "Paused",
+    "autopilotOn": "Autopilot on",
+    "autopilotOff": "Autopilot off",
+    "agents_one": "{{count}} agent",
+    "agents_other": "{{count}} agents",
+    "working": "{{count}} working",
+    "errors_one": "{{count}} error",
+    "errors_other": "{{count}} errors",
+    "demoProvider": "Demo (simulation)",
+    "organization": "Organization",
+    "projectSettings": "Project settings",
+    "noFolder": "no folder",
+    "tokensTitle": "All agents this session: {{session}} tokens\nAll time: {{total}} tokens\nDetails: Reports → Token usage",
+    "tokens": "session {{session}} · total {{total}} tokens",
+    "memories_one": "SQLite · {{count}} memory",
+    "memories_other": "SQLite · {{count}} memories"
+  },
+  "agentStatus": {
+    "idle": "Idle",
+    "working": "Working",
+    "break": "On break",
+    "error": "Error",
+    "offline": "Offline"
+  },
+  "priority": {
+    "low": "Low",
+    "normal": "Normal",
+    "high": "High",
+    "urgent": "Urgent"
+  },
+  "taskColumns": {
+    "todo": "To do",
+    "in_progress": "In progress",
+    "in_review": "In review",
+    "done": "Done"
+  },
+  "feedback": {
+    "button": "Feedback",
+    "title": "Feedback",
+    "intro": "Thanks, a bug, a suggestion, a rating — whatever it is, I read every message. Just write to <mail>{{email}}</mail>.",
+    "idea": {
+      "title": "Have a suggestion?",
+      "text": "Describe it in as much detail as you can: what you'd like, why it would help you and how you imagine it working. Write to <mail>{{email}}</mail>.",
+      "action": "Write a suggestion"
+    },
+    "bug": {
+      "title": "Ran into a bug?",
+      "text": "Tell me exactly at which step and where it happened: what you were doing, which screen and button, what you expected and what happened instead — with the exact error message and a screenshot if you can. Write to <mail>{{email}}</mail>; the app version and system info are added to the mail for you.",
+      "action": "Report a bug"
+    },
+    "thanks": {
+      "title": "Want to say thanks?",
+      "text": "Thank <b>you</b> for using Agentbits! If you'd like to buy me a coffee, you can do it here:",
+      "rate": "Rate the app:",
+      "rateStar": "{{n}} out of 5",
+      "sendRating": "Send rating",
+      "sendThanks": "Write a thank-you"
+    },
+    "copy": "Copy address",
+    "copied": "Address copied",
+    "noMailApp": "If no mail app opens, copy the address and write from your own mail."
+  }
+}

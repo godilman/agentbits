@@ -1,0 +1,38 @@
+{
+  "suggestions": {
+    "s1": "Review the attached file, summarize the key points and split the to-dos into tasks.",
+    "s2": "Review the current state of the project folder and prepare improvement suggestions as a report.",
+    "s3": "Which tasks were sent back for revision? Can you summarize them?"
+  },
+  "channels": "Channels",
+  "leadHint": "{{name}} (lead)",
+  "directMessages": "Direct messages",
+  "noTeam": "No team assigned to the project",
+  "taskThreads": "Task threads",
+  "drop": {
+    "general": "Drop files — they go to the lead (or the team you choose)",
+    "agent": "Drop files — they go to {{name}}",
+    "task": "Drop files — they are added to the task"
+  },
+  "generalSubtitle": "{{project}} · talk to the lead: describe the work to split it into tasks for the project team",
+  "project": "Project",
+  "taskSubtitle": "Task thread — notes are passed to the agent on its next run",
+  "noLeadTitle": "No lead to talk to yet",
+  "noLeadText": "In #general you describe work to the lead; the lead splits it into tasks and hands them to the team. First add your agents and choose a lead (team lead or project lead).",
+  "templates": "Templates",
+  "openGuide": "Open the guide",
+  "empty": "No messages in this channel yet.",
+  "typing": "{{name}} is typing",
+  "shareLabel": "Who can read the files:",
+  "shareLead": "Lead only",
+  "shareLeadNamed": "Lead only ({{name}})",
+  "shareProject": "The whole project team",
+  "shareUnit": "Team: {{name}}",
+  "shareHint": "The lead also opens files it attaches to tasks to whoever does the task.",
+  "placeholderAgent": "Message {{name}}… (Shift+Enter for a new line)",
+  "placeholderNote": "Add a note…",
+  "uploading": "Files are still uploading",
+  "youBadge": "YOU",
+  "you": "You",
+  "agent": "Agent"
+}

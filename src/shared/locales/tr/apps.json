@@ -1,0 +1,123 @@
+{
+  "title": "Uygulamalar",
+  "intro": "Uygulamaları MCP (Model Context Protocol) ile bağla — e-posta, takvim, tasarım araçları, veritabanları… — Claude Desktop'taki gibi. Ajanlar bir uygulamayı yalnızca sen izin verirsen kullanır; bir şeyi değiştiren araçlar onayını bekler ve her çağrı denetim kaydına yazılır.",
+  "add": "Uygulama ekle",
+  "addMenu": {
+    "local": "Bilgisayarda çalışan (stdio)",
+    "remote": "Uzak sunucu (adres)",
+    "json": "JSON yapılandırması yapıştır",
+    "claude": "Claude Desktop'tan al"
+  },
+  "empty": {
+    "title": "Henüz uygulama yok",
+    "hint": "Bir MCP sunucusu ekle: bilgisayarında çalışan bir program (ör. npx …) ya da uzak bir adres. Bir README'deki yapılandırmayı yapıştırabilir ya da Claude Desktop'ta kurduğun sunucuları içe alabilirsin."
+  },
+  "status": {
+    "ok": "bağlı",
+    "error": "hata",
+    "unknown": "denenmedi",
+    "off": "kapalı",
+    "signIn": "giriş gerekli"
+  },
+  "kind": {
+    "stdio": "Yerel",
+    "http": "Uzak",
+    "stdioLong": "Yerel program",
+    "httpLong": "Uzak sunucu"
+  },
+  "toolCount_one": "{{count}} araç",
+  "toolCount_other": "{{count}} araç",
+  "agentCount_one": "{{count}} ajan",
+  "agentCount_other": "{{count}} ajan",
+  "noAgents": "ajan yok",
+  "detail": {
+    "test": "Bağlan ve araçları listele",
+    "testing": "Bağlanıyor…",
+    "signIn": "Giriş yap",
+    "signingIn": "Tarayıcı bekleniyor…",
+    "signOut": "Çıkış yap",
+    "enabled": "Kullanımda",
+    "enabledHint": "Kapalıyken hiçbir ajan bu uygulamayı kullanamaz.",
+    "delete": "Sil",
+    "deleteConfirm": "\"{{name}}\" uygulaması silinsin mi? Ajanlar erişimini kaybeder; denetim kaydındaki satırlar kalır.",
+    "deleted": "Uygulama silindi.",
+    "server": "Sunucu: {{name}}",
+    "toolsAt": "Araçlar {{date}} listelendi",
+    "signInHint": "Uygulamanın giriş sayfasını tarayıcında açar; Agentbits anahtarı bu bilgisayarda şifreli saklar. Yalnızca güvendiğin sunuculara giriş yap; parolanı yazmadan önce açılan sayfanın beklediğin servise ait olduğunu kontrol et."
+  },
+  "tabs": {
+    "tools": "Araçlar",
+    "access": "Erişim",
+    "settings": "Ayarlar",
+    "audit": "Denetim kaydı"
+  },
+  "tools": {
+    "none": "Henüz araç listelenmedi — \"Bağlan ve araçları listele\"ye tıkla.",
+    "policy": "Politika",
+    "default": "varsayılan",
+    "readOnly": "salt-okunur",
+    "destructive": "veri değiştirir",
+    "policies": {
+      "auto": "Otomatik çalışır",
+      "approve": "Önce bana sor",
+      "block": "Kapalı"
+    },
+    "policyHint": "Salt-okunur araçlar varsayılan olarak otomatik çalışır; diğer her şey sol alttaki panelde onayını bekler. Bu ipuçlarını uygulamanın kendisi bildirir — emin değilsen sıkılaştır."
+  },
+  "access": {
+    "hint": "Bu uygulamayı kullanabilecek ajanlar (yukarıdaki politikalarla, kapalı olmayan tüm araçları). Varsayılan olarak kimsenin erişimi yok.",
+    "none": "Henüz ajan yok.",
+    "all": "Hepsine izin ver",
+    "noneBtn": "Hiçbirine"
+  },
+  "form": {
+    "name": "Ad",
+    "namePlaceholder": "ör. Gmail, Figma, Notion",
+    "description": "Ne için? (ajanlar bunu görür)",
+    "descriptionPlaceholder": "ör. Şirket e-postası: oku ve yanıt taslağı hazırla",
+    "transport": "Tür",
+    "command": "Komut",
+    "commandPlaceholder": "ör. npx",
+    "args": "Argümanlar (her satıra bir)",
+    "argsPlaceholder": "-y\n@modelcontextprotocol/server-everything",
+    "cwd": "Çalışma klasörü (isteğe bağlı)",
+    "env": "Ortam değişkenleri",
+    "envHint": "API anahtarları ve token'lar buraya. Değerler şifreli saklanır ve bir daha gösterilmez.",
+    "url": "Sunucu adresi",
+    "urlPlaceholder": "https://ornek.com/mcp",
+    "headers": "Ek HTTP başlıkları",
+    "headersHint": "ör. Authorization: Bearer … — şifreli saklanır.",
+    "oauth": "Tarayıcıda OAuth ile giriş yap",
+    "oauthHint": "Giriş isteyen sunucular için (barındırılan uygulamaların çoğu).",
+    "key": "Ad",
+    "value": "Değer",
+    "keep": "(değişmedi)",
+    "addRow": "Ekle",
+    "save": "Kaydet",
+    "saved": "Kaydedildi.",
+    "create": "Uygulamayı ekle",
+    "stdioWarning": "Agentbits bu komutu bilgisayarında senin kullanıcı yetkilerinle çalıştırır. Yalnızca güvendiğin sunucuları ekle (resmî olanlar ya da bildiğin bir kaynak). Çoğu için Node.js (npx) ya da uv (uvx) kurulu olmalı.",
+    "newTitleLocal": "Yeni yerel uygulama",
+    "newTitleRemote": "Yeni uzak uygulama"
+  },
+  "import": {
+    "titleJson": "MCP yapılandırması yapıştır",
+    "titleClaude": "Claude Desktop'tan al",
+    "jsonHint": "Bir README'deki ya da başka bir uygulamadaki JSON'u yapıştır — ör. {\"mcpServers\": {\"ad\": {\"command\": \"npx\", \"args\": […]}}}.",
+    "read": "Oku",
+    "found_one": "{{count}} sunucu bulundu",
+    "found_other": "{{count}} sunucu bulundu",
+    "exists": "zaten ekli (atlanır)",
+    "add_one": "{{count}} uygulama ekle",
+    "add_other": "{{count}} uygulama ekle",
+    "added_one": "{{count}} uygulama eklendi.",
+    "added_other": "{{count}} uygulama eklendi.",
+    "secretsNote": "Ortam değişkeni ve başlık değerleri şifreli saklanır."
+  },
+  "agent": {
+    "title": "Uygulamalar",
+    "desc": "Bu ajanın kullanabileceği bağlı uygulamalar (MCP). Araç başına politikalar Organizasyon → Uygulamalar'da ayarlanır.",
+    "none": "Henüz bağlı uygulama yok.",
+    "manage": "Uygulamaları yönet"
+  }
+}

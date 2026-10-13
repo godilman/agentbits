@@ -1,0 +1,123 @@
+{
+  "title": "Apps",
+  "intro": "Connect apps over MCP (Model Context Protocol) — mail, calendar, design tools, databases… — like in Claude Desktop. Agents use an app only if you allow it; tools that change things wait for your approval, and every call is in the audit log.",
+  "add": "Add app",
+  "addMenu": {
+    "local": "Local program (stdio)",
+    "remote": "Remote server (URL)",
+    "json": "Paste JSON config",
+    "claude": "Import from Claude Desktop"
+  },
+  "empty": {
+    "title": "No apps yet",
+    "hint": "Add an MCP server: a local program (e.g. npx …) or a remote address. You can also paste a config snippet from a README or import the servers you set up in Claude Desktop."
+  },
+  "status": {
+    "ok": "connected",
+    "error": "error",
+    "unknown": "not tested",
+    "off": "off",
+    "signIn": "sign-in needed"
+  },
+  "kind": {
+    "stdio": "Local",
+    "http": "Remote",
+    "stdioLong": "Local program",
+    "httpLong": "Remote server"
+  },
+  "toolCount_one": "{{count}} tool",
+  "toolCount_other": "{{count}} tools",
+  "agentCount_one": "{{count}} agent",
+  "agentCount_other": "{{count}} agents",
+  "noAgents": "no agents",
+  "detail": {
+    "test": "Connect & list tools",
+    "testing": "Connecting…",
+    "signIn": "Sign in",
+    "signingIn": "Waiting for the browser…",
+    "signOut": "Sign out",
+    "enabled": "In use",
+    "enabledHint": "When off, no agent can use this app.",
+    "delete": "Delete",
+    "deleteConfirm": "Delete the app \"{{name}}\"? Agents lose access; the audit log keeps its entries.",
+    "deleted": "App deleted.",
+    "server": "Server: {{name}}",
+    "toolsAt": "Tools listed {{date}}",
+    "signInHint": "Opens the app's sign-in page in your browser; Agentbits stores the token encrypted on this computer. Only sign in to servers you trust, and check that the page that opens belongs to the service you expect before entering your password."
+  },
+  "tabs": {
+    "tools": "Tools",
+    "access": "Access",
+    "settings": "Settings",
+    "audit": "Audit log"
+  },
+  "tools": {
+    "none": "No tools listed yet — click \"Connect & list tools\".",
+    "policy": "Policy",
+    "default": "default",
+    "readOnly": "read-only",
+    "destructive": "changes data",
+    "policies": {
+      "auto": "Runs automatically",
+      "approve": "Ask me first",
+      "block": "Off"
+    },
+    "policyHint": "Read-only tools run automatically by default; everything else waits for your approval in the bottom-left panel. The app reports these hints itself — tighten them if you're not sure."
+  },
+  "access": {
+    "hint": "Agents allowed to use this app (all its non-blocked tools, with the policies above). Nobody has access by default.",
+    "none": "No agents yet.",
+    "all": "Allow all",
+    "noneBtn": "Allow none"
+  },
+  "form": {
+    "name": "Name",
+    "namePlaceholder": "e.g. Gmail, Figma, Notion",
+    "description": "What is it for? (agents see this)",
+    "descriptionPlaceholder": "e.g. Company mailbox: read and draft replies",
+    "transport": "Type",
+    "command": "Command",
+    "commandPlaceholder": "e.g. npx",
+    "args": "Arguments (one per line)",
+    "argsPlaceholder": "-y\n@modelcontextprotocol/server-everything",
+    "cwd": "Working folder (optional)",
+    "env": "Environment variables",
+    "envHint": "API keys and tokens go here. Values are stored encrypted and never shown again.",
+    "url": "Server address",
+    "urlPlaceholder": "https://example.com/mcp",
+    "headers": "Extra HTTP headers",
+    "headersHint": "e.g. Authorization: Bearer … — stored encrypted.",
+    "oauth": "Sign in with OAuth in the browser",
+    "oauthHint": "For servers that ask you to log in (most hosted apps).",
+    "key": "Name",
+    "value": "Value",
+    "keep": "(unchanged)",
+    "addRow": "Add",
+    "save": "Save",
+    "saved": "Saved.",
+    "create": "Add app",
+    "stdioWarning": "Agentbits runs this command on your computer with your user's rights. Only add servers you trust (official ones or from a source you know). Many need Node.js (npx) or uv (uvx) installed.",
+    "newTitleLocal": "New local app",
+    "newTitleRemote": "New remote app"
+  },
+  "import": {
+    "titleJson": "Paste MCP config",
+    "titleClaude": "Import from Claude Desktop",
+    "jsonHint": "Paste the JSON from a README or another app — e.g. {\"mcpServers\": {\"name\": {\"command\": \"npx\", \"args\": […]}}}.",
+    "read": "Read",
+    "found_one": "{{count}} server found",
+    "found_other": "{{count}} servers found",
+    "exists": "already added (skipped)",
+    "add_one": "Add {{count}} app",
+    "add_other": "Add {{count}} apps",
+    "added_one": "{{count}} app added.",
+    "added_other": "{{count}} apps added.",
+    "secretsNote": "Values of environment variables and headers are stored encrypted."
+  },
+  "agent": {
+    "title": "Apps",
+    "desc": "Connected apps (MCP) this agent may use. Policies per tool are set in Organization → Apps.",
+    "none": "No apps connected yet.",
+    "manage": "Manage apps"
+  }
+}

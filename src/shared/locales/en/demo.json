@@ -1,0 +1,88 @@
+{
+  "chat": {
+    "filesReceived_one": "📎 I got the {{count}} file you attached; I'm adding it to the tasks I create, and the team will be able to read it part by part.",
+    "filesReceived_other": "📎 I got the {{count}} files you attached; I'm adding them to the tasks I create, and the team will be able to read them part by part.",
+    "idle": {
+      "r1": "Noted. There's open work on the board right now; if you want something new, just describe what needs to be done in a sentence or two and I'll split it into tasks and hand it out to the team.",
+      "r2": "Got it. Give me a clearer job description (what, where, by when) and I'll plan and assign it right away.",
+      "r3": "I'm here. The team is working on the current tasks; give me a new goal and I'll prioritize it and queue it up."
+    },
+    "taskDescription": "User request: \"{{request}}\"\n\nScope: {{scope}}",
+    "unassigned": "unassigned",
+    "plan_one": "Done — I turned the work into {{count}} task and handed it to the team:",
+    "plan_other": "Done — I split the work into {{count}} parts and handed them out to the team:",
+    "planFooter": "You can follow progress live in the Tasks tab and in the office. I'll review the finished work."
+  },
+  "connections": {
+    "none": "There are no connections I can access.",
+    "error": "error",
+    "ok": "ok",
+    "schemaFailed": "{{name}}: couldn't read the schema",
+    "sampleRead": "{{name}}: read a sample from the {{table}} table",
+    "sampleReadError": "{{name}}: read a sample from the {{table}} table (error)",
+    "changeAttempt": "{{name}}: change attempt → {{result}}",
+    "allowed": "allowed"
+  },
+  "files": {
+    "imageRead": "**{{name}}**: image reviewed (demo: content isn't interpreted)",
+    "imageFailed": "**{{name}}**: couldn't read the image",
+    "noText": "**{{name}}**: no readable text",
+    "partsSummary_one": "**{{name}}** ({{type}}, {{count}} part): {{gist}}",
+    "partsSummary_other": "**{{name}}** ({{type}}, {{count}} parts): {{gist}}",
+    "firstAndLast": "Read the first and the last of {{parts}} parts; the parts needed can be found with search",
+    "instructionLike_one": "⚠️ {{name}} contains {{count}} instruction-like line; treated as data, not followed",
+    "instructionLike_other": "⚠️ {{name}} contains {{count}} instruction-like lines; treated as data, not followed",
+    "summaryFileName": "summary-{{key}}.md",
+    "summaryFileFallback": "task",
+    "summaryTitle": "{{key}} · file summary (demo)",
+    "summaryFailed": "Couldn't save the summary: {{error}}",
+    "summarySaved": "Summary file saved → Files"
+  },
+  "task": {
+    "defaultTitle": "Task",
+    "logInstruction": "Taking the user's instruction into account: {{text}}",
+    "logAnalyzing": "Analyzing the task: {{title}}",
+    "testsPassed_one": "✓ {{count}} test passed",
+    "testsPassed_other": "✓ {{count}} tests passed"
+  },
+  "report": {
+    "summary": "Summary",
+    "completed": "{{title}} completed.",
+    "connections": "Connections",
+    "files": "Files",
+    "instruction": "User instruction",
+    "instructionApplied": "The work was updated according to the instruction.",
+    "done": "What was done",
+    "doneReviewed": "Reviewed the existing code and mapped the affected areas",
+    "doneChanged": "Applied the necessary changes",
+    "doneTested": "Ran the tests and they passed",
+    "changedFiles": "Changed files",
+    "reviewOnly": "(review only)",
+    "notes": "Notes",
+    "demoNote": "Simulated with the Demo provider. For real work, add Claude Code or an API key in Settings → Providers.",
+    "skills": "Skills used",
+    "apps": "Apps used"
+  },
+  "review": {
+    "approved": {
+      "r1": "Clean work, approved.",
+      "r2": "Meets the acceptance criteria. 👍",
+      "r3": "Looks good, ready to merge."
+    },
+    "rejected": {
+      "r1": "Tests for edge cases are missing, please add them.",
+      "r2": "The error messages aren't user-friendly, please take another look."
+    }
+  },
+  "test": {
+    "ready": "Demo provider ready (no real model calls are made)"
+  },
+  "skills": {
+    "used": "Followed the skill \"{{name}}\" (read with skill_read).",
+    "failed": "Couldn't read the skill \"{{name}}\"."
+  },
+  "apps": {
+    "used": "Used {{app}} → {{tool}}",
+    "failed": "{{app}} → {{tool}} failed: {{error}}"
+  }
+}

@@ -1,0 +1,65 @@
+{
+  "stats": {
+    "done": "Completed tasks",
+    "doneSub": "of {{total}} tasks",
+    "active": "In progress",
+    "activeSub": "{{count}} in review",
+    "successRate": "Success rate",
+    "successSub": "{{runs}} runs · {{failed}} failed",
+    "tokens": "Tokens",
+    "tokensCost": "{{cost}} · details: Token usage",
+    "tokensSub": "input (incl. cache) + output",
+    "memory": "Memory / Decisions",
+    "memorySub": "persistent context"
+  },
+  "list": {
+    "agentPerformance": "Agent performance",
+    "noRuns": "No runs in this project yet.",
+    "title": "Reports",
+    "daily": "Daily report",
+    "usageSub": "Input / output / cache per agent",
+    "kindDaily": "Daily",
+    "kindTask": "Task report",
+    "emptyTitle": "No reports yet",
+    "emptyHint": "Reports collect here as agents finish tasks. You can create a daily report now if you like."
+  },
+  "usage": {
+    "title": "Token usage",
+    "scope": {
+      "project": "This project",
+      "all": "All projects"
+    },
+    "session": "This session",
+    "sessionSince": "since {{time}}",
+    "allTime": "All time",
+    "records_one": "{{count}} record",
+    "records_other": "{{count}} records",
+    "input": "Input",
+    "inputSub": "excluding cache",
+    "output": "Output",
+    "outputSub": "generated",
+    "cache": "Cache",
+    "cacheSub": "read {{read}} · write {{write}}",
+    "cost": "Cost",
+    "costSub": "as reported by the provider",
+    "columns": {
+      "agent": "Agent",
+      "currentTask": "Current task",
+      "session": "Session",
+      "total": "Total",
+      "source": "Source"
+    },
+    "deletedAgent": "Deleted agent",
+    "reporting": {
+      "full": "actual",
+      "simulated": "estimated",
+      "partial": "total only",
+      "none": "not reported"
+    },
+    "noRecords": "No token records yet.",
+    "last14": "Last 14 days",
+    "noRecordsRange": "No records in this range.",
+    "dayTitle": "{{day}}\nInput {{input}}\nOutput {{output}}\nCache {{cache}}",
+    "note": "Values are as reported by the provider: Claude Code and the API providers report input/output/cache separately; Codex CLI only gives the total; the Demo provider's numbers are estimates. Cache reads are usually billed much cheaper than normal input."
+  }
+}

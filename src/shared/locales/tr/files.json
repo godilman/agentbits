@@ -1,0 +1,108 @@
+{
+  "title": "Dosyalar",
+  "you": "Sen",
+  "pastedFileName": "yapistirilan.png",
+  "tooBig": "{{names}}: {{limit}} sınırını aşıyor",
+  "meta": {
+    "pages_one": "{{count}} sayfa",
+    "pages_other": "{{count}} sayfa",
+    "slides_one": "{{count}} slayt",
+    "slides_other": "{{count}} slayt",
+    "sheets_one": "{{count}} sayfa",
+    "sheets_other": "{{count}} sayfa",
+    "sheetNames": "Sayfalar: {{names}}",
+    "parts_one": "{{count}} bölüm · ~{{tokens}} token",
+    "parts_other": "{{count}} bölüm · ~{{tokens}} token"
+  },
+  "view": {
+    "dropLabel": "“{{project}}” dosyalarına ekle",
+    "projectFallback": "Proje",
+    "subtitle": "Yüklenenler, ajanların ürettikleri ve proje klasöründe değişenler",
+    "filter": {
+      "all": "Tümü",
+      "user": "Yüklenen",
+      "agent": "Ajan",
+      "workspace": "Klasör"
+    },
+    "searchPlaceholder": "Ad ya da içerikte ara…",
+    "upload": "Dosya yükle",
+    "added": "Dosyalar eklendi. Ajanlara vermek için sohbette ya da görevde paylaşın veya Erişim’den izin verin.",
+    "emptyTitle": "Henüz dosya yok",
+    "emptyHint": "Dosyaları buraya, sohbete, bir ajanın terminaline ya da bir göreve sürükleyin. PDF, Word, Excel, PowerPoint, CSV, metin, JSON, Markdown ve görseller okunur; ajanlar uzun dosyaları bölüm bölüm okur.",
+    "hits": "İçerikte bulunanlar ({{count}})",
+    "hitPart": "bölüm {{n}} · {{label}}",
+    "columns": {
+      "file": "Dosya",
+      "kind": "Tür",
+      "size": "Boyut",
+      "origin": "Kaynak",
+      "access": "Erişim",
+      "status": "Durum",
+      "added": "Eklenme"
+    },
+    "accessAll": "Tüm ekip",
+    "accessSelected": "Seçili ajanlar",
+    "noMatch": "Eşleşen dosya yok."
+  },
+  "preview": {
+    "role": {
+      "attached": "Eklendi",
+      "given": "Prompta verildi",
+      "read": "Okundu",
+      "generated": "Üretildi"
+    },
+    "fallbackTitle": "Dosya",
+    "confirmDeleteWorkspace": "Kayıt silinir; proje klasöründeki dosyaya dokunulmaz.",
+    "confirmDelete": "Dosya ve çıkarılan metni silinsin mi? Bağlı mesaj ve görevlerde artık açılamaz.",
+    "deleted": "Dosya silindi",
+    "reveal": "Klasörde göster",
+    "openTitle": "Varsayılan uygulamayla aç",
+    "openBlocked": "Bu tür güvenlik nedeniyle doğrudan açılmaz; indirin",
+    "savedTo": "Kaydedildi: {{path}}",
+    "saveAs": "Farklı kaydet",
+    "suspiciousTitle": "Yapay zekâya yönelik talimat benzeri içerik",
+    "suspiciousBody": "Ajanlara dosya içeriği her zaman “güvenilmeyen veri” olarak verilir; içindeki talimatlar uygulanmaz. Örnekler:",
+    "noOriginal": "Dosyanın aslı diskte yok (geri yüklenen yedekten sonra silinmiş olabilir); yalnızca çıkarılan metin duruyor.",
+    "tabs": {
+      "content": "İçerik",
+      "access": "Erişim ({{n}})",
+      "wholeTeam": "tüm ekip",
+      "usage": "Kullanım ({{count}})"
+    },
+    "imageUnavailable": "Görsel önizlenemiyor (aslı yok ya da 15 MB’tan büyük).",
+    "partHeader": "Bölüm {{n}}/{{total}} · {{label}}",
+    "chars_one": "{{n}} karakter",
+    "chars_other": "{{n}} karakter",
+    "partRange": "Bölüm {{from}}–{{to}} / {{total}}",
+    "noText": "Gösterilecek metin yok.",
+    "extracting": "Metin çıkarılıyor…",
+    "access": {
+      "intro": "Varsayılan: <b>hiçbir ajan okuyamaz</b>. Dosya kime gönderildiyse (lider, ajan, takım) yalnızca o okur. Bir göreve eklenen dosyayı o görevi yapan ajan da okuyabilir. Ajanlar dosyayı yalnızca okuyabilir; değiştiremez, silemez.",
+      "shareAll": "Tüm proje ekibi okuyabilsin",
+      "teamCount_one": "{{project}} · {{count}} ajan",
+      "teamCount_other": "{{project}} · {{count}} ajan",
+      "noAgents": "Projede ajan yok.",
+      "viaTasks": "Görev bağlantısıyla da okunur: {{tasks}}"
+    },
+    "neverUsed": "Henüz hiçbir yerde kullanılmadı."
+  },
+  "task": {
+    "hint": "Görevi yapan ajan okuyabilir · sürükle-bırak",
+    "none": "Ek yok."
+  },
+  "parts": {
+    "suspiciousLines_one": "{{count}} talimat benzeri satır (veri olarak ele alınır)",
+    "suspiciousLines_other": "{{count}} talimat benzeri satır (veri olarak ele alınır)",
+    "fileFallback": "dosya",
+    "noOriginal": "(aslı yok)",
+    "attachTitle": "Dosya ekle (sürükle-bırak ve yapıştırma da çalışır) — PDF, Word, Excel, PowerPoint, CSV, metin, JSON, Markdown, görsel",
+    "drop": "Dosyaları bırak"
+  },
+  "attach": {
+    "tooBig": "çok büyük ({{size}}; en fazla {{limit}})",
+    "moreFiles_one": "+{{count}} dosya",
+    "moreFiles_other": "+{{count}} dosya",
+    "maxPerSend": "tek seferde en fazla {{max}} dosya",
+    "addFailed": "eklenemedi"
+  }
+}

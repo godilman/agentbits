@@ -1,0 +1,389 @@
+{
+  "defaults": {
+    "organization": "Organizasyon",
+    "project": "Varsayılan Proje",
+    "projectDescription": "İlk kurulumda oluşturulan proje.",
+    "coreTeam": "Çekirdek Ekip",
+    "coreTeamDescription": "İlk kurulumla gelen başlangıç ekibi.",
+    "teamLead": "Takım lideri"
+  },
+  "errors": {
+    "providerNotFound": "Sağlayıcı bulunamadı",
+    "leadCannotBeDeleted": "Lider ajan silinemez; önce başka bir ajanı lider yap",
+    "unitNameEmpty": "Birim adı boş olamaz",
+    "rootCannotMove": "Organizasyon kökü taşınamaz",
+    "unitCycle": "Bir birim kendi alt birimine taşınamaz",
+    "rootCannotDelete": "Organizasyon kökü silinemez",
+    "projectNameEmpty": "Proje adı boş olamaz",
+    "projectNotFound": "Proje bulunamadı",
+    "projectNotFoundDeleted": "Proje bulunamadı; silinmiş olabilir",
+    "onlyProject": "Bu tek proje; silmeden önce başka bir proje oluşturun (ya da klasörünü kaldırıp yeniden adlandırın)",
+    "invalidResetMode": "Geçersiz sıfırlama türü",
+    "agentNotFound": "Ajan bulunamadı",
+    "taskNotFound": "Görev bulunamadı",
+    "messageEmpty": "Mesaj boş",
+    "modelsTimeout": "Model listesi isteği zaman aşımına uğradı.",
+    "noSecureStorage": "Bu bilgisayarda güvenli anahtar deposu (işletim sistemi anahtar zinciri) yok; bu yüzden Agentbits parola, anahtar ya da token saklamaz. Linux'ta bir anahtarlık (GNOME Keyring / KWallet) kurup kilidini aç.",
+    "badRequest": "Geçersiz istek",
+    "untrustedSender": "Bu istek Agentbits penceresinden gelmediği için reddedildi"
+  },
+  "dialogs": {
+    "pickFile": "Dosya seç",
+    "addFiles": "Dosya ekle",
+    "saveAs": "Farklı kaydet"
+  },
+  "chat": {
+    "filesOnly_one": "📎 {{count}} dosya",
+    "filesOnly_other": "📎 {{count}} dosya"
+  },
+  "memory": {
+    "decision": "Karar ADR-{{seq}}: {{title}}. {{decision}} Gerekçe: {{rationale}}"
+  },
+  "folders": {
+    "pathEmpty": "Klasör yolu boş",
+    "notFound": "Klasör bulunamadı: {{path}}",
+    "notAFolder": "Bu bir klasör değil: {{path}}",
+    "appFolder": "Bu klasör Agentbits uygulamasının kendisi. Ajanlar uygulamanın kodunu değiştirmesin diye proje klasörü olarak seçilemez.",
+    "inUse": "Bu klasör zaten “{{name}}” projesinde kullanılıyor",
+    "otherProject": "başka bir proje",
+    "tooBroad": "Bu klasör ajanlar için fazla geniş (bir sürücü kökü, kullanıcı klasörün ya da Agentbits verisini içeren bir klasör). Projenin kendi klasörünü seç."
+  },
+  "steering": {
+    "resume": "Mevcut adım kesilir; aynı Claude Code konuşması talimatla sürdürülür (--resume).",
+    "simulated": "Demo sağlayıcı: talimat simülasyonla işlenir.",
+    "restart": "Bu sağlayıcıda canlı oturum yok: mevcut adım kesilir, kısmi çıktı + talimatla yeniden başlar."
+  },
+  "usageReporting": {
+    "full": "Sağlayıcının bildirdiği gerçek değerler",
+    "partial": "Sağlayıcı yalnızca toplamı bildiriyor (giriş sütununda)",
+    "none": "Sağlayıcı token bildirmiyor",
+    "simulated": "Demo: tahmini değerler"
+  },
+  "connections": {
+    "kind": {
+      "ssh": "SSH sunucusu"
+    },
+    "level": {
+      "none": "Erişim yok",
+      "read": "Salt okuma",
+      "write": "Okuma / yazma",
+      "execute": "Yürütme",
+      "admin": "Yönetici"
+    },
+    "hint": {
+      "db": {
+        "none": "Bağlantıyı göremez ve kullanamaz",
+        "read": "Yalnızca SELECT / SHOW / EXPLAIN; salt-okunur işlemde çalışır ve geri alınır",
+        "write": "Okuma + INSERT / UPDATE / DELETE / MERGE",
+        "execute": "Okuma / yazma + saklı yordam (CALL / EXEC)",
+        "admin": "Her şey: DDL (CREATE / ALTER / DROP), GRANT, çoklu ifade"
+      },
+      "ssh": {
+        "none": "Sunucuyu göremez ve kullanamaz",
+        "read": "Yalnızca okuma komutları listesindekiler",
+        "write": "Okuma + yazma komutları listesindekiler",
+        "execute": "Okuma + yazma + yürütme komutları listesindekiler",
+        "admin": "Her komut (yine de sunucudaki kullanıcının yetkileriyle sınırlı)"
+      }
+    },
+    "ssh": {
+      "emptyCommand": "Boş komut",
+      "chaining": "Komut zincirleme / yönlendirme (; & > < ` $( ) yalnızca yöneticiye açık",
+      "findExec": "find -exec / -delete yalnızca yöneticiye açık",
+      "notAllowed": "“{{segment}}” izin verilen komut listelerinde yok",
+      "unsafeRead": "“{{segment}}” başka programlar çalıştırabildiği ya da dosya değiştirebildiği için okuma sayılmaz"
+    },
+    "newName": "Yeni bağlantı",
+    "errors": {
+      "notFound": "Bağlantı bulunamadı",
+      "nameEmpty": "Bağlantı adı boş olamaz",
+      "invalidKind": "Geçersiz bağlantı türü",
+      "kindLocked": "Bağlantı türü sonradan değiştirilemez; yeni bağlantı oluşturun",
+      "invalidPort": "Port 1–65535 arasında olmalı",
+      "nameTaken": "“{{name}}” adında bir bağlantı zaten var",
+      "connOrAgentNotFound": "Bağlantı ya da ajan bulunamadı",
+      "invalidLevel": "Geçersiz yetki seviyesi",
+      "approvalNotFound": "Onay isteği bulunamadı (süresi dolmuş olabilir)",
+      "noHost": "Host girilmemiş",
+      "schemaDbOnly": "Şema yalnızca veritabanı bağlantılarında var",
+      "noKeyFile": "Özel anahtar dosyası seçilmedi",
+      "noSshAgent": "SSH agent bulunamadı (SSH_AUTH_SOCK)",
+      "hostKeyChanged": "Sunucu anahtarı değişmiş (beklenen {{expected}}, gelen {{got}}). Sunucu gerçekten değiştiyse bağlantı ayarlarından anahtarı sıfırlayın.",
+      "hostKeyNotPinned": "Sunucu anahtarı henüz doğrulanmadı ({{got}}). Bağlantıyı Organizasyon → Bağlantılar'da açıp \"Test\"e tıklayarak kontrol et ve sabitle.",
+      "productionNeedsTls": "Production veritabanı bu bilgisayarda çalışmıyorsa şifreli bağlantı (TLS / SSL) kullanmalı. \"SSL / şifreleme\"yi aç.",
+      "tooManyRows": "Sorgu {{max}} satırdan fazla döndürdüğü için durduruldu; LIMIT / WHERE ekle",
+      "noAnswer": "Sunucu {{seconds}} saniye içinde yanıt vermedi"
+    },
+    "audit": {
+      "user": "Kullanıcı",
+      "fields": "alanlar: {{list}}",
+      "secretChanged": "parola/anahtar değişti",
+      "readOnlySecretChanged": "salt-okunur parola değişti",
+      "awaitingApproval": "Kullanıcı onayı bekleniyor (Production)",
+      "approved": "Kullanıcı onayladı",
+      "connections_one": "{{count}} bağlantı",
+      "connections_other": "{{count}} bağlantı",
+      "tables_one": "{{count}} tablo",
+      "tables_other": "{{count}} tablo",
+      "allTables": "(tümü)",
+      "rows_one": "{{count}} satır",
+      "rows_other": "{{count}} satır",
+      "rowsFirst_one": "{{count}} satır (ilk {{max}})",
+      "rowsFirst_other": "{{count}} satır (ilk {{max}})",
+      "affected_one": "{{count}} satır etkilendi",
+      "affected_other": "{{count}} satır etkilendi",
+      "exitCode": "çıkış kodu {{code}}",
+      "exitCodeTimedOut": "çıkış kodu {{code}} (zaman aşımı)"
+    },
+    "denied": {
+      "noAccess": "Bu bağlantı yok ya da erişim yetkin yok",
+      "statementNeeds": "Bu ifade “{{needs}}” yetkisi ister; senin yetkin “{{have}}”",
+      "commandNeeds": "Bu komut “{{needs}}” yetkisi ister; senin yetkin “{{have}}”",
+      "notApproved": "Kullanıcı Production işlemini onaylamadı (ya da süre doldu)",
+      "changedWhileWaiting": "İstek onay beklerken bu bağlantıya erişim değişti; çalıştırılmadı",
+      "readOnlyLoginRequired": "Ajanlar yalnızca salt-okunur bir veritabanı kullanıcısıyla okuyabilir; bu bağlantıda tanımlı değil. Kullanıcıdan Bağlantılar → bu bağlantı → Salt-okunur kullanıcı alanını doldurmasını iste."
+    },
+    "log": {
+      "awaitingApproval": "⏳ {{name}} (Production) için onayınız bekleniyor: {{detail}}",
+      "schema": "🔌 {{name}} · şema{{filter}} → {{tables}}"
+    },
+    "toast": {
+      "approvalRequested": "{{agent}}, {{name}} (Production) üzerinde işlem için onay istiyor"
+    },
+    "test": {
+      "sshOk": "SSH bağlantısı başarılı",
+      "sshOkKey": "SSH bağlantısı başarılı · sunucu anahtarı {{key}}",
+      "ok": "Bağlantı başarılı",
+      "okReadOnly": "Bağlantı başarılı · salt-okunur kullanıcı da doğrulandı"
+    }
+  },
+  "files": {
+    "kind": {
+      "text": "Metin",
+      "image": "Görsel",
+      "other": "Diğer"
+    },
+    "origin": {
+      "user": "Yüklenen",
+      "agent": "Ajanın ürettiği",
+      "workspace": "Proje klasöründe değişen"
+    },
+    "status": {
+      "processing": "İşleniyor…",
+      "ready": "Hazır",
+      "partial": "Kısmen okundu",
+      "unsupported": "İçerik okunamıyor",
+      "failed": "İşlenemedi"
+    },
+    "defaultName": "dosya",
+    "pastedName": "yapistirilan",
+    "errors": {
+      "timeout": "İşleme süresi aşıldı (2 dk); dosya çok karmaşık ya da bozuk olabilir",
+      "unknown": "Bilinmeyen hata",
+      "memory": "Bellek sınırı aşıldı; dosya işlenemedi",
+      "workerExited": "İşleyici beklenmedik şekilde kapandı ({{code}})",
+      "originalMissing": "Orijinal dosya bulunamadı",
+      "tooManyAtOnce": "Tek seferde en fazla {{max}} dosya eklenebilir",
+      "isFolder": "klasörler eklenemez",
+      "tooLarge": "çok büyük ({{size}} MB; en fazla {{max}} MB)",
+      "pathNotFound": "bulunamadı",
+      "noReadPermission": "okuma izni yok",
+      "notAdded": "Eklenemeyen dosyalar: {{list}}",
+      "invalidData": "Geçersiz dosya verisi",
+      "dataTooLarge": "Dosya çok büyük (en fazla {{max}} MB)",
+      "attachmentMissing": "Eklerden biri bulunamadı (silinmiş olabilir)",
+      "attachmentOtherProject": "Ek başka bir projeye ait",
+      "tooManyPerMessage": "Tek mesajda en fazla {{max}} dosya",
+      "noAgentsInTeam": "Bu takımda ajan yok",
+      "fileOrAgentNotFound": "Dosya ya da ajan bulunamadı",
+      "notFound": "Dosya bulunamadı",
+      "originalGone": "Dosyanın aslı artık yok (silinmiş ya da taşınmış)",
+      "originalGoneShort": "Dosyanın aslı artık yok",
+      "unsafeOpen": ".{{ext}} dosyaları güvenlik nedeniyle doğrudan açılmaz; “Farklı kaydet” ile indirin",
+      "revealWorkspaceOnly": "Yalnızca proje klasöründeki dosyalar gösterilebilir"
+    },
+    "largeNotExtracted": "Büyük dosya; içerik çıkarılmadı (klasörden açın)",
+    "audit": {
+      "genericName": "📎 dosya",
+      "recordDeleted": "Kayıt silindi (proje klasöründeki dosyaya dokunulmadı)",
+      "deleted": "Dosya silindi",
+      "canRead": "{{agent}}: okuyabilir",
+      "accessRemoved": "{{agent}}: erişim kaldırıldı",
+      "sharedProject": "Tüm proje ekibi okuyabilir",
+      "unsharedProject": "Proje geneli paylaşım kaldırıldı",
+      "noAccess": "Erişim izni yok",
+      "saved": "{{size}} KB kaydedildi"
+    },
+    "links": {
+      "deletedTask": "Silinmiş görev",
+      "run": "Çalışma",
+      "runOf": "{{agent}} · {{task}} çalışması",
+      "agent": "Ajan",
+      "agentLower": "ajan",
+      "task": "görev",
+      "instruction": "Talimat",
+      "instructionTo": "Talimat → {{agent}}: {{text}}",
+      "chatMessage": "Sohbet mesajı",
+      "taskThread": "görev akışı",
+      "chat": "Sohbet ({{where}}): {{text}}"
+    },
+    "log": {
+      "accessDenied": "📎 Erişim reddedildi: {{name}} (bu ajana verilmemiş)",
+      "listed_one": "📎 files_list → {{count}} dosya",
+      "listed_other": "📎 files_list → {{count}} dosya",
+      "readImage": "📎 file_read {{name}} (görsel)",
+      "readParts": "📎 file_read {{name}} · bölüm {{range}}/{{total}}",
+      "search_one": "📎 file_search “{{query}}” → {{count}} sonuç",
+      "search_other": "📎 file_search “{{query}}” → {{count}} sonuç",
+      "saved": "📎 file_save {{name}} ({{size}} KB) → Dosyalar",
+      "workspaceMany": "📁 Proje klasöründe {{total}} dosya değişti; son 40 tanesi kaydedildi"
+    },
+    "extract": {
+      "zipError": "ZIP okunamadı: {{message}}",
+      "zipBomb": "Arşiv açıldığında izin verilen boyutu aşıyor (zip bombası olabilir); işlenmedi",
+      "row": "satır {{range}}",
+      "rows": "satır {{range}}",
+      "page": "Sayfa {{n}}",
+      "pageRange": "Sayfa {{from}}–{{to}}",
+      "slide": "Slayt {{n}}",
+      "slideRange": "Slayt {{from}}–{{to}}",
+      "pdfPassword": "PDF parola korumalı; açılamadı",
+      "pdfError": "PDF okunamadı: {{message}}",
+      "pdfPagesLimited": "PDF {{total}} sayfa; yalnızca ilk {{n}} sayfa okundu",
+      "textLimitPage": "Metin sınırına ulaşıldı; {{n}}. sayfadan sonrası alınmadı",
+      "pdfNoText": "PDF’te metin katmanı yok (taranmış belge olabilir). Uygulama OCR yapmaz; içerik ajanlara metin olarak verilemez.",
+      "pdfEmptyPages": "{{n}} sayfada metin yok (taranmış sayfalar olabilir; OCR yapılmaz)",
+      "docxInvalid": "Geçerli bir Word (.docx) belgesi değil (word/document.xml yok)",
+      "docStart": "Belge başı",
+      "textLimitDoc": "Metin sınırına ulaşıldı; belgenin kalanı alınmadı",
+      "footnotes": "Dipnotlar ve sonnotlar dahil edilmedi",
+      "xlsxInvalid": "Geçerli bir Excel (.xlsx) dosyası değil (xl/workbook.xml yok)",
+      "sheet": "Sayfa {{n}}",
+      "hiddenSheet": "“{{name}}” gizli bir sayfa",
+      "sheetRowLimit": "“{{name}}” sayfasında satır sınırına ulaşıldı; {{row}}. satırdan sonrası alınmadı",
+      "pptxInvalid": "Geçerli bir PowerPoint (.pptx) dosyası değil",
+      "speakerNotes": "Konuşmacı notu",
+      "csvRowLimit": "{{max}} satırdan sonrası alınmadı",
+      "csvBadRows": "{{n}} satırda biçim hatası (tırnak / sütun sayısı)",
+      "tab": "sekme",
+      "delimiter": "Ayraç: {{delim}}",
+      "table": "Tablo",
+      "intro": "Giriş",
+      "jsonLines": "JSON satırları",
+      "jsonBadLines": "{{n}} satır geçerli JSON değil",
+      "jsonInvalidLabel": "JSON (geçersiz)",
+      "jsonInvalid": "Geçerli JSON değil: {{message}}",
+      "image": "Görsel: metin çıkarılmaz (OCR yok); görsel destekleyen modellere görüntü olarak verilir",
+      "imageMismatch": "Uzantısı görsel ama içeriği tanınan bir görsel biçimi değil",
+      "unsupported": "“.{{ext}}” biçiminden içerik çıkarılamıyor. Desteklenenler: PDF, DOCX, XLSX, PPTX, CSV, TXT/kod, Markdown, JSON, görseller.",
+      "text": "Metin",
+      "truncated": "Metin {{max}} karakterde kesildi",
+      "encoding": "Karakter kodlaması: {{encoding}}",
+      "noText": "Dosyada okunabilir metin bulunamadı"
+    }
+  },
+  "feedback": {
+    "subject": {
+      "idea": "[Agentbits] Öneri",
+      "bug": "[Agentbits] Hata bildirimi",
+      "thanks": "[Agentbits] Teşekkür"
+    },
+    "body": {
+      "idea": "Merhaba Gökhan,\n\nÖnerim:\n\nNeden işe yarar:\n\nNasıl çalışmasını hayal ediyorum:\n",
+      "bug": "Merhaba Gökhan,\n\nNe yapıyordum (adım adım):\n1. \n2. \n\nNerede oldu (ekran / sekme / düğme):\n\nNe bekliyordum:\n\nBunun yerine ne oldu (hata mesajının tam metni, mümkünse ekran görüntüsü):\n\nHer seferinde oluyor mu?\n",
+      "thanks": "Merhaba Gökhan,\n\n",
+      "thanksRated": "Merhaba Gökhan,\n\nPuanım: {{rating}}/5\n\n"
+    },
+    "environment": "---\nAgentbits {{version}}\nSistem: {{os}}\nDil: {{language}}",
+    "badKind": "Bilinmeyen geri bildirim türü."
+  },
+  "skills": {
+    "errors": {
+      "badArchive": "Arşiv okunamadı: {{message}}",
+      "tooLarge": "Çok büyük (indirme en fazla 50 MB, bir skill en fazla 10 MB, bir dosya en fazla 2 MB).",
+      "notFound": "Bulunamadı. Adresi ve deponun herkese açık olduğunu kontrol et.",
+      "download": "İndirme başarısız ({{status}}).",
+      "timeout": "İndirme zaman aşımına uğradı.",
+      "badUrl": "GitHub adresi değil. Ör. https://github.com/sahip/depo, içindeki bir klasör/dosya bağlantısı ya da sahip/depo kullan.",
+      "tooManyFiles": "Bu klasörde bir skill için fazla dosya var.",
+      "pathMissing": "Bulunamadı: {{path}}",
+      "badFile": "Bir klasör, .zip ya da .md dosyası seç.",
+      "noSkillMd": "Burada SKILL.md yok. Skill, içinde SKILL.md olan bir klasördür — ya da tek bir .md dosyası seç.",
+      "previewExpired": "Önizlemenin süresi doldu; kaynağı yeniden oku.",
+      "notInstalled": "Skill bulunamadı.",
+      "noSource": "Bu skill uygulamada yazıldı; güncellenecek bir kaynağı yok.",
+      "goneFromSource": "Bu skill artık kaynağında yok.",
+      "nameTaken": "\"{{name}}\" adında bir skill zaten var.",
+      "empty": "SKILL.md boş.",
+      "needFrontmatter": "SKILL.md bir başlık bloğuyla başlamalı:\n---\nname: benim-skillim\ndescription: Ne zaman kullanılacağı\n---",
+      "needDescription": "Bir açıklama ekle: ajanlar skill'i ne zaman kullanacaklarına buna bakarak karar verir."
+    },
+    "notes": {
+      "skippedLarge_one": "2 MB'tan büyük {{count}} dosya atlandı.",
+      "skippedLarge_other": "2 MB'tan büyük {{count}} dosya atlandı.",
+      "droppedFiles_one": "{{count}} dosya alınmadı (sınır: skill başına 300 dosya / 10 MB).",
+      "droppedFiles_other": "{{count}} dosya alınmadı (sınır: skill başına 300 dosya / 10 MB).",
+      "noFrontmatter": "SKILL.md'de başlık bloğu yok; ad ve açıklama tahmin edildi.",
+      "noDescription": "Açıklama yok: ajanlar ne zaman kullanacaklarını bilemez — kurduktan sonra ekle.",
+      "generatedFrontmatter": "Markdown dosyasına bir başlık bloğu (ad, açıklama) eklendi."
+    },
+    "warnings": {
+      "binaries": "Program dosyaları içeriyor (.exe, .dll…). Saklanır ama Agentbits bunları asla çalıştırmaz.",
+      "scripts": "Script içeriyor. Bunları yalnızca komut çalıştırma izni olan ajanlar (terminal izni, CLI sağlayıcılar) çalıştırabilir.",
+      "suspicious_one": "{{count}} satır talimatları geçersiz kılma girişimine benziyor — atamadan önce skill'i oku.",
+      "suspicious_other": "{{count}} satır talimatları geçersiz kılma girişimine benziyor — atamadan önce skill'i oku."
+    },
+    "log": {
+      "read": "📘 Skill okundu: {{name}} · {{path}}"
+    },
+    "dialogs": {
+      "folder": "Skill klasörünü seç",
+      "file": ".zip ya da .md dosyası seç"
+    }
+  },
+  "apps": {
+    "errors": {
+      "needsSignIn": "Bu uygulama giriş istiyor. Organizasyon → Uygulamalar'ı aç ve \"Giriş yap\"a tıkla.",
+      "badAuthUrl": "Uygulama geçersiz bir giriş adresi gönderdi.",
+      "signInFailed": "Giriş başarısız ({{error}}).",
+      "signInTimeout": "Giriş 5 dakika içinde tamamlanmadı.",
+      "noCommand": "Bu uygulama için komut girilmemiş.",
+      "noUrl": "Bu uygulama için adres girilmemiş.",
+      "connectTimeout": "Uygulama 30 saniye içinde yanıt vermedi.",
+      "notFound": "Uygulama bulunamadı.",
+      "commandNotFound": "Program bulunamadı: {{command}}. Kurulu ve PATH'te mi (ör. npx için Node.js, uvx için uv)?",
+      "noClaudeConfig": "Claude Desktop'ın ayar dosyası bulunamadı ({{path}}).",
+      "badJson": "Geçerli bir JSON değil: {{message}}",
+      "noServers": "Bu yapılandırmada MCP sunucusu yok.",
+      "nameRequired": "Uygulamaya bir ad ver.",
+      "nameTaken": "\"{{name}}\" adında bir uygulama zaten var.",
+      "badUrl": "Tam bir http(s) adresi gir.",
+      "sdkOutdated": "Kurulu MCP kütüphanesi eski ({{version}}; güvenli giriş için 1.31.0 ya da üstü gerekli). Agentbits klasöründe \"npm ci\" çalıştır (ya da en yeni Agentbits'i kur) ve yeniden başlat.",
+      "shuttingDown": "Uygulama bağlantısı kapatıldı (düzenlendi, silindi ya da Agentbits kapanıyor). Yeniden dene.",
+      "reSignIn": "Yeniden giriş yap: kayıtlı giriş, yetkilendirme sunucusuna bağlı değildi (güvenlik güncellemesi)."
+    },
+    "oauth": {
+      "done": "Giriş yapıldı. Bu sekmeyi kapatıp Agentbits'e dönebilirsin.",
+      "failed": "Giriş başarısız. Bu sekmeyi kapatıp Agentbits'te yeniden deneyebilirsin."
+    },
+    "audit": {
+      "awaitingApproval": "Kullanıcının onayı bekleniyor",
+      "rejected": "Kullanıcı reddetti",
+      "changedWhileWaiting": "Onay beklerken erişim değişti; çalıştırılmadı"
+    },
+    "log": {
+      "awaitingApproval": "⏸ {{app}} · {{tool}} onayını bekliyor",
+      "rejected": "✋ {{app}} · {{tool}} onaylanmadı",
+      "call": "🧩 {{app}} · {{tool}}",
+      "done": "✓ {{app}} · {{tool}} ({{ms}} ms)",
+      "failed": "✗ {{app}} · {{tool}} başarısız ({{ms}} ms)"
+    },
+    "test": {
+      "ok_one": "Bağlandı · {{count}} araç",
+      "ok_other": "Bağlandı · {{count}} araç"
+    },
+    "toast": {
+      "approvalRequested": "{{agent}}, {{app}} üzerinde {{tool}} aracını kullanmak için onay istiyor — sol alttaki panelden onayla"
+    }
+  }
+}

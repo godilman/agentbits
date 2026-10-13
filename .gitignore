@@ -1,0 +1,63 @@
+# Dependencies and build output
+node_modules/
+out/
+release/
+dist/
+*.tsbuildinfo
+.vite/
+coverage/
+
+# Local app data (Agentbits keeps user data in %APPDATA%\Agentbits or AGENTBITS_DATA_DIR,
+# never in the repository; these guard against a data folder pointed inside it)
+*.db
+*.db-wal
+*.db-shm
+*.db-journal
+*.sqlite
+*.sqlite3
+*.sqlite-wal
+*.sqlite-shm
+/backups/
+/mcp/
+/agentbits-data/
+
+# Secrets and local configuration
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p8
+*.p12
+*.pfx
+*.cer
+*.crt
+*.keystore
+id_rsa*
+id_ed25519*
+*.ppk
+
+# Logs, dumps, temporary files
+*.log
+logs/
+*.dump
+*.sql.gz
+*.bak
+*.tmp
+*.temp
+tmp/
+temp/
+
+# Editors and OS files
+.DS_Store
+Thumbs.db
+desktop.ini
+.idea/
+.vscode/*
+!.vscode/extensions.json
+*.swp
+*~
+
+# Local agent / tool state
+.claude/settings.local.json
+.codex/

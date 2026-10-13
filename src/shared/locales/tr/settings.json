@@ -1,0 +1,266 @@
+{
+  "title": "Ayarlar",
+  "sections": {
+    "agents": "Ajanlar",
+    "permissions": "İzin Matrisi",
+    "providers": "Sağlayıcılar",
+    "memory": "Hafıza",
+    "data": "Veri yönetimi",
+    "general": "Genel"
+  },
+  "agents": {
+    "title": "Ajanlar",
+    "desc": "Ajan ekleme, iş tanımı, yetenekler, görünüm ve izinler Organizasyon sayfasındaki Ajanlar bölümünde.",
+    "count_one": "{{count}} ajan",
+    "count_other": "{{count}} ajan",
+    "manage": "Yeni ajan ekle, görevini ve yetkilerini tek ekrandan yönet.",
+    "openInOrg": "Organizasyonda aç"
+  },
+  "permissions": {
+    "title": "Dinamik İzin Matrisi",
+    "desc": "Her ajanın neye erişebileceğini belirle. CLI sağlayıcılarında bu matris doğrudan araç listesine ve sandbox moduna çevrilir.",
+    "colAgent": "Ajan",
+    "colPaths": "Yollar",
+    "howTitle": "Nasıl uygulanır?",
+    "how": "Ajanlar görevin ait olduğu projenin klasöründe başlar (bu proje: {{workspace}}). Claude Code için kapalı izinler <code>--tools</code> listesinden çıkarılır; dosya yazma <code>acceptEdits</code> moduyla yalnızca çalışma alanı + ek klasörlerde otomatik onaylanır. Codex için <code>--sandbox</code> read-only / workspace-write seçilir. Terminal izni verilen ajan kabukta her komutu çalıştırabilir — yalnızca güvendiğin ajanlara aç. “Onay iste” açıksa ajan başlamadan önce sol panelde onay kartı belirir.",
+    "noWorkspace": "klasör seçilmedi — CLI ajanları çalışmaz",
+    "paths": {
+      "title": "{{name}} için ek izinli klasörler",
+      "add": "Klasör ekle",
+      "workspaceOnly": "Yalnızca çalışma alanı klasörü."
+    }
+  },
+  "connections": {
+    "title": "Bağlantı izinleri",
+    "desc": "Sunucu ve veritabanı erişimi ajan × bağlantı bazında. Varsayılan: erişim yok. Production'da veri değiştiren işlemler ayrıca senin onayını bekler.",
+    "manage": "Bağlantıları yönet",
+    "empty": "Henüz bağlantı yok. Organizasyon → Bağlantılar'dan ekleyin."
+  },
+  "providers": {
+    "title": "Sağlayıcılar",
+    "desc": "Ajanların arkasındaki model / CLI bağlantıları. Varsayılan sağlayıcı, kendine özel sağlayıcı seçilmemiş tüm ajanlar için kullanılır.",
+    "add": "Sağlayıcı ekle",
+    "default": "Varsayılan",
+    "defaultModel": "varsayılan model",
+    "keySet": "anahtar ✓",
+    "keyMissing": "anahtar yok",
+    "testing": "Test ediliyor…",
+    "makeDefault": "Varsayılan yap",
+    "empty": "Sağlayıcı yok — ajanlar demo modunda çalışır.",
+    "newTitle": "Yeni sağlayıcı",
+    "added": "{{label}} eklendi ve varsayılan yapıldı",
+    "kinds": {
+      "claudeCli": "Resmi `claude` CLI’ını arka planda çalıştırır. Dosya/terminal araçları izin matrisine göre açılır.",
+      "anthropic": "Messages API ile doğrudan model çağrısı: dosya sistemine ve terminale erişmez; uygulamanın dosya ve bağlantı araçlarını kullanır.",
+      "openai": "Chat Completions API ile model çağrısı: dosya sistemine ve terminale erişmez; uygulamanın dosya ve bağlantı araçlarını kullanır.",
+      "codexCli": "OpenAI `codex exec` komutunu sandbox moduyla çalıştırır.",
+      "mockTitle": "Demo (simülasyon)",
+      "mock": "Anahtar gerekmez. Ajanlar gerçekçi şekilde çalışıyormuş gibi davranır."
+    },
+    "form": {
+      "apiKeyRequired": "API anahtarı gerekli.",
+      "apiKeyNoSpaces": "Anahtar boşluk içermemeli.",
+      "installed": "● kurulu",
+      "notFound": "○ bulunamadı",
+      "apiKey": "API anahtarı",
+      "apiKeyHint": "İşletim sisteminin anahtar zinciriyle (Windows DPAPI) şifrelenip yerel SQLite’ta saklanır; arayüze geri gönderilmez.",
+      "cliPath": "CLI yolu (boş = PATH’ten bul)",
+      "claudeLogin": "Hesap girişi için bir kez terminalde `claude auth login` çalıştırın (Terminal sekmesinden de yapabilirsiniz).",
+      "codexLogin": "Hesap girişi için bir kez terminalde `codex login` çalıştırın.",
+      "model": "Model",
+      "continueDemo": "Demo ile devam et",
+      "saveTest": "Kaydet ve test et"
+    },
+    "modelSaved": "Model değiştirildi: {{model}}"
+  },
+  "memory": {
+    "title": "Kalıcı Hafıza",
+    "desc": "Lider ve ajanların asla unutmadığı bağlam. Her çalışmada organizasyon geneli + o projenin en alakalı kayıtları (FTS5 + önem + tazelik) prompt’a eklenir.",
+    "scopeOrg": "Organizasyon geneli",
+    "scopeProject": "Bu proje",
+    "addToProject": "{{name}} hafızasına ekle",
+    "projectFallback": "Proje",
+    "addToOrg": "Organizasyon hafızasına ekle",
+    "placeholder": "Ör. Tüm UI metinleri Türkçe olmalı; kod yorumları İngilizce.",
+    "sharedAll": "Ortak (tüm ajanlar)",
+    "onlyAgent": "Yalnızca {{name}}",
+    "search": "Hafızada ara…",
+    "shared": "ortak",
+    "empty": "Kayıt bulunamadı"
+  },
+  "general": {
+    "title": "Genel",
+    "desc": "Orkestrasyon davranışı ve uygulama bilgisi.",
+    "folders": {
+      "title": "Proje klasörleri",
+      "desc": "Her projenin kendi klasörü var: ajanlar (CLI) görevin projesindeki klasörde çalışır, terminal de orada açılır.",
+      "none": "klasör seçilmedi",
+      "open": "Proje ayarlarını aç"
+    },
+    "startup": {
+      "title": "Açılışta",
+      "desc": "Uygulama açılınca hangi projelerin açılacağını sor ya da son oturumdaki proje sekmelerini doğrudan aç.",
+      "ask": "Proje seçiciyi göster",
+      "restore": "Son açık projeler"
+    },
+    "autopilot": {
+      "title": "Otopilot",
+      "desc": "Boşta kalan ajanlar sıradaki görevleri kendiliğinden alır."
+    },
+    "review": {
+      "title": "Lider incelemesi",
+      "desc": "Biten işler lider tarafından incelenip onaylanır ya da revizyona döner."
+    },
+    "wizard": {
+      "title": "Kurulum sihirbazı",
+      "desc": "İlk açılış ekranını yeniden göster.",
+      "restart": "Yeniden başlat"
+    }
+  },
+  "data": {
+    "title": "Veri yönetimi",
+    "desc": "Tüm veriler bu bilgisayarda tek bir SQLite dosyasında durur. Buradan ne kadar yer kapladığını görün, eski kayıtları temizleyin, yedek alın ya da sıfırlayın.",
+    "openFolder": "Klasörü aç",
+    "stats": {
+      "database": "Veritabanı",
+      "databaseSub": "{{agents}} ajan · {{units}} birim · {{projects}} proje",
+      "logs": "Ajan logları",
+      "oldest": "en eskisi {{time}}",
+      "noLogs": "kayıt yok",
+      "orgMemory": "Organizasyon hafızası",
+      "decisionRecords_one": "{{count}} karar kaydı",
+      "decisionRecords_other": "{{count}} karar kaydı",
+      "backups": "Yedekler",
+      "backupCount_one": "{{count}} yedek",
+      "backupCount_other": "{{count}} yedek",
+      "files": "Dosyalar",
+      "filesSub_one": "{{count}} özgün dosya · yedeklerin kullandıkları korunur",
+      "filesSub_other": "{{count}} özgün dosya · yedeklerin kullandıkları korunur"
+    },
+    "projects": {
+      "title": "Projeler",
+      "desc": "Görev, sohbet, log ve hafıza projeye özeldir; bir projeyi temizlemek diğerlerine dokunmaz. Ajanlar, takımlar ve klasördeki dosyalar korunur.",
+      "cleared_one": "{{name}}: {{count}} kayıt silindi",
+      "cleared_other": "{{name}}: {{count}} kayıt silindi",
+      "archived": "arşivde",
+      "summary": "{{tasks}} görev · {{messages}} mesaj · {{logs}} log · {{memories}} hafıza · {{decisions}} karar · {{reports}} rapor · {{files}} dosya ({{size}})",
+      "clean": "Temizle…",
+      "keepDecisionMemory": "Karar hafızasını koru",
+      "deleteCount_one": "{{count}} kaydı sil",
+      "deleteCount_other": "{{count}} kaydı sil",
+      "deleteSelected": "Seçilenleri sil"
+    },
+    "parts": {
+      "memories": "Proje hafızası",
+      "memoriesHint": "Ajanların bu projeden hatırladıkları",
+      "messages": "Sohbet geçmişi",
+      "messagesHint": "Proje kanalları ve görev yazışmaları",
+      "logs": "Çalışma kayıtları",
+      "logsHint": "Loglar ve biten çalışmalar (çalışan işler durur)",
+      "reports": "Raporlar",
+      "reportsHint": "Günlük raporlar",
+      "decisions": "Kararlar",
+      "decisionsHint": "ADR kayıtları",
+      "tasks": "Görevler",
+      "tasksHint": "Kanban kartları (çalışanlar durdurulur)",
+      "files": "Dosyalar",
+      "filesHint": "Ekler, ajan çıktıları ve klasör kayıtları (klasördeki dosyalara dokunulmaz)"
+    },
+    "org": {
+      "title": "Organizasyon ve kayıtlar",
+      "desc": "Projeden bağımsız veriler.",
+      "cleared_one": "Organizasyon hafızasından {{count}} kayıt silindi",
+      "cleared_other": "Organizasyon hafızasından {{count}} kayıt silindi",
+      "memoryTitle": "Organizasyon geneli hafıza",
+      "memoryDesc": "Tüm projelerde kullanılan {{total}} kayıt (tercihler, ortak kurallar, {{decisions}} karar).",
+      "keepDecisions": "Kararları koru",
+      "confirmDelete_one": "Evet, {{count}} kaydı sil",
+      "confirmDelete_other": "Evet, {{count}} kaydı sil",
+      "clean": "Temizle"
+    },
+    "retention": {
+      "title": "Log saklama süresi",
+      "auto": "{{days}} günden eski ajan logları açılışta ve 6 saatte bir otomatik silinir.",
+      "never": "Loglar otomatik silinmez.",
+      "days_one": "{{count}} gün",
+      "days_other": "{{count}} gün",
+      "year": "1 yıl",
+      "forever": "Süresiz",
+      "apply": "Şimdi uygula",
+      "pruned_one": "{{count}} eski log silindi",
+      "pruned_other": "{{count}} eski log silindi",
+      "nothing": "Silinecek eski log yok"
+    },
+    "backups": {
+      "title": "Yedekler",
+      "desc": "Veritabanının anlık kopyası (ayarlar, ajanlar, organizasyon, projeler, görevler, hafıza). Son 10 yedek tutulur; sıfırlamadan önce otomatik alınır.",
+      "create": "Yedek al",
+      "created": "Yedek alındı ({{size}})",
+      "deleted": "Yedek silindi",
+      "restoring": "Yedek geri yükleniyor, uygulama yeniden başlatılıyor…",
+      "empty": "Henüz yedek yok.",
+      "restoreWarning": "Mevcut veri yedeklenip bununla değiştirilecek, uygulama yeniden başlar.",
+      "restore": "Geri yükle",
+      "deleteTitle": "Yedeği sil"
+    },
+    "reset": {
+      "title": "Fabrika ayarlarına dön",
+      "desc": "Çalışan tüm işler durdurulur. Başlamadan önce otomatik yedek alınır; yanlışlıkla sıfırlarsanız Yedekler’den geri yükleyebilirsiniz.",
+      "doneAll": "Her şey sıfırlandı. Yedek: {{name}}",
+      "doneWork": "Çalışma verisi silindi. Yedek: {{name}}",
+      "word": "SIFIRLA",
+      "confirm": "Onaylamak için <word>{{word}}</word> yazın:",
+      "buttonAll": "Her şeyi sıfırla",
+      "buttonWork": "Çalışma verisini sil",
+      "work": {
+        "title": "Sadece çalışma verisini sil",
+        "desc": "Tüm projelerin görevleri, sohbetleri, logları, kararları, raporları, hafızası ve dosya kayıtları silinir (yedeğin kullandığı özgün dosyalar yedek silinene kadar kalır; proje klasörlerine dokunulmaz).",
+        "keeps": "Korunur: ajanlar, izinler, organizasyon, takımlar, projeler ve klasörleri, sağlayıcılar, ayarlar."
+      },
+      "all": {
+        "title": "Her şeyi sıfırla",
+        "desc": "Uygulama ilk kurulduğu hâline döner: ajanlar, organizasyon, projeler, sağlayıcılar ve kayıtlı API anahtarları da silinir.",
+        "keeps": "Boş bir organizasyon ve tek boş proje kalır; kurulum sihirbazı ve kılavuz açılır, ekibi baştan kurarsın. Proje klasörlerindeki dosyalara dokunulmaz."
+      }
+    }
+  },
+  "models": {
+    "groups": {
+      "recommended": "Önerilen",
+      "account": "Hesabındaki diğer modeller"
+    },
+    "custom": "Özel model adı…",
+    "customHint": "Listede olmayan bir modelin (ör. yeni çıkmış bir modelin) tam adını yaz.",
+    "customPlaceholder": {
+      "claude-cli": "ör. sonnet, opus ya da claude-opus-5-5",
+      "anthropic": "ör. claude-opus-5-5",
+      "openai": "ör. gpt-5.6-sol",
+      "codex-cli": "ör. gpt-6.1-sol"
+    },
+    "cliDefaultOption": "{{name}} varsayılanı (hesabına göre)",
+    "inherit": "Sağlayıcının modeli ({{model}})",
+    "inheritCliDefault": "CLI varsayılanı",
+    "loading": "Hesabındaki modeller alınıyor…",
+    "liveOk_one": "Hesabında {{count}} model bulundu.",
+    "liveOk_other": "Hesabında {{count}} model bulundu.",
+    "liveError": "Hesabındaki model listesi alınamadı ({{error}}); önerilen liste gösteriliyor.",
+    "needKey": "Hesabındaki modelleri de görmek için API anahtarını gir.",
+    "refresh": "Listeyi yenile",
+    "notOnAccount": "hesabında görünmüyor",
+    "openaiNoGpt6": "GPT-6 modelleri listede yok: Agentbits'in OpenAI bağlantısı (Chat Completions) bu modellerle araç kullanamıyor. GPT-6'yı Codex CLI ile kullanabilirsin.",
+    "cliAliases": "Takma adlar her zaman o ailenin hesabındaki en yeni modelini kullanır.",
+    "notes": {
+      "balanced": "hız ve zekâ dengesi",
+      "complex": "karmaşık işler, en iyi sonuç",
+      "fast": "en hızlı ve en ucuz",
+      "hardest": "en zorlu akıl yürütme (erişimin varsa)",
+      "opusplan": "planı Opus yapar, işi Sonnet yürütür",
+      "previous": "önceki nesil",
+      "codexRecommended": "karmaşık kodlama ve ajan işleri için önerilen",
+      "mostCapable": "en yetenekli",
+      "focused": "odaklı, tekrarlayan işler",
+      "simulated": "simülasyon",
+      "cliDefault": "CLI varsayılanı"
+    }
+  }
+}

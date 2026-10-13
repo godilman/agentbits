@@ -1,0 +1,112 @@
+{
+  "app": {
+    "loadFailed": "Veriler yüklenemedi",
+    "retry": "Tekrar dene",
+    "opening": "Ofis açılıyor…"
+  },
+  "errorBoundary": {
+    "title": "Bu görünüm bir hatayla karşılaştı",
+    "retry": "Tekrar dene"
+  },
+  "avatar": {
+    "unassigned": "Atanmadı"
+  },
+  "usage": {
+    "noRecords": "{{label}}: kayıt yok",
+    "estimatedLabel": "{{label}} (tahmini)",
+    "input": "Giriş: {{value}}",
+    "output": "Çıkış: {{value}}",
+    "cacheRead": "Önbellek okuma: {{value}}",
+    "cacheWrite": "Önbellek yazma: {{value}}",
+    "total": "Toplam: {{value}}",
+    "cost": "Maliyet: ${{value}}",
+    "records_one": "{{count}} kayıt",
+    "records_other": "{{count}} kayıt",
+    "task": "Görev",
+    "session": "Oturum",
+    "allTime": "Toplam",
+    "estimated": "tahmini",
+    "notReported": "bildirilmiyor"
+  },
+  "topBar": {
+    "tabs": {
+      "chat": "Chat",
+      "office": "Office",
+      "team": "Ekip",
+      "terminal": "Terminal",
+      "tasks": "Tasks",
+      "reports": "Reports",
+      "decisions": "Decisions",
+      "browser": "Browser",
+      "files": "Dosyalar"
+    },
+    "tabTitle": "{{label}} (Ctrl+{{key}})",
+    "organization": "Organizasyon",
+    "organizationTitle": "Organizasyon (Ctrl+O)",
+    "newProject": "Yeni proje",
+    "resumeAllTitle": "Tüm ajanları devam ettir",
+    "pauseAllTitle": "Tüm ajanları duraklat",
+    "resume": "Devam et",
+    "pauseAll": "Tümünü duraklat",
+    "settings": "Ayarlar",
+    "guide": "Kılavuz",
+    "guideTitle": "Kılavuz: neyi nereden, neden, nasıl yapacağın (F1)",
+    "projectTabTitle": "{{name}} — {{path}}\nÇift tıkla: proje ayarları",
+    "projectTabTitleNoFolder": "{{name}} — klasör seçilmedi\nÇift tıkla: proje ayarları",
+    "runningJobs_one": "{{count}} çalışan iş",
+    "runningJobs_other": "{{count}} çalışan iş",
+    "closeTab": "Sekmeyi kapat",
+    "unarchived": "{{name}} arşivden çıkarıldı",
+    "allProjects": "Tüm projeler",
+    "projects": "Projeler",
+    "archive": "Arşiv",
+    "openProject": "Proje aç…",
+    "openFolder": "Klasör aç…",
+    "noFolder": "klasör seçilmedi",
+    "archived": "arşivde",
+    "open": "açık",
+    "projectFolderTitle": "Proje klasörü: {{path}}",
+    "noFolderTitle": "Bu projenin klasörü yok — CLI ajanları çalışamaz",
+    "noFolderChip": "Klasör seçilmedi",
+    "projectSettings": "Proje ayarları"
+  },
+  "sidebar": {
+    "runningWork": "Çalışan işler",
+    "live": "canlı",
+    "noRunningWork": "Şu an koşan iş yok",
+    "openProjectOf": "{{name}} projesini aç",
+    "switchToProject": "{{name}} projesine geç",
+    "awaitingApproval": "onay bekliyor",
+    "paused": "duraklatıldı",
+    "working": "çalışıyor",
+    "resume": "Devam et",
+    "pause": "Duraklat",
+    "caps": {
+      "fsWrite": "dosya yazma",
+      "terminal": "terminal",
+      "network": "ağ",
+      "readOnly": "salt okuma"
+    },
+    "team": "Ekip",
+    "teamTitle": "Proje ekibi",
+    "activeCount": "{{working}}/{{enabled}} aktif",
+    "noTeam": "Bu projeye takım atanmadı → Ekip",
+    "liveChat": "Canlı sohbet",
+    "openAll": "Tümünü aç →",
+    "noMessages": "Bu projede henüz mesaj yok.",
+    "taskChannel": "görev",
+    "youBadge": "SEN",
+    "you": "Sen",
+    "agent": "Ajan",
+    "typing": "{{name}} yazıyor",
+    "placeholderLead": "{{name}}'a yaz… (iş tarif et)",
+    "placeholder": "Mesaj yaz…"
+  },
+  "store": {
+    "projectNotFound": "Proje bulunamadı; silinmiş olabilir",
+    "projectArchived": "{{name}} arşivde; önce arşivden çıkarın",
+    "noValidProjects": "Açılacak geçerli proje yok",
+    "someNotOpened_one": "{{count}} proje açılamadı (silinmiş ya da arşivde)",
+    "someNotOpened_other": "{{count}} proje açılamadı (silinmiş ya da arşivde)"
+  }
+}

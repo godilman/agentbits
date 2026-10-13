@@ -1,0 +1,172 @@
+{
+  "perms": {
+    "fsRead": {
+      "label": "Dosya okuma",
+      "desc": "Çalışma alanındaki dosyaları okuyabilir ve arayabilir."
+    },
+    "fsWrite": {
+      "label": "Dosya yazma",
+      "desc": "Dosya oluşturabilir ve düzenleyebilir."
+    },
+    "terminal": {
+      "label": "Terminal",
+      "desc": "Kabukta senin kullanıcı yetkilerinle komut çalıştırabilir. Açıkken dosya ve ağ kısıtları kabuk üzerinden aşılabilir — yalnızca güvendiğin ajanlara aç. (Codex komutlarını her durumda kendi sandbox'ında çalıştırır; yazma yalnızca proje klasörüne.)"
+    },
+    "network": {
+      "label": "Ağ",
+      "desc": "İnternetten sayfa çekebilir ve arama yapabilir."
+    },
+    "browser": {
+      "label": "Tarayıcı",
+      "hint": "Browser sekmesi",
+      "desc": "Henüz uygulanmıyor: ajanlar uygulama içi tarayıcıyı kullanamaz."
+    },
+    "requireApproval": {
+      "label": "Onay iste",
+      "hint": "Her çalışmadan önce",
+      "desc": "Her göreve başlamadan önce senden onay bekler (tüm sağlayıcılarda)."
+    }
+  },
+  "permTemplates": {
+    "readonly": {
+      "label": "Salt okuma",
+      "desc": "İnceler, raporlar; dosyalara dokunmaz."
+    },
+    "developer": {
+      "label": "Geliştirici",
+      "desc": "Dosya okur ve yazar; terminal ve ağ kapalı."
+    },
+    "full": {
+      "label": "Tam yetki",
+      "desc": "Dosya, terminal, ağ ve tarayıcı açık."
+    }
+  },
+  "fields": {
+    "name": "Ad",
+    "role": "Rol / ünvan",
+    "jobDescription": "İş tanımı",
+    "skills": "Uzmanlık",
+    "shuffle": "Karıştır",
+    "removeTag": "{{tag}} kaldır"
+  },
+  "view": {
+    "title": "Ajanlar",
+    "subtitle": "Ekibini kur, görevlerini ve yetkilerini tanımla.",
+    "newAgent": "Yeni ajan",
+    "search": "Ad, rol ya da yetenek ara…",
+    "noRole": "Rol yok",
+    "noMatch": "Eşleşen ajan yok",
+    "count_one": "{{count}} ajan",
+    "count_other": "{{count}} ajan",
+    "desks": "Masa {{used}}/{{total}}",
+    "empty": {
+      "title": "Henüz ajan yok",
+      "hint": "İlk ajanını ekle; adını, görevini ve yetkilerini sen belirle."
+    }
+  },
+  "units": {
+    "title": "Takımlar",
+    "desc": "Bir ajan birden çok birimde yer alabilir. Birimin atandığı projelerde bu ajan da çalışır.",
+    "none": "Henüz hiçbir birimde değil. Bir takıma ekle; takım bir projeye atanınca ajan o projede çalışır.",
+    "addTo": "Birime ekle…",
+    "allUnits": "Tüm birimlerde üye",
+    "projects": "Projeler",
+    "noProjects": "Hiçbir projede değil.",
+    "openUnit": "Birimi aç",
+    "lead": "Lider",
+    "titlePlaceholder": "Bu birimdeki ünvanı",
+    "remove": "Birimden çıkar"
+  },
+  "new": {
+    "title": "Yeni ajan",
+    "titleUnit": "Yeni ajan · {{unit}}",
+    "defaultName": "Yeni ajan",
+    "create": "Ajanı oluştur",
+    "joinedUnit": "{{name}}, {{unit}} birimine katıldı",
+    "joined": "{{name}} ekibe katıldı",
+    "shuffleTitle": "Başka bir görünüm",
+    "namePlaceholder": "Ör. Ali",
+    "rolePlaceholder": "Ör. Mobile Engineer",
+    "jobDescHint": "Sorumluluklar, kapsam ve teslimatlar. Lider görev dağıtırken buna bakar.",
+    "jobDescPlaceholder": "Ör. Mobil uygulamanın ekranlarını geliştirir, API entegrasyonlarını yapar.\nTeslimat: çalışan ekran + kısa not.",
+    "skillsHint": "Enter ya da virgül ile ekle.",
+    "skillsPlaceholder": "Ör. React Native, Swift, API",
+    "permTemplate": "Yetki şablonu",
+    "permNote": "İzinleri oluşturduktan sonra tek tek değiştirebilirsin.",
+    "unitNote": "Oluşturulan ajan <b>{{unit}}</b> birimine üye olarak eklenecek.",
+    "desksFull": "Ofiste {{desks}} çalışma masası var ve hepsi dolu; yeni ajan bir masayı başka bir ajanla paylaşacak."
+  },
+  "editor": {
+    "nameRequired": "Ad boş olamaz",
+    "badges": {
+      "lead": "Lider",
+      "inactive": "Pasif"
+    },
+    "noRole": "Rol belirtilmedi",
+    "identity": {
+      "title": "Kimlik",
+      "desc": "Ofiste ve sohbette görünen ad, ünvan ve görünüm.",
+      "randomLook": "Rastgele görünüm",
+      "rolePlaceholder": "Ör. Frontend Engineer",
+      "look": "Görünüm",
+      "shirt": "Kıyafet",
+      "hair": "Saç",
+      "skin": "Ten",
+      "active": "Aktif",
+      "activeDesc": "Kapalıyken görev almaz ve ofiste çevrimdışı görünür.",
+      "lead": "Lider",
+      "leadDescIsLead": "Liderliği devretmek için başka bir ajanı lider yap.",
+      "leadDesc": "Sohbeti yönetir, işi böler, atar ve inceler."
+    },
+    "duty": {
+      "title": "Görev ve iş tanımı",
+      "desc": "Lider işi dağıtırken bu bilgilere bakar; ajanın kendi talimatlarına da eklenir.",
+      "jobDescHint": "Sorumluluklar, kapsam ve teslimatlar. Ne kadar net olursa atama o kadar isabetli olur.",
+      "jobDescPlaceholder": "Ör. Ödeme ve sepet ekranlarını geliştirir.\nForm doğrulaması ve hata durumlarından sorumludur.\nTeslimat: çalışan ekran + kısa değişiklik notu.",
+      "skillsHint": "Enter ya da virgül ile ekle. Görevler bu etiketlerle eşleştirilir.",
+      "skillsPlaceholder": "Ör. React, Tailwind, erişilebilirlik",
+      "persona": "Çalışma tarzı / sistem talimatı",
+      "personaHint": "Ajanın nasıl davranacağı: ton, öncelikler, kurallar.",
+      "personaPlaceholder": "Ör. Kısa ve net yazar; değişiklikten önce plan çıkarır, testsiz iş teslim etmez."
+    },
+    "model": {
+      "title": "Model",
+      "desc": "Bu ajanın hangi sağlayıcı ve modelle çalışacağı.",
+      "provider": "Sağlayıcı",
+      "defaultHint": "Varsayılan: {{name}}",
+      "noProvider": "Sağlayıcı yok — demo modunda çalışır.",
+      "default": "Varsayılan",
+      "model": "Model"
+    },
+    "actions": {
+      "message": "Mesaj",
+      "assignTask": "Görev ata"
+    },
+    "status": {
+      "label": "Durum",
+      "current": "Şu anki iş",
+      "awaitingApproval": "Onay bekliyor",
+      "idle": "Boşta — aktif görev yok",
+      "queued": "Sırada",
+      "inProgress": "Sürüyor",
+      "done": "Biten"
+    },
+    "permissions": {
+      "title": "İzinler",
+      "desc": "Bu ajanın neye erişebileceği. Değişiklikler anında kaydedilir ve İzin Matrisi ile senkron kalır.",
+      "matrix": "İzin matrisi",
+      "loading": "İzinler yükleniyor…",
+      "extraFolders": "Ek izinli klasörler",
+      "extraFoldersDesc": "Çalışma alanına ek olarak erişebileceği klasörler. Çalışma alanı: <mono>{{path}}</mono>",
+      "notSelected": "seçilmedi",
+      "addFolder": "Klasör ekle"
+    },
+    "danger": {
+      "title": "Ajanı sil",
+      "leadBlocked": "Lider silinemez — önce başka bir ajanı lider yap.",
+      "desc": "Atanmış görevleri atanmamış olur; çalışma geçmişi ve kişisel hafızası silinir. Geri alınamaz.",
+      "confirm": "{{name}} silinsin mi?",
+      "deleted": "{{name}} silindi"
+    }
+  }
+}

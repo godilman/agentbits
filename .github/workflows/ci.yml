@@ -1,0 +1,32 @@
+# Checks every push and pull request: clean install, types, unit + security regression tests, production build.
+# (Packages are built by release.yml.)
+name: CI
+
+on:
+  push:
+    branches: ['**']
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-latest, ubuntu-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run typecheck
+      # SQL / SSH classification (incl. the 2026-10-13 security review cases), file extraction, skills, MCP config, translations
+      - run: npm run test:unit
+      - run: npm run build
+      # Known critical advisories in runtime dependencies fail the check; review the full report by hand.
+      - run: npm audit --omit=dev --audit-level=critical

@@ -1,0 +1,88 @@
+{
+  "chat": {
+    "filesReceived_one": "📎 Eklediğin {{count}} dosyayı aldım; oluşturduğum görevlere ekliyorum, ekip dosyaları bölüm bölüm okuyabilecek.",
+    "filesReceived_other": "📎 Eklediğin {{count}} dosyayı aldım; oluşturduğum görevlere ekliyorum, ekip dosyaları bölüm bölüm okuyabilecek.",
+    "idle": {
+      "r1": "Not aldım. Şu an panoda açık işler var; yeni bir iş istersen ne yapılması gerektiğini bir iki cümleyle anlatman yeterli, görevlere bölüp ekibe dağıtırım.",
+      "r2": "Anladım. Daha net bir iş tanımı verirsen (ne, nerede, ne zamana kadar) hemen planlayıp atama yaparım.",
+      "r3": "Buradayım. Ekip şu an mevcut görevler üzerinde; yeni bir hedef verirsen önceliklendirip sıraya alırım."
+    },
+    "taskDescription": "Kullanıcı isteği: \"{{request}}\"\n\nKapsam: {{scope}}",
+    "unassigned": "atanmadı",
+    "plan_one": "Tamamdır, işi {{count}} parçaya böldüm ve ekibe dağıttım:",
+    "plan_other": "Tamamdır, işi {{count}} parçaya böldüm ve ekibe dağıttım:",
+    "planFooter": "İlerlemeyi Tasks sekmesinden ve ofisten canlı takip edebilirsin. Biten işleri ben inceleyeceğim."
+  },
+  "connections": {
+    "none": "Erişebildiğim bir bağlantı yok.",
+    "error": "hata",
+    "ok": "tamam",
+    "schemaFailed": "{{name}}: şema okunamadı",
+    "sampleRead": "{{name}}: {{table}} tablosundan örnek okundu",
+    "sampleReadError": "{{name}}: {{table}} tablosundan örnek okundu (hata)",
+    "changeAttempt": "{{name}}: değişiklik denemesi → {{result}}",
+    "allowed": "izin verildi"
+  },
+  "files": {
+    "imageRead": "**{{name}}**: görsel incelendi (demo: içerik yorumlanmaz)",
+    "imageFailed": "**{{name}}**: görsel okunamadı",
+    "noText": "**{{name}}**: okunabilir metin yok",
+    "partsSummary_one": "**{{name}}** ({{type}}, {{count}} bölüm): {{gist}}",
+    "partsSummary_other": "**{{name}}** ({{type}}, {{count}} bölüm): {{gist}}",
+    "firstAndLast": "{{parts}} bölümün ilki ve sonuncusu okundu; arama ile gerekli kısımlar bulunabilir",
+    "instructionLike_one": "⚠️ {{name}} içinde {{count}} talimat benzeri satır var; veri olarak ele alındı, uygulanmadı",
+    "instructionLike_other": "⚠️ {{name}} içinde {{count}} talimat benzeri satır var; veri olarak ele alındı, uygulanmadı",
+    "summaryFileName": "ozet-{{key}}.md",
+    "summaryFileFallback": "gorev",
+    "summaryTitle": "{{key}} · dosya özeti (demo)",
+    "summaryFailed": "Özet kaydedilemedi: {{error}}",
+    "summarySaved": "Özet dosyası kaydedildi → Dosyalar"
+  },
+  "task": {
+    "defaultTitle": "Görev",
+    "logInstruction": "Kullanıcı talimatı dikkate alınıyor: {{text}}",
+    "logAnalyzing": "Görev analiz ediliyor: {{title}}",
+    "testsPassed_one": "✓ {{count}} test geçti",
+    "testsPassed_other": "✓ {{count}} test geçti"
+  },
+  "report": {
+    "summary": "Özet",
+    "completed": "{{title}} tamamlandı.",
+    "connections": "Bağlantılar",
+    "files": "Dosyalar",
+    "instruction": "Kullanıcı talimatı",
+    "instructionApplied": "Talimat doğrultusunda çalışma güncellendi.",
+    "done": "Yapılanlar",
+    "doneReviewed": "Mevcut kod incelendi ve etki alanı çıkarıldı",
+    "doneChanged": "Gerekli değişiklikler uygulandı",
+    "doneTested": "Testler çalıştırıldı ve geçti",
+    "changedFiles": "Değişen dosyalar",
+    "reviewOnly": "(yalnızca inceleme)",
+    "notes": "Notlar",
+    "demoNote": "Demo sağlayıcısı ile simüle edildi. Gerçek çalışma için Ayarlar → Sağlayıcılar'dan Claude Code veya bir API anahtarı ekleyin.",
+    "skills": "Kullanılan skill'ler",
+    "apps": "Kullanılan uygulamalar"
+  },
+  "review": {
+    "approved": {
+      "r1": "Temiz iş, onaylandı.",
+      "r2": "Kabul kriterlerini karşılıyor. 👍",
+      "r3": "İyi görünüyor, birleştirilebilir."
+    },
+    "rejected": {
+      "r1": "Kenar durumları için test eksik, lütfen ekle.",
+      "r2": "Hata mesajları kullanıcı dostu değil, tekrar bak."
+    }
+  },
+  "test": {
+    "ready": "Demo sağlayıcı hazır (gerçek model çağrısı yapılmaz)"
+  },
+  "skills": {
+    "used": "\"{{name}}\" skill'ine göre çalışıldı (skill_read ile okundu).",
+    "failed": "\"{{name}}\" skill'i okunamadı."
+  },
+  "apps": {
+    "used": "{{app}} kullanıldı → {{tool}}",
+    "failed": "{{app}} → {{tool}} başarısız: {{error}}"
+  }
+}

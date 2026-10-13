@@ -1,0 +1,191 @@
+{
+  "title": "Kılavuz",
+  "progress": "{{done}}/{{total}} adım tamam",
+  "closeTitle": "Kapat (F1)",
+  "panes": {
+    "setup": "Kurulum",
+    "places": "Nerede ne var",
+    "keys": "Kısayollar"
+  },
+  "intro": "Her şeyi sen kuruyorsun. Adımlar sen ilerledikçe kendiliğinden işaretlenir; düğmeler seni ilgili yere götürür. Bu kılavuz hep burada: üst çubuktaki <b>Kılavuz</b> ya da <b>F1</b>.",
+  "why": "Neden: ",
+  "how": "Nasıl: ",
+  "allDone": "Kurulum tamam. Yeni projeler için aynı yol: klasör seç, takım ata, lidere işi yaz.",
+  "actions": {
+    "providers": "Sağlayıcılar",
+    "templates": "Şablonlar",
+    "chart": "Şema",
+    "agents": "Ajanlar",
+    "teams": "Takımlar",
+    "permissions": "İzin Matrisi",
+    "connections": "Bağlantılar",
+    "projectSettings": "Proje ayarları",
+    "pickProject": "Proje seç",
+    "chat": "Chat",
+    "tasks": "Tasks",
+    "agentTerminals": "Ajan terminalleri",
+    "office": "Office"
+  },
+  "steps": {
+    "provider": {
+      "title": "Yapay zekâ sağlayıcısını seç",
+      "why": "Ajanlar bir modelle düşünür. Hangi modelin, hangi hesapla çalışacağını burada belirlersin.",
+      "how": "<b>Ayarlar → Sağlayıcılar</b>: Claude Code CLI (kendi Claude hesabınla, bilgisayarındaki CLI), Codex CLI, Anthropic ya da OpenAI API anahtarı, ya da anahtarsız <b>Demo</b> (yalnızca deneme; gerçek model çağrılmaz). Varsayılanı seç; ajan başına farklı sağlayıcı/model de verebilirsin."
+    },
+    "org": {
+      "title": "Organizasyonunu ve takımlarını kur",
+      "why": "Ajanlar takımlarda çalışır; projeye takım atarsın, o takımın ajanları projede çalışır. Bir takım birden çok projede kullanılabilir.",
+      "how": "<b>Organizasyon → Şema</b>: şirket / departman / takım birimlerini iç içe oluştur. En hızlısı <b>Organizasyon → Şablonlar</b>: tek tıkla takım + ajanlar (ör. <i>Çekirdek Ekip</i>, Yazılım, Araştırma, Pazarlama…). Şablondan gelen her şey sonradan değiştirilebilir."
+    },
+    "agents": {
+      "title": "Ajanlarını ekle",
+      "why": "Lider işi ajanların rolüne, yeteneklerine ve iş tanımına bakarak dağıtır; bunlar ne kadar net olursa atama o kadar isabetli olur.",
+      "how": "<b>Organizasyon → Ajanlar → Yeni ajan</b>: ad, rol, iş tanımı, yetenekler, kişilik, görünüm ve (istersen) ajana özel sağlayıcı/model. Ajanı bir takıma eklemeyi unutma (ajan sayfası ya da <b>Takımlar</b>)."
+    },
+    "lead": {
+      "title": "Bir lider belirle",
+      "why": "Lider sohbette seninle konuşan ajandır: isteğini görevlere böler, ajanlara atar ve biten işi inceler.",
+      "how": "<b>Organizasyon → Takımlar</b>'da takımın liderini seç ya da <b>proje ayarlarında</b> projeye özel lider ata. Lider yoksa sohbet çalışmaz; görevleri Tasks'tan kendin de oluşturabilirsin."
+    },
+    "perms": {
+      "title": "İzinleri gözden geçir",
+      "why": "Ajanlar gerçek dosyalara, terminale ve sunuculara dokunabilir. Neye izin verdiğini sen seçersin; varsayılan olarak yalnızca okuma açıktır.",
+      "how": "<b>Ayarlar → İzin Matrisi</b>: ajan başına dosya okuma/yazma, terminal, ağ, tarayıcı ve \"her çalışmadan önce onay iste\". Sunucu ve veritabanı erişimi ayrıdır: <b>Organizasyon → Bağlantılar</b> (varsayılan: hiçbir ajan erişemez; Production'da değişiklik senin onayını bekler)."
+    },
+    "project": {
+      "title": "Projeye klasör ve takım ata",
+      "why": "Proje = bir klasör + orada çalışan takımlar. CLI ajanları yalnızca proje klasöründe dosya okur/yazar. Proje silinse de klasör ve içindekiler diskte kalır.",
+      "how": "Proje sekmesine çift tıkla ya da durum çubuğunda proje adına tıkla → <b>Proje ayarları</b>: klasör, takımlar, lider, renk. Yeni proje için üst çubuktaki <b>+</b> ya da <b>Ctrl+P</b> → \"Klasör aç…\"."
+    },
+    "work": {
+      "title": "Lidere ilk işi ver",
+      "why": "İşi tarif edersin; lider görevlere böler ve ajanlara dağıtır. Dosya eklersen (PDF, Excel, Word, görsel…) görevlere de geçer.",
+      "how": "<b>Chat → #general</b>: ne istediğini, nerede ve ne zamana kadar olduğunu yaz; ataçla ya da sürükle-bırakla dosya ekle. Tek bir ajana doğrudan mesaj için sol listeden ajanı seç. Görevleri elle eklemek için <b>Tasks → Yeni görev</b>."
+    },
+    "watch": {
+      "title": "İzle ve yönlendir",
+      "why": "Ajanların ne yaptığını canlı görür, gerektiğinde araya girersin; biten işi lider inceler, sen de onaylar ya da geri gönderirsin.",
+      "how": "<b>Terminal → Ajan terminalleri</b>: her ajanın komutları, araç çağrıları ve çıktısı; alttaki kutudan <i>Yönlendir</i> (mevcut adımı keser) ya da <i>Sıraya al</i>. <b>Office</b> ekibi haritada gösterir, <b>Tasks</b> görevleri sürükle-bırakla yönetir, <b>Reports</b> rapor ve token kullanımını, <b>Decisions</b> alınan kararları tutar. Üstteki <b>Tümünü duraklat</b> her şeyi durdurur."
+    }
+  },
+  "places": {
+    "sections": {
+      "title": "Proje bölümleri (üst çubuk, Ctrl+1…9)",
+      "chat": {
+        "name": "Chat",
+        "desc": "Lidere iş tarif et (#general), ajanlarla doğrudan konuş, görev akışlarını oku. Dosya ekleyebilirsin."
+      },
+      "office": {
+        "name": "Office",
+        "desc": "Projenin ekibi pikselli ofiste: kim çalışıyor, kim molada, kim onay bekliyor."
+      },
+      "team": {
+        "name": "Ekip",
+        "desc": "Projede çalışan ajanlar, takımları, lider ve token kullanımı."
+      },
+      "terminal": {
+        "name": "Terminal",
+        "desc": "Ajan terminalleri (canlı akış + talimat kutusu) ve Kabuklar (proje klasöründe kendi terminalin)."
+      },
+      "tasks": {
+        "name": "Tasks",
+        "desc": "Kanban panosu: Yapılacak → Devam eden → İncelemede → Bitti. Sürükleyerek başlat/durdur."
+      },
+      "reports": {
+        "name": "Reports",
+        "desc": "Görev raporları, günlük rapor ve token / maliyet kullanımı."
+      },
+      "decisions": {
+        "name": "Decisions",
+        "desc": "Ajanların ve liderin önerdiği kararlar; kabul edilenler hafızaya yazılır."
+      },
+      "browser": {
+        "name": "Browser",
+        "desc": "Uygulama içi tarayıcı (önizleme, belge okuma)."
+      },
+      "files": {
+        "name": "Dosyalar",
+        "desc": "Yüklediğin dosyalar, ajanların ürettikleri ve proje klasöründe değişenler; önizleme, arama, erişim."
+      }
+    },
+    "org": {
+      "title": "Organizasyon (Ctrl+O)",
+      "chart": {
+        "name": "Şema",
+        "desc": "Şirket / departman / takım ağacı; birim ekle, taşı, lider seç."
+      },
+      "teams": {
+        "name": "Takımlar",
+        "desc": "Takım üyeleri ve liderleri; bir takım birden çok projede kullanılır."
+      },
+      "agents": {
+        "name": "Ajanlar",
+        "desc": "Ajan ekle/düzenle: rol, iş tanımı, yetenekler, sağlayıcı, izinler."
+      },
+      "templates": {
+        "name": "Şablonlar",
+        "desc": "Hazır takımlar ve şirketler (tek tıkla birimler + ajanlar)."
+      },
+      "skills": {
+        "name": "Skill'ler",
+        "desc": "GitHub'dan, klasörden, .zip ya da .md'den talimat paketleri (SKILL.md); ajanlara ya da birimlere ata."
+      },
+      "apps": {
+        "name": "Uygulamalar",
+        "desc": "Bağlı uygulamalar (MCP): e-posta, tasarım araçları, veritabanları…; araç başına onay, ajan başına erişim."
+      },
+      "connections": {
+        "name": "Bağlantılar",
+        "desc": "SSH sunucuları ve veritabanları; ajan bazında erişim, Production onayı, denetim kaydı."
+      }
+    },
+    "settings": {
+      "title": "Ayarlar (Ctrl+,)",
+      "agents": {
+        "name": "Ajanlar",
+        "desc": "Tüm ajanların hızlı listesi."
+      },
+      "permissions": {
+        "name": "İzin Matrisi",
+        "desc": "Ajan başına dosya, terminal, ağ, tarayıcı izinleri ve bağlantı izinleri."
+      },
+      "providers": {
+        "name": "Sağlayıcılar",
+        "desc": "Claude Code / Codex CLI, API anahtarları, Demo; varsayılan sağlayıcı."
+      },
+      "memory": {
+        "name": "Hafıza",
+        "desc": "Ajanların hatırladıkları (proje ve organizasyon geneli)."
+      },
+      "data": {
+        "name": "Veri yönetimi",
+        "desc": "Kullanım, temizlik, log saklama, yedekler ve sıfırlama."
+      },
+      "general": {
+        "name": "Genel",
+        "desc": "Otopilot, lider incelemesi, açılışta proje seçimi."
+      }
+    },
+    "statusBar": {
+      "title": "Durum çubuğu (sağ alt)",
+      "feedback": {
+        "name": "Geri bildirim",
+        "desc": "Öneri, hata, teşekkür ya da puan: ne yazacağını anlatır ve geliştiriciye e-posta açar."
+      },
+      "coffee": {
+        "name": "Buy me a coffee",
+        "desc": "Geliştiriciye destek ol (tarayıcıda açılır)."
+      }
+    },
+    "security": "Güvenlik: ajanlar yalnızca izin verdiğin şeylere erişir; dosya içerikleri ve sunucu çıktıları talimat değil veri olarak işlenir; sırların (anahtar, parola) ajanlara gösterilmez."
+  },
+  "shortcuts": {
+    "toggleGuide": "Kılavuzu aç / kapat",
+    "projectPicker": "Proje seçici",
+    "organization": "Organizasyon",
+    "settings": "Ayarlar",
+    "sections": "Proje bölümleri",
+    "nextProject": "Sonraki proje sekmesi",
+    "sendInstruction": "Ajan terminalinde talimatı gönder"
+  }
+}

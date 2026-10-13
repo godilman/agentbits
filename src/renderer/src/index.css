@@ -1,0 +1,152 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: dark;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  @apply bg-canvas font-sans text-[13px] text-zinc-300 antialiased;
+  overflow: hidden;
+  user-select: none;
+}
+
+.drag {
+  -webkit-app-region: drag;
+}
+.no-drag {
+  -webkit-app-region: no-drag;
+}
+
+.selectable,
+input,
+textarea,
+.prose-dark,
+pre,
+code {
+  user-select: text;
+}
+
+/* thin, quiet scrollbars */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-thumb {
+  background: #27272a;
+  border-radius: 8px;
+  border: 2px solid transparent;
+  background-clip: content-box;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #3f3f46;
+  background-clip: content-box;
+  border: 2px solid transparent;
+}
+::-webkit-scrollbar-track,
+::-webkit-scrollbar-corner {
+  background: transparent;
+}
+
+@layer components {
+  .btn {
+    @apply inline-flex h-7 items-center justify-center gap-1.5 rounded-md px-2.5 text-[12px] font-medium transition-colors duration-150 disabled:pointer-events-none disabled:opacity-40;
+  }
+  .btn-primary {
+    @apply btn bg-indigo-600 text-white hover:bg-indigo-700;
+  }
+  .btn-ghost {
+    @apply btn text-zinc-400 hover:bg-white/5 hover:text-zinc-100;
+  }
+  .btn-outline {
+    @apply btn border border-line bg-surface-2 text-zinc-300 hover:border-zinc-600 hover:text-zinc-100;
+  }
+  .btn-danger {
+    @apply btn text-rose-400 hover:bg-rose-500/10 hover:text-rose-300;
+  }
+  .icon-btn {
+    @apply inline-flex h-6 w-6 items-center justify-center rounded-md text-zinc-400 transition-colors hover:bg-white/5 hover:text-zinc-200;
+  }
+  .input {
+    @apply h-8 w-full rounded-md border border-line bg-surface-2 px-2.5 text-[13px] text-zinc-200 outline-none transition-colors placeholder:text-zinc-400 focus:border-accent/60 focus:ring-2 focus:ring-accent/15;
+  }
+  .textarea {
+    @apply input h-auto resize-none py-2 leading-relaxed;
+  }
+  .label {
+    @apply mb-1 block text-[11px] font-medium uppercase tracking-wider text-zinc-400;
+  }
+  .panel-title {
+    @apply text-[11px] font-semibold uppercase tracking-[0.08em] text-zinc-400;
+  }
+  .card {
+    @apply rounded-lg border border-line bg-surface;
+  }
+  .kbd {
+    @apply rounded border border-line bg-surface-2 px-1 font-mono text-[10px] text-zinc-400;
+  }
+}
+
+.prose-dark {
+  @apply text-[13px] leading-relaxed text-zinc-300;
+}
+.prose-dark h1 {
+  @apply mb-3 mt-1 text-lg font-semibold text-zinc-100;
+}
+.prose-dark h2 {
+  @apply mb-2 mt-5 text-[14px] font-semibold text-zinc-100;
+}
+.prose-dark h3 {
+  @apply mb-1.5 mt-4 text-[13px] font-semibold text-zinc-200;
+}
+.prose-dark p {
+  @apply my-2;
+}
+.prose-dark ul {
+  @apply my-2 list-disc space-y-1 pl-5 marker:text-zinc-600;
+}
+.prose-dark ol {
+  @apply my-2 list-decimal space-y-1 pl-5 marker:text-zinc-600;
+}
+.prose-dark code {
+  @apply rounded bg-white/[0.06] px-1 py-px font-mono text-[12px] text-indigo-200;
+}
+.prose-dark pre {
+  @apply my-3 overflow-x-auto rounded-md border border-line bg-black/40 p-3 font-mono text-[12px] leading-5 text-zinc-300;
+}
+.prose-dark pre code {
+  @apply bg-transparent p-0 text-zinc-300;
+}
+.prose-dark table {
+  @apply my-3 w-full border-collapse text-[12px];
+}
+.prose-dark th {
+  @apply border-b border-line px-2 py-1.5 text-left font-medium text-zinc-400;
+}
+.prose-dark td {
+  @apply border-b border-line-soft px-2 py-1.5;
+}
+.prose-dark strong {
+  @apply font-semibold text-zinc-100;
+}
+.prose-dark a {
+  @apply text-indigo-300 underline decoration-indigo-300/30 underline-offset-2;
+}
+
+.pixelated {
+  image-rendering: pixelated;
+}
+
+.xterm {
+  padding: 10px 12px;
+}
+.xterm-viewport {
+  background-color: transparent !important;
+}

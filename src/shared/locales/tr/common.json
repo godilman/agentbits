@@ -1,0 +1,136 @@
+{
+  "app": {
+    "name": "Agentbits",
+    "support": "Enjoying Agentbits? Buy me a coffee! ☕",
+    "supportLabel": "Buy me a coffee"
+  },
+  "actions": {
+    "save": "Kaydet",
+    "cancel": "Vazgeç",
+    "close": "Kapat",
+    "delete": "Sil",
+    "deleteEllipsis": "Sil…",
+    "edit": "Düzenle",
+    "add": "Ekle",
+    "create": "Oluştur",
+    "open": "Aç",
+    "back": "Geri",
+    "next": "İleri",
+    "retry": "Yeniden dene",
+    "copy": "Kopyala",
+    "copied": "Kopyalandı",
+    "confirm": "Onayla",
+    "yesDelete": "Evet, sil",
+    "remove": "Kaldır",
+    "change": "Değiştir",
+    "test": "Test et",
+    "search": "Ara",
+    "refresh": "Yenile",
+    "apply": "Uygula",
+    "reset": "Sıfırla",
+    "start": "Başlat",
+    "stop": "Durdur",
+    "send": "Gönder",
+    "approve": "Onayla",
+    "reject": "Reddet",
+    "chooseFolder": "Klasör seç",
+    "showAll": "Tümünü göster",
+    "showLess": "Daha az göster"
+  },
+  "status": {
+    "idle": "Boşta",
+    "working": "Çalışıyor",
+    "waiting": "Bekliyor",
+    "error": "Hata",
+    "offline": "Çevrimdışı",
+    "paused": "Duraklatıldı",
+    "loading": "Yükleniyor…",
+    "saving": "Kaydediliyor…",
+    "saved": "Kaydedildi",
+    "none": "Yok",
+    "unknown": "Bilinmiyor",
+    "on": "Açık",
+    "off": "Kapalı",
+    "yes": "Evet",
+    "no": "Hayır"
+  },
+  "time": {
+    "now": "şimdi",
+    "minutesShort": "{{count}} dk",
+    "hoursShort": "{{count}} sa",
+    "daysShort": "{{count}} g",
+    "secondsUnit": "{{count}}sn",
+    "minutesSeconds": "{{m}}dk {{s}}sn",
+    "hoursMinutes": "{{h}}sa {{m}}dk",
+    "ago": "{{time}} önce",
+    "justNow": "az önce"
+  },
+  "language": {
+    "label": "Dil",
+    "auto": "Sistem ({{name}})",
+    "hint": "Arayüz dili. Ajanlar, onlara hangi dilde yazarsan o dilde cevap verir."
+  },
+  "statusBar": {
+    "paused": "Duraklatıldı",
+    "autopilotOn": "Otopilot açık",
+    "autopilotOff": "Otopilot kapalı",
+    "agents_one": "{{count}} ajan",
+    "agents_other": "{{count}} ajan",
+    "working": "{{count}} çalışıyor",
+    "errors_one": "{{count}} hata",
+    "errors_other": "{{count}} hata",
+    "demoProvider": "Demo (simülasyon)",
+    "organization": "Organizasyon",
+    "projectSettings": "Proje ayarları",
+    "noFolder": "klasör yok",
+    "tokensTitle": "Bu oturumda tüm ajanlar: {{session}} token\nTüm zamanlar: {{total}} token\nAyrıntı: Reports → Token kullanımı",
+    "tokens": "oturum {{session}} · toplam {{total}} token",
+    "memories_one": "SQLite · {{count}} hafıza",
+    "memories_other": "SQLite · {{count}} hafıza"
+  },
+  "agentStatus": {
+    "idle": "Boşta",
+    "working": "Çalışıyor",
+    "break": "Molada",
+    "error": "Hata",
+    "offline": "Çevrimdışı"
+  },
+  "priority": {
+    "low": "Düşük",
+    "normal": "Normal",
+    "high": "Yüksek",
+    "urgent": "Acil"
+  },
+  "taskColumns": {
+    "todo": "To do",
+    "in_progress": "In progress",
+    "in_review": "In review",
+    "done": "Done"
+  },
+  "feedback": {
+    "button": "Geri bildirim",
+    "title": "Geri bildirim",
+    "intro": "Teşekkür, hata, öneri, puan — ne olursa olsun her mesajı okuyorum. <mail>{{email}}</mail> adresine yazman yeterli.",
+    "idea": {
+      "title": "Önerin mi var?",
+      "text": "Önerini olabildiğince ayrıntılı anlat: ne istediğini, neden işine yarayacağını ve nasıl çalışmasını hayal ettiğini <mail>{{email}}</mail> adresine yaz.",
+      "action": "Öneri yaz"
+    },
+    "bug": {
+      "title": "Hata mı aldın?",
+      "text": "Hatayı tam olarak hangi aşamada ve nerede aldığını ayrıntılı yaz: ne yapıyordun, hangi ekran ve düğme, ne bekliyordun, bunun yerine ne oldu — mümkünse hata mesajının tam metni ve ekran görüntüsüyle. <mail>{{email}}</mail> adresine yaz; uygulama sürümü ve sistem bilgisi e-postaya otomatik eklenir.",
+      "action": "Hata bildir"
+    },
+    "thanks": {
+      "title": "Teşekkür etmek mi istiyorsun?",
+      "text": "Agentbits'i kullandığın için asıl <b>ben</b> sana teşekkür ederim! Bana bir kahve ısmarlamak istersen buradan ısmarlayabilirsin:",
+      "rate": "Uygulamaya puan ver:",
+      "rateStar": "5 üzerinden {{n}}",
+      "sendRating": "Puanı gönder",
+      "sendThanks": "Teşekkür yaz"
+    },
+    "copy": "Adresi kopyala",
+    "copied": "Adres kopyalandı",
+    "noMailApp": "E-posta uygulaması açılmazsa adresi kopyalayıp kendi e-postandan yazabilirsin."
+  }
+}

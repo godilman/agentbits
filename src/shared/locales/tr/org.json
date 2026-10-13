@@ -1,0 +1,153 @@
+{
+  "kinds": {
+    "organization": "Organizasyon",
+    "company": "Şirket",
+    "department": "Departman",
+    "team": "Takım"
+  },
+  "newUnitName": {
+    "organization": "Yeni organizasyon",
+    "company": "Yeni şirket",
+    "department": "Yeni departman",
+    "team": "Yeni takım"
+  },
+  "counts": {
+    "units_one": "{{count}} birim",
+    "units_other": "{{count}} birim",
+    "agents_one": "{{count}} ajan",
+    "agents_other": "{{count}} ajan"
+  },
+  "view": {
+    "title": "Organizasyon",
+    "subtitle": "{{units}} · {{agents}} · takımlar projeler arasında paylaşılır",
+    "tabs": {
+      "chart": "Şema",
+      "teams": "Takımlar",
+      "agents": "Ajanlar",
+      "templates": "Şablonlar",
+      "connections": "Bağlantılar",
+      "skills": "Skill'ler",
+      "apps": "Uygulamalar"
+    },
+    "fromTemplate": "Şablondan kur",
+    "newUnit": "Yeni birim"
+  },
+  "addMembers": {
+    "title": "Üye ekle · {{unit}}",
+    "added_one": "{{count}} ajan {{unit}} birimine eklendi",
+    "added_other": "{{count}} ajan {{unit}} birimine eklendi",
+    "submit_one": "{{count}} ajanı ekle",
+    "submit_other": "{{count}} ajanı ekle",
+    "pick": "Ajan seç",
+    "search": "Ad, rol ya da yetenek ara…",
+    "alreadyMember": "Zaten üye",
+    "noMatch": "Eşleşen ajan yok"
+  },
+  "chart": {
+    "unassigned": "Takımsız ajanlar",
+    "allAssigned": "Herkes en az bir birimde.",
+    "noDirectMembers": "Doğrudan üye yok",
+    "total": "toplam {{count}}",
+    "inProjects_one": "{{count}} projede",
+    "inProjects_other": "{{count}} projede",
+    "notInProject": "Projede değil",
+    "showChildren": "Alt birimleri göster",
+    "hideChildren": "Alt birimleri gizle"
+  },
+  "teams": {
+    "collapse": "Daralt",
+    "expand": "Genişlet",
+    "addChild": "Alt birim ekle",
+    "search": "Birim ara…",
+    "noMatch": "Eşleşen birim yok",
+    "footer": "{{units}} · üzerine gelip <icon/> ile alt birim ekle",
+    "empty": {
+      "title": "Birim yok",
+      "hint": "Organizasyon yükleniyor…"
+    }
+  },
+  "templates": {
+    "intro": {
+      "lead": "Kurduğun her birim yeniden kullanılabilir hazır bir ekiptir.",
+      "body": "Bir şablondan ya da sıfırdan kur, sonra istediğin kadar projeye ata — ajanlar projeler arasında paylaşılır."
+    },
+    "goToTeams": "Takımlarına git",
+    "empty": "Şablon yok",
+    "modalTitle": "Şablondan kur · {{name}}",
+    "creating": "Kuruluyor…",
+    "name": "Ad",
+    "parent": "Bağlı olacağı birim",
+    "newAgents_one": "{{count}} yeni ajan",
+    "newAgents_other": "{{count}} yeni ajan",
+    "summary": "<b>{{agents}}</b> oluşturulur; iş tanımları, yetenekleri ve izinleri hazır gelir. Sonra hepsini düzenleyebilir, birimi istediğin projelere atayabilirsin.",
+    "summaryWithUnits": "{{units}} ve <b>{{agents}}</b> oluşturulur; iş tanımları, yetenekleri ve izinleri hazır gelir. Sonra hepsini düzenleyebilir, birimi istediğin projelere atayabilirsin.",
+    "instantiated": "{{name}} kuruldu · {{agents}}"
+  },
+  "unit": {
+    "nameRequired": "Ad boş olamaz",
+    "agentCount_one": "<n>{{count}}</n> ajan",
+    "agentCount_other": "<n>{{count}}</n> ajan",
+    "info": {
+      "title": "Birim bilgileri",
+      "desc": "Birim yeniden kullanılabilir hazır bir ekip gibidir: istediğin kadar projeye atayabilirsin."
+    },
+    "fields": {
+      "name": "Ad",
+      "kind": "Tür",
+      "rootKind": "Organizasyon (kök birim)",
+      "description": "Açıklama",
+      "descriptionPlaceholder": "Ör. Pazar araştırması, rakip analizi ve veri raporları hazırlar.",
+      "parent": "Bağlı olduğu birim",
+      "topLevel": "— (en üst birim)",
+      "lead": "Birim lideri",
+      "noLead": "Lider yok",
+      "color": "Renk"
+    },
+    "subUnits": {
+      "title": "Alt birimler",
+      "desc": "Şirket → departman → takım gibi istediğin kadar derinleşebilir.",
+      "add": "Alt birim",
+      "none": "Alt birim yok."
+    },
+    "members": {
+      "title": "Üyeler · {{n}}",
+      "descDeep_one": "Alt birimlerle birlikte toplam {{count}} ajan. Bir ajan birden çok birimde olabilir.",
+      "descDeep_other": "Alt birimlerle birlikte toplam {{count}} ajan. Bir ajan birden çok birimde olabilir.",
+      "desc": "Bir ajan birden çok birimde olabilir; birimdeki ünvanı burada belirlenir.",
+      "createAgent": "Yeni ajan oluştur",
+      "add": "Üye ekle",
+      "empty": "Bu birimde henüz ajan yok. Mevcut ajanlardan ekle ya da yeni bir ajan oluştur."
+    },
+    "member": {
+      "openProfile": "Ajan profilini aç",
+      "alsoIn": "Ayrıca: {{units}}",
+      "onlyHere": "Yalnızca bu birimde",
+      "titlePlaceholder": "Ünvan (ör. Kıdemli analist)",
+      "isLead": "Birim lideri (kaldırmak için tıkla)",
+      "makeLead": "Birim lideri yap",
+      "remove": "Birimden çıkar"
+    },
+    "projects": {
+      "title": "Projelerde kullanılıyor",
+      "desc": "Birime atanan projelerde bu birimin ve alt birimlerinin tüm üyeleri çalışır.",
+      "none": "Henüz hiçbir projeye atanmadı.",
+      "open": "Projeyi aç",
+      "inherited": "üst birimden",
+      "archived": "arşiv",
+      "removeFrom": "Bu projeden çıkar",
+      "add": "Projeye ekle…",
+      "noneAddable": "Eklenebilecek proje yok"
+    },
+    "danger": {
+      "title": "Birimi sil",
+      "root": "Organizasyon kökü silinemez.",
+      "desc": "Ajanlar silinmez, yalnızca bu birimlerdeki üyelikleri kalkar; projelerden de çıkarılır.",
+      "descWithSubs_one": "{{count}} alt birim de silinir. Ajanlar silinmez, yalnızca bu birimlerdeki üyelikleri kalkar; projelerden de çıkarılır.",
+      "descWithSubs_other": "{{count}} alt birim de silinir. Ajanlar silinmez, yalnızca bu birimlerdeki üyelikleri kalkar; projelerden de çıkarılır.",
+      "confirm": "{{name}} silinsin mi?",
+      "confirmWithSubs_one": "{{name}} ve {{count}} alt birim silinsin mi?",
+      "confirmWithSubs_other": "{{name}} ve {{count}} alt birim silinsin mi?",
+      "deleted": "{{name}} silindi"
+    }
+  }
+}

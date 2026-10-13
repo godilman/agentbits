@@ -1,0 +1,191 @@
+{
+  "title": "Guide",
+  "progress": "{{done}}/{{total}} steps done",
+  "closeTitle": "Close (F1)",
+  "panes": {
+    "setup": "Setup",
+    "places": "Where things are",
+    "keys": "Shortcuts"
+  },
+  "intro": "You set everything up yourself. Steps tick themselves off as you go; the buttons take you to the right place. This guide is always here: <b>Guide</b> in the top bar, or <b>F1</b>.",
+  "why": "Why: ",
+  "how": "How: ",
+  "allDone": "Setup complete. Same path for new projects: pick a folder, assign a team, write the work to the lead.",
+  "actions": {
+    "providers": "Providers",
+    "templates": "Templates",
+    "chart": "Chart",
+    "agents": "Agents",
+    "teams": "Teams",
+    "permissions": "Permission Matrix",
+    "connections": "Connections",
+    "projectSettings": "Project settings",
+    "pickProject": "Pick a project",
+    "chat": "Chat",
+    "tasks": "Tasks",
+    "agentTerminals": "Agent terminals",
+    "office": "Office"
+  },
+  "steps": {
+    "provider": {
+      "title": "Choose an AI provider",
+      "why": "Agents think with a model. Here you decide which model runs, and with which account.",
+      "how": "<b>Settings → Providers</b>: Claude Code CLI (your own Claude account, the CLI on your computer), Codex CLI, an Anthropic or OpenAI API key, or the key-free <b>Demo</b> (for trying things out only; no real model is called). Pick a default; you can also give each agent a different provider/model."
+    },
+    "org": {
+      "title": "Set up your organization and teams",
+      "why": "Agents work in teams; you assign teams to a project and that team's agents work on it. A team can be used in several projects.",
+      "how": "<b>Organization → Chart</b>: create nested company / department / team units. Quickest is <b>Organization → Templates</b>: a team plus agents in one click (e.g. <i>Core Team</i>, Software, Research, Marketing…). Everything from a template can be changed later."
+    },
+    "agents": {
+      "title": "Add your agents",
+      "why": "The lead hands out work based on the agents' role, skills and job description; the clearer these are, the better the assignments.",
+      "how": "<b>Organization → Agents → New agent</b>: name, role, job description, skills, personality, look and (optionally) an agent-specific provider/model. Don't forget to add the agent to a team (agent page or <b>Teams</b>)."
+    },
+    "lead": {
+      "title": "Pick a lead",
+      "why": "The lead is the agent who talks to you in chat: it splits your request into tasks, assigns them to agents and reviews finished work.",
+      "how": "Choose the team's lead in <b>Organization → Teams</b>, or assign a project-specific lead in <b>project settings</b>. Without a lead the chat doesn't work; you can still create tasks yourself under Tasks."
+    },
+    "perms": {
+      "title": "Review permissions",
+      "why": "Agents can touch real files, the terminal and servers. You choose what they're allowed to do; by default only reading is on.",
+      "how": "<b>Settings → Permission Matrix</b>: per-agent file read/write, terminal, network, browser and \"ask for approval before every run\". Server and database access is separate: <b>Organization → Connections</b> (default: no agent has access; changes in Production wait for your approval)."
+    },
+    "project": {
+      "title": "Give the project a folder and a team",
+      "why": "Project = a folder + the teams working there. CLI agents only read and write files in the project folder. Even if the project is deleted, the folder and its contents stay on disk.",
+      "how": "Double-click the project tab, or click the project name in the status bar → <b>Project settings</b>: folder, teams, lead, color. For a new project use <b>+</b> in the top bar, or <b>Ctrl+P</b> → \"Open folder…\"."
+    },
+    "work": {
+      "title": "Give the lead the first job",
+      "why": "You describe the work; the lead splits it into tasks and hands them out to agents. Files you attach (PDF, Excel, Word, images…) are passed on to the tasks too.",
+      "how": "<b>Chat → #general</b>: write what you want, where, and by when; attach files with the paperclip or drag and drop. To message a single agent directly, pick it from the list on the left. To add tasks by hand: <b>Tasks → New task</b>."
+    },
+    "watch": {
+      "title": "Watch and steer",
+      "why": "You see live what the agents are doing and step in when needed; the lead reviews finished work, and you approve it or send it back.",
+      "how": "<b>Terminal → Agent terminals</b>: each agent's commands, tool calls and output; from the box below, <i>Redirect</i> (interrupts the current step) or <i>Queue</i>. <b>Office</b> shows the team on a map, <b>Tasks</b> manages tasks with drag and drop, <b>Reports</b> keeps reports and token usage, <b>Decisions</b> the decisions made. <b>Pause all</b> at the top stops everything."
+    }
+  },
+  "places": {
+    "sections": {
+      "title": "Project sections (top bar, Ctrl+1…9)",
+      "chat": {
+        "name": "Chat",
+        "desc": "Describe work to the lead (#general), talk to agents directly, read task threads. You can attach files."
+      },
+      "office": {
+        "name": "Office",
+        "desc": "The project's team in the pixel office: who's working, who's on a break, who's awaiting approval."
+      },
+      "team": {
+        "name": "Team",
+        "desc": "Agents working on the project, their teams, the lead and token usage."
+      },
+      "terminal": {
+        "name": "Terminal",
+        "desc": "Agent terminals (live stream + instruction box) and Shells (your own terminal in the project folder)."
+      },
+      "tasks": {
+        "name": "Tasks",
+        "desc": "Kanban board: To do → In progress → In review → Done. Drag to start/stop."
+      },
+      "reports": {
+        "name": "Reports",
+        "desc": "Task reports, the daily report and token / cost usage."
+      },
+      "decisions": {
+        "name": "Decisions",
+        "desc": "Decisions proposed by agents and the lead; accepted ones are written to memory."
+      },
+      "browser": {
+        "name": "Browser",
+        "desc": "In-app browser (previews, reading documents)."
+      },
+      "files": {
+        "name": "Files",
+        "desc": "Files you uploaded, files agents produced and changes in the project folder; preview, search, access."
+      }
+    },
+    "org": {
+      "title": "Organization (Ctrl+O)",
+      "chart": {
+        "name": "Chart",
+        "desc": "Company / department / team tree; add and move units, pick leads."
+      },
+      "teams": {
+        "name": "Teams",
+        "desc": "Team members and leads; a team can be used in several projects."
+      },
+      "agents": {
+        "name": "Agents",
+        "desc": "Add/edit agents: role, job description, skills, provider, permissions."
+      },
+      "templates": {
+        "name": "Templates",
+        "desc": "Ready-made teams and companies (units + agents in one click)."
+      },
+      "skills": {
+        "name": "Skills",
+        "desc": "Instruction packages (SKILL.md) from GitHub, a folder, .zip or .md; assign them to agents or units."
+      },
+      "apps": {
+        "name": "Apps",
+        "desc": "Connected apps (MCP): mail, design tools, databases…; per-tool approval and per-agent access."
+      },
+      "connections": {
+        "name": "Connections",
+        "desc": "SSH servers and databases; per-agent access, Production approval, audit log."
+      }
+    },
+    "settings": {
+      "title": "Settings (Ctrl+,)",
+      "agents": {
+        "name": "Agents",
+        "desc": "Quick list of all agents."
+      },
+      "permissions": {
+        "name": "Permission Matrix",
+        "desc": "Per-agent file, terminal, network and browser permissions, plus connection permissions."
+      },
+      "providers": {
+        "name": "Providers",
+        "desc": "Claude Code / Codex CLI, API keys, Demo; the default provider."
+      },
+      "memory": {
+        "name": "Memory",
+        "desc": "What agents remember (per project and organization-wide)."
+      },
+      "data": {
+        "name": "Data management",
+        "desc": "Usage, clean-up, log retention, backups and reset."
+      },
+      "general": {
+        "name": "General",
+        "desc": "Autopilot, lead review, project selection at startup."
+      }
+    },
+    "statusBar": {
+      "title": "Status bar (bottom right)",
+      "feedback": {
+        "name": "Feedback",
+        "desc": "A suggestion, a bug, a thank-you or a rating: tells you what to write and opens a mail to the developer."
+      },
+      "coffee": {
+        "name": "Buy me a coffee",
+        "desc": "Support the developer (opens in your browser)."
+      }
+    },
+    "security": "Security: agents can only reach what you allow; file contents and server output are treated as data, not instructions; your secrets (keys, passwords) are never shown to agents."
+  },
+  "shortcuts": {
+    "toggleGuide": "Open / close the guide",
+    "projectPicker": "Project picker",
+    "organization": "Organization",
+    "settings": "Settings",
+    "sections": "Project sections",
+    "nextProject": "Next project tab",
+    "sendInstruction": "Send the instruction in an agent terminal"
+  }
+}

@@ -1,0 +1,112 @@
+{
+  "title": "Skills",
+  "intro": "Skills are instruction packages: a folder with a SKILL.md (when and how to do something) plus optional reference files and scripts. Install them from GitHub, a .zip, a folder or a single .md, assign them to agents or teams, and agents read them when the work fits.",
+  "add": "Add skill",
+  "search": "Search skills…",
+  "empty": {
+    "title": "No skills yet",
+    "hint": "Add one from GitHub (e.g. a frontend design or finance skill), from your computer, or write your own."
+  },
+  "noneMatch": "No skill matches.",
+  "selectHint": "Pick a skill on the left.",
+  "badges": {
+    "scripts": "scripts",
+    "disabled": "off",
+    "warnings": "check",
+    "modified": "edited",
+    "assigned_one": "{{count}} assignment",
+    "assigned_other": "{{count}} assignments",
+    "notAssigned": "not assigned"
+  },
+  "source": {
+    "github": "GitHub",
+    "zip": ".zip",
+    "folder": "Folder",
+    "markdown": ".md file",
+    "created": "Written in Agentbits",
+    "label": "Source"
+  },
+  "detail": {
+    "enabled": "In use",
+    "enabledHint": "When off, no agent sees this skill.",
+    "edit": "Edit SKILL.md",
+    "update": "Update from source",
+    "updateConfirm": "Re-download from the source and replace the files? Edits made in Agentbits are lost; assignments are kept.",
+    "updated": "Skill updated.",
+    "delete": "Delete",
+    "deleteConfirm": "Delete the skill \"{{name}}\"? Agents lose access to it. This cannot be undone (backups still contain it).",
+    "deleted": "Skill deleted.",
+    "files_one": "{{count}} file · {{size}}",
+    "files_other": "{{count}} files · {{size}}",
+    "fileList": "Files",
+    "binaryFile": "Not a text file — stored, not shown.",
+    "instructions": "Instructions (SKILL.md)",
+    "warningsTitle": "Before you assign it",
+    "installed": "Installed {{date}}",
+    "updatedAt": "updated {{date}}"
+  },
+  "assign": {
+    "title": "Who can use it",
+    "hint": "Assign to agents, or to a team / department / company: all its members (and those of its sub-units) get it. The organization = every agent.",
+    "add": "Assign to…",
+    "everyone": "Everyone ({{name}})",
+    "units": "Teams and units",
+    "agents": "Agents",
+    "remove": "Remove",
+    "none": "No one yet — agents only see skills assigned to them."
+  },
+  "modal": {
+    "title": "Add skill",
+    "tabs": {
+      "github": "From GitHub",
+      "computer": "From computer",
+      "write": "Write new"
+    },
+    "githubLabel": "GitHub address",
+    "githubPlaceholder": "https://github.com/owner/repo/tree/main/skills/my-skill",
+    "githubHint": "A repository, a folder in it (several skills are found automatically), a SKILL.md or any .md file. Public repositories only.",
+    "read": "Read",
+    "computerHint": "A skill folder (with SKILL.md), a .zip of one or more skills, or a single .md file. You can also drop it here.",
+    "pickFolder": "Choose folder",
+    "pickFile": "Choose .zip / .md",
+    "drop": "Drop a folder, .zip or .md here",
+    "writeHint": "Front matter with name and description is required; the description tells agents when to use the skill.",
+    "writeTemplate": "---\nname: my-skill\ndescription: \"When to use this skill, in one or two sentences.\"\n---\n\n# My skill\n\n## When to use\n\n## Steps\n1. \n",
+    "create": "Create skill",
+    "reading": "Reading…",
+    "found_one": "{{count}} skill found in {{source}}",
+    "found_other": "{{count}} skills found in {{source}}",
+    "selectAll": "Select all",
+    "selectNone": "Select none",
+    "install_one": "Install {{count}} skill",
+    "install_other": "Install {{count}} skills",
+    "installed_one": "{{count}} skill installed.",
+    "installed_other": "{{count}} skills installed.",
+    "back": "Back",
+    "existing": "replaces the installed one",
+    "showMd": "Show SKILL.md",
+    "hideMd": "Hide SKILL.md",
+    "suspicious": "Lines that look like instruction overrides:",
+    "noDescription": "(no description)",
+    "sizeLine": "{{files}} · {{size}}",
+    "files_one": "{{count}} file",
+    "files_other": "{{count}} files",
+    "binaries": "program files"
+  },
+  "edit": {
+    "title": "Edit {{name}}",
+    "warning": "This skill came from {{source}}. \"Update from source\" would overwrite these edits.",
+    "save": "Save",
+    "saved": "Skill saved."
+  },
+  "agent": {
+    "title": "Skills",
+    "desc": "Instruction packages this agent reads when the work fits. Assigned directly or through its teams.",
+    "none": "No skills. Assign one here or from Organization → Skills.",
+    "via": "via {{name}}",
+    "direct": "direct",
+    "add": "Add skill…",
+    "manage": "Manage skills",
+    "off": "turned off"
+  }
+}

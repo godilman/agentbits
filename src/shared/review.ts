@@ -1,0 +1,61 @@
+/** Parsing the project lead's review verdict (pure; tested in tests/review.test.ts). */
+
+/** Top-level `{…}` blocks of a text (strings respected); objects nested inside another are part of their parent. */
+function topLevelObjects(text: string): string[] {
+  const out: string[] = []
+  let i = 0
+  while (i < text.length) {
+    if (text[i] !== '{') {
+      i++
+      continue
+    }
+    let depth = 0
+    let inStr = false
+    let end = -1
+    for (let j = i; j < text.length; j++) {
+      const c = text[j]
+      if (inStr) {
+        if (c === '\\') j++
+        else if (c === '"') inStr = false
+      } else if (c === '"') inStr = true
+      else if (c === '{') depth++
+      else if (c === '}' && --depth === 0) {
+        end = j
+        break
+      }
+    }
+    if (end < 0) break // unbalanced: nothing after this can be a complete top-level object
+    out.push(text.slice(i, end + 1))
+    i = end + 1
+  }
+  return out
+}
+
+/**
+ * The lead's verdict. Only a top-level JSON object whose own `approved` is a real boolean counts: `"false"`,
+ * "not approved", "onaylanmadı", a missing field, an `approved` nested deeper, a key given twice or bozuk JSON never
+ * approve. Several verdicts that disagree are no verdict. `valid: false` = no usable verdict: the task waits for the user.
+ */
+export function parseReview(text: string): { approved: boolean; note: string; valid: boolean } {
+  const verdicts: { approved: boolean; note: string }[] = []
+  for (const raw of topLevelObjects(text)) {
+    let v: unknown
+    try {
+      v = JSON.parse(raw)
+    } catch {
+      continue
+    }
+    if (!v || typeof v !== 'object' || Array.isArray(v)) continue
+    const o = v as { approved?: unknown; note?: unknown }
+    if (typeof o.approved !== 'boolean') continue
+    // JSON.parse keeps the last of duplicate keys, and a nested "approved" could be mistaken for the verdict:
+    // a verdict object that mentions approved more than once is not a verdict.
+    if ((raw.match(/"approved"\s*:/g) ?? []).length !== 1) return { approved: false, note: text.trim().slice(0, 300), valid: false }
+    verdicts.push({ approved: o.approved, note: String(o.note ?? '').slice(0, 2000) })
+  }
+  if (!verdicts.length || verdicts.some((x) => x.approved !== verdicts[0].approved)) {
+    return { approved: false, note: (verdicts.at(-1)?.note || text.trim()).slice(0, 300), valid: false }
+  }
+  const last = verdicts[verdicts.length - 1]
+  return { approved: last.approved, note: last.note, valid: true }
+}

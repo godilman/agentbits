@@ -1,0 +1,35 @@
+{
+  "status": {
+    "proposed": "Proposed",
+    "accepted": "Accepted",
+    "rejected": "Rejected",
+    "superseded": "Superseded"
+  },
+  "list": {
+    "title": "Decision Log",
+    "subtitle": "Accepted decisions are written to persistent memory",
+    "new": "New",
+    "empty": "No records",
+    "emptyTitle": "No decisions yet",
+    "emptyHint": "The lead or agents propose important technical decisions here. Accepted decisions go into every agent's memory."
+  },
+  "filter": {
+    "all": "All",
+    "proposed": "Proposed",
+    "accepted": "Accepted",
+    "rejected": "Rejected"
+  },
+  "editor": {
+    "accept": "Accept",
+    "supersede": "Supersede",
+    "titlePlaceholder": "Decision title",
+    "fields": {
+      "context": "Context",
+      "decision": "Decision",
+      "rationale": "Rationale"
+    },
+    "propose": "Propose",
+    "acceptDirectly": "Accept directly",
+    "decidedByUser": "You"
+  }
+}

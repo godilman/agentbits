@@ -1,0 +1,112 @@
+{
+  "title": "Skill'ler",
+  "intro": "Skill'ler talimat paketleridir: bir işin ne zaman ve nasıl yapılacağını anlatan SKILL.md içeren bir klasör, isteğe bağlı başvuru dosyaları ve script'ler. GitHub'dan, .zip'ten, klasörden ya da tek bir .md'den kur, ajanlara ya da takımlara ata; ajanlar iş uygun olduğunda okur.",
+  "add": "Skill ekle",
+  "search": "Skill ara…",
+  "empty": {
+    "title": "Henüz skill yok",
+    "hint": "GitHub'dan (ör. frontend tasarım ya da finans skill'i), bilgisayarından ekle ya da kendin yaz."
+  },
+  "noneMatch": "Eşleşen skill yok.",
+  "selectHint": "Soldan bir skill seç.",
+  "badges": {
+    "scripts": "script",
+    "disabled": "kapalı",
+    "warnings": "kontrol et",
+    "modified": "düzenlendi",
+    "assigned_one": "{{count}} atama",
+    "assigned_other": "{{count}} atama",
+    "notAssigned": "atanmadı"
+  },
+  "source": {
+    "github": "GitHub",
+    "zip": ".zip",
+    "folder": "Klasör",
+    "markdown": ".md dosyası",
+    "created": "Agentbits'te yazıldı",
+    "label": "Kaynak"
+  },
+  "detail": {
+    "enabled": "Kullanımda",
+    "enabledHint": "Kapalıyken hiçbir ajan bu skill'i görmez.",
+    "edit": "SKILL.md'yi düzenle",
+    "update": "Kaynaktan güncelle",
+    "updateConfirm": "Kaynaktan yeniden indirilip dosyalar değiştirilsin mi? Agentbits'te yapılan düzenlemeler kaybolur; atamalar korunur.",
+    "updated": "Skill güncellendi.",
+    "delete": "Sil",
+    "deleteConfirm": "\"{{name}}\" skill'i silinsin mi? Ajanlar erişimini kaybeder. Geri alınamaz (yedeklerde durur).",
+    "deleted": "Skill silindi.",
+    "files_one": "{{count}} dosya · {{size}}",
+    "files_other": "{{count}} dosya · {{size}}",
+    "fileList": "Dosyalar",
+    "binaryFile": "Metin dosyası değil — saklanır, gösterilmez.",
+    "instructions": "Talimatlar (SKILL.md)",
+    "warningsTitle": "Atamadan önce",
+    "installed": "{{date}} kuruldu",
+    "updatedAt": "{{date}} güncellendi"
+  },
+  "assign": {
+    "title": "Kimler kullanabilir",
+    "hint": "Ajanlara ya da bir takıma / departmana / şirkete ata: tüm üyeleri (ve alt birimlerinin üyeleri) kullanır. Organizasyon = tüm ajanlar.",
+    "add": "Ata…",
+    "everyone": "Herkes ({{name}})",
+    "units": "Takımlar ve birimler",
+    "agents": "Ajanlar",
+    "remove": "Kaldır",
+    "none": "Henüz kimse — ajanlar yalnızca kendilerine atanan skill'leri görür."
+  },
+  "modal": {
+    "title": "Skill ekle",
+    "tabs": {
+      "github": "GitHub'dan",
+      "computer": "Bilgisayardan",
+      "write": "Yeni yaz"
+    },
+    "githubLabel": "GitHub adresi",
+    "githubPlaceholder": "https://github.com/sahip/depo/tree/main/skills/benim-skillim",
+    "githubHint": "Bir depo, içindeki bir klasör (birden çok skill otomatik bulunur), bir SKILL.md ya da herhangi bir .md dosyası. Yalnızca herkese açık depolar.",
+    "read": "Oku",
+    "computerHint": "Bir skill klasörü (içinde SKILL.md), bir ya da birden çok skill içeren .zip, ya da tek bir .md dosyası. Buraya sürükleyip de bırakabilirsin.",
+    "pickFolder": "Klasör seç",
+    "pickFile": ".zip / .md seç",
+    "drop": "Klasör, .zip ya da .md'yi buraya bırak",
+    "writeHint": "Ad ve açıklama içeren başlık bloğu zorunlu; açıklama ajanlara skill'i ne zaman kullanacaklarını söyler.",
+    "writeTemplate": "---\nname: benim-skillim\ndescription: \"Bu skill ne zaman kullanılmalı, bir iki cümleyle.\"\n---\n\n# Benim skill'im\n\n## Ne zaman kullanılır\n\n## Adımlar\n1. \n",
+    "create": "Skill oluştur",
+    "reading": "Okunuyor…",
+    "found_one": "{{source}} içinde {{count}} skill bulundu",
+    "found_other": "{{source}} içinde {{count}} skill bulundu",
+    "selectAll": "Tümünü seç",
+    "selectNone": "Hiçbirini seçme",
+    "install_one": "{{count}} skill kur",
+    "install_other": "{{count}} skill kur",
+    "installed_one": "{{count}} skill kuruldu.",
+    "installed_other": "{{count}} skill kuruldu.",
+    "back": "Geri",
+    "existing": "kurulu olanın yerine geçer",
+    "showMd": "SKILL.md'yi göster",
+    "hideMd": "SKILL.md'yi gizle",
+    "suspicious": "Talimatları geçersiz kılmaya benzeyen satırlar:",
+    "noDescription": "(açıklama yok)",
+    "sizeLine": "{{files}} · {{size}}",
+    "files_one": "{{count}} dosya",
+    "files_other": "{{count}} dosya",
+    "binaries": "program dosyaları"
+  },
+  "edit": {
+    "title": "{{name}} düzenle",
+    "warning": "Bu skill {{source}} kaynağından geldi. \"Kaynaktan güncelle\" bu düzenlemelerin üzerine yazar.",
+    "save": "Kaydet",
+    "saved": "Skill kaydedildi."
+  },
+  "agent": {
+    "title": "Skill'ler",
+    "desc": "Bu ajanın iş uygun olduğunda okuduğu talimat paketleri. Doğrudan ya da takımları üzerinden atanır.",
+    "none": "Skill yok. Buradan ya da Organizasyon → Skill'ler'den ata.",
+    "via": "{{name}} üzerinden",
+    "direct": "doğrudan",
+    "add": "Skill ekle…",
+    "manage": "Skill'leri yönet",
+    "off": "kapalı"
+  }
+}

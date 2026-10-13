@@ -1,0 +1,112 @@
+{
+  "app": {
+    "loadFailed": "Couldn't load data",
+    "retry": "Try again",
+    "opening": "Opening the office…"
+  },
+  "errorBoundary": {
+    "title": "This view ran into an error",
+    "retry": "Try again"
+  },
+  "avatar": {
+    "unassigned": "Unassigned"
+  },
+  "usage": {
+    "noRecords": "{{label}}: no records",
+    "estimatedLabel": "{{label}} (estimated)",
+    "input": "Input: {{value}}",
+    "output": "Output: {{value}}",
+    "cacheRead": "Cache read: {{value}}",
+    "cacheWrite": "Cache write: {{value}}",
+    "total": "Total: {{value}}",
+    "cost": "Cost: ${{value}}",
+    "records_one": "{{count}} record",
+    "records_other": "{{count}} records",
+    "task": "Task",
+    "session": "Session",
+    "allTime": "Total",
+    "estimated": "estimated",
+    "notReported": "not reported"
+  },
+  "topBar": {
+    "tabs": {
+      "chat": "Chat",
+      "office": "Office",
+      "team": "Team",
+      "terminal": "Terminal",
+      "tasks": "Tasks",
+      "reports": "Reports",
+      "decisions": "Decisions",
+      "browser": "Browser",
+      "files": "Files"
+    },
+    "tabTitle": "{{label}} (Ctrl+{{key}})",
+    "organization": "Organization",
+    "organizationTitle": "Organization (Ctrl+O)",
+    "newProject": "New project",
+    "resumeAllTitle": "Resume all agents",
+    "pauseAllTitle": "Pause all agents",
+    "resume": "Resume",
+    "pauseAll": "Pause all",
+    "settings": "Settings",
+    "guide": "Guide",
+    "guideTitle": "Guide: what to do where, why and how (F1)",
+    "projectTabTitle": "{{name}} — {{path}}\nDouble-click: project settings",
+    "projectTabTitleNoFolder": "{{name}} — no folder selected\nDouble-click: project settings",
+    "runningJobs_one": "{{count}} running job",
+    "runningJobs_other": "{{count}} running jobs",
+    "closeTab": "Close tab",
+    "unarchived": "{{name}} restored from the archive",
+    "allProjects": "All projects",
+    "projects": "Projects",
+    "archive": "Archive",
+    "openProject": "Open project…",
+    "openFolder": "Open folder…",
+    "noFolder": "no folder selected",
+    "archived": "archived",
+    "open": "open",
+    "projectFolderTitle": "Project folder: {{path}}",
+    "noFolderTitle": "This project has no folder — CLI agents can't run",
+    "noFolderChip": "No folder selected",
+    "projectSettings": "Project settings"
+  },
+  "sidebar": {
+    "runningWork": "Running work",
+    "live": "live",
+    "noRunningWork": "Nothing is running right now",
+    "openProjectOf": "Open project {{name}}",
+    "switchToProject": "Switch to project {{name}}",
+    "awaitingApproval": "awaiting approval",
+    "paused": "paused",
+    "working": "working",
+    "resume": "Resume",
+    "pause": "Pause",
+    "caps": {
+      "fsWrite": "file write",
+      "terminal": "terminal",
+      "network": "network",
+      "readOnly": "read-only"
+    },
+    "team": "Team",
+    "teamTitle": "Project team",
+    "activeCount": "{{working}}/{{enabled}} active",
+    "noTeam": "No team assigned to this project → Team",
+    "liveChat": "Live chat",
+    "openAll": "Open all →",
+    "noMessages": "No messages in this project yet.",
+    "taskChannel": "task",
+    "youBadge": "YOU",
+    "you": "You",
+    "agent": "Agent",
+    "typing": "{{name}} is typing",
+    "placeholderLead": "Write to {{name}}… (describe the work)",
+    "placeholder": "Write a message…"
+  },
+  "store": {
+    "projectNotFound": "Project not found; it may have been deleted",
+    "projectArchived": "{{name}} is archived; restore it from the archive first",
+    "noValidProjects": "No valid project to open",
+    "someNotOpened_one": "{{count}} project couldn't be opened (deleted or archived)",
+    "someNotOpened_other": "{{count}} projects couldn't be opened (deleted or archived)"
+  }
+}

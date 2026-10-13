@@ -1,0 +1,108 @@
+{
+  "title": "Files",
+  "you": "You",
+  "pastedFileName": "pasted.png",
+  "tooBig": "{{names}}: exceeds the {{limit}} limit",
+  "meta": {
+    "pages_one": "{{count}} page",
+    "pages_other": "{{count}} pages",
+    "slides_one": "{{count}} slide",
+    "slides_other": "{{count}} slides",
+    "sheets_one": "{{count}} sheet",
+    "sheets_other": "{{count}} sheets",
+    "sheetNames": "Sheets: {{names}}",
+    "parts_one": "{{count}} part · ~{{tokens}} tokens",
+    "parts_other": "{{count}} parts · ~{{tokens}} tokens"
+  },
+  "view": {
+    "dropLabel": "Add to “{{project}}” files",
+    "projectFallback": "Project",
+    "subtitle": "Uploads, files agents produced and changes in the project folder",
+    "filter": {
+      "all": "All",
+      "user": "Uploaded",
+      "agent": "Agent",
+      "workspace": "Folder"
+    },
+    "searchPlaceholder": "Search name or content…",
+    "upload": "Upload files",
+    "added": "Files added. To give them to agents, share them in the chat or a task, or allow access under Access.",
+    "emptyTitle": "No files yet",
+    "emptyHint": "Drag files here, into the chat, onto an agent's terminal or onto a task. PDF, Word, Excel, PowerPoint, CSV, text, JSON, Markdown and images can be read; agents read long files part by part.",
+    "hits": "Found in content ({{count}})",
+    "hitPart": "part {{n}} · {{label}}",
+    "columns": {
+      "file": "File",
+      "kind": "Type",
+      "size": "Size",
+      "origin": "Source",
+      "access": "Access",
+      "status": "Status",
+      "added": "Added"
+    },
+    "accessAll": "Whole team",
+    "accessSelected": "Selected agents",
+    "noMatch": "No matching files."
+  },
+  "preview": {
+    "role": {
+      "attached": "Attached",
+      "given": "Given in the prompt",
+      "read": "Read",
+      "generated": "Generated"
+    },
+    "fallbackTitle": "File",
+    "confirmDeleteWorkspace": "The record is deleted; the file in the project folder is not touched.",
+    "confirmDelete": "Delete the file and its extracted text? It can no longer be opened from linked messages and tasks.",
+    "deleted": "File deleted",
+    "reveal": "Show in folder",
+    "openTitle": "Open with the default app",
+    "openBlocked": "This type is not opened directly for security reasons; download it",
+    "savedTo": "Saved: {{path}}",
+    "saveAs": "Save as",
+    "suspiciousTitle": "Instruction-like content aimed at AI",
+    "suspiciousBody": "File content is always given to agents as “untrusted data”; instructions in it are not followed. Examples:",
+    "noOriginal": "The original file is not on disk (it may have been deleted after a backup was restored); only the extracted text remains.",
+    "tabs": {
+      "content": "Content",
+      "access": "Access ({{n}})",
+      "wholeTeam": "whole team",
+      "usage": "Usage ({{count}})"
+    },
+    "imageUnavailable": "The image cannot be previewed (the original is missing or larger than 15 MB).",
+    "partHeader": "Part {{n}}/{{total}} · {{label}}",
+    "chars_one": "{{n}} character",
+    "chars_other": "{{n}} characters",
+    "partRange": "Parts {{from}}–{{to}} / {{total}}",
+    "noText": "No text to show.",
+    "extracting": "Extracting text…",
+    "access": {
+      "intro": "Default: <b>no agent can read it</b>. Only whoever the file was sent to (lead, agent, team) can read it. The agent doing a task can also read files attached to that task. Agents can only read files; they cannot change or delete them.",
+      "shareAll": "Let the whole project team read it",
+      "teamCount_one": "{{project}} · {{count}} agent",
+      "teamCount_other": "{{project}} · {{count}} agents",
+      "noAgents": "No agents in the project.",
+      "viaTasks": "Also readable through task links: {{tasks}}"
+    },
+    "neverUsed": "Not used anywhere yet."
+  },
+  "task": {
+    "hint": "The agent doing the task can read them · drag and drop",
+    "none": "No attachments."
+  },
+  "parts": {
+    "suspiciousLines_one": "{{count}} instruction-like line (treated as data)",
+    "suspiciousLines_other": "{{count}} instruction-like lines (treated as data)",
+    "fileFallback": "file",
+    "noOriginal": "(original missing)",
+    "attachTitle": "Add files (drag and drop and paste work too) — PDF, Word, Excel, PowerPoint, CSV, text, JSON, Markdown, images",
+    "drop": "Drop files"
+  },
+  "attach": {
+    "tooBig": "too large ({{size}}; max {{limit}})",
+    "moreFiles_one": "+{{count}} file",
+    "moreFiles_other": "+{{count}} files",
+    "maxPerSend": "at most {{max}} files at once",
+    "addFailed": "could not be added"
+  }
+}

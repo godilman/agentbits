@@ -1,0 +1,69 @@
+{
+  "name": "agentbits",
+  "productName": "Agentbits",
+  "version": "0.1.0",
+  "description": "You lead. Your AI team gets things done. Multi-agent orchestration desktop app with a pixel-art office.",
+  "main": "./out/main/index.js",
+  "author": "Gökhan Dilman",
+  "license": "SEE LICENSE IN LICENSE",
+  "homepage": "https://github.com/godilman/agentbits",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/godilman/agentbits.git"
+  },
+  "bugs": {
+    "url": "https://github.com/godilman/agentbits/issues"
+  },
+  "private": true,
+  "scripts": {
+    "dev": "electron-vite dev",
+    "build": "electron-vite build",
+    "start": "electron-vite preview",
+    "typecheck": "tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.web.json",
+    "dist": "npm run dist:win",
+    "dist:win": "electron-vite build && electron-builder --win --config electron-builder.config.js --publish never",
+    "dist:mac": "electron-vite build && electron-builder --mac --config electron-builder.config.js --publish never",
+    "test:unit": "node --experimental-strip-types --no-warnings tests/connections.classify.test.ts && node --experimental-strip-types --no-warnings tests/files.extract.test.ts && node --experimental-strip-types --no-warnings tests/skills.test.ts && node --experimental-strip-types --no-warnings tests/apps.test.ts && node --experimental-strip-types --no-warnings tests/review.test.ts && node --experimental-strip-types --no-warnings tests/i18n.test.ts",
+    "i18n:check": "node --experimental-strip-types --no-warnings tests/i18n.test.ts --all",
+    "notices": "node scripts/third-party-notices.mjs"
+  },
+  "dependencies": {
+    "@lydell/node-pty": "1.2.0-beta.15",
+    "@modelcontextprotocol/sdk": "1.31.0",
+    "better-sqlite3": "^13.0.3",
+    "fflate": "^0.8.3",
+    "i18next": "^25.10.10",
+    "mssql": "^12.7.4",
+    "mysql2": "^3.24.5",
+    "papaparse": "^5.7.0",
+    "pg": "^8.23.1",
+    "ssh2": "^1.17.0",
+    "unpdf": "^1.8.1"
+  },
+  "devDependencies": {
+    "@types/better-sqlite3": "^7.6.13",
+    "@types/mssql": "^12.3.0",
+    "@types/node": "^22.20.5",
+    "@types/papaparse": "^5.5.2",
+    "@types/pg": "^8.23.1",
+    "@types/react": "^19.2.0",
+    "@types/react-dom": "^19.2.0",
+    "@types/ssh2": "^1.15.6",
+    "@vitejs/plugin-react": "^5.2.0",
+    "@xterm/addon-fit": "^0.10.0",
+    "@xterm/xterm": "^5.5.0",
+    "autoprefixer": "^10.4.21",
+    "electron": "^44.7.0",
+    "electron-builder": "^26.15.3",
+    "electron-vite": "^5.0.0",
+    "lucide-react": "^0.577.0",
+    "postcss": "^8.5.6",
+    "react": "^19.2.0",
+    "react-dom": "^19.2.0",
+    "react-i18next": "^15.7.4",
+    "tailwindcss": "^3.4.19",
+    "typescript": "~5.9.3",
+    "vite": "^7.3.7",
+    "zustand": "^5.0.15"
+  }
+}

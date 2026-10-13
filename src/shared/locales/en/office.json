@@ -1,0 +1,32 @@
+{
+  "canvas": {
+    "away": "in another project"
+  },
+  "allTime": "All time",
+  "emptyOrg": "The office is empty: you have no agents yet. Set up your team and add agents; they'll sit here.",
+  "templates": "Templates",
+  "guide": "Guide",
+  "noTeam": "No team assigned to this project yet.",
+  "noTeamWithLead": "No team assigned to this project yet — for now only the lead ({{name}}) is here.",
+  "team": "Team",
+  "panel": {
+    "title": "Office",
+    "hint": "Click an agent on the map for details.",
+    "awayIn": "in another project · {{name}}",
+    "editProfile": "Edit profile",
+    "done": "Done",
+    "queued": "Queued",
+    "workingElsewhere": "Working in another project",
+    "goToProject": "Go to project",
+    "currentWork": "Current work",
+    "resume": "Resume",
+    "pause": "Pause",
+    "stop": "Stop",
+    "activity": "Activity",
+    "noLogs": "No entries yet.",
+    "message": "Message",
+    "goOffline": "Take offline",
+    "goOnline": "Bring online",
+    "tokens": "Tokens"
+  }
+}

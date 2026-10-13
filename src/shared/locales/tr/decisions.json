@@ -1,0 +1,35 @@
+{
+  "status": {
+    "proposed": "Önerildi",
+    "accepted": "Kabul",
+    "rejected": "Red",
+    "superseded": "Geçersiz"
+  },
+  "list": {
+    "title": "Karar Kaydı",
+    "subtitle": "Kabul edilen kararlar kalıcı hafızaya yazılır",
+    "new": "Yeni",
+    "empty": "Kayıt yok",
+    "emptyTitle": "Henüz karar yok",
+    "emptyHint": "Lider veya ajanlar önemli teknik kararları buraya önerir. Kabul edilen kararlar tüm ajanların hafızasına girer."
+  },
+  "filter": {
+    "all": "Tümü",
+    "proposed": "Önerilen",
+    "accepted": "Kabul",
+    "rejected": "Red"
+  },
+  "editor": {
+    "accept": "Kabul et",
+    "supersede": "Geçersiz kıl",
+    "titlePlaceholder": "Karar başlığı",
+    "fields": {
+      "context": "Bağlam",
+      "decision": "Karar",
+      "rationale": "Gerekçe"
+    },
+    "propose": "Öner",
+    "acceptDirectly": "Doğrudan kabul et",
+    "decidedByUser": "Sen"
+  }
+}

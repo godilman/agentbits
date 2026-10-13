@@ -1,0 +1,167 @@
+{
+  "list": {
+    "title": "Bağlantılar",
+    "search": "Ara…",
+    "agents_one": "{{count}} ajan",
+    "agents_other": "{{count}} ajan",
+    "testOk": "test başarılı",
+    "testFailed": "test başarısız",
+    "empty": "Henüz bağlantı yok. Sağ üstteki + ile SSH sunucusu ya da veritabanı ekle.",
+    "auditAll": "Denetim kaydı (tümü)",
+    "newConnection": "Yeni bağlantı",
+    "selectTitle": "Bağlantı seç",
+    "selectHint": "Ajanların işlerinde kullanabileceği sunucu ve veritabanlarını buradan yönetirsin. Varsayılan olarak hiçbir ajan erişemez."
+  },
+  "detail": {
+    "noHost": "host yok",
+    "lastTest": "son test {{ago}} önce",
+    "tabs": {
+      "settings": "Ayarlar",
+      "access": "Ajan erişimi ({{n}})",
+      "schema": "Şema",
+      "audit": "Denetim"
+    }
+  },
+  "editor": {
+    "newTitle": "Yeni {{kind}} bağlantısı",
+    "nameRequired": "Bağlantı adı gerekli",
+    "saved": "Bağlantı kaydedildi",
+    "deleted": "{{name}} silindi",
+    "lastTestFailed": "Son test başarısız: {{message}}",
+    "deleteConfirm": "Silinsin mi? Ajan izinleri de silinir.",
+    "test": "Bağlantıyı test et",
+    "definition": {
+      "title": "Tanım",
+      "hint": "Ajanlar bu bilgilerle hangi bağlantının işlerine yaradığını anlar; şifre hiçbir zaman ajana gösterilmez.",
+      "name": "Bağlantı adı",
+      "namePlaceholderDb": "Ör. ERP Production DB",
+      "namePlaceholderSsh": "Ör. ERP Application Server",
+      "env": "Ortam",
+      "productionWarning": "Production: veri değiştiren ya da yıkıcı her işlem (SQL yazma/DDL, okuma listesi dışındaki SSH komutları) çalışmadan önce senin onayını bekler.",
+      "description": "Açıklama",
+      "descriptionPlaceholderDb": "Ör. Şirketin ERP veritabanı. Stok, sipariş, müşteri ve üretim bilgilerini içerir.",
+      "descriptionPlaceholderSsh": "Ör. ERP uygulamasının çalıştığı sunucu.",
+      "purpose": "Kullanım amacı",
+      "purposePlaceholder": "Ajanlar bunu ne için kullanmalı?",
+      "notesDb": "İçerdiği veri ve sistemler",
+      "notesSsh": "Barındırdığı servisler",
+      "notesPlaceholderDb": "Ör. stok, siparis, musteri tabloları; günlük ETL 02:00",
+      "notesPlaceholderSsh": "Ör. erp-api (systemd), nginx, postgres-client"
+    },
+    "connection": {
+      "title": "Bağlantı",
+      "host": "Host / IP",
+      "port": "Port",
+      "username": "Kullanıcı adı",
+      "database": "Veritabanı",
+      "encrypt": "Şifreli (encrypt)",
+      "ssl": "SSL / TLS",
+      "trustCert": "Sertifikaya güven",
+      "trustCertTitle": "Kendinden imzalı sertifikayı kabul et"
+    },
+    "auth": {
+      "title": "Kimlik doğrulama",
+      "hint": "Parola ve anahtarlar işletim sisteminin güvenli deposuyla (safeStorage) şifrelenir; arayüze, ajanlara, terminallere ve loglara gönderilmez.",
+      "password": "Parola",
+      "readOnlyTitle": "Salt-okunur kullanıcı (ajanların okuması için zorunlu)",
+      "readOnlyHint": "Ajanların çalıştırdığı her SELECT bu kullanıcıyla bağlanır; böylece yazma yasağını veritabanının kendisi de uygular. Bu alan boşsa ajanlar bu bağlantıdan okuma yapamaz. Veritabanında yalnızca SELECT yetkisi olan bir kullanıcı oluşturup buraya girin.",
+      "method": "Yöntem",
+      "methodKeyFile": "Anahtar dosyası",
+      "methodKey": "Anahtarı yapıştır",
+      "methodPassword": "Parola",
+      "methodAgent": "SSH agent",
+      "keyFile": "Özel anahtar dosyası",
+      "keyFilePlaceholder": "C:\\Users\\ben\\.ssh\\id_ed25519",
+      "browse": "Seç…",
+      "keyStored": "Özel anahtar (kayıtlı — değiştirmek için yapıştırın)",
+      "keyNew": "Özel anahtar (PEM / OpenSSH)",
+      "passphrase": "Anahtar parolası (varsa)",
+      "agentHint": "Windows'ta OpenSSH Authentication Agent, diğerlerinde SSH_AUTH_SOCK kullanılır.",
+      "hostKey": "Sabitlenmiş sunucu anahtarı:",
+      "hostKeyReset": "Sunucu anahtarı sıfırlandı; bir sonraki bağlantıda yeniden sabitlenecek",
+      "secretStored": "•••••••• (kayıtlı — değiştirmek için yazın)",
+      "secretWillRemove": "kaldırılacak",
+      "secretRemove": "Kayıtlı parolayı kaldır"
+    },
+    "commands": {
+      "title": "İzin verilen komutlar",
+      "hint": "Her satır bir kalıp; * herhangi bir argüman demektir. Ajanın seviyesi hangi listeleri kullanabileceğini belirler; yönetici her komutu çalıştırabilir. ; && > < ` $( ) içeren komutlar yalnızca yöneticiye açıktır, | ile bağlanan komutların her biri listede olmalıdır.",
+      "read": "Okuma (Salt okuma ve üstü)",
+      "write": "Yazma (Okuma / yazma ve üstü)",
+      "execute": "Yürütme (Yürütme ve üstü)"
+    }
+  },
+  "access": {
+    "intro": "Varsayılan politika <b>erişim yok</b>: ajan yalnızca burada yetki verdiğin bağlantıyı görür ve kullanır. Değişiklik bir sonraki araç çağrısından itibaren geçerlidir."
+  },
+  "schema": {
+    "tables_one": "{{count}} tablo/görünüm",
+    "tables_other": "{{count}} tablo/görünüm",
+    "readAgo": "{{ago}} önce okundu",
+    "truncated": "kısaltıldı",
+    "notRead": "Şema henüz okunmadı.",
+    "search": "Tablo / kolon ara…",
+    "read": "Şemayı oku",
+    "hint": "Ajanlar şemayı db_schema aracıyla okur (salt-okunur bağlantıyla); burada keşfedip kontrol edebilirsin.",
+    "view": "view",
+    "columns_one": "{{count}} kolon",
+    "columns_other": "{{count}} kolon",
+    "noMatch": "Eşleşen tablo yok."
+  },
+  "audit": {
+    "title": "Denetim kaydı",
+    "intro": "Her bağlantı erişimi ve kritik işlem: hangi ajan, ne zaman, hangi görevde, ne yaptı ve sonucu.",
+    "filter": {
+      "all": "Tümü",
+      "denied": "Reddedilen",
+      "error": "Hata",
+      "pending": "Onay",
+      "ok": "Başarılı"
+    },
+    "columns": {
+      "time": "Zaman",
+      "who": "Kim",
+      "connection": "Bağlantı",
+      "task": "Görev",
+      "action": "İşlem",
+      "result": "Sonuç"
+    },
+    "result": {
+      "ok": "başarılı",
+      "error": "hata",
+      "denied": "reddedildi",
+      "pending": "onay bekliyor"
+    },
+    "action": {
+      "list": "bağlantıları listeledi",
+      "schema": "şema",
+      "query": "sorgu",
+      "exec": "komut",
+      "test": "bağlantı testi",
+      "permission": "yetki değişikliği",
+      "connectionCreate": "bağlantı oluşturuldu",
+      "connectionUpdate": "bağlantı güncellendi",
+      "connectionDelete": "bağlantı silindi",
+      "queryApproval": "sorgu onayı",
+      "execApproval": "komut onayı",
+      "approvalGranted": "onay verildi",
+      "approvalDenied": "onay reddedildi",
+      "appCreate": "Uygulama eklendi",
+      "appUpdate": "Uygulama değişti",
+      "appDelete": "Uygulama silindi",
+      "appPolicy": "Araç politikası",
+      "appPermission": "Uygulama erişimi",
+      "appTool": "Uygulama aracı: {{tool}}"
+    },
+    "empty": "Kayıt yok.",
+    "older": "Daha eski kayıtlar"
+  },
+  "approvals": {
+    "title": "Production onayı gerekiyor",
+    "sshCommand": "SSH komutu",
+    "level": "{{level}} yetkisi",
+    "approveRun": "Onayla ve çalıştır",
+    "appTool": "Uygulama aracı {{tool}}",
+    "appTitle": "Onay gerekiyor"
+  }
+}

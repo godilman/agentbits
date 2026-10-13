@@ -1,0 +1,266 @@
+{
+  "title": "Settings",
+  "sections": {
+    "agents": "Agents",
+    "permissions": "Permission Matrix",
+    "providers": "Providers",
+    "memory": "Memory",
+    "data": "Data management",
+    "general": "General"
+  },
+  "agents": {
+    "title": "Agents",
+    "desc": "Adding agents, job descriptions, skills, appearance and permissions live in the Agents section of the Organization page.",
+    "count_one": "{{count}} agent",
+    "count_other": "{{count}} agents",
+    "manage": "Add new agents and manage their roles and permissions from a single screen.",
+    "openInOrg": "Open in Organization"
+  },
+  "permissions": {
+    "title": "Dynamic Permission Matrix",
+    "desc": "Decide what each agent can access. For CLI providers this matrix maps directly to the tool list and sandbox mode.",
+    "colAgent": "Agent",
+    "colPaths": "Paths",
+    "howTitle": "How is it applied?",
+    "how": "Agents start in the folder of the task's project (this project: {{workspace}}). For Claude Code, disabled permissions are removed from the <code>--tools</code> list; file writes are auto-approved with <code>acceptEdits</code> mode only in the workspace + extra folders. For Codex, <code>--sandbox</code> read-only / workspace-write is chosen. An agent with terminal permission can run any command in the shell — only enable it for agents you trust. If “Require approval” is on, an approval card appears in the left panel before the agent starts.",
+    "noWorkspace": "no folder selected — CLI agents won't run",
+    "paths": {
+      "title": "Extra allowed folders for {{name}}",
+      "add": "Add folder",
+      "workspaceOnly": "Workspace folder only."
+    }
+  },
+  "connections": {
+    "title": "Connection permissions",
+    "desc": "Server and database access per agent × connection. Default: no access. In Production, operations that change data also wait for your approval.",
+    "manage": "Manage connections",
+    "empty": "No connections yet. Add them under Organization → Connections."
+  },
+  "providers": {
+    "title": "Providers",
+    "desc": "The model / CLI connections behind the agents. The default provider is used for every agent without its own provider.",
+    "add": "Add provider",
+    "default": "Default",
+    "defaultModel": "default model",
+    "keySet": "key ✓",
+    "keyMissing": "no key",
+    "testing": "Testing…",
+    "makeDefault": "Make default",
+    "empty": "No providers — agents run in demo mode.",
+    "newTitle": "New provider",
+    "added": "{{label}} added and set as default",
+    "kinds": {
+      "claudeCli": "Runs the official `claude` CLI in the background. File/terminal tools are enabled according to the permission matrix.",
+      "anthropic": "Direct model call via the Messages API: no file system or terminal access; uses the app's file and connection tools.",
+      "openai": "Model call via the Chat Completions API: no file system or terminal access; uses the app's file and connection tools.",
+      "codexCli": "Runs OpenAI's `codex exec` command in sandbox mode.",
+      "mockTitle": "Demo (simulation)",
+      "mock": "No key needed. Agents behave as if they were really working."
+    },
+    "form": {
+      "apiKeyRequired": "API key is required.",
+      "apiKeyNoSpaces": "The key must not contain spaces.",
+      "installed": "● installed",
+      "notFound": "○ not found",
+      "apiKey": "API key",
+      "apiKeyHint": "Encrypted with the operating system keychain (Windows DPAPI) and stored in the local SQLite; never sent back to the interface.",
+      "cliPath": "CLI path (empty = find on PATH)",
+      "claudeLogin": "Run `claude auth login` once in a terminal to sign in (you can also do it from the Terminal tab).",
+      "codexLogin": "Run `codex login` once in a terminal to sign in.",
+      "model": "Model",
+      "continueDemo": "Continue with demo",
+      "saveTest": "Save and test"
+    },
+    "modelSaved": "Model changed: {{model}}"
+  },
+  "memory": {
+    "title": "Persistent Memory",
+    "desc": "Context the lead and agents never forget. Every run adds the organization-wide records plus the project's most relevant ones (FTS5 + importance + recency) to the prompt.",
+    "scopeOrg": "Organization-wide",
+    "scopeProject": "This project",
+    "addToProject": "Add to {{name}} memory",
+    "projectFallback": "Project",
+    "addToOrg": "Add to organization memory",
+    "placeholder": "E.g. Keep UI copy short; code comments in English.",
+    "sharedAll": "Shared (all agents)",
+    "onlyAgent": "Only {{name}}",
+    "search": "Search memory…",
+    "shared": "shared",
+    "empty": "No records found"
+  },
+  "general": {
+    "title": "General",
+    "desc": "Orchestration behavior and app info.",
+    "folders": {
+      "title": "Project folders",
+      "desc": "Every project has its own folder: agents (CLI) work in the folder of the task's project, and the terminal opens there too.",
+      "none": "no folder selected",
+      "open": "Open project settings"
+    },
+    "startup": {
+      "title": "On startup",
+      "desc": "When the app opens, ask which projects to open or reopen the project tabs from the last session directly.",
+      "ask": "Show project picker",
+      "restore": "Last open projects"
+    },
+    "autopilot": {
+      "title": "Autopilot",
+      "desc": "Idle agents pick up the next tasks on their own."
+    },
+    "review": {
+      "title": "Lead review",
+      "desc": "Finished work is reviewed by the lead and either approved or sent back for revision."
+    },
+    "wizard": {
+      "title": "Setup wizard",
+      "desc": "Show the first-run screen again.",
+      "restart": "Restart"
+    }
+  },
+  "data": {
+    "title": "Data management",
+    "desc": "All data lives in a single SQLite file on this computer. See how much space it takes, clean up old records, take backups or reset.",
+    "openFolder": "Open folder",
+    "stats": {
+      "database": "Database",
+      "databaseSub": "{{agents}} agents · {{units}} units · {{projects}} projects",
+      "logs": "Agent logs",
+      "oldest": "oldest {{time}}",
+      "noLogs": "no records",
+      "orgMemory": "Organization memory",
+      "decisionRecords_one": "{{count}} decision record",
+      "decisionRecords_other": "{{count}} decision records",
+      "backups": "Backups",
+      "backupCount_one": "{{count}} backup",
+      "backupCount_other": "{{count}} backups",
+      "files": "Files",
+      "filesSub_one": "{{count}} original file · those used by backups are kept",
+      "filesSub_other": "{{count}} original files · those used by backups are kept"
+    },
+    "projects": {
+      "title": "Projects",
+      "desc": "Tasks, chat, logs and memory belong to a project; cleaning one project doesn't touch the others. Agents, teams and the files in the folder are kept.",
+      "cleared_one": "{{name}}: {{count}} record deleted",
+      "cleared_other": "{{name}}: {{count}} records deleted",
+      "archived": "archived",
+      "summary": "{{tasks}} tasks · {{messages}} messages · {{logs}} logs · {{memories}} memories · {{decisions}} decisions · {{reports}} reports · {{files}} files ({{size}})",
+      "clean": "Clean up…",
+      "keepDecisionMemory": "Keep decision memory",
+      "deleteCount_one": "Delete {{count}} record",
+      "deleteCount_other": "Delete {{count}} records",
+      "deleteSelected": "Delete selected"
+    },
+    "parts": {
+      "memories": "Project memory",
+      "memoriesHint": "What agents remember from this project",
+      "messages": "Chat history",
+      "messagesHint": "Project channels and task conversations",
+      "logs": "Run records",
+      "logsHint": "Logs and finished runs (running jobs stop)",
+      "reports": "Reports",
+      "reportsHint": "Daily reports",
+      "decisions": "Decisions",
+      "decisionsHint": "ADR records",
+      "tasks": "Tasks",
+      "tasksHint": "Kanban cards (running ones are stopped)",
+      "files": "Files",
+      "filesHint": "Attachments, agent outputs and folder records (files in the folder are not touched)"
+    },
+    "org": {
+      "title": "Organization and records",
+      "desc": "Data not tied to a project.",
+      "cleared_one": "{{count}} record deleted from organization memory",
+      "cleared_other": "{{count}} records deleted from organization memory",
+      "memoryTitle": "Organization-wide memory",
+      "memoryDesc": "{{total}} records used across all projects (preferences, shared rules, {{decisions}} decisions).",
+      "keepDecisions": "Keep decisions",
+      "confirmDelete_one": "Yes, delete {{count}} record",
+      "confirmDelete_other": "Yes, delete {{count}} records",
+      "clean": "Clean up"
+    },
+    "retention": {
+      "title": "Log retention",
+      "auto": "Agent logs older than {{days}} days are deleted automatically at startup and every 6 hours.",
+      "never": "Logs are not deleted automatically.",
+      "days_one": "{{count}} day",
+      "days_other": "{{count}} days",
+      "year": "1 year",
+      "forever": "Forever",
+      "apply": "Apply now",
+      "pruned_one": "{{count}} old log deleted",
+      "pruned_other": "{{count}} old logs deleted",
+      "nothing": "No old logs to delete"
+    },
+    "backups": {
+      "title": "Backups",
+      "desc": "A snapshot of the database (settings, agents, organization, projects, tasks, memory). The last 10 backups are kept; one is taken automatically before a reset.",
+      "create": "Back up",
+      "created": "Backup created ({{size}})",
+      "deleted": "Backup deleted",
+      "restoring": "Restoring backup, restarting the app…",
+      "empty": "No backups yet.",
+      "restoreWarning": "Current data will be backed up and replaced with this one; the app restarts.",
+      "restore": "Restore",
+      "deleteTitle": "Delete backup"
+    },
+    "reset": {
+      "title": "Factory reset",
+      "desc": "All running jobs are stopped. A backup is taken automatically first; if you reset by mistake you can restore it from Backups.",
+      "doneAll": "Everything was reset. Backup: {{name}}",
+      "doneWork": "Work data deleted. Backup: {{name}}",
+      "word": "RESET",
+      "confirm": "Type <word>{{word}}</word> to confirm:",
+      "buttonAll": "Reset everything",
+      "buttonWork": "Delete work data",
+      "work": {
+        "title": "Delete work data only",
+        "desc": "Tasks, chats, logs, decisions, reports, memory and file records of all projects are deleted (original files used by a backup stay until that backup is deleted; project folders are not touched).",
+        "keeps": "Kept: agents, permissions, organization, teams, projects and their folders, providers, settings."
+      },
+      "all": {
+        "title": "Reset everything",
+        "desc": "The app returns to its freshly installed state: agents, organization, projects, providers and saved API keys are deleted too.",
+        "keeps": "An empty organization and a single empty project remain; the setup wizard and the guide open so you can build the team from scratch. Files in project folders are not touched."
+      }
+    }
+  },
+  "models": {
+    "groups": {
+      "recommended": "Recommended",
+      "account": "Other models on your account"
+    },
+    "custom": "Custom model name…",
+    "customHint": "Type the exact name of a model that isn't in the list (e.g. a newly released one).",
+    "customPlaceholder": {
+      "claude-cli": "e.g. sonnet, opus or claude-opus-5-5",
+      "anthropic": "e.g. claude-opus-5-5",
+      "openai": "e.g. gpt-5.6-sol",
+      "codex-cli": "e.g. gpt-6.1-sol"
+    },
+    "cliDefaultOption": "{{name}} default (depends on your account)",
+    "inherit": "Provider's model ({{model}})",
+    "inheritCliDefault": "CLI default",
+    "loading": "Loading the models on your account…",
+    "liveOk_one": "{{count}} model found on your account.",
+    "liveOk_other": "{{count}} models found on your account.",
+    "liveError": "Couldn't load your account's model list ({{error}}); showing the recommended list.",
+    "needKey": "Enter the API key to also see the models on your account.",
+    "refresh": "Reload the list",
+    "notOnAccount": "not on your account",
+    "openaiNoGpt6": "GPT-6 models aren't listed: Agentbits' OpenAI connection (Chat Completions) can't use tools with them. Use GPT-6 through Codex CLI.",
+    "cliAliases": "Aliases always use the newest model of that family available to your account.",
+    "notes": {
+      "balanced": "balance of speed and intelligence",
+      "complex": "complex work, best results",
+      "fast": "fastest and cheapest",
+      "hardest": "hardest reasoning (if you have access)",
+      "opusplan": "Opus plans, Sonnet does the work",
+      "previous": "previous generation",
+      "codexRecommended": "recommended for complex coding and agent work",
+      "mostCapable": "most capable",
+      "focused": "focused, repeatable tasks",
+      "simulated": "simulation",
+      "cliDefault": "CLI default"
+    }
+  }
+}

@@ -1,0 +1,65 @@
+{
+  "stats": {
+    "done": "Biten görev",
+    "doneSub": "{{total}} görevden",
+    "active": "Devam eden",
+    "activeSub": "{{count}} incelemede",
+    "successRate": "Başarı oranı",
+    "successSub": "{{runs}} çalışma · {{failed}} hata",
+    "tokens": "Token",
+    "tokensCost": "{{cost}} · ayrıntı: Token kullanımı",
+    "tokensSub": "giriş (önbellek dahil) + çıkış",
+    "memory": "Hafıza / Karar",
+    "memorySub": "kalıcı bağlam"
+  },
+  "list": {
+    "agentPerformance": "Ajan performansı",
+    "noRuns": "Bu projede henüz çalışma yok.",
+    "title": "Raporlar",
+    "daily": "Günlük rapor",
+    "usageSub": "Ajan bazında giriş / çıkış / önbellek",
+    "kindDaily": "Günlük",
+    "kindTask": "Görev raporu",
+    "emptyTitle": "Henüz rapor yok",
+    "emptyHint": "Ajanlar görev bitirdikçe raporlar burada birikir. İstersen şimdi günlük rapor oluştur."
+  },
+  "usage": {
+    "title": "Token kullanımı",
+    "scope": {
+      "project": "Bu proje",
+      "all": "Tüm projeler"
+    },
+    "session": "Bu oturum",
+    "sessionSince": "{{time}}'den beri",
+    "allTime": "Tüm zamanlar",
+    "records_one": "{{count}} kayıt",
+    "records_other": "{{count}} kayıt",
+    "input": "Giriş",
+    "inputSub": "önbellek hariç",
+    "output": "Çıkış",
+    "outputSub": "üretilen",
+    "cache": "Önbellek",
+    "cacheSub": "okuma {{read}} · yazma {{write}}",
+    "cost": "Maliyet",
+    "costSub": "sağlayıcının bildirdiği",
+    "columns": {
+      "agent": "Ajan",
+      "currentTask": "Mevcut görev",
+      "session": "Oturum",
+      "total": "Toplam",
+      "source": "Kaynak"
+    },
+    "deletedAgent": "Silinmiş ajan",
+    "reporting": {
+      "full": "gerçek",
+      "simulated": "tahmini",
+      "partial": "yalnızca toplam",
+      "none": "bildirilmiyor"
+    },
+    "noRecords": "Henüz token kaydı yok.",
+    "last14": "Son 14 gün",
+    "noRecordsRange": "Bu aralıkta kayıt yok.",
+    "dayTitle": "{{day}}\nGiriş {{input}}\nÇıkış {{output}}\nÖnbellek {{cache}}",
+    "note": "Değerler sağlayıcının bildirdiği ölçüdedir: Claude Code ve API sağlayıcıları giriş/çıkış/önbellek ayrımını bildirir; Codex CLI yalnızca toplamı verir; Demo sağlayıcının sayıları tahminidir. Önbellek okumaları genellikle normal girişten çok daha ucuza faturalanır."
+  }
+}

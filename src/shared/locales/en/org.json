@@ -1,0 +1,153 @@
+{
+  "kinds": {
+    "organization": "Organization",
+    "company": "Company",
+    "department": "Department",
+    "team": "Team"
+  },
+  "newUnitName": {
+    "organization": "New organization",
+    "company": "New company",
+    "department": "New department",
+    "team": "New team"
+  },
+  "counts": {
+    "units_one": "{{count}} unit",
+    "units_other": "{{count}} units",
+    "agents_one": "{{count}} agent",
+    "agents_other": "{{count}} agents"
+  },
+  "view": {
+    "title": "Organization",
+    "subtitle": "{{units}} · {{agents}} · teams are shared across projects",
+    "tabs": {
+      "chart": "Chart",
+      "teams": "Teams",
+      "agents": "Agents",
+      "templates": "Templates",
+      "connections": "Connections",
+      "skills": "Skills",
+      "apps": "Apps"
+    },
+    "fromTemplate": "Set up from template",
+    "newUnit": "New unit"
+  },
+  "addMembers": {
+    "title": "Add members · {{unit}}",
+    "added_one": "{{count}} agent added to {{unit}}",
+    "added_other": "{{count}} agents added to {{unit}}",
+    "submit_one": "Add {{count}} agent",
+    "submit_other": "Add {{count}} agents",
+    "pick": "Select agents",
+    "search": "Search by name, role or expertise…",
+    "alreadyMember": "Already a member",
+    "noMatch": "No matching agents"
+  },
+  "chart": {
+    "unassigned": "Agents without a team",
+    "allAssigned": "Everyone is in at least one unit.",
+    "noDirectMembers": "No direct members",
+    "total": "total {{count}}",
+    "inProjects_one": "in {{count}} project",
+    "inProjects_other": "in {{count}} projects",
+    "notInProject": "Not in a project",
+    "showChildren": "Show sub-units",
+    "hideChildren": "Hide sub-units"
+  },
+  "teams": {
+    "collapse": "Collapse",
+    "expand": "Expand",
+    "addChild": "Add sub-unit",
+    "search": "Search units…",
+    "noMatch": "No matching units",
+    "footer": "{{units}} · hover and use <icon/> to add a sub-unit",
+    "empty": {
+      "title": "No units",
+      "hint": "Loading organization…"
+    }
+  },
+  "templates": {
+    "intro": {
+      "lead": "Every unit you build is a reusable, ready-made team.",
+      "body": "Set one up from a template or from scratch, then assign it to as many projects as you like — agents are shared across projects."
+    },
+    "goToTeams": "Go to your teams",
+    "empty": "No templates",
+    "modalTitle": "Set up from template · {{name}}",
+    "creating": "Setting up…",
+    "name": "Name",
+    "parent": "Parent unit",
+    "newAgents_one": "{{count}} new agent",
+    "newAgents_other": "{{count}} new agents",
+    "summary": "<b>{{agents}}</b> will be created with job descriptions, skills and permissions ready to go. You can edit them all later and assign the unit to any projects you like.",
+    "summaryWithUnits": "{{units}} and <b>{{agents}}</b> will be created with job descriptions, skills and permissions ready to go. You can edit them all later and assign the unit to any projects you like.",
+    "instantiated": "{{name}} set up · {{agents}}"
+  },
+  "unit": {
+    "nameRequired": "Name can't be empty",
+    "agentCount_one": "<n>{{count}}</n> agent",
+    "agentCount_other": "<n>{{count}}</n> agents",
+    "info": {
+      "title": "Unit details",
+      "desc": "A unit works like a reusable, ready-made team: assign it to as many projects as you like."
+    },
+    "fields": {
+      "name": "Name",
+      "kind": "Type",
+      "rootKind": "Organization (root unit)",
+      "description": "Description",
+      "descriptionPlaceholder": "e.g. Prepares market research, competitor analysis and data reports.",
+      "parent": "Parent unit",
+      "topLevel": "— (top-level unit)",
+      "lead": "Unit lead",
+      "noLead": "No lead",
+      "color": "Color"
+    },
+    "subUnits": {
+      "title": "Sub-units",
+      "desc": "Nest as deep as you like, e.g. company → department → team.",
+      "add": "Sub-unit",
+      "none": "No sub-units."
+    },
+    "members": {
+      "title": "Members · {{n}}",
+      "descDeep_one": "{{count}} agent in total including sub-units. An agent can be in more than one unit.",
+      "descDeep_other": "{{count}} agents in total including sub-units. An agent can be in more than one unit.",
+      "desc": "An agent can be in more than one unit; their title within the unit is set here.",
+      "createAgent": "Create new agent",
+      "add": "Add member",
+      "empty": "No agents in this unit yet. Add existing agents or create a new one."
+    },
+    "member": {
+      "openProfile": "Open agent profile",
+      "alsoIn": "Also in: {{units}}",
+      "onlyHere": "Only in this unit",
+      "titlePlaceholder": "Title (e.g. Senior analyst)",
+      "isLead": "Unit lead (click to remove)",
+      "makeLead": "Make unit lead",
+      "remove": "Remove from unit"
+    },
+    "projects": {
+      "title": "Used in projects",
+      "desc": "In projects this unit is assigned to, all members of the unit and its sub-units take part.",
+      "none": "Not assigned to any project yet.",
+      "open": "Open project",
+      "inherited": "from parent unit",
+      "archived": "archived",
+      "removeFrom": "Remove from this project",
+      "add": "Add to project…",
+      "noneAddable": "No projects to add"
+    },
+    "danger": {
+      "title": "Delete unit",
+      "root": "The organization root can't be deleted.",
+      "desc": "Agents aren't deleted; only their memberships in these units are removed, and the units are removed from projects.",
+      "descWithSubs_one": "{{count}} sub-unit will be deleted too. Agents aren't deleted; only their memberships in these units are removed, and the units are removed from projects.",
+      "descWithSubs_other": "{{count}} sub-units will be deleted too. Agents aren't deleted; only their memberships in these units are removed, and the units are removed from projects.",
+      "confirm": "Delete {{name}}?",
+      "confirmWithSubs_one": "Delete {{name}} and {{count}} sub-unit?",
+      "confirmWithSubs_other": "Delete {{name}} and {{count}} sub-units?",
+      "deleted": "{{name}} deleted"
+    }
+  }
+}

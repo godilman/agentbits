@@ -1,0 +1,172 @@
+{
+  "perms": {
+    "fsRead": {
+      "label": "Read files",
+      "desc": "Can read and search files in the workspace."
+    },
+    "fsWrite": {
+      "label": "Write files",
+      "desc": "Can create and edit files."
+    },
+    "terminal": {
+      "label": "Terminal",
+      "desc": "Can run shell commands with your user's rights. While on, file and network limits can be bypassed through the shell — only for agents you trust. (Codex always runs its commands in its own sandbox; writes only inside the project folder.)"
+    },
+    "network": {
+      "label": "Network",
+      "desc": "Can fetch web pages and search the internet."
+    },
+    "browser": {
+      "label": "Browser",
+      "hint": "Browser tab",
+      "desc": "Not applied yet: agents can't use the in-app browser."
+    },
+    "requireApproval": {
+      "label": "Require approval",
+      "hint": "Before every run",
+      "desc": "Waits for your approval before starting each task (all providers)."
+    }
+  },
+  "permTemplates": {
+    "readonly": {
+      "label": "Read-only",
+      "desc": "Reviews and reports; doesn't touch files."
+    },
+    "developer": {
+      "label": "Developer",
+      "desc": "Reads and writes files; terminal and network off."
+    },
+    "full": {
+      "label": "Full access",
+      "desc": "Files, terminal, network and browser enabled."
+    }
+  },
+  "fields": {
+    "name": "Name",
+    "role": "Role / title",
+    "jobDescription": "Job description",
+    "skills": "Expertise",
+    "shuffle": "Shuffle",
+    "removeTag": "Remove {{tag}}"
+  },
+  "view": {
+    "title": "Agents",
+    "subtitle": "Build your team and define their duties and permissions.",
+    "newAgent": "New agent",
+    "search": "Search by name, role or expertise…",
+    "noRole": "No role",
+    "noMatch": "No matching agents",
+    "count_one": "{{count}} agent",
+    "count_other": "{{count}} agents",
+    "desks": "Desks {{used}}/{{total}}",
+    "empty": {
+      "title": "No agents yet",
+      "hint": "Add your first agent; you decide its name, duties and permissions."
+    }
+  },
+  "units": {
+    "title": "Teams",
+    "desc": "An agent can belong to more than one unit. It also works on the projects its units are assigned to.",
+    "none": "Not in any unit yet. Add it to a team; once the team is assigned to a project, the agent works on that project.",
+    "addTo": "Add to unit…",
+    "allUnits": "Member of every unit",
+    "projects": "Projects",
+    "noProjects": "Not in any project.",
+    "openUnit": "Open unit",
+    "lead": "Lead",
+    "titlePlaceholder": "Title in this unit",
+    "remove": "Remove from unit"
+  },
+  "new": {
+    "title": "New agent",
+    "titleUnit": "New agent · {{unit}}",
+    "defaultName": "New agent",
+    "create": "Create agent",
+    "joinedUnit": "{{name}} joined {{unit}}",
+    "joined": "{{name}} joined the team",
+    "shuffleTitle": "Another look",
+    "namePlaceholder": "e.g. Alex",
+    "rolePlaceholder": "e.g. Mobile Engineer",
+    "jobDescHint": "Responsibilities, scope and deliverables. The lead looks at this when assigning work.",
+    "jobDescPlaceholder": "e.g. Builds the mobile app screens and handles API integrations.\nDeliverable: working screen + short note.",
+    "skillsHint": "Add with Enter or a comma.",
+    "skillsPlaceholder": "e.g. React Native, Swift, API",
+    "permTemplate": "Permission template",
+    "permNote": "You can change individual permissions after creating the agent.",
+    "unitNote": "The new agent will be added as a member of <b>{{unit}}</b>.",
+    "desksFull": "The office has {{desks}} desks and they're all taken; the new agent will share a desk with another agent."
+  },
+  "editor": {
+    "nameRequired": "Name can't be empty",
+    "badges": {
+      "lead": "Lead",
+      "inactive": "Inactive"
+    },
+    "noRole": "No role set",
+    "identity": {
+      "title": "Identity",
+      "desc": "Name, title and look shown in the office and in chat.",
+      "randomLook": "Random look",
+      "rolePlaceholder": "e.g. Frontend Engineer",
+      "look": "Appearance",
+      "shirt": "Outfit",
+      "hair": "Hair",
+      "skin": "Skin",
+      "active": "Active",
+      "activeDesc": "When off, it takes no tasks and appears offline in the office.",
+      "lead": "Lead",
+      "leadDescIsLead": "To hand over leadership, make another agent the lead.",
+      "leadDesc": "Runs the chat, splits up the work, assigns and reviews it."
+    },
+    "duty": {
+      "title": "Duties and job description",
+      "desc": "The lead uses this when distributing work; it's also added to the agent's own instructions.",
+      "jobDescHint": "Responsibilities, scope and deliverables. The clearer it is, the more accurate the assignments.",
+      "jobDescPlaceholder": "e.g. Builds the payment and cart screens.\nResponsible for form validation and error states.\nDeliverable: working screen + short change note.",
+      "skillsHint": "Add with Enter or a comma. Tasks are matched against these tags.",
+      "skillsPlaceholder": "e.g. React, Tailwind, accessibility",
+      "persona": "Working style / system instructions",
+      "personaHint": "How the agent should behave: tone, priorities, rules.",
+      "personaPlaceholder": "e.g. Writes short and clear; plans before changing anything and never ships untested work."
+    },
+    "model": {
+      "title": "Model",
+      "desc": "Which provider and model this agent runs with.",
+      "provider": "Provider",
+      "defaultHint": "Default: {{name}}",
+      "noProvider": "No provider — runs in demo mode.",
+      "default": "Default",
+      "model": "Model"
+    },
+    "actions": {
+      "message": "Message",
+      "assignTask": "Assign task"
+    },
+    "status": {
+      "label": "Status",
+      "current": "Current work",
+      "awaitingApproval": "Awaiting approval",
+      "idle": "Idle — no active task",
+      "queued": "Queued",
+      "inProgress": "In progress",
+      "done": "Done"
+    },
+    "permissions": {
+      "title": "Permissions",
+      "desc": "What this agent can access. Changes are saved instantly and stay in sync with the Permission Matrix.",
+      "matrix": "Permission matrix",
+      "loading": "Loading permissions…",
+      "extraFolders": "Extra allowed folders",
+      "extraFoldersDesc": "Folders it can access in addition to the workspace. Workspace: <mono>{{path}}</mono>",
+      "notSelected": "not selected",
+      "addFolder": "Add folder"
+    },
+    "danger": {
+      "title": "Delete agent",
+      "leadBlocked": "The lead can't be deleted — make another agent the lead first.",
+      "desc": "Assigned tasks become unassigned; run history and personal memory are deleted. This can't be undone.",
+      "confirm": "Delete {{name}}?",
+      "deleted": "{{name}} deleted"
+    }
+  }
+}

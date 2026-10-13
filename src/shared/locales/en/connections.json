@@ -1,0 +1,167 @@
+{
+  "list": {
+    "title": "Connections",
+    "search": "Search…",
+    "agents_one": "{{count}} agent",
+    "agents_other": "{{count}} agents",
+    "testOk": "test passed",
+    "testFailed": "test failed",
+    "empty": "No connections yet. Use + at the top right to add an SSH server or a database.",
+    "auditAll": "Audit log (all)",
+    "newConnection": "New connection",
+    "selectTitle": "Select a connection",
+    "selectHint": "Manage the servers and databases agents can use in their work here. By default, no agent has access."
+  },
+  "detail": {
+    "noHost": "no host",
+    "lastTest": "last tested {{ago}} ago",
+    "tabs": {
+      "settings": "Settings",
+      "access": "Agent access ({{n}})",
+      "schema": "Schema",
+      "audit": "Audit"
+    }
+  },
+  "editor": {
+    "newTitle": "New {{kind}} connection",
+    "nameRequired": "Connection name is required",
+    "saved": "Connection saved",
+    "deleted": "{{name}} deleted",
+    "lastTestFailed": "Last test failed: {{message}}",
+    "deleteConfirm": "Delete it? Agent permissions are deleted too.",
+    "test": "Test connection",
+    "definition": {
+      "title": "Definition",
+      "hint": "Agents use this to understand what the connection is useful for; the password is never shown to an agent.",
+      "name": "Connection name",
+      "namePlaceholderDb": "e.g. ERP Production DB",
+      "namePlaceholderSsh": "e.g. ERP Application Server",
+      "env": "Environment",
+      "productionWarning": "Production: every operation that changes data or is destructive (SQL writes/DDL, SSH commands outside the read list) waits for your approval before it runs.",
+      "description": "Description",
+      "descriptionPlaceholderDb": "e.g. The company's ERP database. Contains stock, order, customer and production data.",
+      "descriptionPlaceholderSsh": "e.g. The server the ERP application runs on.",
+      "purpose": "Purpose",
+      "purposePlaceholder": "What should agents use it for?",
+      "notesDb": "Data and systems it contains",
+      "notesSsh": "Services it hosts",
+      "notesPlaceholderDb": "e.g. stock, order, customer tables; daily ETL at 02:00",
+      "notesPlaceholderSsh": "e.g. erp-api (systemd), nginx, postgres-client"
+    },
+    "connection": {
+      "title": "Connection",
+      "host": "Host / IP",
+      "port": "Port",
+      "username": "Username",
+      "database": "Database",
+      "encrypt": "Encrypted (encrypt)",
+      "ssl": "SSL / TLS",
+      "trustCert": "Trust certificate",
+      "trustCertTitle": "Accept a self-signed certificate"
+    },
+    "auth": {
+      "title": "Authentication",
+      "hint": "Passwords and keys are encrypted with the operating system's secure storage (safeStorage); they are never sent to the UI, agents, terminals or logs.",
+      "password": "Password",
+      "readOnlyTitle": "Read-only user (required for agent reads)",
+      "readOnlyHint": "Every SELECT an agent runs connects as this user, so the database itself enforces the no-write rule. Without it, agents cannot read from this connection. Create a user that only has SELECT privileges in the database and enter it here.",
+      "method": "Method",
+      "methodKeyFile": "Key file",
+      "methodKey": "Paste key",
+      "methodPassword": "Password",
+      "methodAgent": "SSH agent",
+      "keyFile": "Private key file",
+      "keyFilePlaceholder": "C:\\Users\\me\\.ssh\\id_ed25519",
+      "browse": "Browse…",
+      "keyStored": "Private key (stored — paste to replace)",
+      "keyNew": "Private key (PEM / OpenSSH)",
+      "passphrase": "Key passphrase (if any)",
+      "agentHint": "Uses the OpenSSH Authentication Agent on Windows and SSH_AUTH_SOCK elsewhere.",
+      "hostKey": "Pinned host key:",
+      "hostKeyReset": "Host key reset; it will be pinned again on the next connection",
+      "secretStored": "•••••••• (stored — type to replace)",
+      "secretWillRemove": "will be removed",
+      "secretRemove": "Remove stored password"
+    },
+    "commands": {
+      "title": "Allowed commands",
+      "hint": "One pattern per line; * means any arguments. The agent's level decides which lists it can use; an admin can run any command. Commands containing ; && > < ` $( ) are admin-only, and every command joined with | must be on a list.",
+      "read": "Read (Read only and above)",
+      "write": "Write (Read / write and above)",
+      "execute": "Execute (Execute and above)"
+    }
+  },
+  "access": {
+    "intro": "The default policy is <b>no access</b>: an agent only sees and uses the connections you grant here. Changes apply from the next tool call."
+  },
+  "schema": {
+    "tables_one": "{{count}} table/view",
+    "tables_other": "{{count}} tables/views",
+    "readAgo": "read {{ago}} ago",
+    "truncated": "truncated",
+    "notRead": "Schema not read yet.",
+    "search": "Search tables / columns…",
+    "read": "Read schema",
+    "hint": "Agents read the schema with the db_schema tool (over the read-only connection); you can explore and check it here.",
+    "view": "view",
+    "columns_one": "{{count}} column",
+    "columns_other": "{{count}} columns",
+    "noMatch": "No matching tables."
+  },
+  "audit": {
+    "title": "Audit log",
+    "intro": "Every connection access and critical operation: which agent, when, in which task, what it did and the result.",
+    "filter": {
+      "all": "All",
+      "denied": "Denied",
+      "error": "Error",
+      "pending": "Approval",
+      "ok": "Succeeded"
+    },
+    "columns": {
+      "time": "Time",
+      "who": "Who",
+      "connection": "Connection",
+      "task": "Task",
+      "action": "Action",
+      "result": "Result"
+    },
+    "result": {
+      "ok": "succeeded",
+      "error": "error",
+      "denied": "denied",
+      "pending": "awaiting approval"
+    },
+    "action": {
+      "list": "listed connections",
+      "schema": "schema",
+      "query": "query",
+      "exec": "command",
+      "test": "connection test",
+      "permission": "permission change",
+      "connectionCreate": "connection created",
+      "connectionUpdate": "connection updated",
+      "connectionDelete": "connection deleted",
+      "queryApproval": "query approval",
+      "execApproval": "command approval",
+      "approvalGranted": "approval granted",
+      "approvalDenied": "approval denied",
+      "appCreate": "App added",
+      "appUpdate": "App changed",
+      "appDelete": "App deleted",
+      "appPolicy": "Tool policy",
+      "appPermission": "App access",
+      "appTool": "App tool: {{tool}}"
+    },
+    "empty": "No entries.",
+    "older": "Older entries"
+  },
+  "approvals": {
+    "title": "Production approval required",
+    "sshCommand": "SSH command",
+    "level": "{{level}} access",
+    "approveRun": "Approve and run",
+    "appTool": "App tool {{tool}}",
+    "appTitle": "Approval required"
+  }
+}

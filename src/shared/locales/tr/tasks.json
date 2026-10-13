@@ -1,0 +1,63 @@
+{
+  "board": {
+    "title": "Görev Panosu",
+    "titleWithProject": "Görev Panosu · {{project}}",
+    "subtitle_one": "{{count}} görev · sürükleyip bırakarak taşı; “In progress”e bırakmak işi başlatır",
+    "subtitle_other": "{{count}} görev · sürükleyip bırakarak taşı; “In progress”e bırakmak işi başlatır",
+    "searchPlaceholder": "Ara (başlık, TA-12)…",
+    "all": "Hepsi",
+    "newTask": "Yeni görev",
+    "addTask": "Görev ekle",
+    "emptyColumn": "Boş",
+    "emptyTitle": "Henüz görev yok",
+    "emptyHint": "Sol paneldeki sohbetten lidere bir iş tarif et ya da yeni görev ekle."
+  },
+  "card": {
+    "priority": "Öncelik: {{label}}",
+    "revisionNote": "Revizyon notu var",
+    "awaitingApproval": "onay",
+    "paused": "durdu",
+    "unassigned": "Atanmadı"
+  },
+  "fields": {
+    "title": "Başlık",
+    "description": "Açıklama",
+    "files": "Dosyalar",
+    "status": "Durum",
+    "priority": "Öncelik",
+    "assignee": "Atanan",
+    "progress": "İlerleme",
+    "auto": "Otomatik"
+  },
+  "drawer": {
+    "dropLabel": "{{key}} görevine ekle",
+    "createdAgo": "· {{ago}} · {{by}}",
+    "startNow": "Şimdi başlat",
+    "descriptionPlaceholder": "Açıklama ekle…",
+    "reviewNote": "İnceleme notu: ",
+    "tabs": {
+      "thread": "Akış",
+      "logs": "Loglar",
+      "runs": "Çalışmalar"
+    },
+    "noMessages": "Henüz mesaj yok. Ajana not bırakabilirsin; bir sonraki çalışmada dikkate alınır.",
+    "youBadge": "SEN",
+    "you": "Sen",
+    "noLogs": "Log yok.",
+    "noRuns": "Bu görev henüz çalıştırılmadı.",
+    "runTokens": "{{n}} tok",
+    "notePlaceholder": "Göreve not ekle…"
+  },
+  "new": {
+    "title": "Yeni görev",
+    "uploading": "Dosyalar hâlâ yükleniyor",
+    "created": "{{key}} oluşturuldu",
+    "createdWithFiles_one": "{{key}} oluşturuldu · 📎 {{count}} dosya",
+    "createdWithFiles_other": "{{key}} oluşturuldu · 📎 {{count}} dosya",
+    "dropLabel": "Göreve dosya ekle",
+    "titlePlaceholder": "Ör. Ayarlar sayfasına tema seçici ekle",
+    "descriptionPlaceholder": "Kabul kriterleri, bağlam, dosya yolları…",
+    "filesHint": "görevi yapan ajan okuyabilir",
+    "noAgents": "Projede atanabilecek ajan yok — lider görevi kendisi dağıtır."
+  }
+}

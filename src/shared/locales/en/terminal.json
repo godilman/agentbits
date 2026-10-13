@@ -1,0 +1,76 @@
+{
+  "tabs": {
+    "agents": "Agent terminals",
+    "agentsHint": "Live output of the agents and natural-language instructions",
+    "shells": "Shells",
+    "shellsHint": "Operating system commands (PowerShell / bash)",
+    "agentsNote": "Instructions go to the agent; they don't run commands.",
+    "shellsNote": "Commands run on this computer with your permissions."
+  },
+  "shell": {
+    "new": "New shell",
+    "open": "+ Open shell",
+    "pty": "Interactive terminal (PTY)",
+    "pipeTitle": "node-pty couldn't be loaded; full-screen programs, password prompts and arrow keys don't work",
+    "pipe": "Pipe mode · interactive programs are not supported",
+    "emptyTitle": "Shell",
+    "emptyHintFolder": "Open a shell in the project folder ({{path}}). What you type here are operating system commands; use “Agent terminals” to instruct agents.",
+    "emptyHintNoFolder": "This project has no folder; the shell opens in your home folder. Use “Agent terminals” to instruct agents."
+  },
+  "grid": {
+    "all": "All ({{count}})",
+    "active": "Working ({{count}})",
+    "columns": "Columns",
+    "auto": "Auto",
+    "noneWorking": "No agents working right now",
+    "noAgents": "You don't have any agents yet",
+    "noProjectAgents": "No agents in this project",
+    "noneWorkingHint": "Switch to All to give an agent a task.",
+    "noAgentsHint": "Set up your team via Organization → Agents or Templates, then assign a team to the project. The steps are in the Guide.",
+    "noProjectAgentsHint": "Assign a team to the project in the Team section.",
+    "openGuide": "Open the guide"
+  },
+  "pane": {
+    "status": {
+      "working": "working",
+      "idle": "idle",
+      "break": "on break",
+      "error": "error",
+      "offline": "offline"
+    },
+    "paused": "paused",
+    "awaitingApproval": "awaiting approval",
+    "dropFiles": "Drop files — they go to {{name}} with the instruction",
+    "projectLead": "Project lead",
+    "noTask": "No task",
+    "provider": "Provider",
+    "resume": "Resume",
+    "pause": "Pause",
+    "backToGrid": "Back to grid",
+    "maximize": "Maximize",
+    "exitFullscreen": "Exit full screen (Esc)",
+    "fullscreen": "Full screen",
+    "older": "Older entries",
+    "loadFailed": "Couldn't load history: {{error}}",
+    "empty": "No entries yet. Output appears here when the agent picks up a task or you give it an instruction.",
+    "newEntries": "{{count}} new",
+    "stopConfirm": "Stop?",
+    "stopTitle": "Stop the run (the task goes back to To do)",
+    "fullPrompt": "Full prompt sent",
+    "systemPrompt": "System prompt"
+  },
+  "composer": {
+    "uploading": "Files are still uploading",
+    "disabled": "The agent is disabled; instructions can't be sent.",
+    "heading": "Instruction to the agent · <b>natural language</b>, not a shell command",
+    "queued_one": "{{count}} instruction queued",
+    "queued_other": "{{count}} instructions queued",
+    "placeholderRunning": "{{name}} is working — change its direction or leave a note for the next step…",
+    "placeholderWaiting": "Instruction to apply after approval…",
+    "placeholderTask": "Write a new task for {{name}}…",
+    "redirect": "Redirect",
+    "queue": "Queue",
+    "queueTitle": "Applied when the current step finishes, before going to review",
+    "giveTask": "Give task"
+  }
+}

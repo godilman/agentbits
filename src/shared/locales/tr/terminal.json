@@ -1,0 +1,76 @@
+{
+  "tabs": {
+    "agents": "Ajan terminalleri",
+    "agentsHint": "Ajanların canlı çıktısı ve doğal dil talimatları",
+    "shells": "Kabuklar",
+    "shellsHint": "İşletim sistemi komutları (PowerShell / bash)",
+    "agentsNote": "Talimatlar ajana gider; komut çalıştırmaz.",
+    "shellsNote": "Komutlar bu bilgisayarda, senin yetkilerinle çalışır."
+  },
+  "shell": {
+    "new": "Yeni kabuk",
+    "open": "+ Kabuk aç",
+    "pty": "Etkileşimli terminal (PTY)",
+    "pipeTitle": "node-pty yüklenemedi; tam ekran programlar, şifre istemleri ve ok tuşları çalışmaz",
+    "pipe": "Pipe modu · etkileşimli programlar desteklenmez",
+    "emptyTitle": "Kabuk",
+    "emptyHintFolder": "Proje klasöründe ({{path}}) bir kabuk aç. Buraya yazılanlar işletim sistemi komutudur; ajanlara talimat için “Ajan terminalleri”ni kullan.",
+    "emptyHintNoFolder": "Bu projenin klasörü yok; kabuk ev klasöründe açılır. Ajanlara talimat için “Ajan terminalleri”ni kullan."
+  },
+  "grid": {
+    "all": "Tümü ({{count}})",
+    "active": "Çalışanlar ({{count}})",
+    "columns": "Sütun",
+    "auto": "Oto",
+    "noneWorking": "Şu an çalışan ajan yok",
+    "noAgents": "Henüz hiç ajanın yok",
+    "noProjectAgents": "Bu projede ajan yok",
+    "noneWorkingHint": "Tümü’ne geçip bir ajana görev verebilirsin.",
+    "noAgentsHint": "Organizasyon → Ajanlar ya da Şablonlar ile ekibini kur; sonra projeye takım ata. Adımlar Kılavuz’da.",
+    "noProjectAgentsHint": "Projeye Ekip bölümünden bir takım ata.",
+    "openGuide": "Kılavuzu aç"
+  },
+  "pane": {
+    "status": {
+      "working": "çalışıyor",
+      "idle": "boşta",
+      "break": "molada",
+      "error": "hata",
+      "offline": "kapalı"
+    },
+    "paused": "duraklatıldı",
+    "awaitingApproval": "onay bekliyor",
+    "dropFiles": "Dosyaları bırak — {{name}}'a talimatla gönderilir",
+    "projectLead": "Proje lideri",
+    "noTask": "Görev yok",
+    "provider": "Sağlayıcı",
+    "resume": "Devam ettir",
+    "pause": "Duraklat",
+    "backToGrid": "Izgaraya dön",
+    "maximize": "Büyüt",
+    "exitFullscreen": "Tam ekrandan çık (Esc)",
+    "fullscreen": "Tam ekran",
+    "older": "Daha eski kayıtlar",
+    "loadFailed": "Geçmiş yüklenemedi: {{error}}",
+    "empty": "Henüz kayıt yok. Ajan bir görev aldığında ya da ona talimat verdiğinde çıktı burada akar.",
+    "newEntries": "{{count}} yeni",
+    "stopConfirm": "Durdur?",
+    "stopTitle": "Çalışmayı durdur (görev Yapılacak'a döner)",
+    "fullPrompt": "Gönderilen tam prompt",
+    "systemPrompt": "Sistem promptu"
+  },
+  "composer": {
+    "uploading": "Dosyalar hâlâ yükleniyor",
+    "disabled": "Ajan devre dışı; talimat gönderilemez.",
+    "heading": "Ajana talimat · <b>doğal dil</b>, kabuk komutu değil",
+    "queued_one": "{{count}} talimat sırada",
+    "queued_other": "{{count}} talimat sırada",
+    "placeholderRunning": "{{name}} çalışıyor — yönünü değiştir ya da sonraki adım için not bırak…",
+    "placeholderWaiting": "Onaydan sonra uygulanacak talimat…",
+    "placeholderTask": "{{name}} için yeni bir görev yaz…",
+    "redirect": "Yönlendir",
+    "queue": "Sıraya al",
+    "queueTitle": "Mevcut adım bitince, incelemeye gitmeden önce uygulanır",
+    "giveTask": "Görev ver"
+  }
+}

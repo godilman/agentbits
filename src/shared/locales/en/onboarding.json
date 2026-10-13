@@ -1,0 +1,27 @@
+{
+  "intro": "Build your own AI team: create your teams and agents, pick a lead and describe the work to them; it gets split into tasks, handed out to agents, reviewed and written to long-term memory.",
+  "steps": {
+    "provider": "Provider",
+    "project": "First project"
+  },
+  "provider": {
+    "title": "What should the agents think with?",
+    "hint": "If Claude Code CLI is installed it works with your account; or enter an API key. You can change this later in Settings and pick a different provider per agent."
+  },
+  "project": {
+    "title": "Your first project",
+    "hint": "Project = a folder + the teams that work in it. CLI agents (Claude Code / Codex) only read and write files in the project folder (and extra folders you allow); pick a folder if you'll use them. Optional for Demo and API providers. Even if the project is deleted, the folder and its contents stay on disk.",
+    "nameLabel": "Project name",
+    "namePlaceholder": "e.g. Website redesign, Market research…",
+    "defaultName": "First Project",
+    "folderLabel": "Folder",
+    "notSelected": "Not selected",
+    "appFolderError": "This folder is the Agentbits app itself; it can't be selected so agents don't change the app's code.",
+    "provider": "Provider:",
+    "change": "change",
+    "start": "Start",
+    "agentsReady_one": "{{count}} agent is ready.",
+    "agentsReady_other": "{{count}} agents are ready.",
+    "noAgents": "No agents yet; inside, the guide walks you through it step by step: team, agents, lead, permissions and the first job."
+  }
+}

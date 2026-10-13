@@ -1,0 +1,63 @@
+{
+  "board": {
+    "title": "Task Board",
+    "titleWithProject": "Task Board · {{project}}",
+    "subtitle_one": "{{count}} task · drag and drop to move; dropping on “In progress” starts the work",
+    "subtitle_other": "{{count}} tasks · drag and drop to move; dropping on “In progress” starts the work",
+    "searchPlaceholder": "Search (title, TA-12)…",
+    "all": "All",
+    "newTask": "New task",
+    "addTask": "Add task",
+    "emptyColumn": "Empty",
+    "emptyTitle": "No tasks yet",
+    "emptyHint": "Describe some work to the lead in the chat on the left, or add a new task."
+  },
+  "card": {
+    "priority": "Priority: {{label}}",
+    "revisionNote": "Has a revision note",
+    "awaitingApproval": "approval",
+    "paused": "paused",
+    "unassigned": "Unassigned"
+  },
+  "fields": {
+    "title": "Title",
+    "description": "Description",
+    "files": "Files",
+    "status": "Status",
+    "priority": "Priority",
+    "assignee": "Assignee",
+    "progress": "Progress",
+    "auto": "Automatic"
+  },
+  "drawer": {
+    "dropLabel": "Add to {{key}}",
+    "createdAgo": "· {{ago}} · {{by}}",
+    "startNow": "Start now",
+    "descriptionPlaceholder": "Add a description…",
+    "reviewNote": "Review note: ",
+    "tabs": {
+      "thread": "Thread",
+      "logs": "Logs",
+      "runs": "Runs"
+    },
+    "noMessages": "No messages yet. You can leave the agent a note; it is taken into account on the next run.",
+    "youBadge": "YOU",
+    "you": "You",
+    "noLogs": "No logs.",
+    "noRuns": "This task hasn't run yet.",
+    "runTokens": "{{n}} tok",
+    "notePlaceholder": "Add a note to the task…"
+  },
+  "new": {
+    "title": "New task",
+    "uploading": "Files are still uploading",
+    "created": "{{key}} created",
+    "createdWithFiles_one": "{{key}} created · 📎 {{count}} file",
+    "createdWithFiles_other": "{{key}} created · 📎 {{count}} files",
+    "dropLabel": "Add files to the task",
+    "titlePlaceholder": "e.g. Add a theme picker to the settings page",
+    "descriptionPlaceholder": "Acceptance criteria, context, file paths…",
+    "filesHint": "the agent doing the task can read them",
+    "noAgents": "No assignable agents in the project — the lead distributes the task itself."
+  }
+}

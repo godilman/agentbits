@@ -1,0 +1,27 @@
+{
+  "intro": "Kendi yapay zeka ekibini kur: takımlarını ve ajanlarını oluştur, bir lider seç, lidere iş tarif et; iş görevlere bölünsün, ajanlara dağıtılsın, incelensin ve kalıcı hafızaya yazılsın.",
+  "steps": {
+    "provider": "Sağlayıcı",
+    "project": "İlk proje"
+  },
+  "provider": {
+    "title": "Ajanlar neyle düşünsün?",
+    "hint": "Claude Code CLI kuruluysa hesabınla çalışır; ya da bir API anahtarı gir. Sonra Ayarlar’dan değiştirebilir, ajan başına farklı sağlayıcı seçebilirsin."
+  },
+  "project": {
+    "title": "İlk projen",
+    "hint": "Proje = bir klasör + o klasörde çalışacak takımlar. CLI ajanları (Claude Code / Codex) yalnızca proje klasöründe (ve izin verdiğin ek klasörlerde) dosya okur/yazar; onları kullanacaksan bir klasör seç. Demo ve API sağlayıcıları için isteğe bağlı. Proje silinse bile klasör ve içindekiler diskte kalır.",
+    "nameLabel": "Proje adı",
+    "namePlaceholder": "Ör. Web sitesi yenileme, Pazar araştırması…",
+    "defaultName": "İlk Proje",
+    "folderLabel": "Klasör",
+    "notSelected": "Seçilmedi",
+    "appFolderError": "Bu klasör Agentbits uygulamasının kendisi; ajanlar uygulamanın kodunu değiştirmesin diye seçilemez.",
+    "provider": "Sağlayıcı:",
+    "change": "değiştir",
+    "start": "Başla",
+    "agentsReady_one": "{{count}} ajanın hazır.",
+    "agentsReady_other": "{{count}} ajanın hazır.",
+    "noAgents": "Henüz ajan yok; içeride kılavuz seni adım adım götürecek: takım, ajanlar, lider, izinler ve ilk iş."
+  }
+}

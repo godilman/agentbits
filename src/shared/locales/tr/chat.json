@@ -1,0 +1,38 @@
+{
+  "suggestions": {
+    "s1": "Ekteki dosyayı incele, önemli noktaları özetle ve yapılacakları görevlere böl.",
+    "s2": "Proje klasöründeki mevcut durumu incele ve iyileştirme önerilerini rapor olarak hazırla.",
+    "s3": "Hangi görevler revizyona döndü, özetler misin?"
+  },
+  "channels": "Kanallar",
+  "leadHint": "{{name}} (lider)",
+  "directMessages": "Direkt mesaj",
+  "noTeam": "Projeye takım atanmadı",
+  "taskThreads": "Görev akışları",
+  "drop": {
+    "general": "Dosyaları bırak — lidere (ya da seçtiğin ekibe) gönderilir",
+    "agent": "Dosyaları bırak — {{name}}'a gönderilir",
+    "task": "Dosyaları bırak — göreve eklenir"
+  },
+  "generalSubtitle": "{{project}} · lider ile konuş: iş tarif et, görevlere bölünüp proje ekibine dağıtılsın",
+  "project": "Proje",
+  "taskSubtitle": "Görev akışı — notlar bir sonraki çalışmada ajana iletilir",
+  "noLeadTitle": "Henüz konuşacak bir lider yok",
+  "noLeadText": "#general'de lidere iş tarif edersin; lider görevlere böler ve ekibe dağıtır. Önce ajanlarını ekle ve bir lider seç (takım lideri ya da proje lideri).",
+  "templates": "Şablonlar",
+  "openGuide": "Kılavuzu aç",
+  "empty": "Bu kanalda henüz mesaj yok.",
+  "typing": "{{name}} yazıyor",
+  "shareLabel": "Dosyaları kim okuyabilsin:",
+  "shareLead": "Yalnızca lider",
+  "shareLeadNamed": "Yalnızca lider ({{name}})",
+  "shareProject": "Tüm proje ekibi",
+  "shareUnit": "Takım: {{name}}",
+  "shareHint": "Lider, görevlere eklediği dosyaları görevi yapanlara da açar.",
+  "placeholderAgent": "{{name}}'a mesaj… (Shift+Enter yeni satır)",
+  "placeholderNote": "Not ekle…",
+  "uploading": "Dosyalar hâlâ yükleniyor",
+  "youBadge": "SEN",
+  "you": "Sen",
+  "agent": "Ajan"
+}
