@@ -381,8 +381,8 @@ Kurulum dosyasını kendi bilgisayarınızda derlemeniz **gerekmez**; GitHub Act
    README'deki "henüz kurulum dosyası yok" cümlelerini (İngilizce + Türkçe) Releases bağlantısıyla güncelleyin.
 
 macOS paketi henüz doğrulanmadı: macOS işi düşse de Windows paketi başarılıysa taslak Release yine oluşur (yalnızca
-Windows dosyalarıyla). 2026-10-13'teki ilk elle çalıştırmada Windows işi geçti, macOS'ta `npm run dist:mac` adımı düştü
-(nedeni henüz bakılmadı — Actions → çalışma → macos → "Run npm run dist:mac" logu).
+Windows dosyalarıyla). İlk çalıştırmada macOS, boş `CSC_LINK` yüzünden ("<repo> not a file") düşüyordu; düzeltildi
+(imza secret'ları yalnızca tanımlıysa dışa aktarılır, yapılandırma boş değişkenleri yok sayar).
 
 Yalnızca denemek için: Actions → **Build packages** → *Run workflow* (Release oluşturmaz; dosyalar çalışmanın
 "Artifacts" bölümünde). Yerelde derlenecekse önce **`npm ci`** (eski `node_modules` eski bağımlılıklarla paketler — 2026-10-13'te

@@ -18,7 +18,9 @@
 - İş akışı adları İngilizce (`CI`, `Build packages`); taslak sürüm notu İngilizce.
 - Windows CI'da `test:unit` düşüyordu: git CRLF'ye çeviriyor, `tests/i18n.test.ts` yorum satırlarını tanımıyordu. Test artık
   `\r?\n` ile bölüyor; `.gitattributes` her yerde LF tutar. `release.yml`'deki iki nokta içeren `run` satırı düzeltildi. `release.yml`: macOS paketi düşse de Windows
-  paketiyle taslak Release oluşur.
+  paketiyle taslak Release oluşur. macOS derlemesi "<repo> not a file" ile düşüyordu: tanımsız secret'lar GitHub'da boş
+  dize olarak geliyor, electron-builder boş `CSC_LINK`'i dosya yolu sanıyordu. İş akışı imza secret'larını yalnızca
+  varsa dışa aktarır; `electron-builder.config.js` boş imza değişkenlerini tanımsız sayar.
 - Türkçe arayüzde çevrilmemiş kalan sol panel metinleri: "Çalışan işler", "Canlı sohbet", "çalışıyor", "duraklatıldı"
   (`tr/layout.json`). `AGENTS.md`: `test:unit` her değişiklikte zorunlu.
 - Belgelerdeki yerel depo yolu genel `git clone` + `cd agentbits` ile değişti; `npm install` → `npm ci`.

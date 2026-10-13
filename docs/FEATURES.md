@@ -321,7 +321,7 @@ yukarıdaki ⏳ satırları ve "Bilinen sorunlar"dır.
 | Güncelleme ve kaldırmada kullanıcı verisinin korunması | ✅ | `%APPDATA%\Agentbits` (DB, yedekler, dosyalar) dokunulmaz (`deleteAppDataOnUninstall: false`); şema açılışta migrate edilir |
 | Otomatik güncelleme (uygulama içi denetim/indirme) | — | Yok (`electron-updater` yok; `publish` ayarı yalnızca ileride kullanılırsa) |
 | macOS DMG / ZIP (arm64 + x64, ad-hoc imza) | 🟡 | `npm run dist:mac` yalnızca macOS'ta / Actions'ta; **henüz gerçek bir Mac'te derlenip denenmedi** |
-| GitHub Actions paket iş akışı (Windows + macOS; `v*` etiketinde taslak Release) | 🟡 | `.github/workflows/release.yml` (typecheck + `test:unit` + paket). Windows işi geçti (2026-10-13); macOS işi `dist:mac` adımında düştü, nedeni incelenmeli — macOS düşse de etikette taslak Release Windows dosyalarıyla oluşur |
+| GitHub Actions paket iş akışı (Windows + macOS; `v*` etiketinde taslak Release) | 🟡 | `.github/workflows/release.yml` (typecheck + `test:unit` + paket). Windows işi geçti (2026-10-13); macOS işi boş `CSC_LINK` yüzünden düşüyordu, düzeltildi (doğrulama sürüyor) — macOS düşse de etikette taslak Release Windows dosyalarıyla oluşur |
 | Linux paketi | — | Hedef yok; Linux'ta yalnızca kaynaktan (`npm run dev` / `npm start`) |
 | Lisans ve üçüncü taraf bildirimleri | ✅ | PolyForm Strict 1.0.0 (`LICENSE`, kurulum sihirbazında ve `resources/LICENSE.txt`); `THIRD_PARTY_NOTICES.md` pakette (`npm run notices` ile yeniden üretilir) |
 | GitHub Releases'te yayımlanmış kurulum dosyası | ⏳ | Depo herkese açık (`github.com/godilman/agentbits`); ilk sürüm `npm ci` ile temiz derlenip kontrol edildikten sonra yayımlanacak |

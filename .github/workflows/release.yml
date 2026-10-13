@@ -28,10 +28,18 @@ jobs:
       - run: npm ci
       - run: npm run typecheck
       - run: npm run test:unit
-      - run: npm run dist:win
+      # Signing secrets are exported only when they exist (an empty CSC_LINK breaks electron-builder).
+      - name: Signing certificate (only when the secret exists)
+        shell: bash
         env:
-          CSC_LINK: ${{ secrets.WIN_CSC_LINK }}
-          CSC_KEY_PASSWORD: ${{ secrets.WIN_CSC_KEY_PASSWORD }}
+          LINK: ${{ secrets.WIN_CSC_LINK }}
+          PASS: ${{ secrets.WIN_CSC_KEY_PASSWORD }}
+        run: |
+          if [ -n "$LINK" ]; then
+            echo "CSC_LINK=$LINK" >> "$GITHUB_ENV"
+            echo "CSC_KEY_PASSWORD=$PASS" >> "$GITHUB_ENV"
+          fi
+      - run: npm run dist:win
       # SHA-256 of what is published, with the commit it was built from (compare after download).
       - name: Checksums
         shell: pwsh
@@ -62,20 +70,26 @@ jobs:
       - run: npm install --no-save --force @lydell/node-pty-darwin-x64@1.2.0-beta.15
       - run: npm run typecheck
       - run: npm run test:unit
-      - name: Notarization key (only when the secret exists)
+      # Signing / notarization secrets are exported only when they exist (an empty CSC_LINK breaks electron-builder).
+      - name: Signing certificate and notarization key (only when the secrets exist)
         env:
+          LINK: ${{ secrets.MAC_CSC_LINK }}
+          PASS: ${{ secrets.MAC_CSC_KEY_PASSWORD }}
           KEY_B64: ${{ secrets.APPLE_API_KEY_BASE64 }}
+          KEY_ID: ${{ secrets.APPLE_API_KEY_ID }}
+          ISSUER: ${{ secrets.APPLE_API_ISSUER }}
         run: |
+          if [ -n "$LINK" ]; then
+            echo "CSC_LINK=$LINK" >> "$GITHUB_ENV"
+            echo "CSC_KEY_PASSWORD=$PASS" >> "$GITHUB_ENV"
+          fi
           if [ -n "$KEY_B64" ]; then
             echo "$KEY_B64" | base64 --decode > "$RUNNER_TEMP/apple-api-key.p8"
             echo "APPLE_API_KEY=$RUNNER_TEMP/apple-api-key.p8" >> "$GITHUB_ENV"
+            echo "APPLE_API_KEY_ID=$KEY_ID" >> "$GITHUB_ENV"
+            echo "APPLE_API_ISSUER=$ISSUER" >> "$GITHUB_ENV"
           fi
       - run: npm run dist:mac
-        env:
-          CSC_LINK: ${{ secrets.MAC_CSC_LINK }}
-          CSC_KEY_PASSWORD: ${{ secrets.MAC_CSC_KEY_PASSWORD }}
-          APPLE_API_KEY_ID: ${{ secrets.APPLE_API_KEY_ID }}
-          APPLE_API_ISSUER: ${{ secrets.APPLE_API_ISSUER }}
       - name: Checksums
         run: |
           cd release && { echo "commit $GITHUB_SHA"; shasum -a 256 *.dmg *.zip *.blockmap latest-mac.yml; } > SHA256SUMS-macos.txt

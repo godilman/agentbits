@@ -10,6 +10,12 @@
 // Without these the builds still work but are unsigned (Windows SmartScreen / macOS Gatekeeper warnings);
 // see docs/DEVELOPMENT.md → "Dağıtım paketleri".
 
+// CI passes unset secrets as empty strings; electron-builder would read an empty CSC_LINK as a file path
+// ("<repo> not a file"). Treat empty as unset.
+for (const k of ['CSC_LINK', 'CSC_KEY_PASSWORD', 'CSC_NAME', 'WIN_CERT_SUBJECT', 'APPLE_API_KEY', 'APPLE_API_KEY_ID', 'APPLE_API_ISSUER', 'APPLE_ID', 'APPLE_APP_SPECIFIC_PASSWORD', 'APPLE_TEAM_ID', 'APPLE_KEYCHAIN_PROFILE']) {
+  if (process.env[k] !== undefined && process.env[k].trim() === '') delete process.env[k]
+}
+
 const certSubject = process.env.WIN_CERT_SUBJECT || null
 const macCert = !!(process.env.CSC_LINK || process.env.CSC_NAME)
 const macNotarize = !!(process.env.APPLE_API_KEY || process.env.APPLE_ID || process.env.APPLE_KEYCHAIN_PROFILE)
