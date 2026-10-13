@@ -50,7 +50,7 @@ jobs:
       - name: Checksums
         shell: pwsh
         run: |
-          $lines = Get-ChildItem release -File | Where-Object { $_.Extension -in '.exe', '.blockmap', '.yml' } | ForEach-Object { "$((Get-FileHash $_.FullName -Algorithm SHA256).Hash.ToLower())  $($_.Name)" }
+          $lines = Get-ChildItem release -File | Where-Object { $_.Extension -in '.exe', '.blockmap' -or $_.Name -eq 'latest.yml' } | ForEach-Object { "$((Get-FileHash $_.FullName -Algorithm SHA256).Hash.ToLower())  $($_.Name)" }
           ("commit $env:GITHUB_SHA" + "`n" + ($lines -join "`n")) | Out-File -Encoding utf8 release/SHA256SUMS-windows.txt
       - uses: actions/upload-artifact@v4
         with:

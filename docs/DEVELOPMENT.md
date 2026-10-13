@@ -400,7 +400,10 @@ Ajan oturumları repo **ayarlarını** değiştiremez (yalnızca kod gönderebil
 - [ ] Settings → Security → **Private vulnerability reporting** → Enable (`SECURITY.md`'deki bildirim bağlantısı buna bağlı).
 - [ ] Repo sayfası → About ⚙ → **Topics**: `ai-agents`, `multi-agent`, `agent-orchestration`, `electron`, `typescript`,
   `react`, `pixel-art`, `sqlite`, `desktop-app`, `mcp`.
-- [ ] İlk sürüm (`v0.1.0`) — §9.3. Yerelde duran eski `release\Agentbits-Setup-0.1.0.exe` SDK 1.30.1 içerir; yayımlamayın.
+- [ ] İlk sürüm (`v0.1.0`) — §9.3. **Taslak hazır** (2026-10-13, commit `61eb389`, Windows exe + macOS DMG/ZIP + SHA256SUMS);
+  kalan: exe'yi deneyip notları yapıştırmak ve *Publish*. Yayımlandıktan sonra README'lerdeki "henüz kurulum dosyası yok"
+  bölümleri indirme bağlantılarıyla değiştirilmeli. Yerelde duran eski `release\Agentbits-Setup-0.1.0.exe` SDK 1.30.1 içerir;
+  onu yayımlamayın.
 - [ ] (İsteğe bağlı) Uygulamadaki geri bildirim adresi (`src/shared/support.ts` → `FEEDBACK_EMAIL`) kişisel Gmail'dir ve
   artık herkese açık kodda; ayrı bir destek adresi düşünülebilir.
 
