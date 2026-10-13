@@ -374,9 +374,14 @@ bozuyordu).
 Kurulum dosyasını kendi bilgisayarınızda derlemeniz **gerekmez**; GitHub Actions temiz kurulumla (`npm ci`) derler:
 
 1. `package.json` → `version`'ı artırın (ör. `0.1.1`), `docs/CHANGELOG.md`'ye yazın, commit + push.
-2. Etiket gönderin: `git tag v0.1.1` → `git push origin v0.1.1`. **Build packages** iş akışı
-   (`release.yml`) Windows + macOS paketlerini ve `SHA256SUMS-*.txt`'yi derleyip **taslak** bir Release'e ekler (yalnızca
-   sahip görür).
+2. Taslak sürümü başlatın — iki yoldan biri:
+   - **Tarayıcıdan (en kolayı):** Actions → **Build packages** → *Run workflow* → `release_tag` kutusuna `v0.1.1` yazın →
+     *Run workflow*.
+   - **Komutla:** `git tag v0.1.1` → `git push origin v0.1.1`.
+
+   **Build packages** iş akışı (`release.yml`) Windows + macOS paketlerini ve `SHA256SUMS-*.txt`'yi derleyip **taslak**
+   bir Release'e ekler (yalnızca sahip görür; etiket, taslak yayımlanınca derlenen commit'te oluşur). Ajan oturumları
+   etiket gönderemez ama iş akışını `release_tag` ile başlatabilir.
 3. Taslaktaki exe'yi indirip kurun, açılışı deneyin; notları `docs/RELEASE_TEMPLATE.md` ile yazın; **Publish** deyin.
    README'deki "henüz kurulum dosyası yok" cümlelerini (İngilizce + Türkçe) Releases bağlantısıyla güncelleyin.
 
@@ -384,7 +389,7 @@ macOS paketi henüz doğrulanmadı: macOS işi düşse de Windows paketi başar�
 Windows dosyalarıyla). İlk çalıştırmada macOS, boş `CSC_LINK` yüzünden ("<repo> not a file") düşüyordu; düzeltildi
 (imza secret'ları yalnızca tanımlıysa dışa aktarılır, yapılandırma boş değişkenleri yok sayar).
 
-Yalnızca denemek için: Actions → **Build packages** → *Run workflow* (Release oluşturmaz; dosyalar çalışmanın
+Yalnızca denemek için: Actions → **Build packages** → *Run workflow*, `release_tag` boş (Release oluşturmaz; dosyalar çalışmanın
 "Artifacts" bölümünde). Yerelde derlenecekse önce **`npm ci`** (eski `node_modules` eski bağımlılıklarla paketler — 2026-10-13'te
 bu yüzden eski MCP SDK 1.30.1 pakete giriyordu), sonra `npm run dist:win`.
 
