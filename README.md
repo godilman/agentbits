@@ -141,12 +141,13 @@ sign in to the CLIs, and it does not offer signing in with a Claude subscription
 
 ### Installer
 
-There is no published installer yet. Windows (and later macOS) packages will be attached to
-[GitHub Releases](https://github.com/godilman/agentbits/releases) once a release has been built and checked.
-Until then, run Agentbits from source or build the installer yourself (below).
+Download the latest version from [GitHub Releases](https://github.com/godilman/agentbits/releases/latest):
 
-When installers are published, note that they are **not code-signed** yet: Windows SmartScreen will warn you
-("More info" → "Run anyway").
+- **Windows 10/11 (x64):** `Agentbits-Setup-<version>.exe` (main target)
+- **macOS:** `.dmg` or `.zip`, for Apple Silicon (`arm64`) or Intel (`x64`). Not tested on a real Mac yet.
+
+The installers are **not code-signed** yet: Windows SmartScreen will warn you ("More info" → "Run anyway").
+SHA-256 checksums are attached to each release as `SHA256SUMS-*.txt`.
 
 ### Run from source
 
@@ -255,7 +256,7 @@ details: [docs/FEATURES.md](docs/FEATURES.md).
 
 These items are already listed as planned in [docs/FEATURES.md](docs/FEATURES.md). There are no dates.
 
-- [ ] Published, checked installers on GitHub Releases (Windows first, then macOS)
+- [ ] Code-signed installers and a macOS package tested on a real Mac
 - [ ] More providers (e.g. Gemini, local models)
 - [ ] Agents using the browser as a tool (the `browser` permission)
 - [ ] Connection and file tools for Codex CLI agents
