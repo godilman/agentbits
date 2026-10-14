@@ -141,12 +141,13 @@ içermez, kurmaz ve onlarda oturum açmaz; uygulama içinde Claude aboneliğiyle
 
 ### Kurulum dosyası
 
-Henüz yayımlanmış bir kurulum dosyası yok. Windows (ardından macOS) paketleri, bir sürüm derlenip kontrol edildikten
-sonra [GitHub Releases](https://github.com/godilman/agentbits/releases) sayfasına eklenecek. O zamana kadar
-Agentbits'i kaynaktan çalıştırabilir ya da kurulum dosyasını kendin üretebilirsin (aşağıda).
+Son sürümü [GitHub Releases](https://github.com/godilman/agentbits/releases/latest) sayfasından indirebilirsin:
 
-Kurulum dosyaları yayımlandığında henüz **kod imzalı olmayacak**: Windows SmartScreen uyarı verecek ("Ek bilgi" →
-"Yine de çalıştır").
+- **Windows 10/11 (x64):** `Agentbits-Setup-<sürüm>.exe` (ana hedef)
+- **macOS:** Apple Silicon (`arm64`) ya da Intel (`x64`) için `.dmg` veya `.zip`. Henüz gerçek bir Mac'te denenmedi.
+
+Kurulum dosyaları henüz **kod imzalı değil**: Windows SmartScreen uyarı verir ("Ek bilgi" → "Yine de çalıştır").
+SHA-256 özetleri her sürümde `SHA256SUMS-*.txt` dosyalarında.
 
 ### Kaynaktan çalıştırma
 
@@ -259,7 +260,7 @@ proje klasörlerini kapsamaz; MySQL ve SQL Server sürücüleri PostgreSQL ve SS
 
 Bu maddeler [docs/FEATURES.md](docs/FEATURES.md)'de zaten planlı olarak geçiyor. Tarih verilmedi.
 
-- [ ] GitHub Releases'te yayımlanmış ve kontrol edilmiş kurulum dosyaları (önce Windows, sonra macOS)
+- [ ] Kod imzalı kurulum dosyaları ve gerçek bir Mac'te denenmiş macOS paketi
 - [ ] Daha fazla sağlayıcı (ör. Gemini, yerel modeller)
 - [ ] Ajanların tarayıcıyı araç olarak kullanması (`browser` izni)
 - [ ] Codex CLI ajanları için bağlantı ve dosya araçları
