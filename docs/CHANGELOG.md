@@ -13,6 +13,8 @@
   yalnızca Actions → Build packages → `release_tag` ile hazırlanır.
 - `CLAUDE.md`: "Güncel durum ve devir notu" bölümü (sahip, kararlar, yapılanlar, açık işler, öğrenilenler) — yeni oturumlar
   buradan devam eder. `docs/DEVELOPMENT.md` §9.3–9.4 güncel durumla; `docs/FEATURES.md` Releases satırı ✅.
+- `.gitignore`: `node_modules` artık klasör olmasa da (ör. sembolik bağ) yok sayılır; yanlışlıkla commit edilen bir
+  `node_modules` sembolik bağı kaldırıldı (`c1745f6` → `748f83d`; içerik yok, yalnızca ajan ortamının yolu).
 
 ## 2026-10-13 — GitHub'da herkese açık yayın hazırlığı
 
