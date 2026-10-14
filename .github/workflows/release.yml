@@ -1,7 +1,8 @@
 # Builds the Windows installer and the macOS DMG/ZIP (Apple Silicon + Intel).
-# Runs by hand (Actions → "Build packages" → Run workflow) or when a tag like v0.2.0 is pushed.
-# A pushed tag, or a "release_tag" entered when running it by hand, also creates a draft GitHub release
-# with the files attached (only the owner sees drafts; publishing it creates the tag).
+# Runs by hand only (Actions → "Build packages" → Run workflow). Entering a "release_tag" such as v0.2.0
+# also creates a draft GitHub release with the files attached (only the owner sees drafts; publishing it
+# creates the tag). There is deliberately no tag trigger: publishing a draft creates its tag, and a tag
+# trigger would then build everything again and fail on the already existing release.
 #
 # Signing is optional: without these repository secrets the packages are built unsigned.
 #   macOS : MAC_CSC_LINK (base64 of the Developer ID Application .p12), MAC_CSC_KEY_PASSWORD,
@@ -16,8 +17,6 @@ on:
         description: 'To also create a draft GitHub release, enter its version tag (e.g. v0.1.0). Leave empty to only build.'
         required: false
         default: ''
-  push:
-    tags: ['v*']
 
 permissions:
   contents: write
@@ -112,7 +111,7 @@ jobs:
 
   release:
     # The Windows package is required; the macOS package (not yet verified on a real Mac) is attached when it built.
-    if: always() && needs.windows.result == 'success' && (startsWith(github.ref, 'refs/tags/v') || startsWith(inputs.release_tag, 'v'))
+    if: always() && needs.windows.result == 'success' && startsWith(inputs.release_tag, 'v')
     needs: [windows, macos]
     runs-on: ubuntu-latest
     steps:
@@ -123,6 +122,6 @@ jobs:
       - name: Draft release
         env:
           GH_TOKEN: ${{ github.token }}
-          TAG: ${{ inputs.release_tag || github.ref_name }}
+          TAG: ${{ inputs.release_tag }}
         # A draft does not create the tag yet; publishing it creates the tag on the built commit (--target).
         run: gh release create "$TAG" dist/* --repo "$GITHUB_REPOSITORY" --target "$GITHUB_SHA" --draft --title "Agentbits $TAG" --notes "Draft release. Fill in the notes from docs/RELEASE_TEMPLATE.md and check the SHA256SUMS files before publishing."

@@ -374,16 +374,15 @@ bozuyordu).
 Kurulum dosyasını kendi bilgisayarınızda derlemeniz **gerekmez**; GitHub Actions temiz kurulumla (`npm ci`) derler:
 
 1. `package.json` → `version`'ı artırın (ör. `0.1.1`), `docs/CHANGELOG.md`'ye yazın, commit + push.
-2. Taslak sürümü başlatın — iki yoldan biri:
-   - **Tarayıcıdan (en kolayı):** Actions → **Build packages** → *Run workflow* → `release_tag` kutusuna `v0.1.1` yazın →
-     *Run workflow*.
-   - **Komutla:** `git tag v0.1.1` → `git push origin v0.1.1`.
-
-   **Build packages** iş akışı (`release.yml`) Windows + macOS paketlerini ve `SHA256SUMS-*.txt`'yi derleyip **taslak**
-   bir Release'e ekler (yalnızca sahip görür; etiket, taslak yayımlanınca derlenen commit'te oluşur). Ajan oturumları
-   etiket gönderemez ama iş akışını `release_tag` ile başlatabilir.
-3. Taslaktaki exe'yi indirip kurun, açılışı deneyin; notları `docs/RELEASE_TEMPLATE.md` ile yazın; **Publish** deyin.
-   README'deki "henüz kurulum dosyası yok" cümlelerini (İngilizce + Türkçe) Releases bağlantısıyla güncelleyin.
+2. Taslak sürümü başlatın: Actions → **Build packages** → *Run workflow* → `release_tag` kutusuna `v0.1.1` yazın →
+   *Run workflow*. İş akışı (`release.yml`) Windows + macOS paketlerini ve `SHA256SUMS-*.txt`'yi derleyip **taslak** bir
+   Release'e ekler (yalnızca sahip görür). Etiket, taslak yayımlanınca derlenen commit'te oluşur — **elle etiket
+   göndermeyin**: iş akışında bilinçli olarak etiket tetikleyicisi yok (v0.1.0 yayımlanınca etiket tetikleyicisi her şeyi
+   yeniden derleyip zaten var olan Release yüzünden düşmüştü). Ajan oturumları da iş akışını `release_tag` ile başlatabilir
+   (`gh api -X POST repos/godilman/agentbits/actions/workflows/release.yml/dispatches -f ref=main -f 'inputs[release_tag]=v0.1.1'`);
+   etiket gönderemez, Release düzenleyemez / yayımlayamaz.
+3. Taslaktaki exe'yi indirip kurun, açılışı deneyin; notları yazın (v0.1.0'ın İngilizce notları örnek alınabilir) ve
+   **Publish** deyin. README'ler `releases/latest`'e bağlıdır; sürüm numarası geçmediği için her sürümde değiştirmek gerekmez.
 
 macOS paketi henüz doğrulanmadı: macOS işi düşse de Windows paketi başarılıysa taslak Release yine oluşur (yalnızca
 Windows dosyalarıyla). İlk çalıştırmada macOS, boş `CSC_LINK` yüzünden ("<repo> not a file") düşüyordu; düzeltildi
@@ -393,18 +392,21 @@ Yalnızca denemek için: Actions → **Build packages** → *Run workflow*, `rel
 "Artifacts" bölümünde). Yerelde derlenecekse önce **`npm ci`** (eski `node_modules` eski bağımlılıklarla paketler — 2026-10-13'te
 bu yüzden eski MCP SDK 1.30.1 pakete giriyordu), sonra `npm run dist:win`.
 
-### 9.4 Sahibin GitHub'da elle yapması gerekenler (açık)
+### 9.4 Sahibin GitHub'da elle yapması gerekenler
 
-Ajan oturumları repo **ayarlarını** değiştiremez (yalnızca kod gönderebilir). 2026-10-13 itibarıyla açık olanlar:
+Ajan oturumları repo **ayarlarını** değiştiremez, Release düzenleyemez, etiket gönderemez (yalnızca kod gönderir ve iş
+akışı başlatır). Durum (2026-10-14):
 
-- [ ] Settings → Security → **Private vulnerability reporting** → Enable (`SECURITY.md`'deki bildirim bağlantısı buna bağlı).
-- [ ] Repo sayfası → About ⚙ → **Topics**: `ai-agents`, `multi-agent`, `agent-orchestration`, `electron`, `typescript`,
-  `react`, `pixel-art`, `sqlite`, `desktop-app`, `mcp`.
-- [ ] İlk sürüm (`v0.1.0`) — §9.3. **Taslak hazır** (2026-10-13, commit `61eb389`, Windows exe + macOS DMG/ZIP + SHA256SUMS);
-  kalan: exe'yi deneyip notları yapıştırmak ve *Publish*. Yayımlandıktan sonra README'lerdeki "henüz kurulum dosyası yok"
-  bölümleri indirme bağlantılarıyla değiştirilmeli. Yerelde duran eski `release\Agentbits-Setup-0.1.0.exe` SDK 1.30.1 içerir;
-  onu yayımlamayın.
-- [ ] (İsteğe bağlı) Uygulamadaki geri bildirim adresi (`src/shared/support.ts` → `FEEDBACK_EMAIL`) kişisel Gmail'dir ve
-  artık herkese açık kodda; ayrı bir destek adresi düşünülebilir.
+- [x] Private vulnerability reporting açık.
+- [x] Topics eklendi.
+- [x] **v0.1.0 yayımlandı** (2026-10-14; Windows exe + macOS DMG/ZIP + SHA256SUMS; paketler commit `61eb389`'den). README'ler
+  `releases/latest`'e bağlandı.
+- [x] Yerel klasör git'e bağlandı (`origin` = GitHub, `user.email` = noreply adresi).
+- [ ] GitHub → Settings → Emails → **Keep my email addresses private** ve **Block command line pushes that expose my
+  email** açılmalı: 2026-10-14'te web arayüzünden yapılan iki README commit'i kişisel Gmail ile yazıldı (geçmişte kalır;
+  adres zaten `FEEDBACK_EMAIL`'de herkese açık olduğundan geçmişi yeniden yazmaya gerek görülmedi).
+- [ ] (İsteğe bağlı) Uygulamadaki geri bildirim adresi (`src/shared/support.ts` → `FEEDBACK_EMAIL`) kişisel Gmail'dir;
+  ayrı bir destek adresi düşünülebilir.
+- [ ] Bilgisayardaki eski `release\Agentbits-Setup-0.1.0.exe` (SDK 1.30.1 içerir) silinebilir; kullanılmamalı.
 
 Bunlar yapıldıkça bu listeyi güncelleyin.

@@ -324,7 +324,7 @@ yukarıdaki ⏳ satırları ve "Bilinen sorunlar"dır.
 | GitHub Actions paket iş akışı (Windows + macOS; `v*` etiketinde taslak Release) | 🟡 | `.github/workflows/release.yml` (typecheck + `test:unit` + paket). Windows işi geçti (2026-10-13); macOS işi boş `CSC_LINK` yüzünden düşüyordu, düzeltildi; 2026-10-13'te iki paket de CI'da derlendi (macOS paketi gerçek bir Mac'te hâlâ denenmedi) — macOS düşse de etikette taslak Release Windows dosyalarıyla oluşur |
 | Linux paketi | — | Hedef yok; Linux'ta yalnızca kaynaktan (`npm run dev` / `npm start`) |
 | Lisans ve üçüncü taraf bildirimleri | ✅ | PolyForm Strict 1.0.0 (`LICENSE`, kurulum sihirbazında ve `resources/LICENSE.txt`); `THIRD_PARTY_NOTICES.md` pakette (`npm run notices` ile yeniden üretilir) |
-| GitHub Releases'te yayımlanmış kurulum dosyası | ⏳ | Depo herkese açık (`github.com/godilman/agentbits`); ilk sürüm `npm ci` ile temiz derlenip kontrol edildikten sonra yayımlanacak |
+| GitHub Releases'te yayımlanmış kurulum dosyası | ✅ | v0.1.0 yayımlandı (2026-10-14): Windows exe + macOS DMG/ZIP (imzasız; macOS gerçek Mac'te denenmedi) + SHA256SUMS. CI'da derlenir: Actions → Build packages → `release_tag` (DEVELOPMENT §9.3) |
 
 ## 12. Kapsam dışı — Agentbits'in yapmadıkları
 

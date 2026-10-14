@@ -4,6 +4,16 @@
 > `## YYYY-MM-DD — kısa başlık`, ardından **Eklendi / Değişti / Düzeltildi / Kaldırıldı / Bilinen** maddeleri
 > ve ilgili dosyalar.
 
+## 2026-10-14 — v0.1.0 yayımlandı, devir notu
+
+### Değişti
+- **v0.1.0** GitHub Releases'te yayımlandı (sahip); README'ler (EN + TR) `releases/latest`'e bağlandı (sahip).
+- `release.yml`: etiket tetikleyicisi kaldırıldı. Taslak yayımlanınca oluşan `v0.1.0` etiketi iş akışını yeniden
+  çalıştırmış, paketleri baştan derleyip zaten var olan Release yüzünden "Draft release" adımında düşmüştü. Sürümler artık
+  yalnızca Actions → Build packages → `release_tag` ile hazırlanır.
+- `CLAUDE.md`: "Güncel durum ve devir notu" bölümü (sahip, kararlar, yapılanlar, açık işler, öğrenilenler) — yeni oturumlar
+  buradan devam eder. `docs/DEVELOPMENT.md` §9.3–9.4 güncel durumla; `docs/FEATURES.md` Releases satırı ✅.
+
 ## 2026-10-13 — GitHub'da herkese açık yayın hazırlığı
 
 ### Değişti

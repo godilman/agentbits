@@ -23,7 +23,63 @@ hissinde, koyu temalı, ajanların ne yaptığını canlı gösteren güvenli bi
 Ürün vizyonu → [docs/PROJECT.md](docs/PROJECT.md).
 
 Durum: **MVP (v0.1.0)** — organizasyon, projeler ve tüm proje bölümleri çalışıyor; özellik durumu →
-[docs/FEATURES.md](docs/FEATURES.md).
+[docs/FEATURES.md](docs/FEATURES.md). Depo herkese açık, v0.1.0 GitHub Releases'te yayımlandı (2026-10-14).
+
+## Güncel durum ve devir notu (son güncelleme: 2026-10-14)
+
+> Önceki oturumların bağlamı burada özetlenir; yeni bir oturuma başlayan ajan bunu okuyarak devam edebilmelidir.
+> Ayrıntılar: [docs/CHANGELOG.md](docs/CHANGELOG.md) (en üstteki kayıtlar), [docs/SECURITY.md](docs/SECURITY.md),
+> [docs/DEVELOPMENT.md §9](docs/DEVELOPMENT.md#9-github-deposu-günlük-iş-akışı-ve-sürüm-yayınlama). Oturum sonunda bu
+> bölümü güncelleyin (tarih, yapılanlar, açık işler).
+
+**Sahip ve çalışma biçimi**
+- Sahip: **Gökhan Dilman** (GitHub `godilman`). Türkçe yazışır; cevaplar Türkçe olmalı. Yazılımcı gibi varsaymayın: neyi
+  neden yaptığını tek cümleyle söyleyin, yapması gereken adımları **kopyalanabilir PowerShell komutlarıyla** verin.
+  Sahip ayrıntıları unutabileceğini söyledi: her kararı ve açık işi belgelere yazın (bu bölüm + DEVELOPMENT §9.4).
+- Geliştirme Windows'ta; sahibin yerel klasörü GitHub'ın **git klonudur** (`origin` = `github.com/godilman/agentbits`,
+  `user.email` = `godilman@users.noreply.github.com`). Oturuma `git pull` ile başlayın, commit'ten önce `git status`.
+- Geri alınamaz ya da herkese açık sonuç doğuran işlerde (lisans, yayın, Release, geçmişi yeniden yazma, veri silme)
+  önce sahibe sorun.
+
+**Sahibin aldığı kararlar** (değiştirmeden önce sorun)
+- Sahte giriş ekranı **kaldırıldı** (uygulama tek kullanıcılı). Otopilot varsayılan **açık**.
+- Codex ajanı **klasörle sınırlı** (`workspace-write`, ağ yalnızca izinle); `danger-full-access` asla.
+- Lisans **PolyForm Strict 1.0.0** — sahibin isteği: "herkes kullanabilsin ama değiştiremesin" (ticari olmayan kullanım
+  serbest; değişiklik, türev, yeniden dağıtım yok; ticari kullanım izin ister). Önceki MIT, paketleme hazırlığında bir
+  ajan tarafından eklenmişti. README projeyi "source-available" diye tanıtır, "open source" demez. Telif: Gökhan Dilman.
+- Depo herkese açık. Destek: Buy Me a Coffee (`godilman`, tamamen gönüllü); uygulamadaki geri bildirim e-postası
+  `src/shared/support.ts`.
+
+**Son oturumda yapılanlar (2026-10-13 / 14)**
+1. **Güvenlik incelemesi, 1. tur** (bağımsız rapor, 27 bulgu) → durum tablosu `docs/SECURITY.md`, ADR-024.
+2. **Güvenlik incelemesi, 2. tur:** `sed`'de her betik denetlenir; tırnaklı SQL fonksiyon adları yakalanır; iç içe JSON'daki
+   `approved` kararı geçersiz; ajan okumaları **salt-okunur DB kullanıcısı zorunlu**; temizlik beklemesi (`settled`) süre
+   dolunca hata verir; MCP stderr/hata metinleri sırlardan arındırılır, kapanışta bağlantı yeniden açılmaz; MCP SDK
+   **1.31.0** (eskiyse OAuth reddedilir), `issuer`'sız eski OAuth girişleri açılışta silinir; kapanışta görev başlamaz.
+3. **Herkese açık yayın:** README (EN varsayılan + TR), `docs/screenshots/` (Demo, boş profil), LICENSE, CONTRIBUTING,
+   kök SECURITY, THIRD_PARTY_NOTICES (`npm run notices`), `.gitignore` / `.gitattributes` (LF), CI ve Build packages iş
+   akışları (boş imza secret'ı macOS'u bozuyordu → düzeltildi), **v0.1.0 Release** (Windows exe + macOS DMG/ZIP, imzasız).
+
+**Açık işler / sıradaki adımlar**
+- Sahip: GitHub e-posta gizliliği ayarı; isteğe bağlı ayrı destek e-postası; eski yerel `release\` exe'si kullanılmamalı
+  (DEVELOPMENT §9.4).
+- macOS paketi gerçek bir Mac'te denenmedi; kod imzalama yok (Windows SmartScreen / macOS Gatekeeper uyarır).
+- GitHub Actions "Node.js 20 deprecated" uyarısı: `actions/checkout`, `setup-node`, `upload-artifact`, `download-artifact`
+  Node 24 destekleyen sürümlere yükseltilmeli (sürüm numaralarını resmi sayfalardan doğrulayın).
+- Türkçe arayüzde sekme adları (Chat, Office, Tasks, Reports, Decisions, Browser) İngilizce; bilinçli olup olmadığı sahibe
+  sorulmadı.
+- Demo sağlayıcısı (`providers/mock.ts`) pazarlama/araştırma görevlerinde de kod dosyası düzenlemeleri taklit ediyor;
+  görev türüne uygun simülasyon README görüntülerini de iyileştirir.
+- `docs/SECURITY.md`'deki 🟡 / ⏳ maddeler (ör. büyük veride UI sayfalama) ve `docs/FEATURES.md` "Bilinen sorunlar".
+
+**Önceki oturumlardan öğrenilenler**
+- Yeni sürüm: `package.json` sürümünü artır → Actions → Build packages → `release_tag` → taslağı dene → Publish
+  (DEVELOPMENT §9.3). Elle etiket göndermeyin.
+- Yerelde paketlemeden önce **`npm ci`** (eski `node_modules` eski MCP SDK'yı pakete koymuştu).
+- Windows'ta CRLF'ye dönen dosyalar testleri bozuyordu → `.gitattributes` her yerde LF; testler `\r?\n` ile böler.
+- README görüntüleri: Demo sağlayıcı, ayrı boş `AGENTBITS_DATA_DIR`, 1600×960, e-ticaret şablonu, 256 renk PNG; gerçek veri,
+  anahtar, kişisel yol görünmemeli.
+- Bulut ajan oturumları GitHub'da repo ayarı değiştiremez, etiket gönderemez, Release düzenleyemez; iş akışı başlatabilir.
 
 ## Teknoloji yığını
 
@@ -112,7 +168,7 @@ Kurulum sorunları (Electron binary eksik, siyah pencere, execution policy, Clau
 | `src/renderer/src/features/` | `org/` (Organizasyon sayfası: Şema, Takımlar, Ajanlar, Şablonlar, Skill'ler, Uygulamalar, Bağlantılar), `skills/` (`SkillsView`, `AddSkillModal`, `AgentSkills`), `apps/` (`AppsView`, `AgentApps`), `connections/` (`ConnectionsView`, `AuditList`, `ApprovalsDock` = Production onayları), `agents/` (Organizasyon → Ajanlar), `project/` (ProjectLauncher = açılış proje seçici + ProjectHome, ProjectModal, Ekip bölümü), proje bölümleri `chat`, `office`, `terminal` (`AgentGrid` + `AgentPane` = ajan terminalleri, `TerminalView` = Kabuklar), `tasks`, `reports` (+ `UsagePanel`), `decisions`, `browser`, `files` (`FilesView`, `FilePreviewModal`, `TaskFiles`, `hooks.ts`, `parts.tsx`); `settings` (`SettingsPanel`, `DataSection` = Veri yönetimi, `parts.tsx`), `guide` (`GuideDrawer` = Kılavuz yan paneli: 8 adım otomatik işaretlenir, "Nerede ne var", Kısayollar; TopBar "Kılavuz" / `F1`) |
 | `src/renderer/src/index.css` | Tailwind + bileşen sınıfları (`btn-*`, `input`, `card`, `label`, `panel-title`…) |
 | `electron-builder.config.js`, `build-resources/` | Paketleme yapılandırması (JS; `extraResources`: `LICENSE` → `LICENSE.txt`, `THIRD_PARTY_NOTICES.md`; `appId` `app.agentbits.desktop`; Windows NSIS + macOS DMG/ZIP; imza/noterlik ortam değişkenleriyle açılır → `docs/DEVELOPMENT.md` §8); `build-resources/icon.svg` (logo kaynağı), `icon.png` (512 px, dev penceresi), `icon.ico` (16–256), `icon.icns` (macOS), `entitlements.mac.plist` (özel NSIS betiği yok; `installer.nsh` kaldırıldı) |
-| `.github/workflows/release.yml` | GitHub Actions: Windows + macOS paketlerini derler (elle ya da `v*` etiketiyle; etikette taslak Release) |
+| `.github/workflows/ci.yml`, `.github/workflows/release.yml` | GitHub Actions: `CI` her push/PR'da Windows + Ubuntu'da `npm ci` → typecheck → `test:unit` → build → `npm audit`; `Build packages` yalnızca elle (Actions → Run workflow) Windows + macOS paketlerini derler, `release_tag` verilirse taslak Release oluşturur (etiket tetikleyicisi bilinçli olarak yok) |
 | `docs/` | Proje belgeleri (bkz. aşağı) |
 | `out/`, `release/` | Derleme çıktıları (gitignore'da) — elle düzenlemeyin |
 
@@ -217,7 +273,7 @@ Kurulum sorunları (Electron binary eksik, siyah pencere, execution policy, Clau
 17. **Depo GitHub'da herkese açık** (<https://github.com/godilman/agentbits>, `main`). Commit edilen her şey herkese
     görünür ve geçmişte kalır: sır, kişisel veri/yol, veritabanı, derleme çıktısı (`release/`, `out/`) commit etmeyin;
     commit'ten önce `git status`. Yerel klasörün GitHub'a bağlanması, günlük akış (`pull` → değişiklik → doğrulama →
-    `commit` → `push`), sürüm yayınlama (etiket → taslak Release) ve **sahibin elle yapacağı açık işler** →
+    `commit` → `push`), sürüm yayınlama (Build packages + `release_tag` → taslak Release) ve **sahibin elle yapacağı açık işler** →
     [docs/DEVELOPMENT.md §9](docs/DEVELOPMENT.md#9-github-deposu-günlük-iş-akışı-ve-sürüm-yayınlama). Sahibe yol gösterirken
     oradaki komutları kullanın; tamamlanan maddeleri oradan işaretleyin.
 
