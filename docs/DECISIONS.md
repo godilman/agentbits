@@ -480,3 +480,28 @@ Durum değerleri: *Kabul edildi*, *Önerildi*, *Yerini aldı*, *Geri alındı*.
 - **Sonuçlar:** API ajanları da onay kartı bekler (şablon ajanlarında "Onay iste" açık). Linux'ta anahtar zinciri olmayan
   kullanıcı sır kaydedemez. Terminal izninin OS düzeyinde yalıtılması, harcama tavanı, sürücülere iptal sinyali, dosya
   yollarının main'de yetkilendirilmesi ve imzalı paketler açık kaldı (SECURITY.md).
+
+## ADR-025 — Paralel yazılımcılar: ikizler, bağımlılıklar, ekip farkındalığı, görev başına git worktree (2026-10-15)
+
+- **Bağlam:** Sahip bir yazılımcıyı çoğaltınca liderin işi ikizlere dağıtmasını, ajanların birbirinden haberdar olmasını ve
+  "paralel ama sırası gelince seri" bitirmesini istedi. Ajanlar aynı proje klasöründe çalışıyor, aynı dosyayı aynı anda
+  ezebiliyordu; birbirlerinin işini bilmiyorlardı; lider yalnızca "en uygun" üyeye atıyordu (Demo eşitlikte hep ilkine).
+- **Karar:**
+  - **Çoğalt** (`agents:duplicate`): profil + izinler + birimler + skill / uygulama / bağlantı / dosya izinleri; lider bayrağı hariç.
+  - **İş dağıtımı:** lider üyelerin açık iş sayısını görür ve aynı roldekilere dağıtır; zamanlayıcıda boştaki **ikiz** (aynı
+    rol + aynı yetenekler) meşgul ikizinin sıradaki görevini devralır (`shareWithTwins`, varsayılan açık; revizyon notlu
+    görevler kendi ajanında kalır).
+  - **Bağımlılık:** `tasks.depends_on` + liderin `"after"` alanı (yalnızca önceki öğeler / var olan anahtarlar → döngü yok);
+    zamanlayıcı bekler, sonraki adım önceki raporları görür. Kullanıcı elle başlatabilir.
+  - **Farkındalık prompt + araç ile:** `core/team.ts` (canlı: kim, hangi görev, hangi dosyalar), `team_status`, aynı dosyaya
+    ikinci yazana uyarı. Tek başına garanti değildir.
+  - **Gerçek yalıtım git worktree ile (proje ayarı, varsayılan kapalı):** görev başına dal + kopya (`<veri>/worktrees/…`),
+    biten görev `--no-ff` birleşir; kirli klasörde bekler; çakışma görevin kendi kopyasına alınıp ajana geri döner.
+    Kopyalar proje içine konmaz (test araçları iç içe kopyaları bulur); veri klasöründeki kopya için kök klasör denetimi
+    (`assertRunFolder`) yalnızca projenin kendi klasörüne uygulanır, kopya yolu Agentbits tarafından hesaplanır.
+    Agentbits'in kendi git çağrıları depo hook'larını **çalıştırmaz** (boş `core.hooksPath`).
+- **Neden varsayılan kapalı:** açmak ajanların değişikliklerinin klasöre yalnızca görev bitince geldiği bir akışa geçirir;
+  klasörün git deposu olması gerekir. Sahip proje bazında seçer.
+- **Elenen:** kopyaları proje içinde tutmak; dosya kilidi (Claude Code'un Edit aracını araya girerek engelleyemiyoruz,
+  modele bağlı bir "kilit" garanti değil); tek ajana sıralı çalıştırma (paralellik kaybı).
+

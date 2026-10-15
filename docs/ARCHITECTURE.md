@@ -59,7 +59,7 @@ agentbits/
    │  ├─ secrets.ts           # safeStorage şifreleme
    │  ├─ db/
    │  │  ├─ index.ts          # openDb (yol, pragmalar, migrate), getDb, closeDb
-   │  │  ├─ schema.ts         # MIGRATIONS v1–v10 (sürümlü, yalnızca ekleme)
+   │  │  ├─ schema.ts         # MIGRATIONS v1–v12 (sürümlü, yalnızca ekleme)
    │  │  ├─ repos.ts          # settingsRepo, providersRepo, agentsRepo, permissionsRepo, unitsRepo, projectsRepo,
    │  │  │                    # tasksRepo, runsRepo, messagesRepo, logsRepo, memoriesRepo, decisionsRepo,
    │  │  │                    # reportsRepo, getStats(projectId?)
@@ -554,6 +554,25 @@ onay bekleyen çalışma da veritabanı kapandıktan sonra yürümez (açılış
   sıraya girer ve mevcut adımdan sonra uygulanır (`instructionWithFiles` → `[From your project lead <ad>]` öneki;
   `instructionTurn` başlığı kaynağa göre değişir). Başka projenin / bilinmeyen anahtar → "⚠️ … not iletilmedi". Çalışanların
   (görev ya da DM) ```` ```message ```` blokları yok sayılır.
+
+### 6.7b Paralel çalışma (ADR-025, 2026-10-15)
+- **İkizler:** `isTwin` (`shared/org.ts`: aynı rol + aynı yetenek etiketleri). `tick()`'te boştaki ajanın kendi işi yoksa
+  `takeFromTwin()` meşgul ikizlerinin `tasksRepo.queuedFor()` görevini (revizyon notsuz, bağımlılıkları bitmiş) devralır,
+  görev akışına "↔" notu düşer (`settings.shareWithTwins`). Liderin ekip listesinde her üyenin `open tasks` sayısı ve
+  "aynı roldekilere dağıt" kuralı var. `agents:duplicate` ikiz üretir.
+- **Bağımlılık:** `Task.dependsOn`; liderin ```` ```tasks ```` öğesinde `"after"` → `resolveAfter` (`shared/leadComms.ts`).
+  `nextFor` / `queuedFor` `DEPS_DONE` (`json_each`) koşulunu kullanır. `execute()` prompt'a `previousSteps()` ("Previous steps",
+  bağımlılıkların rapor özetleri) ekler; liderin açık görev listesinde "(after TA-n)".
+- **Farkındalık:** `core/team.ts` → `teamState` (çalışma başında `start`, `finally`'de `end`, `RunContext.onFileWritten` →
+  `touch`). Sistem prompt'unda "Team right now", `team_status` aracı (`agentTools`, görev modunda). Aynı dosyaya ikinci yazana
+  transkript + görev akışında ⚠️. Claude Code `Edit/MultiEdit/Write/NotebookEdit`, Demo `Edit/Write` bildirir.
+- **Worktree (`project.isolation = 'worktree'`):** CLI çalışmasından önce `prepareWorktree()` → `isRepoRoot` +
+  `ensureWorktree(<veri>/worktrees/<proje>/<görev>, agentbits/<anahtar>)`; `cwd` kopyadır, prompt'a "Your working copy".
+  Başarıda `commitWorktree()` (yazar = ajan). Görev `done` olunca (`queueReview` onayı ya da `tasks:move`) `finishTaskBranch()`
+  → `mergeIntoRoot` (`--no-ff`): `merged` → kopya + dal silinir, kökte `recordWorkspaceChanges`; `dirty` → bekler
+  (`tasks:mergePending`, `tasks:merge` = "Şimdi birleştir"); `conflict` → `bringRootIn` (çakışma işaretleri kopyada) + görev
+  `todo` ve `reviewNote` ile ajana döner. Her şey `serialized(repo)` ile sıralı; git çağrıları boş `core.hooksPath` ile.
+  Hata → uyarı + ortak klasörde devam (çalışma düşmez). Görev / proje silinince kopyalar silinir.
 
 ### 6.8 Günlük rapor — `generateDailyReport(projectId)`
 Projenin pano sayıları, bugün biten görevleri, üyelerinin performansı, bugünkü kararları ve kaynak

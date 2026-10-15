@@ -32,7 +32,7 @@ const MIGRATIONS: { version: number; sql: string }[] = [ { version: 1, sql: `...
 
 - `migrate(db)` önce `schema_migrations` tablosunu oluşturur, `MAX(version)`'dan büyük her migration'ı
   **kendi transaction'ında** çalıştırıp sürümünü kaydeder.
-- **Yalnızca ekleyin.** Uygulanmış bir migration'ı (bugün: v1–v10) asla düzenlemeyin, silmeyin, yeniden
+- **Yalnızca ekleyin.** Uygulanmış bir migration'ı (bugün: v1–v12) asla düzenlemeyin, silmeyin, yeniden
   numaralandırmayın — kullanıcı makinelerindeki DB'ler onu zaten çalıştırdı ve değişiklik oraya ulaşmaz.
 - Yeni değişiklik = dizinin sonuna `{ version: N+1, sql: ... }`. SQLite'ta tipik olarak
   `ALTER TABLE x ADD COLUMN y ... NOT NULL DEFAULT ...`; sütun silme/CHECK değiştirme için tabloyu yeniden
@@ -56,6 +56,8 @@ const MIGRATIONS: { version: number; sql: string }[] = [ { version: 1, sql: `...
 | 8 | 2026-10-13 | Skill'ler: `skills`, `skill_files` (dosyalar BLOB), `skill_assignments` (ajan / birim) + `idx_skill_assign_target`; ajan ya da birim silinince atamayı silen trigger'lar `skill_assign_agent_gone`, `skill_assign_unit_gone` |
 | 9 | 2026-10-13 | Uygulamalar (MCP): `mcp_servers` (env/başlık/OAuth şifreli), `mcp_tool_policies`, `mcp_permissions` (varsayılan reddet) + `idx_mcp_perm_agent` |
 | 10 | 2026-10-15 | Lider ↔ ekip: `agent_instructions.source TEXT NOT NULL DEFAULT 'user'` CHECK `user, lead` (eski satırlar `user`); `idx_reports_task (task_id, created_at)` — liderin "son biten işler" bağlamı. v9→v10 yükseltmesi bellekte SQLite ile doğrulandı |
+| 11 | 2026-10-15 | `tasks.depends_on TEXT NOT NULL DEFAULT '[]'` (bitmesi beklenen görev id'leri; zamanlayıcı `json_each` ile denetler, silinen bağımlılık engellemez). v10→v11 yükseltmesi SQLite ile denendi |
+| 12 | 2026-10-15 | `projects.isolation TEXT NOT NULL DEFAULT 'shared'` CHECK `shared, worktree` (görev başına git worktree, ADR-025) |
 
 ## 3. Tablolar
 
@@ -93,6 +95,7 @@ Kullanılan anahtarlar (`AppSettings`, varsayılanlar `shared/settingsRules.ts` 
 | `runMaxCostUsd` | number | `0` | Bir görev çalışmasının maliyet tavanı (yalnızca Claude Code bildirir); `0` = sınırsız |
 | `cliEnvPassthrough` | string[] | `[]` | Ajan CLI'larına ek olarak aktarılan ortam değişkeni adları (`agentEnv`); `SSH_AUTH_SOCK`, `NODE_OPTIONS`, `ELECTRON_RUN_AS_NODE` reddedilir |
 | `filesQuotaMb` | number | `5120` | Dosya deposunun (içerik adresli orijinaller, `sha256 <> ''`) en büyük boyutu, MB; aşan ekleme / `file_save` reddedilir. Proje klasörü dosyaları sayılmaz; `0` = sınırsız |
+| `shareWithTwins` | boolean | `true` | Boştaki ajan, aynı rol + yeteneklerdeki meşgul ikizinin sıradaki görevini devralır (ADR-025) |
 
 ### `providers`
 | Sütun | Tip | Not |

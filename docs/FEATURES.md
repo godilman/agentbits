@@ -237,7 +237,11 @@ yukarıdaki ⏳ satırları ve "Bilinen sorunlar"dır.
 | Tümünü duraklat / devam et | ✅ | Yeniden açılışta da geçerli (`settings.orchestrator.paused`). CLI'da "duraklat" yalnızca çıktı okumayı bekletir |
 | Uygulama yeniden açılınca yarım işleri temizleme | ✅ | Çalışmalar `cancelled`, görevler `todo` **ve bekletilir** (kendiliğinden yeniden başlamaz; görev akışında not) |
 | Proje bağlamı prompt'ta (`## Project`: ad, açıklama, klasör) | ✅ | Çalışan ve lider sistem prompt'ları |
-| Aynı klasörde eşzamanlı düzenleme çakışma yönetimi | ⏳ | Yok; git dalı önerilir |
+| Aynı klasörde eşzamanlı düzenleme çakışma yönetimi | ✅ | 2026-10-15: proje ayarı "Her görev kendi git çalışma kopyasında" (görev başına dal + worktree, biten görev birleşir, çakışma ajana döner; ADR-025). Kapalıyken: ekip farkındalığı + aynı dosyaya ikinci yazana uyarı |
+| Ajanı çoğalt (ikiz: aynı rol, izinler, takımlar, erişimler) | ✅ | 2026-10-15; Organizasyon → Ajanlar → Çoğalt (`agents:duplicate`) |
+| İş dağıtımı: lider aynı roldekilere dağıtır; boştaki ikiz meşgul ikizin sıradaki görevini devralır | ✅ | 2026-10-15; Ayarlar → Genel → "İkizler arasında iş paylaşımı" (varsayılan açık) |
+| Görev bağımlılıkları (`"after"`), sonraki adım önceki raporları görür, kartta "… bekleniyor" | ✅ | 2026-10-15; migration v11; elle başlatma serbest |
+| Ekip farkındalığı: "Team right now" + `team_status` aracı (kim, hangi görev, hangi dosyalar) | ✅ | 2026-10-15; `core/team.ts`. Dosya bilgisi Claude Code ve Demo'dan; Codex ve API sağlayıcıları dosya yazdığını bildirmez |
 
 ## 6. Sağlayıcılar
 
@@ -356,7 +360,7 @@ Kullanıcıya dürüstçe söylenmesi gerekenler (kodla doğrulandı, 2026-10-13
 | Zamanlanmış / tekrarlanan görev, son tarih | — | Görevler sohbetten, elle ya da talimatla oluşur; otopilot yalnızca sıradakini alır |
 | İşletim sistemi bildirimleri | — | Yalnızca uygulama içi toast'lar ve rozetler |
 | Git entegrasyonu (dal, commit, PR) | — | Agentbits git kullanmaz; terminal izinli bir ajan kendisi çalıştırabilir |
-| Aynı klasörde eşzamanlı düzenleme çakışma yönetimi | ⏳ | Git dalı önerilir |
+| Aynı klasörde eşzamanlı düzenleme çakışma yönetimi | ✅ | Proje ayarı: görev başına git worktree (ADR-025) |
 | OCR, eski Office biçimleri (.doc/.xls/.ppt/.rtf) | ⏳ | §3c |
 | Ajanların dosya eklerini değiştirmesi / silmesi | — | Bilinçli: ajanlar yalnızca okur, `file_save` yalnızca yeni metin dosyası (ADR-021) |
 | Proje klasörlerinin yedeklenmesi | — | Yedek yalnızca veritabanıdır; proje klasörü ve dosyaları silinmez de |
@@ -383,7 +387,7 @@ eklendi; bunlar CHANGELOG'da kayıtlı ve gözden geçirilmeli.
 5. ~~Terminal pipe tabanlı~~ — **Düzeltildi (Faz 1):** Kabuklar node-pty ile gerçek PTY. Yalnızca node-pty yüklenemezse
    "Pipe modu"na düşülür; o modda tam ekran uygulamalar çalışmaz, `Ctrl+C` yalnızca yazılan satırı siler.
 6. CLI çalışmasında "duraklat" süreci dondurmaz; yalnızca çıktı okumayı bekletir (süreç arka planda devam edebilir).
-7. Aynı çalışma alanında birden fazla ajan aynı anda dosya düzenleyebilir; çakışma yönetimi yok.
+7. ~~Aynı çalışma alanında birden fazla ajan aynı anda dosya düzenleyebilir~~ — **2026-10-15:** proje ayarıyla görev başına git worktree (ADR-025). Ayar kapalıyken (varsayılan) yalnızca farkındalık ve uyarı var; worktree modunda ana klasör yalnızca görev bitince değişir ve kopyalarda `node_modules` gibi izlenmeyen dosyalar yoktur (gerekirse ajan kurar).
 8. Terminal izni olan ajan kabukta her komutu çalıştırabilir (`Bash` ön-onaylı) — yalnızca güvenilen ajanlara verin.
 9. API sağlayıcıları (Anthropic/OpenAI) dosya sistemi ve terminal aracı kullanmaz: görevlerde proje klasörüne dokunmaz,
    yalnızca metin ve Agentbits araçları (izinli bağlantılar, dosya ekleri, `file_save`, skill'ler, uygulamalar) kullanır;

@@ -4,6 +4,25 @@
 > `## YYYY-MM-DD — kısa başlık`, ardından **Eklendi / Değişti / Düzeltildi / Kaldırıldı / Bilinen** maddeleri
 > ve ilgili dosyalar.
 
+## 2026-10-15 — Paralel yazılımcılar: çoğalt, iş dağıtımı, bağımlılıklar, farkındalık, git worktree (ADR-025)
+
+Sahibin isteği: çoğaltılan yazılımcılar işi paylaşsın, birbirinden haberdar olsun, paralel ama gerektiğinde sırayla bitirsin.
+
+### Eklendi
+- **Ajanı çoğalt** (`agents:duplicate`, Organizasyon → Ajanlar → Çoğalt).
+- **İş dağıtımı:** liderin ekip listesinde açık iş sayısı + "aynı roldekilere dağıt" kuralı; boştaki **ikiz** meşgul ikizin
+  sıradaki görevini devralır (Ayarlar → Genel, varsayılan açık); Demo lideri eşitlikte en az yüklüye verir.
+- **Görev bağımlılıkları** (migration v11): liderin `"after"` alanı, zamanlayıcı bekler, "Previous steps" ile önceki raporlar,
+  kartta "… bekleniyor"; Demo "sonra / then" içeren isteği zincirler.
+- **Ekip farkındalığı:** "Team right now" bölümü, `team_status` aracı, aynı dosyaya ikinci yazana ⚠️.
+- **Görev başına git worktree** (proje ayarı, migration v12): dal + kopya, commit, bitince `--no-ff` birleştirme, kirli klasörde
+  "Şimdi birleştir", çakışma ajana döner; depo hook'ları çalışmaz.
+- Testler: `team.test.ts`, `worktree.test.ts` (gerçek git), `leadComms` (`resolveAfter`); v10→v11 ve çoğaltma SQL'i bellekte SQLite ile.
+
+### Güvenlik
+- `tests/redact.test.ts`: anahtar biçimli örnekler parçalardan kurulur. GitHub secret scanning bir **uydurma** Google anahtarı
+  örneğini işaretlemişti (uyarı #1, "testlerde kullanılıyor" olarak kapatıldı; gerçek anahtar yoktu).
+
 ## 2026-10-15 — IPC şeması, yerel yol yetkisi, büyük veri (Faz 3, 2. kısım: #13, #27)
 
 ### Eklendi
