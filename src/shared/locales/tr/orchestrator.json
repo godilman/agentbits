@@ -183,7 +183,8 @@
     "claudeReady": "Claude Code hazır: {{version}} · oturum açık",
     "codexNotFound": "Codex CLI bulunamadı. `npm i -g @openai/codex` ile yükleyin.",
     "codexFound": "Codex bulundu: {{version}}",
-    "codexNeedsRead": "Codex sandbox içinde her zaman dosya okur; bu ajana \"Dosya okuma\" izni ver ya da başka bir sağlayıcı seç"
+    "codexNeedsRead": "Codex sandbox içinde her zaman dosya okur; bu ajana \"Dosya okuma\" izni ver ya da başka bir sağlayıcı seç",
+    "streamIncomplete": "{{provider}}: yanıt bitmeden kesildi (bağlantı koptu). Yeniden dene."
   },
   "terminal": {
     "processExited": "[süreç sonlandı: {{code}}]",
@@ -226,10 +227,10 @@
     "cost": "⏱ Maliyet sınırına ulaşıldı ({{cost}} USD): çalışma durduruldu, görev seni bekliyor."
   },
   "worktree": {
-    "notRepo": "Worktree modu açık ama proje klasörü en az bir commit'i olan bir git deposunun kökü değil; proje klasöründe çalışılıyor.",
+    "notRepo": "Görevler kendi git çalışma kopyasında çalışacak şekilde ayarlı, ama proje klasörü en az bir commit'i olan bir git deposunun kökü değil. Görev ortak klasörde çalışmasın diye bekletildi: ilk commit'i yap (ya da ayarı kapat) ve görevi yeniden başlat.",
     "created": "🌿 {{branch}} dalında kendi çalışma kopyası",
     "reused": "🌿 {{branch}} dalının çalışma kopyasında devam ediliyor",
-    "failed": "Git çalışma kopyası hazırlanamadı ({{error}}); proje klasöründe çalışılıyor.",
+    "failed": "Görevin git çalışma kopyası hazırlanamadı ({{error}}). Görev ortak klasörde çalışmasın diye bekletildi; depoyu düzeltip yeniden başlat.",
     "committed": "🌿 Değişiklikler {{branch}} dalına commit'lendi",
     "noChanges": "🌿 {{branch}} dalında commit'lenecek dosya değişikliği yok",
     "commitFailed": "Çalışma kopyasındaki değişiklikler commit'lenemedi: {{error}}",
@@ -237,7 +238,8 @@
     "dirty": "⏸ {{key}}: proje klasöründe commit'lenmemiş değişiklikler olduğu için {{branch}} birleştirilmedi. Onları commit'le ya da stash'le, sonra görevde “Şimdi birleştir”e bas.",
     "conflict": "⚠️ {{key}}: {{branch}} dalı projeyle çakışıyor ({{files}}). Görev, çakışmaları kendi çalışma kopyasında çözmesi için ajanına geri döndü.",
     "conflictNote": "Bu görevi projeye birleştirirken şu dosyalarda çakışma çıktı: {{files}}. Projenin son hâli senin dalına alındı; bu dosyalardaki çakışma işaretlerini (<<<<<<< ======= >>>>>>>) iki değişiklik birlikte çalışacak şekilde çöz, sonra raporunla bitir.",
-    "mergeFailed": "⚠️ {{key}}: {{branch}} birleştirilemedi: {{error}}"
+    "mergeFailed": "⚠️ {{key}}: {{branch}} birleştirilemedi: {{error}}",
+    "uncommittedKept": "çalışma kopyasında commit edilemeyen değişiklikler var, bu yüzden kopya silinmedi"
   },
   "race": {
     "by": "Yarış modu",
@@ -249,5 +251,13 @@
     "lostNote": "Yarışı kaybetti; {{key}} tutuldu.",
     "decided": "🏁 {{winner}} ({{wName}}) kazandı; {{loser}} kapatıldı, değişiklikleri atıldı. {{note}}",
     "needsWorktree": "🏁 {{key}} için yarış modu atlandı: bu projenin klasörü var ama göreve ayrı çalışma kopyası kapalı, iki deneme birbirinin üzerine yazar. Proje ayarlarından \"Her görev kendi git çalışma kopyasında\" ayarını aç."
+  },
+  "held": {
+    "interrupted": "Agentbits kapanırken yarıda kaldı",
+    "stopped": "Sen durdurdun",
+    "notApproved": "Çalışmayı onaylamadın",
+    "failed": "{{count}} kez hata verdi: {{error}}",
+    "revisionLimit": "Lider {{count}} kez geri gönderdi",
+    "commitFailed": "Ajanın değişiklikleri çalışma kopyasında commit edilemedi (ör. git imzalama ayarı). Değişiklikler orada duruyor; git'i düzeltip görevi yeniden başlat."
   }
 }

@@ -412,6 +412,12 @@ const mapTask = (r: Row): Task => ({
 
 /** SQL condition: every dependency of the `tasks` row is done (a deleted dependency no longer blocks). */
 const DEPS_DONE = `NOT EXISTS (SELECT 1 FROM json_each(tasks.depends_on) d JOIN tasks dep ON dep.id = d.value WHERE dep.status <> 'done')`
+/**
+ * Picker filters bound as JSON arrays: held tasks are left out in SQL (filtering after LIMIT let 25 held tasks hide every
+ * other one), and so are tasks waiting for a done task whose code isn't merged into the project folder yet.
+ */
+const PICKABLE = `tasks.id NOT IN (SELECT value FROM json_each(@held))
+  AND NOT EXISTS (SELECT 1 FROM json_each(tasks.depends_on) d WHERE d.value IN (SELECT value FROM json_each(@unmerged)))`
 
 type CursorPayload = { status: string; sortOrder: number; seq: number }
 
@@ -576,19 +582,23 @@ export const tasksRepo = {
    * Next todo task for this agent: tasks assigned to it (in any active project) first,
    * then unassigned tasks of the projects it is a member of.
    */
-  nextFor(agentId: string, exclude: Set<string>, assignedIn: string[], unassignedIn: string[]): Task | null {
+  nextFor(agentId: string, exclude: Set<string>, assignedIn: string[], unassignedIn: string[], unmerged: Set<string> = new Set()): Task | null {
     if (!assignedIn.length && !unassignedIn.length) return null
-    const ph = (n: number): string => (n ? Array(n).fill('?').join(',') : 'NULL')
-    const rows = getDb()
+    const r = getDb()
       .prepare(
-        `SELECT * FROM tasks WHERE status = 'todo' AND ${DEPS_DONE} AND (
-           (assignee_id = ? AND project_id IN (${ph(assignedIn.length)}))
-           OR (assignee_id IS NULL AND project_id IN (${ph(unassignedIn.length)}))
+        `SELECT * FROM tasks WHERE status = 'todo' AND ${DEPS_DONE} AND ${PICKABLE} AND (
+           (assignee_id = @agentId AND project_id IN (SELECT value FROM json_each(@assigned)))
+           OR (assignee_id IS NULL AND project_id IN (SELECT value FROM json_each(@unassigned)))
          )
-         ORDER BY (assignee_id IS NULL), priority DESC, sort_order LIMIT 25`
+         ORDER BY (assignee_id IS NULL), priority DESC, sort_order LIMIT 1`
       )
-      .all(agentId, ...assignedIn, ...unassignedIn) as Row[]
-    const r = rows.find((x) => !exclude.has(x.id))
+      .get({
+        agentId,
+        assigned: JSON.stringify(assignedIn),
+        unassigned: JSON.stringify(unassignedIn),
+        held: JSON.stringify([...exclude]),
+        unmerged: JSON.stringify([...unmerged])
+      }) as Row | undefined
     return r ? mapTask(r) : null
   },
   /** Race mode: the challenger copy of a task (null when it isn't racing). */
@@ -597,17 +607,21 @@ export const tasksRepo = {
     return r ? mapTask(r) : null
   },
   /** `todo` tasks queued for the given agents in the given projects, without a revision note, most urgent first. */
-  queuedFor(agentIds: string[], projectIds: string[]): Task[] {
+  queuedFor(agentIds: string[], projectIds: string[], exclude: Set<string> = new Set(), unmerged: Set<string> = new Set()): Task[] {
     if (!agentIds.length || !projectIds.length) return []
-    const ph = (n: number): string => Array(n).fill('?').join(',')
     return (
       getDb()
         .prepare(
-          `SELECT * FROM tasks WHERE status = 'todo' AND review_note IS NULL AND ${DEPS_DONE}
-             AND assignee_id IN (${ph(agentIds.length)}) AND project_id IN (${ph(projectIds.length)})
+          `SELECT * FROM tasks WHERE status = 'todo' AND review_note IS NULL AND ${DEPS_DONE} AND ${PICKABLE}
+             AND assignee_id IN (SELECT value FROM json_each(@agents)) AND project_id IN (SELECT value FROM json_each(@projects))
            ORDER BY priority DESC, sort_order LIMIT 25`
         )
-        .all(...agentIds, ...projectIds) as Row[]
+        .all({
+          agents: JSON.stringify(agentIds),
+          projects: JSON.stringify(projectIds),
+          held: JSON.stringify([...exclude]),
+          unmerged: JSON.stringify([...unmerged])
+        }) as Row[]
     ).map(mapTask)
   },
   delete(id: string): void {
@@ -856,6 +870,9 @@ export const memoriesRepo = {
   },
   delete(id: string): void {
     getDb().prepare('DELETE FROM memories WHERE id = ?').run(id)
+  },
+  deleteBySource(source: string): number {
+    return getDb().prepare('DELETE FROM memories WHERE source = ?').run(source).changes
   }
 }
 

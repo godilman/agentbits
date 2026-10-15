@@ -4,6 +4,28 @@
 > `## YYYY-MM-DD — kısa başlık`, ardından **Eklendi / Değişti / Düzeltildi / Kaldırıldı / Bilinen** maddeleri
 > ve ilgili dosyalar.
 
+## 2026-10-16 — Dış inceleme bulguları: iş kaybı, yalıtım, kuyruk, karar hafızası, akış hataları
+
+### Düzeltildi
+- **Commit başarısız olursa ajanın işi silinebiliyordu** (worktree modu): commit hatası artık görevi incelemeye göndermez,
+  görev nedeniyle bekletilir; birleştirmeden önce çalışma kopyasında commit edilmemiş değişiklik varsa önce commit edilir,
+  olmuyorsa kopya **silinmez** (`isClean`, `finishTaskBranch`).
+- **Worktree hazırlanamazsa görev ortak klasörde çalışıyordu:** artık durur ve nedeniyle bekletilir (`IsolationError`) —
+  paralel görevler ve yarışın kaybedeni birbirinin üzerine yazamaz.
+- **Bağımlı görev, önceki görevin kodu birleşmeden başlayabiliyordu:** birleşmesi bekleyen `done` görev bağımlılık
+  olarak bitmiş sayılmaz (`unmergedDone`, `PICKABLE`).
+- **İlk 25 görev bekletilmişse kuyruk tıkanıyordu:** bekletilenler SQL içinde elenir (`nextFor`, `queuedFor`).
+- **Değiştirilen / geçersiz kılınan / silinen kararın eski hali hafızada kalıyordu:** `memoryEngine.syncDecision` hafıza
+  kaydını kararın güncel haline getirir ya da siler.
+- **OpenAI akışında gelen hata ya da yarıda kesilen yanıt başarılı iş sayılıyordu:** akıştaki `error` hata olur; bitiş
+  işareti (`finish_reason` / Anthropic `stop_reason`) gelmezse "yanıt bitmeden kesildi" hatası.
+- Bekletilen görevin nedeni saklanır (`orchestrator.heldWhy`).
+
+### Doğrulandı
+- `tests/worktree.test.ts`: imzalama ayarıyla başarısız commit → kopya "temiz değil", birleştirme "nothing" → kopya korunur.
+- Gerçek SQLite + sahte SSE sunucusuyla uçtan uca (depoda değil): 25 bekletilen + 26. görev, birleşmemiş bağımlılık, karar
+  düzenleme / geçersiz kılma / silme, akış hatası ve kesik akış. Aynı test **eski kodla düştü** (A5, A6), yenisiyle geçti.
+
 ## 2026-10-15 — v0.2.0 sürüm hazırlığı
 
 ### Değişti

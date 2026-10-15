@@ -9,7 +9,7 @@ import { isTwin } from '@shared/org'
 import { describeTeam, teamState } from './team'
 import { dirname, isAbsolute, join, relative } from 'path'
 import { existsSync, rmSync } from 'fs'
-import { branchFor, bringRootIn, commitAll, ensureWorktree, git, isRepoRoot, mergeIntoRoot, removeWorktree, serialized, type GitEnv } from './worktree'
+import { branchFor, bringRootIn, commitAll, ensureWorktree, git, isClean, isRepoRoot, mergeIntoRoot, removeWorktree, serialized, type GitEnv } from './worktree'
 import {
   agentsRepo,
   decisionsRepo,
@@ -166,6 +166,10 @@ const flatten = (md: string): string =>
 
 /** Settings rows outside AppSettings: autopilot holds and the global pause survive a restart. */
 const HELD_KEY = 'orchestrator.held'
+const HELD_WHY_KEY = 'orchestrator.heldWhy'
+
+/** Worktree isolation is on but the task's own copy can't be made: the task must not run in the shared folder. */
+class IsolationError extends Error {}
 const PAUSED_KEY = 'orchestrator.paused'
 /** Review rounds (finished runs) after which a sent-back task waits for the user instead of running again. */
 const MAX_REVIEW_ROUNDS = 4
@@ -187,6 +191,8 @@ class Orchestrator {
   private approvals = new Map<string, (ok: boolean) => void>()
   /** Tasks autopilot must not pick up again (rejected, stopped, failing, interrupted); kept across restarts. */
   private blocked = new Set<string>()
+  /** Why a held task waits (shown on its card and in "Needs you"). */
+  private heldWhy = new Map<string, string>()
   private failCounts = new Map<string, number>()
   /** Chat replies and reviews in flight (not task runs): stop / reset / project delete cancel and await them. */
   private aux = new Map<AbortController, { projectId: string | null; done: Promise<void> }>()
@@ -203,6 +209,7 @@ class Orchestrator {
 
   init(): void {
     this.blocked = new Set(readJson<string[]>(HELD_KEY, []))
+    this.heldWhy = new Map(Object.entries(readJson<Record<string, string>>(HELD_WHY_KEY, {})))
     this.globalPaused = readJson<boolean>(PAUSED_KEY, false)
     const stale = runsRepo.cancelStale()
     instructionsRepo.cancelStale()
@@ -211,6 +218,7 @@ class Orchestrator {
         // Interrupted by a quit / crash: it may have done part of its work, so it is not restarted automatically.
         tasksRepo.update(task.id, { status: 'todo', progress: 0 })
         this.blocked.add(task.id)
+        this.heldWhy.set(task.id, t('orchestrator:held.interrupted'))
         this.post(`task:${task.id}`, 'system', null, t('orchestrator:chat.interruptedHeld'), task.projectId)
       }
     }
@@ -300,8 +308,9 @@ class Orchestrator {
     }
   }
 
-  private hold(taskId: string): void {
+  private hold(taskId: string, reason: string): void {
     this.blocked.add(taskId)
+    this.heldWhy.set(taskId, reason)
     this.saveHeld()
     // Race mode: an attempt waiting for this one in review is now reviewed on its own.
     const task = tasksRepo.get(taskId)
@@ -312,13 +321,31 @@ class Orchestrator {
   /** The user put the task back in the queue (moved it / started it): autopilot may take it again. */
   release(taskId: string): void {
     this.failCounts.delete(taskId)
+    this.heldWhy.delete(taskId)
     if (this.blocked.delete(taskId)) this.saveHeld()
+  }
+
+  /** Held tasks with the reason they wait. */
+  heldTasks(): { taskId: string; reason: string }[] {
+    return [...this.blocked].map((taskId) => ({ taskId, reason: this.heldWhy.get(taskId) ?? '' }))
+  }
+
+  /**
+   * Done tasks whose branch is not merged into the project folder yet (worktree mode). Tasks waiting for them don't
+   * start: the code they build on isn't in the folder.
+   */
+  unmergedDone(): Set<string> {
+    const out = new Set<string>()
+    for (const t of tasksRepo.listAll()) if (t.status === 'done' && t.raceResult !== 'lost' && this.pendingMerge(t.id)) out.add(t.id)
+    return out
   }
 
   private saveHeld(): void {
     const live = new Set(tasksRepo.listAll().map((x) => x.id))
     for (const id of [...this.blocked]) if (!live.has(id)) this.blocked.delete(id)
+    for (const id of [...this.heldWhy.keys()]) if (!this.blocked.has(id)) this.heldWhy.delete(id)
     writeJson(HELD_KEY, [...this.blocked])
+    writeJson(HELD_WHY_KEY, Object.fromEntries(this.heldWhy))
   }
 
   get isPaused(): boolean {
@@ -349,11 +376,12 @@ class Orchestrator {
     const active = activeProjectIds()
     if (!active.length) return
     const leads = new Map(active.map((pid) => [pid, projectLead(pid)?.id ?? null]))
+    const unmerged = this.unmergedDone()
     for (const agent of agentsRepo.list()) {
       if (!agent.enabled || agent.isLead || agent.status !== 'idle' || this.busy.has(agent.id)) continue
       // Unassigned work only from projects the agent belongs to and does not lead.
       const workable = memberProjectIds(agent.id).filter((pid) => leads.get(pid) !== agent.id)
-      const task = tasksRepo.nextFor(agent.id, this.blocked, active, workable) ?? (settings.shareWithTwins ? this.takeFromTwin(agent, workable) : null)
+      const task = tasksRepo.nextFor(agent.id, this.blocked, active, workable, unmerged) ?? (settings.shareWithTwins ? this.takeFromTwin(agent, workable, unmerged) : null)
       if (task) void this.startTask(task.id, agent.id)
     }
   }
@@ -362,12 +390,12 @@ class Orchestrator {
    * An idle agent takes over a task queued for a busy twin (same role and skills, e.g. a duplicated developer) in a
    * project both work in. Tasks with a revision note stay with their agent (it has the context).
    */
-  private takeFromTwin(agent: Agent, projectIds: string[]): Task | null {
+  private takeFromTwin(agent: Agent, projectIds: string[], unmerged: Set<string>): Task | null {
     if (!projectIds.length) return null
     const busyTwins = agentsRepo
       .list()
       .filter((o) => o.enabled && !o.isLead && isTwin(agent, o) && (o.status !== 'idle' || this.busy.has(o.id)))
-    const task = tasksRepo.queuedFor(busyTwins.map((o) => o.id), projectIds).find((x) => !this.blocked.has(x.id))
+    const task = tasksRepo.queuedFor(busyTwins.map((o) => o.id), projectIds, this.blocked, unmerged)[0]
     if (!task) return null
     const from = busyTwins.find((o) => o.id === task.assigneeId)?.name ?? '?'
     tasksRepo.update(task.id, { assigneeId: agent.id })
@@ -404,28 +432,29 @@ class Orchestrator {
     const root = project.rootPath
     const env = this.gitEnv()
     try {
-      if (!(await isRepoRoot(root, env))) {
-        this.log({ ...ctx, level: 'warn', message: t('orchestrator:worktree.notRepo') })
-        return null
-      }
+      if (!(await isRepoRoot(root, env))) throw new IsolationError(t('orchestrator:worktree.notRepo'))
       const branch = branchFor(task.key)
       const dir = this.worktreeDir(project.id, task.key)
       const how = await serialized(root, () => ensureWorktree(root, dir, branch, env))
       this.log({ ...ctx, level: 'info', message: t(how === 'created' ? 'orchestrator:worktree.created' : 'orchestrator:worktree.reused', { branch }) })
       return { dir, branch }
     } catch (e) {
-      this.log({ ...ctx, level: 'warn', message: t('orchestrator:worktree.failed', { error: (e as Error).message.slice(0, 300) }) })
-      return null
+      // Never fall back to the shared folder: parallel tasks (and a race's loser) would overwrite each other there.
+      if (e instanceof IsolationError) throw e
+      throw new IsolationError(t('orchestrator:worktree.failed', { error: (e as Error).message.slice(0, 300) }))
     }
   }
 
-  private async commitWorktree(root: string, wt: { dir: string; branch: string }, task: Task, agent: Agent, logCtx: { runId: string; agentId: string; taskId: string; projectId: string }): Promise<void> {
+  /** False when the changes could not be committed (they stay in the working copy; the task must not be reviewed). */
+  private async commitWorktree(root: string, wt: { dir: string; branch: string }, task: Task, agent: Agent, logCtx: { runId: string; agentId: string; taskId: string; projectId: string }): Promise<boolean> {
     const author = { name: agent.name, email: `${agent.name.toLowerCase().replace(/[^a-z0-9]+/g, '.') || 'agent'}@agents.agentbits.local` }
     try {
       const made = await serialized(root, () => commitAll(wt.dir, `${task.key}: ${task.title}`, author, this.gitEnv()))
       this.log({ ...logCtx, level: 'info', message: t(made ? 'orchestrator:worktree.committed' : 'orchestrator:worktree.noChanges', { branch: wt.branch }) })
+      return true
     } catch (e) {
       this.log({ ...logCtx, level: 'warn', message: t('orchestrator:worktree.commitFailed', { error: (e as Error).message.slice(0, 300) }) })
+      return false
     }
   }
 
@@ -457,8 +486,23 @@ class Orchestrator {
       this.post(`task:${task.id}`, 'system', null, text, task.projectId)
     }
     try {
+      // Changes left uncommitted in the copy (e.g. an earlier commit failed) are committed first; if that fails too the
+      // copy is kept — removing it would delete the agent's work.
+      if (!(await serialized(root, () => isClean(dir, env)))) {
+        const agent = task.assigneeId ? agentsRepo.get(task.assigneeId) : null
+        const author = { name: agent?.name ?? 'Agentbits', email: 'agent@agents.agentbits.local' }
+        try {
+          await serialized(root, () => commitAll(dir, `${task.key}: ${task.title}`, author, env))
+        } catch (e) {
+          say('mergeFailed', { error: (e as Error).message.slice(0, 300) })
+          emit({ type: 'tasks:changed' })
+          return
+        }
+      }
       const out = await serialized(root, () => mergeIntoRoot(root, branch, `Merge ${task.key}: ${task.title}`, env))
-      if (out.status === 'merged' || out.status === 'nothing') {
+      if ((out.status === 'merged' || out.status === 'nothing') && !(await serialized(root, () => isClean(dir, env)))) {
+        say('mergeFailed', { error: t('orchestrator:worktree.uncommittedKept') })
+      } else if (out.status === 'merged' || out.status === 'nothing') {
         await serialized(root, () => removeWorktree(root, dir, branch, env))
         if (out.status === 'merged') {
           say('merged')
@@ -684,7 +728,7 @@ class Orchestrator {
       if (!ok) {
         runsRepo.update(run.id, { status: 'cancelled', endedAt: nowIso(), error: t('orchestrator:runs.notApproved') })
         tasksRepo.update(task.id, { status: 'todo', progress: 0 })
-        this.hold(task.id)
+        this.hold(task.id, t('orchestrator:held.notApproved'))
         this.busy.delete(agent.id)
         this.setStatus(agent.id, 'idle')
         this.log({ level: 'warn', message: t('orchestrator:log.runNotApproved'), runId: run.id, agentId: agent.id, taskId: task.id, projectId: task.projectId })
@@ -731,9 +775,14 @@ class Orchestrator {
     const project = getProject(task.projectId)
     const pid = task.projectId
     // Worktree mode (CLI agents): the task works on its own branch in its own copy; never fails the run (falls back).
+    let isolationError: IsolationError | null = null
     const wt =
       provider.kind === 'claude-cli' || provider.kind === 'codex-cli'
-        ? await this.prepareWorktree(project, task, { runId, agentId: agent.id, taskId: task.id, projectId: pid })
+        ? await this.prepareWorktree(project, task, { runId, agentId: agent.id, taskId: task.id, projectId: pid }).catch((e: unknown) => {
+            if (!(e instanceof IsolationError)) throw e
+            isolationError = e
+            return null
+          })
         : null
     const ws = wt?.dir ?? this.workspace(project)
     const memories = await memoryEngine.recall({ agentId: agent.id, taskId: task.id, projectId: pid, query: `${task.title} ${task.description}` })
@@ -884,6 +933,9 @@ class Orchestrator {
     }
 
     try {
+      // Worktree isolation is on but the copy could not be made: stop here instead of working in the shared folder.
+      const isoErr = isolationError as IsolationError | null
+      if (isoErr) throw isoErr
       if ((provider.kind === 'claude-cli' || provider.kind === 'codex-cli') && !project?.rootPath) {
         throw new Error(t('orchestrator:errors.noFolder', { project: project?.name ?? t('orchestrator:project') }))
       }
@@ -1017,7 +1069,15 @@ class Orchestrator {
       })
 
       // Worktree mode: the run's changes become a commit on the task branch (merged when the task is done).
-      if (wt && project?.rootPath) await this.commitWorktree(project.rootPath, wt, task, agent, logCtx)
+      // A failed commit keeps the task out of review: approving it would merge nothing and lose the work.
+      const committed = wt && project?.rootPath ? await this.commitWorktree(project.rootPath, wt, task, agent, logCtx) : true
+      if (!committed) {
+        tasksRepo.update(task.id, { status: 'todo', progress: 0 })
+        const why = t('orchestrator:held.commitFailed')
+        this.hold(task.id, why)
+        this.post(`task:${task.id}`, 'system', null, why, pid)
+        this.post('general', 'system', null, `⚠️ ${task.key}: ${why}`, pid)
+      }
       // Outputs: files saved with file_save, and (CLI agents) files changed in the project folder (worktree mode: after the merge).
       if ((provider.kind === 'claude-cli' || provider.kind === 'codex-cli') && perms.fsWrite && project?.rootPath && !wt) {
         recordWorkspaceChanges(connCtx, project.rootPath, runStartedMs)
@@ -1083,7 +1143,7 @@ class Orchestrator {
 
       this.setStatus(agent.id, 'break', t('orchestrator:status.coffeeBreak'))
       this.setStatusLater(agent.id, BREAK_MS[0] + Math.random() * (BREAK_MS[1] - BREAK_MS[0]), 'break')
-      if (settingsRepo.get().reviewByLead) this.queueReview(task.id)
+      if (committed && settingsRepo.get().reviewByLead) this.queueReview(task.id)
     } catch (e) {
       flush()
       for (const q of instructionsRepo.queuedFor(runId)) instructionsRepo.setStatus(q.id, 'cancelled', { note: t('orchestrator:notes.endedBeforeFinish') })
@@ -1099,7 +1159,7 @@ class Orchestrator {
           costUsd: totals.costUsd
         })
         tasksRepo.update(task.id, { status: 'todo', progress: 0 })
-        this.hold(task.id)
+        this.hold(task.id, ar.limitHit ?? t('orchestrator:held.stopped'))
         this.log({ ...logCtx, level: 'status', message: t('orchestrator:log.runStoppedToTodo') })
         if (ar.limitHit) {
           this.log({ ...logCtx, level: 'warn', message: ar.limitHit })
@@ -1120,14 +1180,19 @@ class Orchestrator {
         })
         tasksRepo.update(task.id, { status: 'todo', progress: 0 })
         this.log({ ...logCtx, level: 'error', message: msg })
-        if (auth) {
+        if (e instanceof IsolationError) {
+          this.hold(task.id, msg)
+          this.post(`task:${task.id}`, 'system', null, `⚠️ ${msg}`, pid)
+          this.post('general', 'system', null, `⚠️ ${task.key}: ${msg}`, pid)
+          this.setStatus(agent.id, 'idle')
+        } else if (auth) {
           // Credentials problem: not the task's fault and every agent will hit it — stop the loop.
           this.setStatus(agent.id, 'error', t('orchestrator:status.authInvalid'))
           this.authFailure(text, pid)
         } else {
           const fails = (this.failCounts.get(task.id) ?? 0) + 1
           this.failCounts.set(task.id, fails)
-          if (fails >= 2) this.hold(task.id)
+          if (fails >= 2) this.hold(task.id, t('orchestrator:held.failed', { count: fails, error: text.slice(0, 200) }))
           this.post('general', 'system', null, t('orchestrator:chat.agentError', { agent: agent.name, key: task.key, text }), pid)
           this.setStatus(agent.id, 'error', text.slice(0, 120))
           this.setStatusLater(agent.id, ERROR_COOLDOWN_MS, 'error')
@@ -1683,7 +1748,7 @@ class Orchestrator {
         // Endless review loops cost money: after a few rounds the task waits for the user.
         const rounds = runsRepo.list({ taskId, limit: MAX_REVIEW_ROUNDS + 1 }).filter((r) => r.status === 'succeeded').length
         if (rounds >= MAX_REVIEW_ROUNDS) {
-          this.hold(taskId)
+          this.hold(taskId, t('orchestrator:held.revisionLimit', { count: rounds }))
           this.post(`task:${taskId}`, 'system', null, t('orchestrator:chat.revisionLimit', { count: rounds }), pid)
         }
         this.post('general', 'agent', lead.id, t('orchestrator:chat.revisionGeneral', { key: task.key, worker: worker.name, note }), pid)

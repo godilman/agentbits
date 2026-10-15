@@ -732,21 +732,14 @@ const handlers: Handlers = {
   /* decisions */
   'decisions:list': () => decisionsRepo.list(),
   'decisions:save': (input, id) => {
-    const before = id ? decisionsRepo.get(id) : null
     const d = decisionsRepo.save(input, id)
-    if (d.status === 'accepted' && before?.status !== 'accepted') {
-      memoryEngine.remember(t('main:memory.decision', { seq: d.seq, title: d.title, decision: d.decision, rationale: d.rationale }), 'decision', {
-        importance: 1,
-        projectId: d.projectId,
-        source: `decision:${d.id}`
-      })
-      emit({ type: 'memory:changed' })
-    }
+    if (memoryEngine.syncDecision(d.id, d)) emit({ type: 'memory:changed' })
     emit({ type: 'decisions:changed' })
     return d
   },
   'decisions:delete': (id) => {
     decisionsRepo.delete(id)
+    if (memoryEngine.syncDecision(id, null)) emit({ type: 'memory:changed' })
     emit({ type: 'decisions:changed' })
   },
 

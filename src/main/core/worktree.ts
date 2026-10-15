@@ -137,6 +137,12 @@ export async function bringRootIn(root: string, wtDir: string, env: GitEnv): Pro
   return files
 }
 
+/** No uncommitted or untracked changes in a working copy (a failed check counts as not clean). */
+export async function isClean(dir: string, env: GitEnv): Promise<boolean> {
+  const r = await git(dir, ['status', '--porcelain'], env)
+  return r.ok && !r.out.trim()
+}
+
 /** Removes the task's worktree and (when merged) its branch. */
 export async function removeWorktree(root: string, wtDir: string, branch: string | null, env: GitEnv): Promise<void> {
   if (existsSync(wtDir)) await git(root, ['worktree', 'remove', '--force', wtDir], env)

@@ -3,7 +3,7 @@ import assert from 'node:assert/strict'
 import { chmodSync, existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
-import { branchFor, bringRootIn, commitAll, ensureWorktree, git, isRepoRoot, mergeIntoRoot, removeWorktree } from '../src/main/core/worktree.ts'
+import { branchFor, bringRootIn, commitAll, ensureWorktree, git, isClean, isRepoRoot, mergeIntoRoot, removeWorktree } from '../src/main/core/worktree.ts'
 
 const base = mkdtempSync(join(tmpdir(), 'agentbits-wt-'))
 const env = { noHooksDir: join(base, 'nohooks') }
@@ -93,6 +93,20 @@ try {
   assert.equal(readFileSync(join(root, 'a.txt'), 'utf8'), 'one\nTWO by TA-3 and TA-4\nthree\n')
   // the agent's commits carry its name
   assert.match(await sh(root, 'log', '--format=%an', '-n', '20'), /Kaan/)
+  // A commit that fails (here: commit signing with a missing gpg program) throws and leaves the work uncommitted;
+  // merging then has nothing to merge, so the copy must be seen as not clean and must not be removed.
+  await ensureWorktree(root, wt('ta-5'), branchFor('TA-5'), env)
+  writeFileSync(join(wt('ta-5'), 'c.txt'), 'agent work\n')
+  await sh(root, 'config', 'commit.gpgsign', 'true')
+  await sh(root, 'config', 'gpg.program', join(base, 'no-such-gpg'))
+  await assert.rejects(commitAll(wt('ta-5'), 'TA-5: work', author, env))
+  assert.equal(await isClean(wt('ta-5'), env), false)
+  assert.deepEqual(await mergeIntoRoot(root, branchFor('TA-5'), 'Merge TA-5', env), { status: 'nothing' })
+  await sh(root, 'config', '--unset', 'commit.gpgsign')
+  assert.equal(await commitAll(wt('ta-5'), 'TA-5: work', author, env), true)
+  assert.equal(await isClean(wt('ta-5'), env), true)
+  assert.deepEqual(await mergeIntoRoot(root, branchFor('TA-5'), 'Merge TA-5', env), { status: 'merged' })
+  assert.equal(readFileSync(join(root, 'c.txt'), 'utf8'), 'agent work\n')
   console.log('worktree: parallel tasks isolated, merged, conflicts resolved in the task worktree, hooks never run')
 } finally {
   rmSync(base, { recursive: true, force: true })

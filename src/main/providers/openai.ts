@@ -75,6 +75,8 @@ export const openaiAdapter: ProviderAdapter = {
       const pendingImages: { mime: string; data: string }[] = []
       for await (const ev of readSse(res, ctx.signal)) {
         await ctx.checkpoint()
+        // An error after the stream started arrives as an event, not an HTTP status.
+        if (ev.error) throw new Error(`${ep.compat ? ctx.provider.label : 'OpenAI'}: ${(ev.error as any)?.message ?? JSON.stringify(ev.error).slice(0, 300)}`)
         const choice = (ev.choices as any[] | undefined)?.[0]
         const delta = choice?.delta
         if (delta?.content) {
@@ -96,6 +98,8 @@ export const openaiAdapter: ProviderAdapter = {
           cached = usage.prompt_tokens_details?.cached_tokens ?? cached
         }
       }
+      // No finish_reason: the connection dropped mid-answer — a cut-off reply must not count as finished work.
+      if (!finish) throw new Error(t('orchestrator:providers.streamIncomplete', { provider: ep.compat ? ctx.provider.label : 'OpenAI' }))
       // OpenAI counts cached tokens inside prompt_tokens; split them out.
       ctx.onUsage?.({ input: Math.max(0, tokensIn - cached), output: tokensOut, cacheRead: cached, cacheWrite: 0, costUsd: 0 })
       totalIn += tokensIn

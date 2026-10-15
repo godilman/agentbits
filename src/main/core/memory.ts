@@ -1,6 +1,7 @@
 import { getDb } from '../db'
 import { mapMemory, memoriesRepo } from '../db/repos'
-import type { Memory, MemoryKind } from '@shared/types'
+import type { Decision, Memory, MemoryKind } from '@shared/types'
+import { t } from '../i18n'
 import { semanticRelevance } from '@shared/vectors'
 import { queryVector, scheduleIndex, semanticHits } from './embeddings'
 
@@ -113,6 +114,23 @@ export const memoryEngine = {
     const m = memoriesRepo.add({ content: content.slice(0, 4000), kind, ...opts })
     scheduleIndex()
     return m
+  },
+
+  /**
+   * An accepted decision lives in memory (importance 1) as its current text; an edited, no longer accepted (rejected,
+   * superseded) or deleted decision must not keep reaching agents in an old form. True when memory changed.
+   */
+  syncDecision(id: string, d: Decision | null): boolean {
+    const source = `decision:${id}`
+    const removed = memoriesRepo.deleteBySource(source)
+    if (d?.status === 'accepted') {
+      this.remember(t('main:memory.decision', { seq: d.seq, title: d.title, decision: d.decision, rationale: d.rationale }), 'decision', {
+        importance: 1,
+        projectId: d.projectId,
+        source
+      })
+    }
+    return removed > 0 || d?.status === 'accepted'
   },
 
   /** Renders memories as a compact prompt section. */

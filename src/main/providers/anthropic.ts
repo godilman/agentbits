@@ -103,6 +103,8 @@ export const anthropicAdapter: ProviderAdapter = {
           throw new Error(`Anthropic: ${(ev.error as any)?.message ?? 'stream error'}`)
         }
       }
+      // No stop_reason: the connection dropped mid-answer — a cut-off reply must not count as finished work.
+      if (!stop) throw new Error(t('orchestrator:providers.streamIncomplete', { provider: 'Anthropic' }))
       ctx.onUsage?.({ input: tokensIn, output: tokensOut, cacheRead, cacheWrite, costUsd: 0 })
       totalIn += tokensIn + cacheRead + cacheWrite
       totalOut += tokensOut
