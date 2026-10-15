@@ -4,6 +4,23 @@
 > `## YYYY-MM-DD — kısa başlık`, ardından **Eklendi / Değişti / Düzeltildi / Kaldırıldı / Bilinen** maddeleri
 > ve ilgili dosyalar.
 
+## 2026-10-15 — Faz 4: Gemini ve yerel modeller (OpenAI uyumlu uç nokta), Codex'e Agentbits araçları
+
+### Eklendi
+- OpenAI sağlayıcısında **Uç nokta**: OpenAI / Google Gemini / Ollama / LM Studio / başka bir OpenAI uyumlu adres
+  (migration v13 `providers.base_url`; `shared/endpoints.ts` + `tests/endpoints.test.ts`). Yerel sunucuda anahtar gerekmez;
+  anahtar yalnızca HTTPS'e ya da bu bilgisayara gider. Model listesi sunucunun `/models`'ından.
+- **Codex** görevlerde her zaman Agentbits MCP köprüsünü alır: bağlantılar, dosyalar, skill'ler, uygulamalar, `team_status`.
+
+### Doğrulandı
+- Adaptör, sahte yerel bir OpenAI uyumlu sunucuya karşı uçtan uca denendi: anahtarsız istek (başlık yok), `/models`, akış,
+  araç çağrısı turu, klasik `max_tokens`, uzak uçta anahtarsız istek reddi. Gemini temel adresi ve `models.list` / araç / görsel
+  desteği Google'ın resmi cookbook'undan doğrulandı (ai.google.dev bu ağdan erişilemedi). Gerçek Gemini / Ollama / Codex ile denenmedi.
+
+### Düzeltildi (CI'ın yakaladıkları)
+- Git kimliği tanımlı olmayan makinede birleştirme "Committer identity unknown" ile düşüyordu → "Agentbits" kimliği.
+- Windows'ta ekip farkındalığı dosya yollarını küçük harfle gösteriyordu; worktree testi CRLF'den bağımsız.
+
 ## 2026-10-15 — Paralel yazılımcılar: çoğalt, iş dağıtımı, bağımlılıklar, farkındalık, git worktree (ADR-025)
 
 Sahibin isteği: çoğaltılan yazılımcılar işi paylaşsın, birbirinden haberdar olsun, paralel ama gerektiğinde sırayla bitirsin.

@@ -72,7 +72,27 @@
       "continueDemo": "Demo ile devam et",
       "saveTest": "Kaydet ve test et"
     },
-    "modelSaved": "Model değiştirildi: {{model}}"
+    "modelSaved": "Model değiştirildi: {{model}}",
+    "endpoint": {
+      "label": "Uç nokta",
+      "keyOptional": "Bu uç nokta için isteğe bağlı",
+      "invalid": "Geçerli bir adres değil: kullanıcı adı, sorgu ya da parça içermeyen bir http(s) adresi yaz.",
+      "insecure": "HTTPS kullan; düz http yalnızca bu bilgisayara (localhost / 127.0.0.1) izinli.",
+      "presets": {
+        "openai": "OpenAI",
+        "gemini": "Google Gemini",
+        "ollama": "Ollama (bu bilgisayarda)",
+        "lmstudio": "LM Studio (bu bilgisayarda)",
+        "custom": "Başka bir OpenAI uyumlu adres"
+      },
+      "hints": {
+        "openai": "OpenAI API'si.",
+        "gemini": "Gemini, OpenAI uyumlu API'si üzerinden. Anahtarı Google AI Studio'dan al.",
+        "ollama": "Ollama'nın 127.0.0.1:11434'te sunduğu yerel model; önce Ollama'yı başlatıp bir model indir. Hiçbir şey bilgisayarından çıkmaz.",
+        "lmstudio": "LM Studio'nun 127.0.0.1:1234'te sunduğu yerel model; önce sunucusunu başlatıp bir model yükle. Hiçbir şey bilgisayarından çıkmaz.",
+        "custom": "OpenAI Chat Completions API'sini konuşan herhangi bir sunucu, ör. şirket ağ geçidi (…/v1). Anahtar yalnızca girersen gönderilir."
+      }
+    }
   },
   "memory": {
     "title": "Kalıcı Hafıza",

@@ -25,7 +25,9 @@
     "modelsTimeout": "Model list request timed out.",
     "noSecureStorage": "This computer has no secure key storage (OS keychain), so Agentbits does not store passwords, keys or tokens. On Linux install and unlock a keyring (GNOME Keyring / KWallet).",
     "badRequest": "Invalid request",
-    "untrustedSender": "This request did not come from the Agentbits window and was refused"
+    "untrustedSender": "This request did not come from the Agentbits window and was refused",
+    "endpointInvalid": "The endpoint address is not valid (an http(s) URL without user, query or fragment).",
+    "endpointInsecure": "An API key may only be sent over HTTPS, or over http to this computer (localhost / 127.0.0.1)."
   },
   "dialogs": {
     "pickFile": "Choose a file",

@@ -9,6 +9,8 @@ export interface Provider {
   model: string
   hasKey: boolean // the key itself never leaves the main process
   cliPath: string | null
+  /** OpenAI kind only: an OpenAI-compatible endpoint (Gemini, Ollama, LM Studio…); '' = OpenAI. `shared/endpoints.ts`. */
+  baseUrl: string
   isDefault: boolean
   createdAt: string
 }
@@ -19,6 +21,7 @@ export interface ProviderInput {
   model?: string
   apiKey?: string
   cliPath?: string | null
+  baseUrl?: string
   isDefault?: boolean
 }
 

@@ -143,7 +143,7 @@ Lejant: ✅ tamam · 🟡 kısmi · 🚧 geliştiriliyor · ⏳ planlı · — y
 | Araçlar: `connections_list`, `db_schema`, `db_query`, `ssh_exec` — yalnızca main'de çalışır, transkriptte 🔌 / 🖥 / ⛔ / ↳ satırları | ✅ | `tools.ts`, `service.ts` |
 | Claude Code: çalışma başına MCP yapılandırması + köprü (127.0.0.1, çalışma token'ı), `--strict-mcp-config` (projenin `.mcp.json`'u yok sayılır), `mcp__agentbits` ön-onaylı | ✅ | `bridge.ts`, `mcp/server.ts` |
 | Anthropic / OpenAI: yerel tool-use döngüsü (en fazla 16 tur; tur başına kullanım), yalnızca bağlantısı olan ajanlara | ✅ | `anthropic.ts`, `openai.ts` |
-| Codex CLI ile bağlantı araçları | ⏳ | Yok; prompt bunu söyler |
+| Codex CLI ile bağlantı araçları | ✅ | 2026-10-15: görevde Codex her zaman Agentbits MCP köprüsünü alır (bağlantı, dosya, skill, uygulama, `team_status`); yetki köprüde denetlenir. Gerçek Codex CLI ile denenmedi |
 | Demo: veri/sunucu görevlerinde aynı yoldan **gerçek** çağrılar (liste, şema, `SELECT … LIMIT 5`, 0 satırlık `UPDATE`, `uptime`/`df`) | ✅ | İzin, onay ve denetimi göstermek için |
 | Araç sonuçları "untrusted content" etiketli; prompt verideki talimatlara uyulmamasını söyler | ✅ | |
 
@@ -251,7 +251,7 @@ yukarıdaki ⏳ satırları ve "Bilinen sorunlar"dır.
 | Claude Code — "Test et" (`--version` + `claude auth status`) | ✅ | |
 | Codex CLI (`codex exec`, sandbox) | 🟡 | Yalnızca toplam token ("tokens used: N", `partial`), maliyet yok; resume yok; `allowed_paths` desteklenmez |
 | Anthropic API (Messages, SSE) | 🟡 | Dosya sistemi / terminal aracı yok (proje klasöründe dosya değiştiremez, komut çalıştıramaz); yalnızca Agentbits araçları (izinli bağlantılar §3b, dosya ekleri §3c, `file_save`); görsel/PDF blokları; token raporlu, maliyet ($) hesaplanmaz; `require_approval` uygulanır (2026-10-13'ten beri tüm sağlayıcılarda) |
-| OpenAI API (Chat Completions, SSE) | 🟡 | Anthropic ile aynı sınırlar; görseller `image_url`, PDF yerel gönderilmez |
+| OpenAI API (Chat Completions, SSE) | 🟡 | Anthropic ile aynı sınırlar; görseller `image_url`, PDF yerel gönderilmez. **OpenAI uyumlu uç nokta** (2026-10-15): Google Gemini, Ollama, LM Studio ya da özel adres (`providers.base_url`); yerel sunucuda anahtar gerekmez, anahtar yalnızca HTTPS'e ya da localhost'a gider; uyumlu uçlara `max_tokens` gider ve token kullanımını bildirmeyebilirler |
 | Demo / simülasyon (anahtarsız) | ✅ | Ofis, Kanban, sohbet, inceleme gerçekçi canlanır; atamayı proje ekibi içinde yapar (`RunContext.team`). İş türüne göre simüle eder (2026-10-15, `shared/demoKind.ts`): kod (dosya düzenler, test çalıştırır), araştırma (arar, karşılaştırır), içerik (taslak yazar), veri (tablo/metrik); rapor ve inceleme notları da türe uyar |
 | Ajan başına sağlayıcı ve model seçimi | ✅ | Organizasyon → Ajanlar → Model; model listeden seçilir, "Sağlayıcının modeli" varsayılan; sağlayıcı türü değişince ajanın modeli sıfırlanır |
 | Model seçimi açılır listeden (elle yazım yok) | ✅ | `features/settings/ModelSelect.tsx` + `src/shared/models.ts` (`MODEL_CATALOG`, `DEFAULT_MODEL`): sağlayıcı ekleme formu, Ayarlar → Sağlayıcılar (mevcut sağlayıcının modeli satırdan değişir), ajan düzenleyici. Önerilen liste kısa notlarla; Anthropic/OpenAI'de anahtarla hesabın canlı listesi (`providers:models`, "Hesabındaki diğer modeller", hesapta olmayan önerilenler işaretlenir); listede olmayan yeni model için "Özel model adı…". OpenAI'de GPT-6 listelenmez (Chat Completions'ta araç çağırmaz; Codex CLI'da var). Katalog 2026-10-13 itibarıyla — yeni modeller çıktıkça güncellenmeli |
@@ -260,7 +260,7 @@ yukarıdaki ⏳ satırları ve "Bilinen sorunlar"dır.
 | Hesapla (OAuth) giriş | 🟡 | Yalnızca CLI'ların kendi girişi (`claude auth login`, `codex login`) terminalde, uygulama dışında |
 | Uygulama içinde Claude hesabı/aboneliğiyle giriş | — | Sunulmaz (Anthropic'in politikası); Claude için API anahtarı ya da kullanıcının kendi Claude Code girişi |
 | CLI'ların uygulamayla gelmesi / kurulması | — | `claude` ve `codex` paketlenmez; kullanıcı kurar ve giriş yapar, Agentbits yalnızca bulur (`where` / `which`) ya da yol verilir |
-| Gemini ve diğer sağlayıcılar (yerel modeller dahil) | ⏳ | Yok; sağlayıcı türleri `claude-cli`, `codex-cli`, `anthropic`, `openai`, `mock` |
+| Gemini ve yerel modeller (Ollama, LM Studio) | ✅ | 2026-10-15: OpenAI sağlayıcısında "Uç nokta" seçimi (`shared/endpoints.ts`, `tests/endpoints.test.ts`); sahte yerel bir OpenAI uyumlu sunucuyla uçtan uca denendi (model listesi, akış, araç çağrısı, anahtarsız istek). Gerçek Gemini / Ollama ile denenmedi |
 
 ## 7. İzin matrisi
 
@@ -346,14 +346,14 @@ Kullanıcıya dürüstçe söylenmesi gerekenler (kodla doğrulandı, 2026-10-13
 | Kendini güncellemek | — | Yeni sürüm yeni kurulum dosyasıyla kurulur; veriler korunur (§11) |
 | Claude Code / Codex CLI'ı getirmek, kurmak ya da oturum açmak | — | Kullanıcı kurar ve terminalde giriş yapar; Agentbits yalnızca çalıştırır |
 | Uygulama içinde Claude hesabı/aboneliğiyle giriş | — | Anthropic'in politikası nedeniyle sunulmaz; API anahtarı ya da kullanıcının kendi Claude Code girişi |
-| Gemini, yerel modeller ya da başka sağlayıcılar | ⏳ | Yalnızca Claude Code CLI, Codex CLI, Anthropic API, OpenAI API, Demo |
+| OpenAI uyumlu olmayan sağlayıcılar | ⏳ | Claude Code CLI, Codex CLI, Anthropic API, OpenAI API (+ OpenAI uyumlu uç noktalar: Gemini, Ollama, LM Studio, özel adres), Demo |
 | API sağlayıcılarıyla dosya düzenleme / komut çalıştırma | — | Anthropic/OpenAI ajanları yalnızca metin + Agentbits araçları (bağlantılar, dosya ekleri); kod değişikliği için CLI sağlayıcısı gerekir |
 | API'lerde maliyet ($) hesabı, bütçe / harcama sınırı | — | Token sayılır; $ yalnızca Claude Code bildirirse görünür; sınır koyan bir ayar yok |
 | Bulut senkronizasyonu, çok kullanıcı, ekip hesabı, uzaktan erişim | — | Tek makine, tek kullanıcı; her şey yerel SQLite'ta (`%APPDATA%\Agentbits`) |
 | Uygulama içi hesap / giriş | — | Tek kullanıcılı masaüstü uygulaması; sahte giriş ekranı kaldırıldı (Bilinen sorunlar #1) |
 | Telemetri / analitik, Agentbits sunucusu | — | Ağ trafiği yalnızca seçilen sağlayıcılara, CLI'ların kendisine, tanımlı bağlantılara, eklenen uygulamalara (MCP), skill kurulurken GitHub'a, Browser sekmesine ve tıklanınca destek sayfasına (sistem tarayıcısında) |
 | Ajanların tarayıcı kullanması | ⏳ | Browser yalnızca kullanıcı için; `browser` izni uygulanmıyor |
-| Codex CLI ile bağlantı / dosya araçları | ⏳ | Codex'e dosyalar yalnızca prompt bütçesiyle ve `--image` ile gider (uygulama izni olan Codex ajanı köprüyü alır; bağlantı izinleri yine köprüde denetlenir) |
+| Codex CLI ile bağlantı / dosya araçları | ✅ | 2026-10-15: köprü üzerinden; ekler ayrıca prompt bütçesiyle ve `--image` ile |
 | Uygulama (MCP) sunucularını kurmak, Node.js / uv getirmek | — | Kullanıcı sunucunun komutunu ya da adresini verir; Agentbits yalnızca bağlanır |
 | MCP kaynakları / istemleri / sampling | ⏳ | Yalnızca araçlar (§3f) |
 | Özel GitHub depolarından skill | ⏳ | Yalnızca herkese açık depolar, .zip, klasör, .md (§3e) |

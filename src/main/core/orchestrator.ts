@@ -121,6 +121,7 @@ const MOCK_PROVIDER: Provider = {
   model: 'simulated',
   hasKey: false,
   cliPath: null,
+  baseUrl: '',
   isDefault: true,
   createdAt: new Date(0).toISOString()
 }
@@ -594,7 +595,7 @@ class Orchestrator {
       projectId: q.projectId,
       taskId: q.taskId,
       focusIds: ids,
-      toolsAvailable: kind !== 'codex-cli',
+      toolsAvailable: true,
       // Mid-run images are read with file_read (the first turn is already sent).
       vision: kind === 'codex-cli' || kind === 'mock' ? 'none' : 'tool',
       heading: 'Files attached to this instruction'
@@ -746,8 +747,9 @@ class Orchestrator {
       for (const q of early) instructionsRepo.setStatus(q.id, 'applied', { note: t('orchestrator:notes.addedToFirstPrompt') })
     }
 
-    // Attachments of the task: inlined while the budget lasts, otherwise read with file tools.
-    const toolsAvailable = provider.kind !== 'codex-cli'
+    // Attachments of the task: inlined while the budget lasts, otherwise read with file tools. Every provider has the
+    // Agentbits tools in a task: APIs by function calling, Claude Code and Codex through the per-run MCP server.
+    const toolsAvailable = true
     const taskFiles = filesSection({
       agentId: agent.id,
       projectId: pid,
@@ -833,8 +835,7 @@ class Orchestrator {
     })
     if (skillSection) system += '\n\n' + skillSection
     // Apps (MCP): Codex gets the Agentbits MCP server only when the agent has apps to use.
-    const codexApps = provider.kind === 'codex-cli' && appToolsFor(agent.id).length > 0
-    const appSection = appsPrompt(agent.id, toolsAvailable || codexApps)
+    const appSection = appsPrompt(agent.id, toolsAvailable)
     if (appSection) system += '\n\n' + appSection
     let mcp: { configPath: string; server: { command: string; args: string[]; env: Record<string, string> }; dispose: () => void } | null = null
     const toolOpts: {
@@ -874,7 +875,7 @@ class Orchestrator {
       }
       // Re-checked at run time on the real path: the folder (or a link in it) may have changed since it was saved.
       if ((provider.kind === 'claude-cli' || provider.kind === 'codex-cli') && project?.rootPath) assertRunFolder(project.rootPath)
-      if (provider.kind === 'claude-cli' || codexApps) {
+      if (provider.kind === 'claude-cli' || provider.kind === 'codex-cli') {
         mcp = await prepareMcp(connCtx, runId)
         toolOpts.mcpConfigPath = mcp.configPath
         toolOpts.mcpServer = mcp.server

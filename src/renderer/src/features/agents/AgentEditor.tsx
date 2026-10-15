@@ -231,6 +231,7 @@ export function AgentEditor({ agent }: { agent: Agent }) {
                 key={agentProvider?.id ?? 'none'}
                 kind={agentProvider?.kind ?? 'mock'}
                 providerId={agentProvider?.id}
+                baseUrl={agentProvider?.baseUrl || undefined}
                 value={agent.model ?? ''}
                 onChange={(m) => void save({ model: m || null })}
                 inheritLabel={t('settings:models.inherit', { model: agentProvider?.model || t('settings:models.inheritCliDefault') })}

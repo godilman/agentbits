@@ -4,8 +4,15 @@ import { AbortedError, readSse, type ProviderAdapter, type RunContext, type RunR
 /** One model request (streamed) may take at most this long. */
 const REQUEST_TIMEOUT_MS = 10 * 60_000
 import { t } from '../i18n'
+import { isLocalUrl } from '@shared/endpoints'
 
-const API = 'https://api.openai.com/v1/chat/completions'
+const OPENAI = 'https://api.openai.com/v1'
+
+/** OpenAI itself, or an OpenAI-compatible endpoint (Gemini, Ollama, LM Studio…); a local server needs no key. */
+function endpoint(provider: Provider): { base: string; compat: boolean; keyOptional: boolean } {
+  const base = provider.baseUrl || OPENAI
+  return { base, compat: !!provider.baseUrl, keyOptional: !!provider.baseUrl && isLocalUrl(provider.baseUrl) }
+}
 
 async function errorText(res: Response): Promise<string> {
   try {
@@ -21,7 +28,8 @@ const MAX_TOOL_ROUNDS = 16
 /* eslint-disable @typescript-eslint/no-explicit-any */
 export const openaiAdapter: ProviderAdapter = {
   async run(ctx: RunContext): Promise<RunResult> {
-    if (!ctx.apiKey) throw new Error(t('orchestrator:providers.openaiKeyMissing'))
+    const ep = endpoint(ctx.provider)
+    if (!ctx.apiKey && !ep.keyOptional) throw new Error(t('orchestrator:providers.openaiKeyMissing'))
     const tools =
       ctx.callTool && ctx.tools?.length
         ? ctx.tools.map((t) => ({ type: 'function', function: { name: t.name, description: t.description, parameters: t.inputSchema } }))
@@ -38,15 +46,17 @@ export const openaiAdapter: ProviderAdapter = {
     let totalOut = 0
 
     for (let round = 0; round <= MAX_TOOL_ROUNDS; round++) {
-      const res = await fetch(API, {
+      const res = await fetch(`${ep.base}/chat/completions`, {
         method: 'POST',
-        headers: { 'content-type': 'application/json', authorization: `Bearer ${ctx.apiKey}` },
+        headers: { 'content-type': 'application/json', ...(ctx.apiKey ? { authorization: `Bearer ${ctx.apiKey}` } : {}) },
         signal: AbortSignal.any([ctx.signal, AbortSignal.timeout(REQUEST_TIMEOUT_MS)]),
         body: JSON.stringify({
           model: ctx.model,
           stream: true,
-          stream_options: { include_usage: true },
-          max_completion_tokens: ctx.mode === 'task' ? 8000 : 2000,
+          // Compatible servers get the classic parameters (max_completion_tokens / stream_options are OpenAI additions).
+          ...(ep.compat
+            ? { max_tokens: ctx.mode === 'task' ? 8000 : 2000 }
+            : { stream_options: { include_usage: true }, max_completion_tokens: ctx.mode === 'task' ? 8000 : 2000 }),
           messages,
           ...(tools ? { tools } : {})
         })
@@ -54,7 +64,7 @@ export const openaiAdapter: ProviderAdapter = {
         if (ctx.signal.aborted) throw new AbortedError()
         throw e
       })
-      if (!res.ok) throw new Error(`OpenAI ${res.status}: ${await errorText(res)}`)
+      if (!res.ok) throw new Error(`${ep.compat ? ctx.provider.label : 'OpenAI'} ${res.status}: ${await errorText(res)}`)
 
       let tokensIn = 0
       let tokensOut = 0
@@ -123,10 +133,11 @@ export const openaiAdapter: ProviderAdapter = {
   },
 
   async test(provider: Provider, apiKey: string | null): Promise<ProviderTestResult> {
-    if (!apiKey) return { ok: false, message: t('orchestrator:providers.apiKeyMissing') }
+    const ep = endpoint(provider)
+    if (!apiKey && !ep.keyOptional) return { ok: false, message: t('orchestrator:providers.apiKeyMissing') }
     try {
-      const res = await fetch('https://api.openai.com/v1/models', {
-        headers: { authorization: `Bearer ${apiKey}` },
+      const res = await fetch(`${ep.base}/models`, {
+        headers: apiKey ? { authorization: `Bearer ${apiKey}` } : {},
         signal: AbortSignal.timeout(20_000)
       })
       if (!res.ok) return { ok: false, message: `${res.status}: ${await errorText(res)}` }

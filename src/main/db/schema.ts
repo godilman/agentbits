@@ -593,6 +593,13 @@ const MIGRATIONS: { version: number; sql: string }[] = [
       -- How CLI agents work in the project folder: all in the folder itself, or each task in its own git worktree.
       ALTER TABLE projects ADD COLUMN isolation TEXT NOT NULL DEFAULT 'shared' CHECK (isolation IN ('shared','worktree'));
     `
+  },
+  {
+    version: 13,
+    sql: `
+      -- OpenAI provider on an OpenAI-compatible endpoint (Gemini, Ollama, LM Studio…); '' = OpenAI itself.
+      ALTER TABLE providers ADD COLUMN base_url TEXT NOT NULL DEFAULT '';
+    `
   }
 ]
 

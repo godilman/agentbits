@@ -87,7 +87,7 @@ export interface Api {
    * typed in the form. `live` is null for kinds without a live list; `error` when the request failed (the UI then
    * shows the built-in catalog only).
    */
-  'providers:models': (input: { kind: ProviderKind; providerId?: string; apiKey?: string }) => { live: { id: string; label: string }[] | null; error?: string }
+  'providers:models': (input: { kind: ProviderKind; providerId?: string; apiKey?: string; baseUrl?: string }) => { live: { id: string; label: string }[] | null; error?: string }
 
   // agents & permissions
   'agents:list': () => Agent[]

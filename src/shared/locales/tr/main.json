@@ -25,7 +25,9 @@
     "modelsTimeout": "Model listesi isteği zaman aşımına uğradı.",
     "noSecureStorage": "Bu bilgisayarda güvenli anahtar deposu (işletim sistemi anahtar zinciri) yok; bu yüzden Agentbits parola, anahtar ya da token saklamaz. Linux'ta bir anahtarlık (GNOME Keyring / KWallet) kurup kilidini aç.",
     "badRequest": "Geçersiz istek",
-    "untrustedSender": "Bu istek Agentbits penceresinden gelmediği için reddedildi"
+    "untrustedSender": "Bu istek Agentbits penceresinden gelmediği için reddedildi",
+    "endpointInvalid": "Uç nokta adresi geçerli değil (kullanıcı adı, sorgu ya da parça içermeyen bir http(s) adresi olmalı).",
+    "endpointInsecure": "API anahtarı yalnızca HTTPS ile ya da bu bilgisayara http ile (localhost / 127.0.0.1) gönderilebilir."
   },
   "dialogs": {
     "pickFile": "Dosya seç",

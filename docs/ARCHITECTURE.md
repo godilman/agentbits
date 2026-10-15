@@ -59,7 +59,7 @@ agentbits/
    │  ├─ secrets.ts           # safeStorage şifreleme
    │  ├─ db/
    │  │  ├─ index.ts          # openDb (yol, pragmalar, migrate), getDb, closeDb
-   │  │  ├─ schema.ts         # MIGRATIONS v1–v12 (sürümlü, yalnızca ekleme)
+   │  │  ├─ schema.ts         # MIGRATIONS v1–v13 (sürümlü, yalnızca ekleme)
    │  │  ├─ repos.ts          # settingsRepo, providersRepo, agentsRepo, permissionsRepo, unitsRepo, projectsRepo,
    │  │  │                    # tasksRepo, runsRepo, messagesRepo, logsRepo, memoriesRepo, decisionsRepo,
    │  │  │                    # reportsRepo, getStats(projectId?)
@@ -631,6 +631,15 @@ değişkeni olarak geçer.
 (`await` geri basınç = duraklatma), stderr'i son 20 000 karakterle tutar. Windows'ta `.cmd/.bat` shim'leri
 `shell: true` gerektirdiği için argümanlar `quoteCmd()` ile cmd.exe'ye göre tırnaklanır — uzun metin bu
 yüzden **asla komut satırından değil stdin'den** gönderilir.
+
+### 8.0b OpenAI uyumlu uç noktalar (2026-10-15)
+`Provider.baseUrl` (yalnızca `openai` türü; '' = OpenAI). `shared/endpoints.ts`: hazır uçlar (Gemini
+`https://generativelanguage.googleapis.com/v1beta/openai`, Ollama `http://127.0.0.1:11434/v1`, LM Studio `http://127.0.0.1:1234/v1`,
+özel), `checkBaseUrl` (http(s), kullanıcı / sorgu / parça yok; **http yalnızca localhost / 127.x / [::1]** — anahtar şifresiz ağa
+gitmez), `isLocalUrl` (anahtarsız çalışma), `cleanModelId` (Gemini `models/` öneki). `openai.ts`: `${base}/chat/completions`,
+`${base}/models`; uyumlu uçlara `max_tokens` (OpenAI'ye `max_completion_tokens` + `stream_options`), anahtar yoksa `Authorization`
+yok. `providers:save` / `providers:models` adresi main'de doğrular. Görev çalışmalarında Codex de Agentbits MCP köprüsünü alır
+(`toolsAvailable` tüm sağlayıcılarda doğru).
 
 ### 8.1 İzin matrisi → CLI bayrakları
 

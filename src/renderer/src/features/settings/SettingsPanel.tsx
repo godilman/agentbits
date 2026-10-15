@@ -15,6 +15,7 @@ import { KindIcon, ProviderForm } from './ProviderForm'
 import { ModelSelect } from './ModelSelect'
 import { DataSection } from './DataSection'
 import { LimitsSection } from './LimitsSection'
+import { isLocalUrl } from '@shared/endpoints'
 import { Heading, Row } from './parts'
 
 const SECTIONS: { id: SettingsSection; labelKey: I18nKey; icon: React.ComponentType<{ size?: number }> }[] = [
@@ -341,8 +342,9 @@ function ProvidersSection() {
               </div>
               <div className="font-mono text-[11px] text-zinc-400">
                 {p.model || t('settings:providers.defaultModel')}
-                {p.kind === 'anthropic' || p.kind === 'openai' ? ' · ' + (p.hasKey ? t('settings:providers.keySet') : t('settings:providers.keyMissing')) : ''}
+                {(p.kind === 'anthropic' || p.kind === 'openai') && !(p.baseUrl && isLocalUrl(p.baseUrl)) ? ' · ' + (p.hasKey ? t('settings:providers.keySet') : t('settings:providers.keyMissing')) : ''}
                 {p.cliPath ? ` · ${p.cliPath}` : ''}
+                {p.baseUrl ? ` · ${p.baseUrl}` : ''}
               </div>
               {p.kind !== 'mock' && (
                 <div className="mt-2 max-w-[460px]">
@@ -350,6 +352,7 @@ function ProvidersSection() {
                     key={p.id}
                     kind={p.kind}
                     providerId={p.id}
+                    baseUrl={p.baseUrl || undefined}
                     value={p.model}
                     onChange={(model) =>
                       void call('providers:save', { kind: p.kind, model }, p.id)

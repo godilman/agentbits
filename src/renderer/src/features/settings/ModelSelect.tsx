@@ -6,6 +6,7 @@ import type { I18nKey } from '@shared/i18n'
 import { LIVE_MODEL_KINDS, MODEL_CATALOG, type ModelOption } from '@shared/models'
 import { call } from '@/lib/api'
 import { cn } from '@/lib/format'
+import { isLocalUrl } from '@shared/endpoints'
 
 const INHERIT = '__inherit__'
 const CUSTOM = '__custom__'
@@ -23,21 +24,24 @@ export function ModelSelect({
   apiKey,
   inheritLabel,
   disabled,
-  testId
+  testId,
+  baseUrl
 }: {
   kind: ProviderKind
   value: string
   onChange: (model: string) => void
   providerId?: string
   apiKey?: string
+  /** OpenAI-compatible endpoint: its own /models list instead of the OpenAI catalog; a local server needs no key. */
+  baseUrl?: string
   inheritLabel?: string
   disabled?: boolean
   testId?: string
 }) {
   const { t } = useTranslation()
   // In the agent editor '' means "inherit"; the catalog's '' (CLI default) only makes sense for a provider.
-  const catalog = useMemo(() => MODEL_CATALOG[kind].filter((m) => !(inheritLabel && m.id === '')), [kind, inheritLabel])
-  const canLive = LIVE_MODEL_KINDS.includes(kind) && !!(providerId || apiKey?.trim())
+  const catalog = useMemo(() => (baseUrl ? [] : MODEL_CATALOG[kind].filter((m) => !(inheritLabel && m.id === ''))), [kind, inheritLabel, baseUrl])
+  const canLive = LIVE_MODEL_KINDS.includes(kind) && !!(providerId || apiKey?.trim() || (baseUrl && isLocalUrl(baseUrl)))
   const [live, setLive] = useState<{ id: string; label: string }[] | null>(null)
   const [liveState, setLiveState] = useState<{ loading: boolean; error?: string }>({ loading: false })
   const [reload, setReload] = useState(0)
@@ -50,7 +54,7 @@ export function ModelSelect({
     // Debounced while a key is being typed.
     const timer = setTimeout(() => {
       setLiveState({ loading: true })
-      call('providers:models', { kind, providerId, apiKey: apiKey?.trim() || undefined })
+      call('providers:models', { kind, providerId, apiKey: apiKey?.trim() || undefined, baseUrl })
         .then((r) => {
           if (cancelled) return
           setLive(r.live)
@@ -62,7 +66,7 @@ export function ModelSelect({
       cancelled = true
       clearTimeout(timer)
     }
-  }, [kind, providerId, apiKey, canLive, reload])
+  }, [kind, providerId, apiKey, baseUrl, canLive, reload])
 
   const liveIds = useMemo(() => new Set(live?.map((m) => m.id) ?? []), [live])
   const extras = useMemo(() => (live ?? []).filter((m) => !catalog.some((c) => c.id === m.id)), [live, catalog])

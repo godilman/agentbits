@@ -71,7 +71,7 @@ Demo sağlayıcı iş türüne göre simülasyon (`shared/demoKind.ts`), paket s
 - **2026-10-15 sahibin onayladığı yol haritası** (fazlar sırayla, her faz sonunda doğrulama + belgeler + commit/push):
   Faz 1 ✅ temizlik → v0.1.1 · Faz 2 ✅ lider ↔ ajan iletişimi · **P ✅ paralel yazılımcılar** (çoğalt, iş dağıtımı, bağımlılık, farkındalık, worktree — ADR-025) (sahibin kararı: **yalnızca lider** ajanlarla konuşur — görev verir,
   biten işleri ve notları görür, göreve not bırakır; ajanlar birbirleriyle doğrudan konuşmaz) · Faz 3 SECURITY.md'deki 🟡/⏳
-  maddeler ✅ (#02 OS yalıtımı ve #24 imza kodla kapanmaz, belgede) · Faz 4 OpenAI uyumlu uç nokta (Gemini, yerel modeller) + Codex bağlantı/dosya araçları · Faz 5 ajanların tarayıcı
+  maddeler ✅ (#02 OS yalıtımı ve #24 imza kodla kapanmaz, belgede) · Faz 4 ✅ OpenAI uyumlu uç nokta (Gemini, Ollama, LM Studio) + Codex'e Agentbits araçları · Faz 5 ajanların tarayıcı
   kullanması, özel rapor, özel GitHub skill, MCP kaynakları/istemleri · Faz 6 RTF/.doc/.xls + OCR · Faz 7 vektör hafıza +
   aynı klasörde çakışma yönetimi · ardından **yarış modu** (sahibin isteği: açılıp kapanabilen ayar, varsayılan kapalı; açıkken
   aynı görev farklı sağlayıcılardaki iki ajana paralel verilir, lider sonuçları karşılaştırıp birini seçer). + **paylaşım** (birim / takım / ajan dışa-içe aktarma, bağlantıyla kurulum; galeri sonra). Sahip: hepsi bitince
@@ -152,7 +152,7 @@ Kurulum sorunları (Electron binary eksik, siyah pencere, execution policy, Clau
 | `src/main/ipc.ts` | Tek `api` kanalı için handler tablosu (`Api`'ye göre tip kontrollü) + organizasyon/proje kuralları |
 | `src/main/events.ts` | `emit()` / `toast()` — main → renderer olay yayını (`event` kanalı) |
 | `src/main/secrets.ts` | API anahtarı şifreleme (`safeStorage`) |
-| `src/main/db/` | `index.ts` bağlantı + pragmalar, `schema.ts` sürümlü migration'lar (v1–v12), `repos.ts` sorgu katmanı (başlangıç verisi yok: ilk açılış boş organizasyon + tek boş proje) |
+| `src/main/db/` | `index.ts` bağlantı + pragmalar, `schema.ts` sürümlü migration'lar (v1–v13), `repos.ts` sorgu katmanı (başlangıç verisi yok: ilk açılış boş organizasyon + tek boş proje) |
 | `src/main/core/orchestrator.ts` | Tick, görev çalıştırma, onay, inceleme, sohbet — hepsi **proje kapsamlı** |
 | `src/main/core/org.ts` | `ensureOrgDefaults()`, `projectMembers`, `projectLead`, `memberProjectIds`, `activeProjectIds`, `getProject` |
 | `src/main/core/team.ts` / `src/main/core/worktree.ts` | Paralel çalışma (ADR-025): canlı ekip durumu + `team_status` / görev başına git worktree (dal, commit, birleştirme, çakışma; depo hook'ları çalışmaz) — `tests/team.test.ts`, `tests/worktree.test.ts` (gerçek git) |
@@ -210,7 +210,7 @@ Kurulum sorunları (Electron binary eksik, siyah pencere, execution policy, Clau
    örneği). İlkel değer ya da `find` ile mevcut nesne döndürmek güvenlidir.
 5. **React StrictMode** dev'de effect'leri iki kez çalıştırır. `init()` idempotenttir; olaylar `id` ile
    tekilleştirilir. Yeni abonelikte aynı korumayı yapın.
-6. **Migration'lar yalnızca eklenir** (`src/main/db/schema.ts`, bugün v12). Uygulanmış olanı **asla
+6. **Migration'lar yalnızca eklenir** (`src/main/db/schema.ts`, bugün v13). Uygulanmış olanı **asla
    düzenlemeyin**. Eski satırları yeni yapıya bağlamak `ensureOrgDefaults()` gibi idempotent kodla yapılır.
    → [docs/DATABASE.md](docs/DATABASE.md)
 7. **DB ↔ tip eşlemesi** `repos.ts`'deki `mapX` fonksiyonlarındadır: `snake_case` ↔ `camelCase`,

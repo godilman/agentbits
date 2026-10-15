@@ -22,6 +22,7 @@ import {
 import { wouldCycle } from '@shared/org'
 import { SettingsError, validateSettingsPatch } from '@shared/settingsRules'
 import { assertPathsAllowed, grantPaths } from './pathGrants'
+import { checkBaseUrl } from '@shared/endpoints'
 import { argsMatch } from '@shared/ipcSchema'
 import { instantiateTemplate, listTemplates } from './core/templates'
 import { assertUsableFolder, folderStatus, inspectFolder } from './core/folders'
@@ -136,6 +137,11 @@ const handlers: Handlers = {
   /* providers */
   'providers:list': () => providersRepo.list(),
   'providers:save': (input, id) => {
+    if (input.baseUrl !== undefined) {
+      const c = checkBaseUrl(input.baseUrl)
+      if (!c.ok) throw new Error(t(c.reason === 'insecure' ? 'main:errors.endpointInsecure' : 'main:errors.endpointInvalid'))
+      input = { ...input, baseUrl: c.url }
+    }
     const p = providersRepo.save(input, id)
     emit({ type: 'providers:changed' })
     return p
@@ -151,8 +157,12 @@ const handlers: Handlers = {
     return getAdapter(p.kind).test(p, providersRepo.getApiKey(id))
   },
   'providers:detectCli': async () => ({ claude: await which('claude'), codex: await which('codex') }),
-  'providers:models': ({ kind, providerId, apiKey }) =>
-    fetchLiveModels(kind, apiKey?.trim() || (providerId ? providersRepo.getApiKey(providerId) : null)),
+  'providers:models': ({ kind, providerId, apiKey, baseUrl }) => {
+    const stored = providerId ? providersRepo.get(providerId) : null
+    const c = checkBaseUrl(baseUrl ?? stored?.baseUrl ?? '')
+    if (!c.ok) return { live: null, error: t(c.reason === 'insecure' ? 'main:errors.endpointInsecure' : 'main:errors.endpointInvalid') }
+    return fetchLiveModels(kind, apiKey?.trim() || (providerId ? providersRepo.getApiKey(providerId) : null), c.url)
+  },
 
   /* agents */
   'agents:list': () => agentsRepo.list(),

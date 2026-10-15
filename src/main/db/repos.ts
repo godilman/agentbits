@@ -88,6 +88,7 @@ const mapProvider = (r: Row): Provider => ({
   model: r.model,
   hasKey: !!r.api_key_enc && (r.api_key_enc as Buffer).length > 0,
   cliPath: r.cli_path,
+  baseUrl: r.base_url ?? '',
   isDefault: bool(r.is_default),
   createdAt: r.created_at
 })
@@ -123,14 +124,15 @@ export const providersRepo = {
         if (input.label !== undefined) (sets.push('label = ?'), vals.push(input.label))
         if (input.model !== undefined) (sets.push('model = ?'), vals.push(input.model))
         if (input.cliPath !== undefined) (sets.push('cli_path = ?'), vals.push(input.cliPath))
+        if (input.baseUrl !== undefined) (sets.push('base_url = ?'), vals.push(input.baseUrl))
         if (input.isDefault !== undefined) (sets.push('is_default = ?'), vals.push(input.isDefault ? 1 : 0))
         if (input.apiKey) (sets.push('api_key_enc = ?'), vals.push(encryptSecret(input.apiKey)))
         if (sets.length) db.prepare(`UPDATE providers SET ${sets.join(', ')} WHERE id = ?`).run(...vals, id)
       } else {
         const isFirst = (db.prepare('SELECT COUNT(*) AS c FROM providers').get() as Row).c === 0
         db.prepare(
-          `INSERT INTO providers(id, kind, label, model, api_key_enc, cli_path, is_default)
-           VALUES (?, ?, ?, ?, ?, ?, ?)`
+          `INSERT INTO providers(id, kind, label, model, api_key_enc, cli_path, is_default, base_url)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?)`
         ).run(
           pid,
           input.kind,
@@ -138,7 +140,8 @@ export const providersRepo = {
           input.model ?? DEFAULT_MODELS[input.kind],
           input.apiKey ? encryptSecret(input.apiKey) : null,
           input.cliPath ?? null,
-          input.isDefault || isFirst ? 1 : 0
+          input.isDefault || isFirst ? 1 : 0,
+          input.kind === 'openai' ? input.baseUrl ?? '' : ''
         )
       }
     })()

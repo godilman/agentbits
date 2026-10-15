@@ -72,7 +72,27 @@
       "continueDemo": "Continue with demo",
       "saveTest": "Save and test"
     },
-    "modelSaved": "Model changed: {{model}}"
+    "modelSaved": "Model changed: {{model}}",
+    "endpoint": {
+      "label": "Endpoint",
+      "keyOptional": "Optional for this endpoint",
+      "invalid": "Not a valid address: use an http(s) URL without user, query or fragment.",
+      "insecure": "Use HTTPS; plain http is only allowed to this computer (localhost / 127.0.0.1).",
+      "presets": {
+        "openai": "OpenAI",
+        "gemini": "Google Gemini",
+        "ollama": "Ollama (on this computer)",
+        "lmstudio": "LM Studio (on this computer)",
+        "custom": "Other OpenAI-compatible address"
+      },
+      "hints": {
+        "openai": "The OpenAI API.",
+        "gemini": "Gemini through its OpenAI-compatible API. Get a key in Google AI Studio.",
+        "ollama": "A local model served by Ollama at 127.0.0.1:11434 — start Ollama and pull a model first. Nothing leaves your computer.",
+        "lmstudio": "A local model served by LM Studio at 127.0.0.1:1234 — start its server and load a model first. Nothing leaves your computer.",
+        "custom": "Any server that speaks the OpenAI Chat Completions API, e.g. a company gateway (…/v1). A key is sent only if you enter one."
+      }
+    }
   },
   "memory": {
     "title": "Persistent Memory",

@@ -7,6 +7,7 @@ import { call } from '@/lib/api'
 import { cn } from '@/lib/format'
 import { DEFAULT_MODEL } from '@shared/models'
 import { ModelSelect } from './ModelSelect'
+import { checkBaseUrl, ENDPOINTS, type EndpointPreset } from '@shared/endpoints'
 
 export const PROVIDER_KINDS: { kind: ProviderKind; title: string; desc: string; model: string; needsKey: boolean; cli: boolean }[] = [
   { kind: 'claude-cli', title: 'Claude Code CLI', get desc() { return t('settings:providers.kinds.claudeCli') }, model: DEFAULT_MODEL['claude-cli'], needsKey: false, cli: true },
@@ -49,14 +50,26 @@ export function ProviderForm({ onSaved, compactCards = false, initialKind = 'cla
   const [detected, setDetected] = useState<{ claude: string | null; codex: string | null } | null>(null)
   const [busy, setBusy] = useState(false)
   const [result, setResult] = useState<{ ok: boolean; message: string } | null>(null)
+  // OpenAI kind: OpenAI itself or an OpenAI-compatible endpoint (Gemini, Ollama, LM Studio, custom address).
+  const [endpoint, setEndpoint] = useState<EndpointPreset>('openai')
+  const [customUrl, setCustomUrl] = useState('')
+  const preset = ENDPOINTS.find((e) => e.id === endpoint)!
+  const compat = kind === 'openai' && endpoint !== 'openai'
+  const baseUrl = kind !== 'openai' ? '' : endpoint === 'custom' ? customUrl.trim() : preset.url
+  const urlCheck = checkBaseUrl(baseUrl)
+  const needsKey = meta.needsKey && (kind !== 'openai' || preset.needsKey)
 
   useEffect(() => {
-    setModel(meta.model)
+    setModel(compat ? preset.model : meta.model)
     setResult(null)
     setApiKeyTouched(false)
-  }, [kind, meta.model])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [kind, meta.model, endpoint])
 
-  const apiKeyError = meta.needsKey ? validateApiKey(kind, apiKey) : null
+  // An optional key is only checked when one was typed.
+  const apiKeyError = needsKey || apiKey ? validateApiKey(kind, apiKey) : null
+  const urlError = compat && !urlCheck.ok ? t(urlCheck.reason === 'insecure' ? 'settings:providers.endpoint.insecure' : 'settings:providers.endpoint.invalid') : null
+  const blocked = (needsKey && apiKeyError !== null) || (!needsKey && !!apiKey && apiKeyError !== null) || !!urlError || (compat && (!baseUrl || !model.trim()))
   // Show the error once the user has typed or left the field; stay quiet on a pristine form.
   const showApiKeyError = apiKeyError !== null && (apiKeyTouched || apiKey.length > 0)
 
@@ -70,11 +83,19 @@ export function ProviderForm({ onSaved, compactCards = false, initialKind = 'cla
     setBusy(true)
     setResult(null)
     try {
+      const host = (() => {
+        try {
+          return new URL(baseUrl).host
+        } catch {
+          return baseUrl
+        }
+      })()
       const p = await call('providers:save', {
         kind,
         model,
-        apiKey: meta.needsKey ? apiKey : undefined,
+        apiKey: meta.needsKey && apiKey ? apiKey : undefined,
         cliPath: meta.cli ? cliPath || null : null,
+        ...(compat ? { baseUrl, label: endpoint === 'custom' ? host : t(`settings:providers.endpoint.presets.${endpoint}`) } : {}),
         isDefault: true
       })
       const test = await call('providers:test', p.id)
@@ -117,7 +138,29 @@ export function ProviderForm({ onSaved, compactCards = false, initialKind = 'cla
       {compactCards && <div className="text-[12px] leading-relaxed text-zinc-400">{meta.desc}</div>}
 
       <div className="grid grid-cols-2 gap-3">
-        {meta.needsKey && (
+        {kind === 'openai' && (
+          <div className="col-span-2">
+            <label className="label" htmlFor="provider-endpoint">{t('settings:providers.endpoint.label')}</label>
+            <select id="provider-endpoint" data-testid="provider-endpoint" className="input" value={endpoint} onChange={(e) => setEndpoint(e.target.value as EndpointPreset)}>
+              {ENDPOINTS.map((e) => (
+                <option key={e.id} value={e.id}>
+                  {t(`settings:providers.endpoint.presets.${e.id}`)}
+                </option>
+              ))}
+            </select>
+            {endpoint === 'custom' && (
+              <input
+                className={cn('input mt-1.5 font-mono text-[12px]', urlError && 'border-rose-500/50')}
+                value={customUrl}
+                onChange={(e) => setCustomUrl(e.target.value)}
+                placeholder="https://…/v1"
+              />
+            )}
+            {urlError && endpoint === 'custom' && customUrl.trim() && <div className="mt-1 text-[11px] text-rose-300">{urlError}</div>}
+            <div className="mt-1 text-[11px] text-zinc-400">{t(`settings:providers.endpoint.hints.${endpoint}`)}</div>
+          </div>
+        )}
+        {meta.needsKey && (needsKey || compat) && (
           <div className="col-span-2">
             <label className="label" htmlFor="provider-api-key">{t('settings:providers.form.apiKey')}</label>
             <input
@@ -127,7 +170,7 @@ export function ProviderForm({ onSaved, compactCards = false, initialKind = 'cla
               value={apiKey}
               onChange={(e) => setApiKey(e.target.value)}
               onBlur={() => setApiKeyTouched(true)}
-              placeholder={kind === 'anthropic' ? 'sk-ant-…' : 'sk-…'}
+              placeholder={kind === 'anthropic' ? 'sk-ant-…' : compat ? (needsKey ? '' : t('settings:providers.endpoint.keyOptional')) : 'sk-…'}
               aria-invalid={showApiKeyError}
               aria-describedby={showApiKeyError ? 'provider-api-key-error' : undefined}
               autoFocus
@@ -154,7 +197,15 @@ export function ProviderForm({ onSaved, compactCards = false, initialKind = 'cla
         {kind !== 'mock' && (
           <div className="col-span-2">
             <label className="label">{t('settings:providers.form.model')}</label>
-            <ModelSelect key={kind} kind={kind} value={model} onChange={setModel} apiKey={meta.needsKey && !apiKeyError ? apiKey : undefined} testId="provider-model" />
+            <ModelSelect
+              key={`${kind}:${endpoint}`}
+              kind={kind}
+              value={model}
+              onChange={setModel}
+              apiKey={meta.needsKey && apiKey && !apiKeyError ? apiKey : undefined}
+              baseUrl={compat && urlCheck.ok ? baseUrl : undefined}
+              testId="provider-model"
+            />
           </div>
         )}
       </div>
@@ -166,7 +217,7 @@ export function ProviderForm({ onSaved, compactCards = false, initialKind = 'cla
       )}
 
       <div className="flex justify-end">
-        <button className="btn-primary h-8 px-4" disabled={busy || (meta.needsKey && apiKeyError !== null)} onClick={() => void save()}>
+        <button className="btn-primary h-8 px-4" disabled={busy || blocked} onClick={() => void save()}>
           {busy && <Loader2 size={13} className="animate-spin" />}
           {kind === 'mock' ? t('settings:providers.form.continueDemo') : t('settings:providers.form.saveTest')}
         </button>
