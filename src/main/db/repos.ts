@@ -216,6 +216,40 @@ export const agentsRepo = {
     const r = getDb().prepare('SELECT * FROM agents WHERE id = ?').get(id) as Row | undefined
     return r ? mapAgent(r) : null
   },
+  /**
+   * A twin of an agent for parallel work: same profile, provider, permissions, units (with titles), skills, app,
+   * connection and file grants — a new name and shirt, never the lead flag. One transaction.
+   */
+  duplicate(id: string): Agent {
+    const src = this.get(id)
+    if (!src) throw new Error(t('orchestrator:errors.agentNotFound'))
+    const db = getDb()
+    const base = src.name.replace(/\s+\d+$/, '')
+    let n = 2
+    while (this.findByName(`${base} ${n}`)) n++
+    const shirts = ['#6366f1', '#10b981', '#f59e0b', '#ec4899', '#06b6d4', '#ef4444', '#8b5cf6', '#84cc16', '#f97316', '#64748b']
+    const color = shirts[(shirts.indexOf(src.color) + n) % shirts.length] ?? src.color
+    const newId = randomUUID()
+    db.transaction(() => {
+      const desk = (db.prepare('SELECT COALESCE(MAX(desk_index), -1) + 1 AS d FROM agents').get() as Row).d
+      db.prepare(
+        `INSERT INTO agents(id, name, role, persona, job_description, skills, provider_id, model, color, hair, skin, desk_index, is_lead, enabled)
+         SELECT ?, ?, role, persona, job_description, skills, provider_id, model, ?, hair, skin, ?, 0, enabled FROM agents WHERE id = ?`
+      ).run(newId, `${base} ${n}`, color, desk, id)
+      db.prepare(
+        `INSERT INTO agent_permissions(agent_id, fs_read, fs_write, terminal, network, browser, require_approval, allowed_paths)
+         SELECT ?, fs_read, fs_write, terminal, network, browser, require_approval, allowed_paths FROM agent_permissions WHERE agent_id = ?`
+      ).run(newId, id)
+      db.prepare('INSERT INTO unit_members(unit_id, agent_id, title) SELECT unit_id, ?, title FROM unit_members WHERE agent_id = ?').run(newId, id)
+      db.prepare(
+        "INSERT INTO skill_assignments(skill_id, target_type, target_id) SELECT skill_id, 'agent', ? FROM skill_assignments WHERE target_type = 'agent' AND target_id = ?"
+      ).run(newId, id)
+      db.prepare('INSERT INTO mcp_permissions(server_id, agent_id) SELECT server_id, ? FROM mcp_permissions WHERE agent_id = ?').run(newId, id)
+      db.prepare('INSERT INTO connection_permissions(connection_id, agent_id, level) SELECT connection_id, ?, level FROM connection_permissions WHERE agent_id = ?').run(newId, id)
+      db.prepare('INSERT INTO file_access(file_id, agent_id, granted_by) SELECT file_id, ?, granted_by FROM file_access WHERE agent_id = ?').run(newId, id)
+    })()
+    return this.get(newId)!
+  },
   findByName(name: string): Agent | null {
     const r = getDb().prepare('SELECT * FROM agents WHERE lower(name) = lower(?)').get(name.trim()) as
       | Row

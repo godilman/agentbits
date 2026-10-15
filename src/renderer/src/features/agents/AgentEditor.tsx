@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import {
   BriefcaseBusiness,
   Check,
+  Copy,
   Cpu,
   FolderOpen,
   IdCard,
@@ -246,6 +247,7 @@ export function AgentEditor({ agent }: { agent: Agent }) {
 
         <PermissionsCard agent={agent} onSave={savePerms} />
 
+        <DuplicateCard agent={agent} />
         <DangerZone agent={agent} />
       </div>
     </div>
@@ -445,6 +447,44 @@ function PermissionsCard({ agent, onSave }: { agent: Agent; onSave: (patch: Perm
         </>
       )}
     </Section>
+  )
+}
+
+/* ───────────────────────────── duplicate ───────────────────────────── */
+
+/** A twin for parallel work: the lead can then split work between them. */
+function DuplicateCard({ agent }: { agent: Agent }) {
+  const { t } = useTranslation()
+  const toast = useAppStore((s) => s.toast)
+  const selectAgent = useAppStore((s) => s.selectAgent)
+  const [busy, setBusy] = useState(false)
+  const duplicate = async (): Promise<void> => {
+    setBusy(true)
+    try {
+      const twin = await call('agents:duplicate', agent.id)
+      selectAgent(twin.id)
+      toast('info', t('agents:editor.duplicate.done', { name: twin.name }))
+    } catch (e) {
+      toast('error', apiError(e))
+    } finally {
+      setBusy(false)
+    }
+  }
+  return (
+    <section className="card">
+      <div className="flex items-center gap-4 px-5 py-4">
+        <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md border border-line bg-white/[0.03] text-indigo-300">
+          <Copy size={14} />
+        </div>
+        <div className="min-w-0 flex-1">
+          <div className="text-[13px] font-semibold text-zinc-100">{t('agents:editor.duplicate.title')}</div>
+          <div className="text-[12px] text-zinc-400">{t('agents:editor.duplicate.desc')}</div>
+        </div>
+        <button data-testid="agent-duplicate" className="btn-outline" disabled={busy} onClick={() => void duplicate()}>
+          <Copy size={13} /> {t('agents:editor.duplicate.action')}
+        </button>
+      </div>
+    </section>
   )
 }
 

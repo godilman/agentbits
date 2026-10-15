@@ -167,6 +167,12 @@
       "desc": "Atanmış görevleri atanmamış olur; çalışma geçmişi ve kişisel hafızası silinir. Geri alınamaz.",
       "confirm": "{{name}} silinsin mi?",
       "deleted": "{{name}} silindi"
+    },
+    "duplicate": {
+      "title": "Çoğalt",
+      "desc": "Aynı rol, iş tanımı, sağlayıcı, izinler, takımlar, skill'ler ve erişimlerle bir ikiz oluşturur; lider işi aralarında paylaştırabilir.",
+      "action": "Çoğalt",
+      "done": "{{name}} oluşturuldu"
     }
   }
 }

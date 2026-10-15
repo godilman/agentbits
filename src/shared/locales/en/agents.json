@@ -167,6 +167,12 @@
       "desc": "Assigned tasks become unassigned; run history and personal memory are deleted. This can't be undone.",
       "confirm": "Delete {{name}}?",
       "deleted": "{{name}} deleted"
+    },
+    "duplicate": {
+      "title": "Duplicate",
+      "desc": "Creates a twin with the same role, job description, provider, permissions, teams, skills and access, so the lead can split work between them.",
+      "action": "Duplicate",
+      "done": "{{name}} created"
     }
   }
 }

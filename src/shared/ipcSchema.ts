@@ -26,6 +26,7 @@ export const IPC_SCHEMA = {
   'agents:list': [],
   'agents:save': ['o', 's?', 'o?'],
   'agents:delete': ['s'],
+  'agents:duplicate': ['s'],
   'agents:setStatus': ['s', 's'],
   'permissions:list': [],
   'permissions:update': ['s', 'o'],

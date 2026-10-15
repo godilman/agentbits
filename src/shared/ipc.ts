@@ -94,6 +94,8 @@ export interface Api {
   /** Creates (no id) or updates an agent. `permissions` is applied in the same transaction. */
   'agents:save': (input: AgentInput, id?: string, permissions?: PermissionsPatch) => Agent
   'agents:delete': (id: string) => void
+  /** A twin for parallel work (profile, permissions, units, skill / app / connection / file grants; new name). */
+  'agents:duplicate': (id: string) => Agent
   'agents:setStatus': (id: string, status: Agent['status']) => void
   'permissions:list': () => AgentPermissions[]
   'permissions:update': (agentId: string, patch: PermissionsPatch) => AgentPermissions

@@ -174,6 +174,11 @@ const handlers: Handlers = {
     emit({ type: 'units:changed' })
     emit({ type: 'projects:changed' })
   },
+  'agents:duplicate': (id) => {
+    const a = agentsRepo.duplicate(id)
+    for (const type of ['agents:changed', 'permissions:changed', 'units:changed', 'projects:changed', 'skills:changed', 'apps:changed', 'connections:changed', 'files:changed'] as const) emit({ type })
+    return a
+  },
   'agents:setStatus': (id, status) => {
     agentsRepo.setStatus(id, status)
     emit({ type: 'agents:changed' })
