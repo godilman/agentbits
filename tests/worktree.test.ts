@@ -22,6 +22,8 @@ try {
   assert.equal(await isRepoRoot(base, env), false)
   await import('node:fs').then((fs) => fs.mkdirSync(root))
   await sh(root, 'init', '-q', '-b', 'main')
+  // Windows runners default to core.autocrlf=true (CRLF on checkout); compare content, not line endings.
+  await sh(root, 'config', 'core.autocrlf', 'false')
   assert.equal(await isRepoRoot(root, env), false) // no commit yet: no HEAD to branch from
   writeFileSync(join(root, 'a.txt'), 'one\ntwo\nthree\n')
   writeFileSync(join(root, 'b.txt'), 'bee\n')
