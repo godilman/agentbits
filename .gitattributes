@@ -11,3 +11,9 @@
 *.xlsx binary
 *.docx binary
 *.pptx binary
+*.doc binary
+*.xls binary
+*.ppt binary
+*.gz binary
+*.wasm binary
+*.traineddata binary
