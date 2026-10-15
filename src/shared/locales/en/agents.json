@@ -18,8 +18,8 @@
     },
     "browser": {
       "label": "Browser",
-      "hint": "Browser tab",
-      "desc": "Not applied yet: agents can't use the in-app browser."
+      "hint": "Web pages",
+      "desc": "Reads public web pages as text (web_fetch) with any provider. The local network and private addresses stay unreachable."
     },
     "requireApproval": {
       "label": "Require approval",

@@ -18,8 +18,8 @@
     },
     "browser": {
       "label": "Tarayıcı",
-      "hint": "Tarayıcı sekmesi",
-      "desc": "Henüz uygulanmıyor: ajanlar uygulama içi tarayıcıyı kullanamaz."
+      "hint": "Web sayfaları",
+      "desc": "Herhangi bir sağlayıcıyla herkese açık web sayfalarını metin olarak okur (web_fetch). Yerel ağ ve özel adreslere erişemez."
     },
     "requireApproval": {
       "label": "Onay iste",

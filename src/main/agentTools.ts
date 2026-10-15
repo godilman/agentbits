@@ -6,6 +6,7 @@ import { readableFiles } from './files/service'
 import { SKILL_TOOLS, SKILL_TOOL_NAMES, runSkillTool, skillsForAgent } from './skills/service'
 import { appToolsFor, isAppTool, runAppTool } from './apps/service'
 import { TEAM_TOOL, runTeamTool } from './core/team'
+import { WEB_TOOL, runWebTool, webToolFor } from './web/tool'
 
 /**
  * Every tool an agent may call, decided per agent and run: connection tools only
@@ -19,6 +20,8 @@ export function agentTools(ctx: AgentCtx): ToolSpec[] {
   if (ctx.mode !== 'chat' && ctx.projectId) out.push(FILE_SAVE_TOOL)
   if (skillsForAgent(ctx.agentId).length) out.push(...SKILL_TOOLS)
   out.push(...appToolsFor(ctx.agentId))
+  // The browser permission: read public web pages (all providers; Claude Code's own WebFetch needs the network one).
+  out.push(...webToolFor(ctx.agentId))
   // Parallel work: who else is working in the project and on which files (task runs only).
   if (ctx.mode !== 'chat' && ctx.projectId && ctx.runId) out.push(TEAM_TOOL)
   return out
@@ -26,6 +29,7 @@ export function agentTools(ctx: AgentCtx): ToolSpec[] {
 
 export async function runAgentTool(ctx: AgentCtx, name: string, args: Record<string, unknown>): Promise<ToolOutput> {
   if (name === TEAM_TOOL.name) return runTeamTool(ctx)
+  if (name === WEB_TOOL.name) return runWebTool(ctx, args)
   if (SKILL_TOOL_NAMES.has(name)) return runSkillTool(ctx, name, args)
   if (isAppTool(name)) return runAppTool(ctx, name, args)
   if (FILE_TOOL_NAMES.has(name)) {
