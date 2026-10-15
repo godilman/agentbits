@@ -20,9 +20,10 @@ interface Form {
   unitIds: string[]
   leadAgentId: string | null
   archived: boolean
+  worktree: boolean
 }
 
-const EMPTY: Form = { name: '', description: '', rootPath: '', color: PROJECT_COLORS[0], unitIds: [], leadAgentId: null, archived: false }
+const EMPTY: Form = { name: '', description: '', rootPath: '', color: PROJECT_COLORS[0], unitIds: [], leadAgentId: null, archived: false, worktree: false }
 
 /** Create / edit a project: name, folder, color, assigned units (teams), lead, archive & delete. */
 export function ProjectModal() {
@@ -69,7 +70,8 @@ export function ProjectModal() {
         color: p.color,
         unitIds: p.unitIds,
         leadAgentId: p.leadAgentId,
-        archived: p.status === 'archived'
+        archived: p.status === 'archived',
+        worktree: p.isolation === 'worktree'
       })
     } else {
       const used = new Set(useAppStore.getState().projects.map((x) => x.color))
@@ -141,6 +143,7 @@ export function ProjectModal() {
       color: form.color,
       unitIds: form.unitIds,
       leadAgentId: leadValid,
+      isolation: form.worktree ? 'worktree' : 'shared',
       ...(editing ? { status: form.archived ? 'archived' : 'active' } : {})
     }
     try {
@@ -263,6 +266,13 @@ export function ProjectModal() {
           ) : (
             <div className="mt-1.5 text-[11.5px] text-zinc-500">{t('project:modal.folderHint')}</div>
           )}
+          <div className="mt-3 flex items-start gap-3 rounded-md border border-line bg-surface-2/60 px-3 py-2.5">
+            <div className="min-w-0 flex-1">
+              <div className="text-[12.5px] text-zinc-200">{t('project:modal.worktree.title')}</div>
+              <div className="mt-0.5 text-[11.5px] text-zinc-400">{t('project:modal.worktree.desc')}</div>
+            </div>
+            <Toggle checked={form.worktree} onChange={(v) => set('worktree', v)} />
+          </div>
         </div>
 
         <div>

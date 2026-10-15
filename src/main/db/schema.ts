@@ -586,6 +586,13 @@ const MIGRATIONS: { version: number; sql: string }[] = [
       -- Task dependencies: ids of tasks that must be done first (JSON array). The scheduler skips a task until they are.
       ALTER TABLE tasks ADD COLUMN depends_on TEXT NOT NULL DEFAULT '[]';
     `
+  },
+  {
+    version: 12,
+    sql: `
+      -- How CLI agents work in the project folder: all in the folder itself, or each task in its own git worktree.
+      ALTER TABLE projects ADD COLUMN isolation TEXT NOT NULL DEFAULT 'shared' CHECK (isolation IN ('shared','worktree'));
+    `
   }
 ]
 

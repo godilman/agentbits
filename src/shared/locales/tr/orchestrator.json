@@ -223,5 +223,19 @@
     "time": "⏱ Süre sınırına ulaşıldı ({{minutes}} dk): çalışma durduruldu, görev seni bekliyor.",
     "tokens": "⏱ Token sınırına ulaşıldı ({{tokens}}): çalışma durduruldu, görev seni bekliyor.",
     "cost": "⏱ Maliyet sınırına ulaşıldı ({{cost}} USD): çalışma durduruldu, görev seni bekliyor."
+  },
+  "worktree": {
+    "notRepo": "Worktree modu açık ama proje klasörü en az bir commit'i olan bir git deposunun kökü değil; proje klasöründe çalışılıyor.",
+    "created": "🌿 {{branch}} dalında kendi çalışma kopyası",
+    "reused": "🌿 {{branch}} dalının çalışma kopyasında devam ediliyor",
+    "failed": "Git çalışma kopyası hazırlanamadı ({{error}}); proje klasöründe çalışılıyor.",
+    "committed": "🌿 Değişiklikler {{branch}} dalına commit'lendi",
+    "noChanges": "🌿 {{branch}} dalında commit'lenecek dosya değişikliği yok",
+    "commitFailed": "Çalışma kopyasındaki değişiklikler commit'lenemedi: {{error}}",
+    "merged": "🔀 {{key}}: {{branch}} dalı proje klasörüne birleştirildi.",
+    "dirty": "⏸ {{key}}: proje klasöründe commit'lenmemiş değişiklikler olduğu için {{branch}} birleştirilmedi. Onları commit'le ya da stash'le, sonra görevde “Şimdi birleştir”e bas.",
+    "conflict": "⚠️ {{key}}: {{branch}} dalı projeyle çakışıyor ({{files}}). Görev, çakışmaları kendi çalışma kopyasında çözmesi için ajanına geri döndü.",
+    "conflictNote": "Bu görevi projeye birleştirirken şu dosyalarda çakışma çıktı: {{files}}. Projenin son hâli senin dalına alındı; bu dosyalardaki çakışma işaretlerini (<<<<<<< ======= >>>>>>>) iki değişiklik birlikte çalışacak şekilde çöz, sonra raporunla bitir.",
+    "mergeFailed": "⚠️ {{key}}: {{branch}} birleştirilemedi: {{error}}"
   }
 }

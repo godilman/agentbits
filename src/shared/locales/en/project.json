@@ -51,7 +51,11 @@
     "created": "{{name}} created",
     "archived": "{{name}} archived",
     "saved": "Project saved",
-    "deleted": "{{name}} deleted"
+    "deleted": "{{name}} deleted",
+    "worktree": {
+      "title": "Each task in its own git working copy",
+      "desc": "For parallel developers: every task works on its own branch (agentbits/ta-…) in a separate copy, so agents never overwrite each other. The folder must be a git repository with at least one commit. A done task is merged into the folder; a conflict goes back to the agent to resolve. Claude Code and Codex agents only."
+    }
   },
   "launcher": {
     "title": "Which projects should we open?",

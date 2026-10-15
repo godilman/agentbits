@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Play, Send, Square, Trash2, X } from 'lucide-react'
+import { GitMerge, Play, Send, Square, Trash2, X } from 'lucide-react'
 import type { ApiArgs } from '@shared/ipc'
 import type { AgentLog, Run, TaskStatus } from '@shared/types'
 import { PixelAvatar } from '@/components/common/PixelAvatar'
@@ -22,7 +22,7 @@ export function TaskDrawer() {
   // Only tasks of the active project open here (the selection is cleared on project switch anyway).
   const task = useAppStore((s) => s.tasks.find((x) => x.id === s.selectedTaskId && x.projectId === s.activeProjectId))
   const agents = useAppStore((s) => s.agents)
-  const { members, lead } = useProjectScope()
+  const { members, lead, project } = useProjectScope()
   const selectTask = useAppStore((s) => s.selectTask)
   const channels = useAppStore((s) => s.channels)
   const loadChannel = useAppStore((s) => s.loadChannel)
@@ -35,6 +35,18 @@ export function TaskDrawer() {
   const [history, setHistory] = useState<AgentLog[]>([])
   const [runs, setRuns] = useState<Run[]>([])
   const scrollRef = useRef<HTMLDivElement>(null)
+  // Worktree mode: a done task whose branch still waits to be merged (e.g. uncommitted changes in the folder).
+  const [mergePending, setMergePending] = useState(false)
+  const [merging, setMerging] = useState(false)
+  const worktree = project?.isolation === 'worktree'
+  useEffect(() => {
+    if (!id || !worktree || task?.status !== 'done') return setMergePending(false)
+    let alive = true
+    void call('tasks:mergePending', id).then((v) => alive && setMergePending(v), () => undefined)
+    return () => {
+      alive = false
+    }
+  }, [id, worktree, task?.status, task?.updatedAt])
   const [dropped, setDropped] = useState<File[] | null>(null)
   const drop = useFileDrop((files) => setDropped(files), !!task)
 
@@ -76,6 +88,21 @@ export function TaskDrawer() {
         <span className="font-mono text-[12px] text-zinc-400">{task.key}</span>
         <span className="text-[11px] text-zinc-400">{t('tasks:drawer.createdAgo', { ago: ago(task.createdAt), by: task.createdBy })}</span>
         <div className="ml-auto flex items-center gap-1">
+          {mergePending && (
+            <button
+              className="btn-outline h-6 text-[11.5px]"
+              disabled={merging}
+              title={t('tasks:drawer.mergeHint')}
+              onClick={() => {
+                setMerging(true)
+                void call('tasks:merge', task.id)
+                  .then(setMergePending, () => undefined)
+                  .finally(() => setMerging(false))
+              }}
+            >
+              <GitMerge size={11} /> {t('tasks:drawer.mergeNow')}
+            </button>
+          )}
           {task.status === 'in_progress' || activeRun ? (
             <button className="btn-danger h-6 text-[11.5px]" onClick={() => activeRun && void call('runs:stop', activeRun.id)}>
               <Square size={11} /> {t('actions.stop')}

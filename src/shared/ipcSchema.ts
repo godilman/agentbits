@@ -45,6 +45,8 @@ export const IPC_SCHEMA = {
   'projects:inspectFolder': ['s'],
   'tasks:list': ['o?'],
   'tasks:board': ['n'],
+  'tasks:merge': ['s'],
+  'tasks:mergePending': ['s'],
   'tasks:create': ['o'],
   'tasks:update': ['s', 'o'],
   'tasks:move': ['s', 's', 'n?'],

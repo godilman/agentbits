@@ -128,6 +128,9 @@ export interface Api {
   'tasks:list': (opts?: TaskListOpts) => TaskPage
   /** Unfinished tasks + the newest `doneLimit` done tasks of each project (security review #27). */
   'tasks:board': (doneLimit: number) => TaskBoard
+  /** Worktree mode: merge a done task's branch now (true while it still waits, e.g. uncommitted changes in the folder). */
+  'tasks:merge': (id: string) => boolean
+  'tasks:mergePending': (id: string) => boolean
   'tasks:create': (input: TaskInput) => Task
   'tasks:update': (id: string, patch: Partial<Pick<Task, 'title' | 'description' | 'priority' | 'assigneeId'>>) => Task
   'tasks:move': (id: string, status: TaskStatus, sortOrder?: number) => Task

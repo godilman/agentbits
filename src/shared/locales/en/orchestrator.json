@@ -223,5 +223,19 @@
     "time": "⏱ Time limit reached ({{minutes}} min): the run was stopped and the task waits for you.",
     "tokens": "⏱ Token limit reached ({{tokens}}): the run was stopped and the task waits for you.",
     "cost": "⏱ Cost limit reached ({{cost}} USD): the run was stopped and the task waits for you."
+  },
+  "worktree": {
+    "notRepo": "Worktree mode is on, but the project folder is not the top of a git repository with at least one commit: working in the folder itself.",
+    "created": "🌿 Own working copy on branch {{branch}}",
+    "reused": "🌿 Continuing in the working copy of branch {{branch}}",
+    "failed": "Could not prepare the git working copy ({{error}}): working in the project folder itself.",
+    "committed": "🌿 Changes committed to {{branch}}",
+    "noChanges": "🌿 No file changes to commit on {{branch}}",
+    "commitFailed": "Could not commit the changes in the working copy: {{error}}",
+    "merged": "🔀 {{key}}: branch {{branch}} merged into the project folder.",
+    "dirty": "⏸ {{key}}: the project folder has uncommitted changes, so {{branch}} was not merged. Commit or stash them, then use “Merge now” in the task.",
+    "conflict": "⚠️ {{key}}: merging {{branch}} conflicts with the project ({{files}}). The task went back to its agent to resolve the conflicts in its working copy.",
+    "conflictNote": "Merging this task into the project hit conflicts in: {{files}}. The project's latest state was merged into your branch; resolve the conflict markers (<<<<<<< ======= >>>>>>>) in those files so both changes work together, then finish with your report.",
+    "mergeFailed": "⚠️ {{key}}: merging {{branch}} failed: {{error}}"
   }
 }

@@ -50,7 +50,9 @@
     "noLogs": "Log yok.",
     "noRuns": "Bu görev henüz çalıştırılmadı.",
     "runTokens": "{{n}} tok",
-    "notePlaceholder": "Göreve not ekle…"
+    "notePlaceholder": "Göreve not ekle…",
+    "mergeNow": "Şimdi birleştir",
+    "mergeHint": "Bu görevin dalını proje klasörüne birleştir (örneğin oradaki commit'lenmemiş değişiklikler yüzünden bekliyordu)."
   },
   "new": {
     "title": "Yeni görev",

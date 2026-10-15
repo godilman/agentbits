@@ -212,13 +212,22 @@ const handlers: Handlers = {
     else if (status === 'todo' && before && before.status !== 'todo') orchestrator.release(id)
     const t = tasksRepo.move(id, status, sortOrder)
     emit({ type: 'tasks:changed' })
+    // Worktree mode: a task the user marks done gets its branch merged.
+    if (status === 'done' && before?.status !== 'done') void orchestrator.finishTaskBranch(id)
     if (status === 'in_progress' && before?.status !== 'in_progress') {
       tasksRepo.update(id, { status: before?.status ?? 'todo' })
       void orchestrator.startTask(id)
     }
     return tasksRepo.get(id) ?? t
   },
+  'tasks:merge': async (id) => {
+    await orchestrator.finishTaskBranch(id)
+    return orchestrator.pendingMerge(id)
+  },
+  'tasks:mergePending': (id) => orchestrator.pendingMerge(id),
   'tasks:delete': (id) => {
+    const doomed = tasksRepo.get(id)
+    if (doomed) void orchestrator.discardTaskBranch(doomed)
     orchestrator.stopTask(id)
     tasksRepo.delete(id)
     emit({ type: 'tasks:changed' })
@@ -496,6 +505,7 @@ const handlers: Handlers = {
   'projects:save': (input, id) => {
     if (input.name !== undefined && !input.name.trim()) throw new Error(t('main:errors.projectNameEmpty'))
     if (id && !projectsRepo.get(id)) throw new Error(t('main:errors.projectNotFoundDeleted'))
+    if (input.isolation !== undefined && input.isolation !== 'shared' && input.isolation !== 'worktree') throw new Error(t('main:errors.badRequest'))
     // Validate the folder only when it changes (an existing project may point at a folder that is gone).
     if (input.rootPath) {
       const before = id ? projectsRepo.get(id)?.rootPath : undefined
@@ -526,6 +536,7 @@ const handlers: Handlers = {
       settingsRepo.update({ workspaceRoot: heir.rootPath })
       emit({ type: 'settings:changed' })
     }
+    void orchestrator.discardProjectWorktrees(p)
     projectsRepo.delete(id) // attachments cascade; unreferenced originals are removed below
     try {
       gcBlobs()

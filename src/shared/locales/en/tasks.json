@@ -50,7 +50,9 @@
     "noLogs": "No logs.",
     "noRuns": "This task hasn't run yet.",
     "runTokens": "{{n}} tok",
-    "notePlaceholder": "Add a note to the task…"
+    "notePlaceholder": "Add a note to the task…",
+    "mergeNow": "Merge now",
+    "mergeHint": "Merge this task's branch into the project folder (it waited, e.g. because of uncommitted changes there)."
   },
   "new": {
     "title": "New task",

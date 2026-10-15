@@ -421,6 +421,8 @@ export interface Project {
   sortOrder: number
   /** Last time the project was opened in a tab (null = never). */
   lastOpenedAt: string | null
+  /** `worktree`: each task works on its own git branch in a separate working copy and is merged when done. */
+  isolation: 'shared' | 'worktree'
   createdAt: string
   updatedAt: string
 }
@@ -445,7 +447,7 @@ export interface FolderInspection {
 }
 
 export type ProjectInput = Partial<
-  Pick<Project, 'name' | 'description' | 'rootPath' | 'color' | 'leadAgentId' | 'status' | 'unitIds'>
+  Pick<Project, 'name' | 'description' | 'rootPath' | 'color' | 'leadAgentId' | 'status' | 'unitIds' | 'isolation'>
 >
 
 export interface TemplateAgentPreview {

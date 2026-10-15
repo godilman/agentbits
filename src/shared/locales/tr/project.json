@@ -51,7 +51,11 @@
     "created": "{{name}} oluşturuldu",
     "archived": "{{name}} arşivlendi",
     "saved": "Proje kaydedildi",
-    "deleted": "{{name}} silindi"
+    "deleted": "{{name}} silindi",
+    "worktree": {
+      "title": "Her görev kendi git çalışma kopyasında",
+      "desc": "Paralel çalışan yazılımcılar için: her görev ayrı bir kopyada kendi dalında (agentbits/ta-…) çalışır, ajanlar birbirinin işini ezmez. Klasör en az bir commit'i olan bir git deposu olmalı. Biten görev klasöre birleştirilir; çakışma çözülmesi için ajana geri döner. Yalnızca Claude Code ve Codex ajanları."
+    }
   },
   "launcher": {
     "title": "Hangi projeleri açalım?",

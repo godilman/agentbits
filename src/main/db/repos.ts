@@ -1110,6 +1110,7 @@ const mapProject = (r: Row, links: { project_id: string; unit_id: string }[]): P
   unitIds: links.filter((l) => l.project_id === r.id).map((l) => l.unit_id),
   sortOrder: r.sort_order,
   lastOpenedAt: r.last_opened_at ?? null,
+  isolation: r.isolation === 'worktree' ? 'worktree' : 'shared',
   createdAt: r.created_at,
   updatedAt: r.updated_at
 })
@@ -1157,7 +1158,8 @@ export const projectsRepo = {
           rootPath: 'root_path',
           color: 'color',
           leadAgentId: 'lead_agent_id',
-          status: 'status'
+          status: 'status',
+          isolation: 'isolation'
         }
         const sets: string[] = []
         const vals: unknown[] = []
@@ -1173,8 +1175,8 @@ export const projectsRepo = {
       } else {
         const order = (db.prepare('SELECT COALESCE(MAX(sort_order), 0) + 1 AS o FROM projects').get() as Row).o
         db.prepare(
-          `INSERT INTO projects(id, name, description, root_path, color, lead_agent_id, status, is_default, sort_order)
-           VALUES (?,?,?,?,?,?,?,?,?)`
+          `INSERT INTO projects(id, name, description, root_path, color, lead_agent_id, status, is_default, sort_order, isolation)
+           VALUES (?,?,?,?,?,?,?,?,?,?)`
         ).run(
           pid,
           (input.name ?? t('orchestrator:db.newProject')).trim() || t('orchestrator:db.newProject'),
@@ -1184,7 +1186,8 @@ export const projectsRepo = {
           input.leadAgentId ?? null,
           input.status ?? 'active',
           opts.isDefault ? 1 : 0,
-          order
+          order,
+          input.isolation === 'worktree' ? 'worktree' : 'shared'
         )
       }
       if (input.unitIds) {

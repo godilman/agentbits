@@ -6,7 +6,9 @@ import type { Agent, AgentInstruction, FileRecord, InstructionInput, LogLevel, P
 import { resolveAfter, type LeadMessage } from '@shared/leadComms'
 import { isTwin } from '@shared/org'
 import { describeTeam, teamState } from './team'
-import { isAbsolute, relative } from 'path'
+import { dirname, isAbsolute, join, relative } from 'path'
+import { existsSync, rmSync } from 'fs'
+import { branchFor, bringRootIn, commitAll, ensureWorktree, git, isRepoRoot, mergeIntoRoot, removeWorktree, serialized, type GitEnv } from './worktree'
 import {
   agentsRepo,
   decisionsRepo,
@@ -43,7 +45,7 @@ import {
 } from '../files/service'
 import { fileRef } from '@shared/files'
 import { AbortedError, getAdapter, type ProviderAdapter } from '../providers'
-import { getDb } from '../db'
+import { getDb, getDbPath } from '../db'
 import { memoryEngine } from './memory'
 import { activeProjectIds, getProject, memberProjectIds, projectLead, projectMembers } from './org'
 import {
@@ -375,6 +377,126 @@ class Orchestrator {
   }
 
   /** Working folder for a project; non-CLI providers fall back to the home folder. */
+  /* ───────────────────────── git worktree isolation ───────────────────────── */
+
+  private gitEnv(): GitEnv {
+    return { noHooksDir: join(dirname(getDbPath()), 'worktrees', '.nohooks') }
+  }
+
+  private worktreeDir(projectId: string, taskKey: string): string {
+    return join(dirname(getDbPath()), 'worktrees', projectId, taskKey.toLowerCase().replace(/[^a-z0-9._-]+/g, '-'))
+  }
+
+  private async prepareWorktree(
+    project: Project | null,
+    task: Task,
+    ctx: { runId: string; agentId: string; taskId: string; projectId: string }
+  ): Promise<{ dir: string; branch: string } | null> {
+    if (!project?.rootPath || project.isolation !== 'worktree') return null
+    const root = project.rootPath
+    const env = this.gitEnv()
+    try {
+      if (!(await isRepoRoot(root, env))) {
+        this.log({ ...ctx, level: 'warn', message: t('orchestrator:worktree.notRepo') })
+        return null
+      }
+      const branch = branchFor(task.key)
+      const dir = this.worktreeDir(project.id, task.key)
+      const how = await serialized(root, () => ensureWorktree(root, dir, branch, env))
+      this.log({ ...ctx, level: 'info', message: t(how === 'created' ? 'orchestrator:worktree.created' : 'orchestrator:worktree.reused', { branch }) })
+      return { dir, branch }
+    } catch (e) {
+      this.log({ ...ctx, level: 'warn', message: t('orchestrator:worktree.failed', { error: (e as Error).message.slice(0, 300) }) })
+      return null
+    }
+  }
+
+  private async commitWorktree(root: string, wt: { dir: string; branch: string }, task: Task, agent: Agent, logCtx: { runId: string; agentId: string; taskId: string; projectId: string }): Promise<void> {
+    const author = { name: agent.name, email: `${agent.name.toLowerCase().replace(/[^a-z0-9]+/g, '.') || 'agent'}@agents.agentbits.local` }
+    try {
+      const made = await serialized(root, () => commitAll(wt.dir, `${task.key}: ${task.title}`, author, this.gitEnv()))
+      this.log({ ...logCtx, level: 'info', message: t(made ? 'orchestrator:worktree.committed' : 'orchestrator:worktree.noChanges', { branch: wt.branch }) })
+    } catch (e) {
+      this.log({ ...logCtx, level: 'warn', message: t('orchestrator:worktree.commitFailed', { error: (e as Error).message.slice(0, 300) }) })
+    }
+  }
+
+  /** Is a finished task's branch still waiting to be merged (worktree mode)? */
+  pendingMerge(taskId: string): boolean {
+    const task = tasksRepo.get(taskId)
+    const project = task ? getProject(task.projectId) : null
+    return !!task && project?.isolation === 'worktree' && existsSync(this.worktreeDir(project.id, task.key))
+  }
+
+  /**
+   * A task became done (review approved or moved by the user): merge its branch into the project folder.
+   * Dirty folder → waits ("Merge now" in the task); conflict → the project's state is brought into the task branch and
+   * the task goes back to its agent to resolve the marked files.
+   */
+  async finishTaskBranch(taskId: string): Promise<void> {
+    const task = tasksRepo.get(taskId)
+    const project = task ? getProject(task.projectId) : null
+    if (!task || !project?.rootPath || project.isolation !== 'worktree') return
+    const dir = this.worktreeDir(project.id, task.key)
+    if (!existsSync(dir)) return
+    const root = project.rootPath
+    const env = this.gitEnv()
+    const branch = branchFor(task.key)
+    const say = (what: 'merged' | 'dirty' | 'conflict' | 'mergeFailed', vars: Record<string, string> = {}): void => {
+      const text = t(`orchestrator:worktree.${what}`, { key: task.key, branch, files: '', error: '', ...vars })
+      this.post('general', 'system', null, text, task.projectId)
+      this.post(`task:${task.id}`, 'system', null, text, task.projectId)
+    }
+    try {
+      const out = await serialized(root, () => mergeIntoRoot(root, branch, `Merge ${task.key}: ${task.title}`, env))
+      if (out.status === 'merged' || out.status === 'nothing') {
+        await serialized(root, () => removeWorktree(root, dir, branch, env))
+        if (out.status === 'merged') {
+          say('merged')
+          const since = task.startedAt ? Date.parse(task.startedAt) : Date.now() - 86_400_000
+          recordWorkspaceChanges({ agentId: task.assigneeId ?? '', projectId: task.projectId, taskId: task.id, mode: 'task' }, root, since)
+        }
+      } else if (out.status === 'dirty') {
+        say('dirty')
+      } else if (out.status === 'conflict') {
+        const files = await serialized(root, () => bringRootIn(root, dir, env))
+        const list = (files.length ? files : out.files).join(', ')
+        tasksRepo.update(task.id, { status: 'todo', progress: 0, reviewNote: t('orchestrator:worktree.conflictNote', { files: list }) })
+        say('conflict', { files: list })
+      } else if (out.status === 'failed') {
+        say('mergeFailed', { error: out.error.slice(0, 300) })
+      }
+    } catch (e) {
+      say('mergeFailed', { error: (e as Error).message.slice(0, 300) })
+    }
+    emit({ type: 'tasks:changed' })
+  }
+
+  /** A deleted project's task copies go with it (`git worktree prune` makes the repository forget them). */
+  async discardProjectWorktrees(project: Project): Promise<void> {
+    const dir = join(dirname(getDbPath()), 'worktrees', project.id)
+    try {
+      rmSync(dir, { recursive: true, force: true })
+      if (project.rootPath && existsSync(project.rootPath)) await serialized(project.rootPath, () => git(project.rootPath, ['worktree', 'prune'], this.gitEnv()))
+    } catch {
+      /* best effort */
+    }
+  }
+
+  /** A deleted task's branch and working copy go too (its work was never merged). */
+  async discardTaskBranch(task: Task): Promise<void> {
+    const project = getProject(task.projectId)
+    if (!project?.rootPath) return
+    const dir = this.worktreeDir(project.id, task.key)
+    if (!existsSync(dir)) return
+    const root = project.rootPath
+    try {
+      await serialized(root, () => removeWorktree(root, dir, branchFor(task.key), this.gitEnv()))
+    } catch {
+      /* the folder can be removed by hand; git worktree prune forgets it */
+    }
+  }
+
   private workspace(project: Project | null): string {
     return project?.rootPath || app.getPath('home')
   }
@@ -593,9 +715,20 @@ class Orchestrator {
     const perms = permissionsRepo.get(agent.id)
     const project = getProject(task.projectId)
     const pid = task.projectId
-    const ws = this.workspace(project)
+    // Worktree mode (CLI agents): the task works on its own branch in its own copy; never fails the run (falls back).
+    const wt =
+      provider.kind === 'claude-cli' || provider.kind === 'codex-cli'
+        ? await this.prepareWorktree(project, task, { runId, agentId: agent.id, taskId: task.id, projectId: pid })
+        : null
+    const ws = wt?.dir ?? this.workspace(project)
     const memories = memoryEngine.recall({ agentId: agent.id, taskId: task.id, projectId: pid, query: `${task.title} ${task.description}` })
     let system = workerSystem(agent, perms, memoryEngine.format(memories), ws) + '\n\n' + this.projectContext(project)
+    if (wt) {
+      system +=
+        `\n\n## Your working copy\nYou work in your own git worktree of the project (branch ${wt.branch}), not in the project folder itself; ` +
+        'teammates work in their own copies at the same time. Agentbits commits your changes when this run ends and merges the branch ' +
+        'into the project when the task is approved. Do not switch branches, rebase, reset or push.'
+    }
     const team = describeTeam(pid, runId)
     if (team) {
       system +=
@@ -868,8 +1001,10 @@ class Orchestrator {
         message: t('orchestrator:log.completed', { tokens: num(totals.total || result.tokensIn + result.tokensOut) })
       })
 
-      // Outputs: files saved with file_save, and (CLI agents) files changed in the project folder.
-      if ((provider.kind === 'claude-cli' || provider.kind === 'codex-cli') && perms.fsWrite && project?.rootPath) {
+      // Worktree mode: the run's changes become a commit on the task branch (merged when the task is done).
+      if (wt && project?.rootPath) await this.commitWorktree(project.rootPath, wt, task, agent, logCtx)
+      // Outputs: files saved with file_save, and (CLI agents) files changed in the project folder (worktree mode: after the merge).
+      if ((provider.kind === 'claude-cli' || provider.kind === 'codex-cli') && perms.fsWrite && project?.rootPath && !wt) {
         recordWorkspaceChanges(connCtx, project.rootPath, runStartedMs)
       }
       const outputs = generatedFor(runId)
@@ -1395,6 +1530,7 @@ class Orchestrator {
       if (!fresh || fresh.status !== 'in_review') return // user moved it meanwhile
       if (approved) {
         tasksRepo.move(taskId, 'done')
+        void this.finishTaskBranch(taskId)
         tasksRepo.update(taskId, { reviewNote: note })
         this.post(`task:${taskId}`, 'agent', lead.id, t('orchestrator:chat.approvedTask', { note }), pid)
         this.post('general', 'agent', lead.id, t('orchestrator:chat.approvedGeneral', { key: task.key, worker: worker.name, note }), pid)
