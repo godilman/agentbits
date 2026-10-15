@@ -19,7 +19,9 @@
     "revisionNote": "Has a revision note",
     "awaitingApproval": "approval",
     "paused": "paused",
-    "unassigned": "Unassigned"
+    "unassigned": "Unassigned",
+    "waitsFor": "Waits for {{keys}}",
+    "waitsForHint": "Autopilot starts it once these are done; you can still start it yourself."
   },
   "fields": {
     "title": "Title",

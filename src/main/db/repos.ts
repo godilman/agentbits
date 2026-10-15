@@ -401,8 +401,12 @@ const mapTask = (r: Row): Task => ({
   createdAt: r.created_at,
   updatedAt: r.updated_at,
   startedAt: r.started_at,
-  completedAt: r.completed_at
+  completedAt: r.completed_at,
+  dependsOn: JSON.parse(r.depends_on || '[]')
 })
+
+/** SQL condition: every dependency of the `tasks` row is done (a deleted dependency no longer blocks). */
+const DEPS_DONE = `NOT EXISTS (SELECT 1 FROM json_each(tasks.depends_on) d JOIN tasks dep ON dep.id = d.value WHERE dep.status <> 'done')`
 
 type CursorPayload = { status: string; sortOrder: number; seq: number }
 
@@ -506,8 +510,8 @@ export const tasksRepo = {
         db.prepare('SELECT COALESCE(MAX(sort_order), 0) + 1 AS o FROM tasks WHERE status = ?').get(status) as Row
       ).o
       db.prepare(
-        `INSERT INTO tasks(id, seq, key, title, description, status, priority, assignee_id, sort_order, created_by, project_id)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+        `INSERT INTO tasks(id, seq, key, title, description, status, priority, assignee_id, sort_order, created_by, project_id, depends_on)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
       ).run(
         id,
         seq,
@@ -519,7 +523,8 @@ export const tasksRepo = {
         input.assigneeId ?? null,
         order,
         createdBy,
-        input.projectId ?? projectsRepo.defaultId()
+        input.projectId ?? projectsRepo.defaultId(),
+        JSON.stringify([...new Set(input.dependsOn ?? [])])
       )
     })()
     return this.get(id)!
@@ -569,7 +574,7 @@ export const tasksRepo = {
     const ph = (n: number): string => (n ? Array(n).fill('?').join(',') : 'NULL')
     const rows = getDb()
       .prepare(
-        `SELECT * FROM tasks WHERE status = 'todo' AND (
+        `SELECT * FROM tasks WHERE status = 'todo' AND ${DEPS_DONE} AND (
            (assignee_id = ? AND project_id IN (${ph(assignedIn.length)}))
            OR (assignee_id IS NULL AND project_id IN (${ph(unassignedIn.length)}))
          )
@@ -586,7 +591,7 @@ export const tasksRepo = {
     return (
       getDb()
         .prepare(
-          `SELECT * FROM tasks WHERE status = 'todo' AND review_note IS NULL
+          `SELECT * FROM tasks WHERE status = 'todo' AND review_note IS NULL AND ${DEPS_DONE}
              AND assignee_id IN (${ph(agentIds.length)}) AND project_id IN (${ph(projectIds.length)})
            ORDER BY priority DESC, sort_order LIMIT 25`
         )

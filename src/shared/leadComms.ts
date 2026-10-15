@@ -51,3 +51,20 @@ export function reportExcerpt(md: string, max = 400): string {
   const flat = body.replace(/\s+/g, ' ').trim()
   return flat.length > max ? `${flat.slice(0, max - 1).trimEnd()}…` : flat
 }
+
+/**
+ * "after" of a planned task → dependency ids. Numbers (or digit strings) are 1-based positions of EARLIER tasks in the
+ * same block, anything else an existing task key resolved by `byKey` (same project only). Later or own positions are
+ * ignored, so a block can never create a cycle.
+ */
+export function resolveAfter(after: unknown, position: number, earlierIds: string[], byKey: (key: string) => string | undefined): string[] {
+  const refs = Array.isArray(after) ? after : after === undefined || after === null ? [] : [after]
+  const out: string[] = []
+  for (const ref of refs.slice(0, 20)) {
+    const text = String(ref).trim()
+    const n = typeof ref === 'number' ? ref : /^\d+$/.test(text) ? Number(text) : NaN
+    const id = Number.isFinite(n) ? (Number.isInteger(n) && n >= 1 && n <= position ? earlierIds[n - 1] : undefined) : text ? byKey(text) : undefined
+    if (id && !out.includes(id)) out.push(id)
+  }
+  return out
+}

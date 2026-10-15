@@ -579,6 +579,13 @@ const MIGRATIONS: { version: number; sql: string }[] = [
       -- The lead's chat context reads the latest report of recently finished tasks.
       CREATE INDEX IF NOT EXISTS idx_reports_task ON reports(task_id, created_at);
     `
+  },
+  {
+    version: 11,
+    sql: `
+      -- Task dependencies: ids of tasks that must be done first (JSON array). The scheduler skips a task until they are.
+      ALTER TABLE tasks ADD COLUMN depends_on TEXT NOT NULL DEFAULT '[]';
+    `
   }
 ]
 

@@ -1,6 +1,6 @@
 import { useMemo, useState, type DragEvent } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Loader2, MessageSquareWarning, Plus, Search, SquareKanban } from 'lucide-react'
+import { Hourglass, Loader2, MessageSquareWarning, Plus, Search, SquareKanban } from 'lucide-react'
 import type { Task, TaskStatus } from '@shared/types'
 import { locale } from '@/i18n'
 import { PixelAvatar } from '@/components/common/PixelAvatar'
@@ -183,6 +183,16 @@ function TaskCard({ task, dragging, onDragStart, onDragEnd }: { task: Task; drag
   const run = useAppStore((s) => s.activeRuns.find((r) => r.taskId === task.id))
   const agent = agentById(agents, task.assigneeId)
   const pr = PRIORITY_META[task.priority]
+  // Unfinished dependencies (a string, so the selector returns a primitive); an unloaded dependency is an old done task.
+  const waitsFor = useAppStore((s) =>
+    task.status === 'todo'
+      ? task.dependsOn
+          .map((id) => s.tasks.find((x) => x.id === id))
+          .filter((d) => d && d.status !== 'done')
+          .map((d) => d!.key)
+          .join(', ')
+      : ''
+  )
 
   return (
     <div
@@ -210,6 +220,11 @@ function TaskCard({ task, dragging, onDragStart, onDragEnd }: { task: Task; drag
         )}
       </div>
       <div className="mt-1 line-clamp-2 text-[12.5px] leading-snug text-zinc-200">{task.title}</div>
+      {waitsFor && (
+        <div className="mt-1.5 inline-flex items-center gap-1 rounded bg-sky-500/10 px-1.5 py-0.5 text-[10.5px] text-sky-300" title={t('tasks:card.waitsForHint')}>
+          <Hourglass size={10} /> {t('tasks:card.waitsFor', { keys: waitsFor })}
+        </div>
+      )}
       {(task.status === 'in_progress' || (task.progress > 0 && task.status !== 'done')) && (
         <div className="mt-2 flex items-center gap-2">
           <ProgressBar value={task.progress} tone={task.status === 'in_review' ? 'violet' : 'emerald'} />

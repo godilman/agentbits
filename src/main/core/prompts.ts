@@ -65,7 +65,10 @@ export function leadSystem(lead: Agent, team: Agent[], board: Task[], memory: st
   const open = board
     .filter((t) => t.status !== 'done')
     .slice(0, 30)
-    .map((t) => `- ${t.key} [${t.status}] ${t.title}${t.assigneeId ? ` → ${team.find((a) => a.id === t.assigneeId)?.name ?? '?'}` : ''}`)
+    .map((t) => {
+      const waits = t.dependsOn.map((id) => board.find((x) => x.id === id)).filter((x) => x && x.status !== 'done')
+      return `- ${t.key} [${t.status}] ${t.title}${t.assigneeId ? ` → ${team.find((a) => a.id === t.assigneeId)?.name ?? '?'}` : ''}${waits.length ? ` (after ${waits.map((x) => x!.key).join(', ')})` : ''}`
+    })
     .join('\n')
   return [
     `You are ${lead.name}, the ${lead.role} and coordinator of the Agentbits team.`,
@@ -83,6 +86,9 @@ export function leadSystem(lead: Agent, team: Agent[], board: Task[], memory: st
     '  Emit them in ONE fenced block exactly like:',
     '```tasks\n[{"title": "...", "description": "...", "assignee": "<team member name>", "priority": 1}]\n```',
     '  priority: 0 low, 1 normal, 2 high, 3 urgent.',
+    '  Order: independent tasks run in parallel. When a task needs the result of another, add "after": [1, "TA-3"]',
+    '  (1-based positions of EARLIER tasks in the same block, or keys of existing tasks). It starts once those are done,',
+    '  and its assignee sees their reports. Do not chain tasks that can run side by side.',
     '  Files: the files attached to the user\'s message go to every task you create. To give a task only',
     '  specific files, add "files": ["<file ref>", ...] to it ("files": [] for none). Assignees can only read the files given.',
     '- To pass a note, a correction or an answer to the team member working on a task, add a fenced block:',
@@ -127,6 +133,8 @@ export interface PlannedTask {
   priority?: number
   /** File refs / names handed to the task (default: the files of the user's message). */
   files?: string[]
+  /** Must wait for: 1-based positions of earlier tasks in the same block, or keys of existing tasks ("TA-3"). */
+  after?: unknown
 }
 export interface PlannedDecision {
   title: string

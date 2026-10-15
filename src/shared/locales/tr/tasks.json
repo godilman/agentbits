@@ -19,7 +19,9 @@
     "revisionNote": "Revizyon notu var",
     "awaitingApproval": "onay",
     "paused": "durdu",
-    "unassigned": "Atanmadı"
+    "unassigned": "Atanmadı",
+    "waitsFor": "{{keys}} bekleniyor",
+    "waitsForHint": "Otopilot bunlar bitince başlatır; sen yine de kendin başlatabilirsin."
   },
   "fields": {
     "title": "Başlık",

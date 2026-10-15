@@ -150,10 +150,13 @@ function chatReplyText(ctx: RunContext): string {
     .filter((s) => s.split(/\s+/).length >= 3)
     .slice(0, 4)
   const load = new Map<string, number>()
+  // "first …, then …": each step waits for the previous one (otherwise the parts run in parallel).
+  const sequential = /\b(sonra|ardından|daha sonra|then|after that|afterwards)\b/i.test(msg) // i18n-ignore
   const items = (parts.length ? parts : [msg]).map((p, i) => ({
     title: p.charAt(0).toUpperCase() + p.slice(1, 90),
     description: t('demo:chat.taskDescription', { request: msg.slice(0, 280), scope: p }),
     assignee: assigneeFor(p, i, ctx.team, ctx.agent.id, load),
+    after: sequential && i > 0 ? [i] : undefined,
     priority: i === 0 ? 2 : 1
   }))
   const lines = items.map((it) => `- **${it.title}** → ${it.assignee ?? t('demo:chat.unassigned')}`).join('\n')

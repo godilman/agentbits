@@ -98,6 +98,8 @@ export interface Task {
   updatedAt: string
   startedAt: string | null
   completedAt: string | null
+  /** Ids of tasks that must be done before this one starts (autopilot waits; the user can still start it). */
+  dependsOn: string[]
 }
 
 export interface TaskInput {
@@ -110,6 +112,8 @@ export interface TaskInput {
   status?: TaskStatus
   /** Attachments linked to the new task (its assignee may read them while working on it). */
   fileIds?: string[]
+  /** Ids of tasks (same project) that must be done first. */
+  dependsOn?: string[]
 }
 
 export interface TaskListOpts {
