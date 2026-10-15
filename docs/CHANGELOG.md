@@ -4,6 +4,30 @@
 > `## YYYY-MM-DD — kısa başlık`, ardından **Eklendi / Değişti / Düzeltildi / Kaldırıldı / Bilinen** maddeleri
 > ve ilgili dosyalar.
 
+## 2026-10-16 — "Bana ihtiyaç var", takılma nedenleri, kabul kriterleri, "Ne değişti?"
+
+### Eklendi
+- **Bana ihtiyaç var** (üst bar, sayı rozetli): onay bekleyen bağlantı / uygulama işlemleri, başlamak için onay bekleyen
+  çalışmalar, liderin karar veremediği incelemeler ve yarışlar, lider incelemesi kapalıyken incelemedeki görevler, henüz
+  birleştirilmemiş işler, bekletilen görevler (nedeniyle) ve hata veren ajanlar tek listede; satır görevi açar
+  (`features/inbox/NeedsYou.tsx`, `orchestrator:state` → `held`, `unmerged`, `undecided`).
+- **Kartta somut takılma nedeni:** "TA-1 birleştirilmesi bekleniyor", "Bekletiliyor: 2 kez hata verdi: …", "Karar senin",
+  "Yarış eşi TA-7 bekleniyor", "Henüz klasöre birleştirilmedi".
+- **Kabul kriterleri** (migration v16 `tasks.acceptance`, `tasks.acceptance_check`): yeni görev formu, görev ayrıntısı ve
+  liderin ```` ```tasks ```` öğesinde `"acceptance"`. Görevi alanın istemine girer; lider incelemede her birini tek tek
+  işaretler (`judgeCriteria`), karşılanmayan kriter onayı geri göndermeye çevirir, eksik ya da bozuk kontrol = karar yok
+  (kullanıcıya kalır). Sonuç ✓/✗ ile görevde. Demo sağlayıcı da kriterleri işaretler; yarış kopyası kriterleri taşır.
+- **Ne değişti?** (worktree projelerinde): görevin değiştirdiği dosyalar, +/− satırlar ve renkli fark — çalışma kopyası
+  varken ondan, birleşince birleştirme commit'inden (`taskChanges`, `tasks:changes`).
+
+### Değişti
+- `tasks:update` artık yalnız başlık, açıklama, öncelik, atanan ve kabul kriterlerini değiştirir (durum / inceleme / yarış
+  alanları orkestratörün).
+
+### Doğrulandı
+- `tests/review.test.ts` (kriter listesi, eksik / sayısı tutmayan / boolean olmayan kontrol), `tests/worktree.test.ts`
+  ("Ne değişti?" kopyadan ve birleştirme commit'inden). Arayüz sahte köprüyle tarayıcıda ekran görüntüsüyle denetlendi.
+
 ## 2026-10-16 — Dış inceleme bulguları: iş kaybı, yalıtım, kuyruk, karar hafızası, akış hataları
 
 ### Düzeltildi

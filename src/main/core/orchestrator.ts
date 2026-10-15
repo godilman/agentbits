@@ -4,12 +4,12 @@ import { intlLocale } from '@shared/i18n'
 import { allTranslations, currentLanguage, t } from '../i18n'
 import type { Agent, AgentInstruction, FileRecord, InstructionInput, LogLevel, Project, Provider, Task, UsageDelta, UsageMode } from '@shared/types'
 import { resolveAfter, type LeadMessage } from '@shared/leadComms'
-import { parseRaceVerdict, pickRival } from '@shared/review'
+import { acceptanceList, judgeCriteria, parseRaceVerdict, pickRival } from '@shared/review'
 import { isTwin } from '@shared/org'
 import { describeTeam, teamState } from './team'
 import { dirname, isAbsolute, join, relative } from 'path'
 import { existsSync, rmSync } from 'fs'
-import { branchFor, bringRootIn, commitAll, ensureWorktree, git, isClean, isRepoRoot, mergeIntoRoot, removeWorktree, serialized, type GitEnv } from './worktree'
+import { branchFor, bringRootIn, commitAll, ensureWorktree, git, isClean, isRepoRoot, mergeIntoRoot, removeWorktree, serialized, taskChanges, type GitEnv, type TaskChanges } from './worktree'
 import {
   agentsRepo,
   decisionsRepo,
@@ -193,6 +193,8 @@ class Orchestrator {
   private blocked = new Set<string>()
   /** Why a held task waits (shown on its card and in "Needs you"). */
   private heldWhy = new Map<string, string>()
+  /** Tasks in review the lead couldn't decide (unclear verdict / race): they wait for the user. */
+  private undecided = new Set<string>()
   private failCounts = new Map<string, number>()
   /** Chat replies and reviews in flight (not task runs): stop / reset / project delete cancel and await them. */
   private aux = new Map<AbortController, { projectId: string | null; done: Promise<void> }>()
@@ -325,6 +327,12 @@ class Orchestrator {
     if (this.blocked.delete(taskId)) this.saveHeld()
   }
 
+  /** What the renderer shows: pause state and everything that waits for the user ("Needs you", card reasons). */
+  state(): { paused: boolean; held: { taskId: string; reason: string }[]; unmerged: string[]; undecided: string[] } {
+    for (const id of [...this.undecided]) if (tasksRepo.get(id)?.status !== 'in_review') this.undecided.delete(id)
+    return { paused: this.globalPaused, held: this.heldTasks(), unmerged: [...this.unmergedDone()], undecided: [...this.undecided] }
+  }
+
   /** Held tasks with the reason they wait. */
   heldTasks(): { taskId: string; reason: string }[] {
     return [...this.blocked].map((taskId) => ({ taskId, reason: this.heldWhy.get(taskId) ?? '' }))
@@ -346,6 +354,7 @@ class Orchestrator {
     for (const id of [...this.heldWhy.keys()]) if (!this.blocked.has(id)) this.heldWhy.delete(id)
     writeJson(HELD_KEY, [...this.blocked])
     writeJson(HELD_WHY_KEY, Object.fromEntries(this.heldWhy))
+    emit({ type: 'orchestrator:changed' })
   }
 
   get isPaused(): boolean {
@@ -458,6 +467,21 @@ class Orchestrator {
     }
   }
 
+  /** "What changed?" for a task, from git (worktree mode: its copy, or its merge commit). Null without git history. */
+  async changesOf(taskId: string): Promise<TaskChanges | null> {
+    const task = tasksRepo.get(taskId)
+    const project = task ? getProject(task.projectId) : null
+    if (!task || !project?.rootPath || project.isolation !== 'worktree') return null
+    const root = project.rootPath
+    const env = this.gitEnv()
+    try {
+      if (!(await isRepoRoot(root, env))) return null
+      return await serialized(root, () => taskChanges(root, this.worktreeDir(project.id, task.key), task.key, env))
+    } catch {
+      return null
+    }
+  }
+
   /** Is a finished task's branch still waiting to be merged (worktree mode)? */
   pendingMerge(taskId: string): boolean {
     const task = tasksRepo.get(taskId)
@@ -523,6 +547,7 @@ class Orchestrator {
       say('mergeFailed', { error: (e as Error).message.slice(0, 300) })
     }
     emit({ type: 'tasks:changed' })
+    emit({ type: 'orchestrator:changed' })
   }
 
   /** A deleted project's task copies go with it (`git worktree prune` makes the repository forget them). */
@@ -1408,7 +1433,7 @@ class Orchestrator {
       return
     }
     const copy = tasksRepo.create(
-      { title: task.title, description: task.description, priority: task.priority, assigneeId: rival.id, projectId: task.projectId, dependsOn: task.dependsOn, raceOf: task.id },
+      { title: task.title, description: task.description, priority: task.priority, assigneeId: rival.id, projectId: task.projectId, dependsOn: task.dependsOn, raceOf: task.id, acceptance: task.acceptance },
       t('orchestrator:race.by')
     )
     for (const id of filesRepo.linkedTo('task', task.id)) filesRepo.link(id, 'task', copy.id, 'attached')
@@ -1468,6 +1493,8 @@ class Orchestrator {
       if (!o || !c || o.status !== 'in_review' || c.status !== 'in_review') return // the user moved one meanwhile
       if (!v.valid || !v.winner) {
         for (const x of [o, c]) this.post(`task:${x.id}`, 'system', null, t('orchestrator:race.unclear', { lead: lead.name }), pid)
+        for (const x of [o, c]) this.undecided.add(x.id)
+        emit({ type: 'orchestrator:changed' })
         return
       }
       const [win, lose, winner] = v.winner === 'A' ? [o, c, a] : [c, o, b]
@@ -1683,7 +1710,8 @@ class Orchestrator {
       budget: 16_000
     })
     const rPrompt = reviewPrompt(task, worker, lastRun.output) + (produced.text ? '\n\n' + produced.text : '')
-    const rSystem = reviewSystem(lead)
+    const criteria = acceptanceList(task.acceptance)
+    const rSystem = reviewSystem(lead, criteria.length)
     this.log({
       ...leadCtx,
       level: 'prompt',
@@ -1709,11 +1737,23 @@ class Orchestrator {
         checkpoint: async () => undefined
       })
       if (aux.signal.aborted) return
-      const { approved, note, valid } = parseReview(result.text)
+      const verdict = parseReview(result.text)
+      // Acceptance criteria: each must be checked; an unmet one turns an approval into a revision.
+      const check = criteria.length ? judgeCriteria(criteria, verdict.criteria) : []
+      const valid = verdict.valid && check !== null
+      const unmet = (check ?? []).filter((c) => !c.met)
+      const approved = verdict.approved && !unmet.length
+      const note =
+        verdict.approved && unmet.length
+          ? `${verdict.note}\n${t('orchestrator:review.unmet', { list: unmet.map((c) => `${c.text}${c.note ? ` (${c.note})` : ''}`).join('; ') })}`
+          : verdict.note
+      if (check?.length) tasksRepo.update(taskId, { acceptanceCheck: check })
       if (!valid) {
         // No clear verdict: never counted as approved and not sent back either — the user decides.
         this.log({ ...leadCtx, level: 'warn', message: t('orchestrator:log.reviewUnclear', { key: task.key }) })
         this.post(`task:${taskId}`, 'system', null, t('orchestrator:chat.reviewUnclear', { lead: lead.name }), pid)
+        this.undecided.add(taskId)
+        emit({ type: 'orchestrator:changed' })
         return
       }
       this.log({ ...leadCtx, level: 'status', message: approved
@@ -1952,7 +1992,8 @@ class Orchestrator {
               priority: Math.max(0, Math.min(3, Number(p.priority ?? 1))) as 0 | 1 | 2 | 3,
               assigneeId: p.assignee ? memberByName(p.assignee) : null,
               projectId,
-              dependsOn
+              dependsOn,
+              acceptance: (Array.isArray(p.acceptance) ? p.acceptance.map(String) : typeof p.acceptance === 'string' ? [p.acceptance] : []).join('\n').slice(0, 4000)
             },
             agent.name
           )

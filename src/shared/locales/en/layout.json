@@ -108,5 +108,19 @@
     "noValidProjects": "No valid project to open",
     "someNotOpened_one": "{{count}} project couldn't be opened (deleted or archived)",
     "someNotOpened_other": "{{count}} projects couldn't be opened (deleted or archived)"
+  },
+  "needsYou": {
+    "button": "Needs you",
+    "title": "Needs you",
+    "desc": "Everything waiting for you, across your open projects.",
+    "empty": "Nothing waits for you right now.",
+    "approval": "{{agent}} asks to use {{target}}",
+    "runApproval": "{{agent}} waits for your OK to start",
+    "undecided": "The lead couldn't decide — your call",
+    "review": "Finished, waiting for your review",
+    "unmerged": "Done, not merged into the folder yet",
+    "held": "On hold: {{reason}}",
+    "heldNoReason": "On hold",
+    "agentError": "{{agent}} stopped with an error"
   }
 }

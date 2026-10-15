@@ -137,8 +137,10 @@ export interface Api {
   /** Worktree mode: merge a done task's branch now (true while it still waits, e.g. uncommitted changes in the folder). */
   'tasks:merge': (id: string) => boolean
   'tasks:mergePending': (id: string) => boolean
+  /** "What changed?" from git (worktree projects): files with +/- lines and the diff; null without git history. */
+  'tasks:changes': (id: string) => { files: { path: string; added: number; removed: number }[]; diff: string; truncated: boolean } | null
   'tasks:create': (input: TaskInput) => Task
-  'tasks:update': (id: string, patch: Partial<Pick<Task, 'title' | 'description' | 'priority' | 'assigneeId'>>) => Task
+  'tasks:update': (id: string, patch: Partial<Pick<Task, 'title' | 'description' | 'priority' | 'assigneeId' | 'acceptance'>>) => Task
   'tasks:move': (id: string, status: TaskStatus, sortOrder?: number) => Task
   'tasks:delete': (id: string) => void
   'tasks:start': (id: string) => void
@@ -291,7 +293,8 @@ export interface Api {
   // orchestrator
   'orchestrator:pauseAll': () => void
   'orchestrator:resumeAll': () => void
-  'orchestrator:state': () => { paused: boolean }
+  /** Pause state + what waits for the user: held tasks (with reason), done tasks not merged yet, reviews the lead left open. */
+  'orchestrator:state': () => { paused: boolean; held: { taskId: string; reason: string }[]; unmerged: string[]; undecided: string[] }
 }
 
 export type ApiMethod = keyof Api

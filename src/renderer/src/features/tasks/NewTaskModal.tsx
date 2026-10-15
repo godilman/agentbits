@@ -25,6 +25,7 @@ export function NewTaskModal() {
   const toast = useAppStore((s) => s.toast)
   const [title, setTitle] = useState('')
   const [description, setDescription] = useState('')
+  const [acceptance, setAcceptance] = useState('')
   const [priority, setPriority] = useState<0 | 1 | 2 | 3>(1)
   const [assigneeId, setAssigneeId] = useState<string | null>(null)
   const att = useAttachments(pid)
@@ -38,6 +39,7 @@ export function NewTaskModal() {
     if (open) {
       setTitle('')
       setDescription('')
+      setAcceptance('')
       setPriority(1)
       setAssigneeId(presetAssigneeId)
     }
@@ -48,7 +50,7 @@ export function NewTaskModal() {
     if (!pid) return
     if (att.uploading) return toast('error', t('tasks:new.uploading'))
     try {
-      const task = await call('tasks:create', { title, description, priority, assigneeId, projectId: pid, fileIds: att.readyIds })
+      const task = await call('tasks:create', { title, description, acceptance, priority, assigneeId, projectId: pid, fileIds: att.readyIds })
       att.clear()
       toast(
         'success',
@@ -95,6 +97,9 @@ export function NewTaskModal() {
         <div>
           <label className="label">{t('tasks:fields.description')}</label>
           <textarea className="textarea" rows={4} value={description} onChange={(e) => setDescription(e.target.value)} onPaste={drop.onPaste} placeholder={t('tasks:new.descriptionPlaceholder')} />
+          <label className="label mt-3">{t('tasks:fields.acceptance')}</label>
+          <textarea className="textarea" rows={2} value={acceptance} onChange={(e) => setAcceptance(e.target.value)} placeholder={t('tasks:new.acceptancePlaceholder')} />
+          <div className="mt-1 text-[11px] text-zinc-500">{t('tasks:new.acceptanceHint')}</div>
         </div>
         <div>
           <label className="label flex items-center gap-2">

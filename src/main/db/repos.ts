@@ -407,7 +407,9 @@ const mapTask = (r: Row): Task => ({
   completedAt: r.completed_at,
   dependsOn: JSON.parse(r.depends_on || '[]'),
   raceOf: r.race_of ?? null,
-  raceResult: r.race_result === 'won' || r.race_result === 'lost' ? r.race_result : null
+  raceResult: r.race_result === 'won' || r.race_result === 'lost' ? r.race_result : null,
+  acceptance: r.acceptance ?? '',
+  acceptanceCheck: r.acceptance_check ? JSON.parse(r.acceptance_check) : null
 })
 
 /** SQL condition: every dependency of the `tasks` row is done (a deleted dependency no longer blocks). */
@@ -521,8 +523,8 @@ export const tasksRepo = {
         db.prepare('SELECT COALESCE(MAX(sort_order), 0) + 1 AS o FROM tasks WHERE status = ?').get(status) as Row
       ).o
       db.prepare(
-        `INSERT INTO tasks(id, seq, key, title, description, status, priority, assignee_id, sort_order, created_by, project_id, depends_on, race_of)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+        `INSERT INTO tasks(id, seq, key, title, description, status, priority, assignee_id, sort_order, created_by, project_id, depends_on, race_of, acceptance)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
       ).run(
         id,
         seq,
@@ -536,7 +538,8 @@ export const tasksRepo = {
         createdBy,
         input.projectId ?? projectsRepo.defaultId(),
         JSON.stringify([...new Set(input.dependsOn ?? [])]),
-        input.raceOf ?? null
+        input.raceOf ?? null,
+        (input.acceptance ?? '').slice(0, 4000)
       )
     })()
     return this.get(id)!
@@ -553,13 +556,16 @@ export const tasksRepo = {
       reviewNote: 'review_note',
       startedAt: 'started_at',
       completedAt: 'completed_at',
-      raceResult: 'race_result'
+      raceResult: 'race_result',
+      acceptance: 'acceptance',
+      acceptanceCheck: 'acceptance_check'
     }
     const sets: string[] = []
     const vals: unknown[] = []
     for (const [k, col] of Object.entries(map)) {
-      const v = (patch as any)[k]
+      let v = (patch as any)[k]
       if (v === undefined) continue
+      if (k === 'acceptanceCheck') v = v === null ? null : JSON.stringify(v)
       sets.push(`${col} = ?`)
       vals.push(v)
     }

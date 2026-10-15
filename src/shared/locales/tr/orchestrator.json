@@ -259,5 +259,8 @@
     "failed": "{{count}} kez hata verdi: {{error}}",
     "revisionLimit": "Lider {{count}} kez geri gönderdi",
     "commitFailed": "Ajanın değişiklikleri çalışma kopyasında commit edilemedi (ör. git imzalama ayarı). Değişiklikler orada duruyor; git'i düzeltip görevi yeniden başlat."
+  },
+  "review": {
+    "unmet": "Karşılanmayan kabul kriterleri: {{list}}"
   }
 }

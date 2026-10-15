@@ -108,5 +108,19 @@
     "noValidProjects": "Açılacak geçerli proje yok",
     "someNotOpened_one": "{{count}} proje açılamadı (silinmiş ya da arşivde)",
     "someNotOpened_other": "{{count}} proje açılamadı (silinmiş ya da arşivde)"
+  },
+  "needsYou": {
+    "button": "Bana ihtiyaç var",
+    "title": "Bana ihtiyaç var",
+    "desc": "Açık projelerinde seni bekleyen her şey.",
+    "empty": "Şu an seni bekleyen bir şey yok.",
+    "approval": "{{agent}}, {{target}} kullanmak için izin istiyor",
+    "runApproval": "{{agent}} başlamak için onayını bekliyor",
+    "undecided": "Lider karar veremedi — karar senin",
+    "review": "Bitti, incelemeni bekliyor",
+    "unmerged": "Bitti, henüz klasöre birleştirilmedi",
+    "held": "Bekletiliyor: {{reason}}",
+    "heldNoReason": "Bekletiliyor",
+    "agentError": "{{agent}} bir hatayla durdu"
   }
 }

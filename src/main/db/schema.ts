@@ -620,6 +620,14 @@ const MIGRATIONS: { version: number; sql: string }[] = [
         vec BLOB NOT NULL
       );
     `
+  },
+  {
+    version: 16,
+    sql: `
+      -- Acceptance criteria (one per line) and the lead's check of each at the last review (JSON [{text, met, note}]).
+      ALTER TABLE tasks ADD COLUMN acceptance TEXT NOT NULL DEFAULT '';
+      ALTER TABLE tasks ADD COLUMN acceptance_check TEXT;
+    `
   }
 ]
 

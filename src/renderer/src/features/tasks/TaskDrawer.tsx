@@ -12,6 +12,7 @@ import { useProjectScope } from '@/lib/org'
 import { agentById, channelKey, useAppStore } from '@/store/useAppStore'
 import { useFileDrop } from '@/features/files/hooks'
 import { DropOverlay } from '@/features/files/parts'
+import { TaskChanges } from './TaskChanges'
 import { TaskFiles } from '@/features/files/TaskFiles'
 
 type Pane = 'thread' | 'logs' | 'runs'
@@ -31,6 +32,7 @@ export function TaskDrawer() {
   const [pane, setPane] = useState<Pane>('thread')
   const [title, setTitle] = useState('')
   const [desc, setDesc] = useState('')
+  const [acc, setAcc] = useState('')
   const [draft, setDraft] = useState('')
   const [history, setHistory] = useState<AgentLog[]>([])
   const [runs, setRuns] = useState<Run[]>([])
@@ -54,6 +56,7 @@ export function TaskDrawer() {
     if (!task) return
     setTitle(task.title)
     setDesc(task.description)
+    setAcc(task.acceptance)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [task?.id])
 
@@ -186,6 +189,31 @@ export function TaskDrawer() {
           onChange={(e) => setDesc(e.target.value)}
           onBlur={() => desc !== task.description && save({ description: desc })}
         />
+        <div>
+          <div className="mb-1 text-[11px] font-medium uppercase tracking-wide text-zinc-500">{t('tasks:fields.acceptance')}</div>
+          <textarea
+            className="textarea text-[12.5px]"
+            rows={Math.min(8, Math.max(2, acc.split('\n').length))}
+            placeholder={t('tasks:new.acceptancePlaceholder')}
+            value={acc}
+            onChange={(e) => setAcc(e.target.value)}
+            onBlur={() => acc !== task.acceptance && save({ acceptance: acc })}
+          />
+          {task.acceptanceCheck && task.acceptanceCheck.length > 0 && (
+            <ul className="mt-1.5 space-y-0.5 text-[12px]">
+              {task.acceptanceCheck.map((c, i) => (
+                <li key={i} className={cn('flex gap-1.5', c.met ? 'text-emerald-300' : 'text-rose-300')}>
+                  <span className="shrink-0">{c.met ? '✓' : '✗'}</span>
+                  <span>
+                    {c.text}
+                    {c.note && <span className="text-zinc-400"> — {c.note}</span>}
+                  </span>
+                </li>
+              ))}
+              <li className="text-[11px] text-zinc-500">{t('tasks:drawer.acceptanceChecked')}</li>
+            </ul>
+          )}
+        </div>
         {task.reviewNote && (
           <div className="rounded-md border border-amber-500/20 bg-amber-500/[0.06] px-3 py-2 text-[12px] text-amber-100/90">
             <span className="font-medium text-amber-300">{t('tasks:drawer.reviewNote')}</span>
@@ -193,6 +221,7 @@ export function TaskDrawer() {
           </div>
         )}
         <TaskFiles task={task} droppedFiles={dropped} />
+        <TaskChanges task={task} />
       </div>
 
       <div className="flex items-center justify-between px-4 pb-1 pt-3">

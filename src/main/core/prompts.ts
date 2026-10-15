@@ -1,5 +1,6 @@
 import type { Agent, AgentPermissions, Message, Task } from '@shared/types'
 import { describePermissions } from './permissions'
+import { acceptanceList } from '@shared/review'
 
 const PRIORITY = ['low', 'normal', 'high', 'urgent']
 
@@ -42,6 +43,9 @@ export function workerPrompt(task: Task, thread: Message[], names: Record<string
     `${task.key}: ${task.title}`,
     `Priority: ${PRIORITY[task.priority]}`,
     task.description ? `## Description\n${task.description}` : '',
+    acceptanceList(task.acceptance).length
+      ? `## Acceptance criteria (the lead checks each one before approving)\n${acceptanceList(task.acceptance).map((c, i) => `${i + 1}. ${c}`).join('\n')}`
+      : '',
     task.reviewNote ? `## Feedback from the previous review (address this!)\n${task.reviewNote}` : '',
     comments ? `## Task thread\n${comments}` : ''
   ]
@@ -89,6 +93,8 @@ export function leadSystem(lead: Agent, team: Agent[], board: Task[], memory: st
     '  Order: independent tasks run in parallel. When a task needs the result of another, add "after": [1, "TA-3"]',
     '  (1-based positions of EARLIER tasks in the same block, or keys of existing tasks). It starts once those are done,',
     '  and its assignee sees their reports. Do not chain tasks that can run side by side.',
+    '  Acceptance criteria: when the user states what "done" means (tests pass, a language, files not to touch…), add',
+    '  "acceptance": ["...", "..."] to the task; you will check each one when reviewing it.',
     '  Files: the files attached to the user\'s message go to every task you create. To give a task only',
     '  specific files, add "files": ["<file ref>", ...] to it ("files": [] for none). Assignees can only read the files given.',
     '- To pass a note, a correction or an answer to the team member working on a task, add a fenced block:',
@@ -112,11 +118,14 @@ export function leadPrompt(history: Message[], names: Record<string, string>, us
   return `## Conversation so far\n${h || '(empty)'}\n\n## User message\n${userMessage}`
 }
 
-export function reviewSystem(lead: Agent): string {
+export function reviewSystem(lead: Agent, criteria = 0): string {
   return [
     `You are ${lead.name}, reviewing a teammate's work as ${lead.role}.`,
     'Decide whether the work satisfies the task. Respond with ONLY a JSON object:',
-    '{"approved": true|false, "note": "one or two sentences of feedback in the task\'s language"}'
+    criteria
+      ? `{"approved": true|false, "note": "one or two sentences of feedback in the task's language", "criteria": [{"met": true|false, "note": "short reason"}, ...]}\n` +
+        `"criteria" has exactly ${criteria} entries, one per acceptance criterion, in order. Approve only if every criterion is met.`
+      : '{"approved": true|false, "note": "one or two sentences of feedback in the task\'s language"}'
   ].join('\n')
 }
 
@@ -135,7 +144,9 @@ export function racePrompt(task: Task, a: { agent: Agent; label: string; output:
 }
 
 export function reviewPrompt(task: Task, agent: Agent, output: string): string {
-  return `## Task\n${task.key}: ${task.title}\n${task.description}\n\n## Work report by ${agent.name}\n${output.slice(0, 12000)}`
+  const criteria = acceptanceList(task.acceptance)
+  const crit = criteria.length ? `\n\n## Acceptance criteria\n${criteria.map((c, i) => `${i + 1}. ${c}`).join('\n')}` : ''
+  return `## Task\n${task.key}: ${task.title}\n${task.description}${crit}\n\n## Work report by ${agent.name}\n${output.slice(0, 12000)}`
 }
 
 /* ───────────────────────── output parsing ───────────────────────── */
@@ -149,6 +160,8 @@ export interface PlannedTask {
   files?: string[]
   /** Must wait for: 1-based positions of earlier tasks in the same block, or keys of existing tasks ("TA-3"). */
   after?: unknown
+  /** Acceptance criteria (list or one per line). */
+  acceptance?: unknown
 }
 export interface PlannedDecision {
   title: string

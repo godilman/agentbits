@@ -137,6 +137,45 @@ export async function bringRootIn(root: string, wtDir: string, env: GitEnv): Pro
   return files
 }
 
+export interface TaskChanges {
+  files: { path: string; added: number; removed: number }[]
+  /** Unified diff, cut at 200 000 characters. */
+  diff: string
+  truncated: boolean
+}
+
+/**
+ * What a task changed, from git: while its working copy exists, the copy against where it branched off (uncommitted
+ * edits included); once merged, the merge commit "Merge <key>: …" in the project folder. Null when git has nothing.
+ */
+export async function taskChanges(root: string, wtDir: string | null, key: string, env: GitEnv): Promise<TaskChanges | null> {
+  let cwd = root
+  let range: string[]
+  if (wtDir && existsSync(wtDir)) {
+    const head = await git(root, ['rev-parse', 'HEAD'], env)
+    const base = head.ok ? await git(wtDir, ['merge-base', 'HEAD', head.out], env) : head
+    if (!base.ok) return null
+    cwd = wtDir
+    range = [base.out]
+  } else {
+    const c = await git(root, ['log', '--merges', '-n', '1', '--format=%H', `--grep=^Merge ${key}:`], env)
+    if (!c.ok || !c.out) return null
+    range = [`${c.out}^1`, c.out]
+  }
+  const stat = await git(cwd, ['diff', '--numstat', ...range], env)
+  if (!stat.ok) return null
+  const files = stat.out
+    .split('\n')
+    .filter(Boolean)
+    .map((l) => {
+      const [a, r, ...p] = l.split('\t')
+      return { path: p.join('\t'), added: Number(a) || 0, removed: Number(r) || 0 }
+    })
+  const patch = await git(cwd, ['diff', '--no-color', ...range], env)
+  const full = patch.ok ? patch.out : ''
+  return { files, diff: full.slice(0, 200_000), truncated: full.length > 200_000 }
+}
+
 /** No uncommitted or untracked changes in a working copy (a failed check counts as not clean). */
 export async function isClean(dir: string, env: GitEnv): Promise<boolean> {
   const r = await git(dir, ['status', '--porcelain'], env)

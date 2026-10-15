@@ -25,7 +25,15 @@
     "race": "Yarış",
     "raceWon": "Kazandı",
     "raceLost": "Kaybetti",
-    "raceHint": "Yarış modu: aynı görevde iki üye çalıştı; lider iyi olan denemeyi tutar."
+    "raceHint": "Yarış modu: aynı görevde iki üye çalıştı; lider iyi olan denemeyi tutar.",
+    "waitsMerge": "{{keys}} birleştirilmesi bekleniyor",
+    "waitsMergeHint": "Dayandığı görev bitti ama değişiklikleri henüz proje klasörüne birleştirilmedi (o görevi aç: \"Şimdi birleştir\").",
+    "held": "Bekletiliyor: {{reason}}",
+    "heldNoReason": "Bekletiliyor",
+    "heldHint": "Otopilot bekletilen görevi başlatmaz. Kendin başlat ya da Yapılacak'a geri taşı.",
+    "undecided": "Karar senin: lider karar veremedi",
+    "racePartner": "Yarış eşi {{key}} bekleniyor",
+    "notMerged": "Henüz klasöre birleştirilmedi"
   },
   "fields": {
     "title": "Başlık",
@@ -35,7 +43,8 @@
     "priority": "Öncelik",
     "assignee": "Atanan",
     "progress": "İlerleme",
-    "auto": "Otomatik"
+    "auto": "Otomatik",
+    "acceptance": "Kabul kriterleri"
   },
   "drawer": {
     "dropLabel": "{{key}} görevine ekle",
@@ -56,7 +65,8 @@
     "runTokens": "{{n}} tok",
     "notePlaceholder": "Göreve not ekle…",
     "mergeNow": "Şimdi birleştir",
-    "mergeHint": "Bu görevin dalını proje klasörüne birleştir (örneğin oradaki commit'lenmemiş değişiklikler yüzünden bekliyordu)."
+    "mergeHint": "Bu görevin dalını proje klasörüne birleştir (örneğin oradaki commit'lenmemiş değişiklikler yüzünden bekliyordu).",
+    "acceptanceChecked": "Liderin son incelemedeki kontrolü"
   },
   "new": {
     "title": "Yeni görev",
@@ -68,6 +78,16 @@
     "titlePlaceholder": "Ör. Ayarlar sayfasına tema seçici ekle",
     "descriptionPlaceholder": "Kabul kriterleri, bağlam, dosya yolları…",
     "filesHint": "görevi yapan ajan okuyabilir",
-    "noAgents": "Projede atanabilecek ajan yok — lider görevi kendisi dağıtır."
+    "noAgents": "Projede atanabilecek ajan yok — lider görevi kendisi dağıtır.",
+    "acceptancePlaceholder": "Her satıra bir tane, ör. Testler geçmeli · Arayüz metni Türkçe · db/ klasörüne dokunma",
+    "acceptanceHint": "İsteğe bağlı. Görevi alan görür; lider her birini tek tek kontrol eder, biri karşılanmazsa görevi geri gönderir."
+  },
+  "changes": {
+    "title": "Ne değişti?",
+    "summary_one": "{{count}} dosya",
+    "summary_other": "{{count}} dosya",
+    "showDiff": "Farkı göster",
+    "hideDiff": "Farkı gizle",
+    "truncated": "Fark daha uzun; gerisi burada kesildi."
   }
 }

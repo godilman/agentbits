@@ -51,6 +51,7 @@ export const IPC_SCHEMA = {
   'tasks:board': ['n'],
   'tasks:merge': ['s'],
   'tasks:mergePending': ['s'],
+  'tasks:changes': ['s'],
   'tasks:create': ['o'],
   'tasks:update': ['s', 'o'],
   'tasks:move': ['s', 's', 'n?'],

@@ -1,6 +1,6 @@
 /** Review verdict parsing: only a real boolean approves (security review 2026-10-13). Run: npm run test:unit */
 import assert from 'node:assert/strict'
-import { parseRaceVerdict, parseReview, pickRival } from '../src/shared/review.ts'
+import { acceptanceList, judgeCriteria, parseRaceVerdict, parseReview, pickRival } from '../src/shared/review.ts'
 
 const no = (text: string): void => assert.equal(parseReview(text).approved, false, text)
 assert.deepEqual(parseReview('Looks good.\n{"approved": true, "note": "ok"}'), { approved: true, note: 'ok', valid: true })
@@ -44,4 +44,13 @@ assert.equal(pickRival('anthropic||opus', []), null)
 assert.equal(pickRival('anthropic||opus', [c('a', 'anthropic||sonnet'), c('b', 'codex-cli||gpt')])?.id, 'b')
 assert.equal(pickRival('anthropic||opus', [c('a', 'anthropic||opus'), c('b', 'anthropic||sonnet')])?.id, 'b')
 assert.equal(pickRival('openai|https://x/v1|m', [c('a', 'openai|http://127.0.0.1:11434/v1|m')])?.id, 'a')
+// Acceptance criteria: list markers stripped; each criterion needs a real boolean check, in the right count.
+assert.deepEqual(acceptanceList('- Tests pass\n2) Turkish UI\n\n[x] don\'t touch db/\n'), ['Tests pass', 'Turkish UI', "don't touch db/"])
+const crit = ['Tests pass', 'Turkish UI']
+const v = parseReview('{"approved": true, "note": "ok", "criteria": [{"met": true}, {"met": false, "note": "English labels"}]}')
+assert.deepEqual(judgeCriteria(crit, v.criteria), [{ text: 'Tests pass', met: true, note: '' }, { text: 'Turkish UI', met: false, note: 'English labels' }])
+assert.equal(judgeCriteria(crit, undefined), null)
+assert.equal(judgeCriteria(crit, [{ met: true }]), null)
+assert.equal(judgeCriteria(crit, [{ met: true }, { met: 'yes' }]), null)
+assert.deepEqual(judgeCriteria([], undefined), null)
 console.log('review: verdict and race verdict parsing ok')

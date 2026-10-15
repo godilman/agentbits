@@ -259,5 +259,8 @@
     "failed": "Failed {{count}} times: {{error}}",
     "revisionLimit": "Sent back {{count}} times by the lead",
     "commitFailed": "The agent's changes could not be committed in its working copy (e.g. a git signing setting). They are kept there; fix git and start the task again."
+  },
+  "review": {
+    "unmet": "Acceptance criteria not met: {{list}}"
   }
 }

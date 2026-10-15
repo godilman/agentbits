@@ -457,8 +457,11 @@ export const mockAdapter: ProviderAdapter = {
       await sleep(rand(1500, 3000), ctx.signal)
       const approved = Math.random() < 0.85
       const kind = demoKind(ctx.prompt.split('\n## Work report by')[0])
+      // Acceptance criteria: one check per criterion (all met when approved, the first one missed otherwise).
+      const n = Number(/"criteria" has exactly (\d+) entries/.exec(ctx.system)?.[1] ?? 0)
       text = JSON.stringify({
         approved,
+        ...(n ? { criteria: Array.from({ length: n }, (_, i) => ({ met: approved || i > 0, note: '' })) } : {}),
         note: approved
           ? pick([t('demo:review.approved.r1'), t('demo:review.approved.r2'), t('demo:review.approved.r3')])
           : pick([t(`demo:kinds.${kind}.rejected1`), t(`demo:kinds.${kind}.rejected2`)])

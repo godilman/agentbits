@@ -216,7 +216,11 @@ const handlers: Handlers = {
     return t
   },
   'tasks:update': (id, patch) => {
-    const t = tasksRepo.update(id, patch)
+    // The window may only edit these; status, review and race fields belong to the orchestrator.
+    const p = patch as Record<string, unknown>
+    const allowed = Object.fromEntries(['title', 'description', 'priority', 'assigneeId', 'acceptance'].filter((k) => p[k] !== undefined).map((k) => [k, p[k]]))
+    if (typeof allowed.acceptance === 'string') allowed.acceptance = allowed.acceptance.slice(0, 4000)
+    const t = tasksRepo.update(id, allowed)
     emit({ type: 'tasks:changed' })
     return t
   },
@@ -240,6 +244,7 @@ const handlers: Handlers = {
     return orchestrator.pendingMerge(id)
   },
   'tasks:mergePending': (id) => orchestrator.pendingMerge(id),
+  'tasks:changes': (id) => orchestrator.changesOf(id),
   'tasks:delete': (id) => {
     const doomed = tasksRepo.get(id)
     if (doomed) void orchestrator.discardTaskBranch(doomed)
@@ -792,7 +797,7 @@ const handlers: Handlers = {
   /* orchestrator */
   'orchestrator:pauseAll': () => orchestrator.pauseAll(),
   'orchestrator:resumeAll': () => orchestrator.resumeAll(),
-  'orchestrator:state': () => ({ paused: orchestrator.isPaused })
+  'orchestrator:state': () => orchestrator.state()
 }
 
 /**

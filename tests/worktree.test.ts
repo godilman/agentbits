@@ -3,7 +3,7 @@ import assert from 'node:assert/strict'
 import { chmodSync, existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
-import { branchFor, bringRootIn, commitAll, ensureWorktree, git, isClean, isRepoRoot, mergeIntoRoot, removeWorktree } from '../src/main/core/worktree.ts'
+import { branchFor, bringRootIn, commitAll, ensureWorktree, git, isClean, isRepoRoot, mergeIntoRoot, removeWorktree, taskChanges } from '../src/main/core/worktree.ts'
 
 const base = mkdtempSync(join(tmpdir(), 'agentbits-wt-'))
 const env = { noHooksDir: join(base, 'nohooks') }
@@ -102,11 +102,18 @@ try {
   await assert.rejects(commitAll(wt('ta-5'), 'TA-5: work', author, env))
   assert.equal(await isClean(wt('ta-5'), env), false)
   assert.deepEqual(await mergeIntoRoot(root, branchFor('TA-5'), 'Merge TA-5', env), { status: 'nothing' })
+  // "What changed?" while the copy exists (staged by the failed commit attempt)
+  assert.deepEqual((await taskChanges(root, wt('ta-5'), 'TA-5', env))?.files, [{ path: 'c.txt', added: 1, removed: 0 }])
   await sh(root, 'config', '--unset', 'commit.gpgsign')
   assert.equal(await commitAll(wt('ta-5'), 'TA-5: work', author, env), true)
   assert.equal(await isClean(wt('ta-5'), env), true)
-  assert.deepEqual(await mergeIntoRoot(root, branchFor('TA-5'), 'Merge TA-5', env), { status: 'merged' })
+  assert.deepEqual(await mergeIntoRoot(root, branchFor('TA-5'), 'Merge TA-5: work', env), { status: 'merged' })
   assert.equal(readFileSync(join(root, 'c.txt'), 'utf8'), 'agent work\n')
+  // …and after the merge, from the merge commit
+  const merged = await taskChanges(root, null, 'TA-5', env)
+  assert.deepEqual(merged?.files, [{ path: 'c.txt', added: 1, removed: 0 }])
+  assert.match(merged!.diff, /\+agent work/)
+  assert.equal(await taskChanges(root, null, 'TA-99', env), null)
   console.log('worktree: parallel tasks isolated, merged, conflicts resolved in the task worktree, hooks never run')
 } finally {
   rmSync(base, { recursive: true, force: true })

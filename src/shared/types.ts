@@ -107,6 +107,16 @@ export interface Task {
   raceOf: string | null
   /** Race mode: the lead's comparison picked this attempt (`won`) or the other one (`lost`). */
   raceResult: 'won' | 'lost' | null
+  /** Acceptance criteria, one per line ('' = none): in the assignee's prompt and checked one by one in the lead's review. */
+  acceptance: string
+  /** The lead's check of each criterion at the last review (null = not reviewed against criteria). */
+  acceptanceCheck: CriterionCheck[] | null
+}
+
+export interface CriterionCheck {
+  text: string
+  met: boolean
+  note: string
 }
 
 export interface TaskInput {
@@ -123,6 +133,8 @@ export interface TaskInput {
   dependsOn?: string[]
   /** Race mode: this is a challenger copy of that task. */
   raceOf?: string | null
+  /** Acceptance criteria, one per line. */
+  acceptance?: string
 }
 
 export interface TaskListOpts {

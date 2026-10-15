@@ -33,6 +33,7 @@ import { shortPath } from '@/lib/org'
 import { useAppStore, type Tab } from '@/store/useAppStore'
 import { useGuideSteps } from '@/features/guide/GuideDrawer'
 import { useOpenFolder } from '@/features/project/ProjectLauncher'
+import { NeedsYouButton } from '@/features/inbox/NeedsYou'
 import { Logo } from '@/components/common/Logo'
 
 type TabDef = { id: Tab; readonly label: string; icon: ComponentType<{ size?: number; className?: string }>; key: string }
@@ -123,6 +124,7 @@ function ProjectStrip() {
       </nav>
 
       <div className="no-drag ml-auto flex shrink-0 items-center gap-1">
+        <NeedsYouButton />
         <GuideButton />
         <button
           onClick={() => void call(paused ? 'orchestrator:resumeAll' : 'orchestrator:pauseAll')}

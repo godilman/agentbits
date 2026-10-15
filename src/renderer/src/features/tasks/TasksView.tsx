@@ -1,6 +1,6 @@
 import { useMemo, useState, type DragEvent } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Hourglass, Loader2, MessageSquareWarning, Plus, Search, SquareKanban } from 'lucide-react'
+import { GitMerge, Hourglass, Loader2, MessageSquareWarning, PauseCircle, Plus, Search, SquareKanban, UserCheck } from 'lucide-react'
 import type { Task, TaskStatus } from '@shared/types'
 import { locale } from '@/i18n'
 import { PixelAvatar } from '@/components/common/PixelAvatar'
@@ -195,6 +195,24 @@ function TaskCard({ task, dragging, onDragStart, onDragEnd }: { task: Task; drag
           .join(', ')
       : ''
   )
+  // Concrete reasons a task doesn't move (strings, so the selectors return primitives).
+  const waitsMerge = useAppStore((s) =>
+    task.status === 'todo'
+      ? task.dependsOn
+          .filter((id) => s.orchestratorWaits.unmerged.includes(id))
+          .map((id) => s.tasks.find((x) => x.id === id)?.key ?? '')
+          .filter(Boolean)
+          .join(', ')
+      : ''
+  )
+  const heldWhy = useAppStore((s) => (task.status === 'todo' ? (s.orchestratorWaits.held[task.id] ?? null) : null))
+  const undecided = useAppStore((s) => task.status === 'in_review' && s.orchestratorWaits.undecided.includes(task.id))
+  const ownUnmerged = useAppStore((s) => task.status === 'done' && s.orchestratorWaits.unmerged.includes(task.id))
+  const racePartner = useAppStore((s) => {
+    if (task.status !== 'in_review' || task.raceResult) return ''
+    const p = task.raceOf ? s.tasks.find((x) => x.id === task.raceOf) : s.tasks.find((x) => x.raceOf === task.id)
+    return p && (p.status === 'todo' || p.status === 'in_progress') ? p.key : ''
+  })
 
   return (
     <div
@@ -236,6 +254,31 @@ function TaskCard({ task, dragging, onDragStart, onDragEnd }: { task: Task; drag
       {waitsFor && (
         <div className="mt-1.5 inline-flex items-center gap-1 rounded bg-sky-500/10 px-1.5 py-0.5 text-[10.5px] text-sky-300" title={t('tasks:card.waitsForHint')}>
           <Hourglass size={10} /> {t('tasks:card.waitsFor', { keys: waitsFor })}
+        </div>
+      )}
+      {waitsMerge && (
+        <div className="mt-1.5 inline-flex items-center gap-1 rounded bg-sky-500/10 px-1.5 py-0.5 text-[10.5px] text-sky-300" title={t('tasks:card.waitsMergeHint')}>
+          <GitMerge size={10} /> {t('tasks:card.waitsMerge', { keys: waitsMerge })}
+        </div>
+      )}
+      {heldWhy !== null && (
+        <div className="mt-1.5 flex items-start gap-1 rounded bg-amber-500/10 px-1.5 py-0.5 text-[10.5px] leading-snug text-amber-300" title={t('tasks:card.heldHint')}>
+          <PauseCircle size={10} className="mt-[2px] shrink-0" /> <span className="line-clamp-2">{heldWhy ? t('tasks:card.held', { reason: heldWhy }) : t('tasks:card.heldNoReason')}</span>
+        </div>
+      )}
+      {undecided && (
+        <div className="mt-1.5 inline-flex items-center gap-1 rounded bg-violet-500/10 px-1.5 py-0.5 text-[10.5px] text-violet-300">
+          <UserCheck size={10} /> {t('tasks:card.undecided')}
+        </div>
+      )}
+      {racePartner && (
+        <div className="mt-1.5 inline-flex items-center gap-1 rounded bg-orange-500/10 px-1.5 py-0.5 text-[10.5px] text-orange-300">
+          <Hourglass size={10} /> {t('tasks:card.racePartner', { key: racePartner })}
+        </div>
+      )}
+      {ownUnmerged && (
+        <div className="mt-1.5 inline-flex items-center gap-1 rounded bg-sky-500/10 px-1.5 py-0.5 text-[10.5px] text-sky-300" title={t('tasks:card.waitsMergeHint')}>
+          <GitMerge size={10} /> {t('tasks:card.notMerged')}
         </div>
       )}
       {(task.status === 'in_progress' || (task.progress > 0 && task.status !== 'done')) && (

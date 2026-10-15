@@ -25,7 +25,15 @@
     "race": "Race",
     "raceWon": "Won",
     "raceLost": "Lost",
-    "raceHint": "Race mode: two members worked on the same task; the lead keeps the better attempt."
+    "raceHint": "Race mode: two members worked on the same task; the lead keeps the better attempt.",
+    "waitsMerge": "Waits for {{keys}} to be merged",
+    "waitsMergeHint": "The task it builds on is done, but its changes aren't merged into the project folder yet (open that task: \"Merge now\").",
+    "held": "On hold: {{reason}}",
+    "heldNoReason": "On hold",
+    "heldHint": "Autopilot doesn't start held tasks. Start it yourself, or move it back to To do.",
+    "undecided": "Your decision: the lead couldn't decide",
+    "racePartner": "Waits for race partner {{key}}",
+    "notMerged": "Not merged into the folder yet"
   },
   "fields": {
     "title": "Title",
@@ -35,7 +43,8 @@
     "priority": "Priority",
     "assignee": "Assignee",
     "progress": "Progress",
-    "auto": "Automatic"
+    "auto": "Automatic",
+    "acceptance": "Acceptance criteria"
   },
   "drawer": {
     "dropLabel": "Add to {{key}}",
@@ -56,7 +65,8 @@
     "runTokens": "{{n}} tok",
     "notePlaceholder": "Add a note to the task…",
     "mergeNow": "Merge now",
-    "mergeHint": "Merge this task's branch into the project folder (it waited, e.g. because of uncommitted changes there)."
+    "mergeHint": "Merge this task's branch into the project folder (it waited, e.g. because of uncommitted changes there).",
+    "acceptanceChecked": "The lead's check at the last review"
   },
   "new": {
     "title": "New task",
@@ -68,6 +78,16 @@
     "titlePlaceholder": "e.g. Add a theme picker to the settings page",
     "descriptionPlaceholder": "Acceptance criteria, context, file paths…",
     "filesHint": "the agent doing the task can read them",
-    "noAgents": "No assignable agents in the project — the lead distributes the task itself."
+    "noAgents": "No assignable agents in the project — the lead distributes the task itself.",
+    "acceptancePlaceholder": "One per line, e.g. Tests pass · UI text in Turkish · Don't touch the db/ folder",
+    "acceptanceHint": "Optional. The assignee sees them; the lead checks each one and sends the task back if one isn't met."
+  },
+  "changes": {
+    "title": "What changed?",
+    "summary_one": "{{count}} file",
+    "summary_other": "{{count}} files",
+    "showDiff": "Show diff",
+    "hideDiff": "Hide diff",
+    "truncated": "The diff is longer; the rest is cut off here."
   }
 }

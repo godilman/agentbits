@@ -106,6 +106,8 @@ interface State {
   /** Bumped on `audit:changed`; audit views refetch. */
   auditVersion: number
   orchestratorPaused: boolean
+  /** Held tasks → reason; done tasks not merged yet; reviews the lead left to the user. */
+  orchestratorWaits: { held: Record<string, string>; unmerged: string[]; undecided: string[] }
   toasts: Toast[]
   memoryVersion: number
   /** Bumped on `files:changed`; file lists, chips and previews refetch. */
@@ -298,11 +300,18 @@ async function loadAll(): Promise<void> {
     activeProjectId: tabs.active,
     stats: tabs.active ? await call('stats:get', tabs.active) : null,
     orchestratorPaused: orch.paused,
+    orchestratorWaits: waitsOf(orch),
     launcher: { open: settings.onboarded && !restore, preselect: last.open.length ? (last.active ? [last.active, ...last.open.filter((x) => x !== last.active)] : last.open) : [] },
     ready: true
   })
   if (!unsubscribe) unsubscribe = bridge().on(handleEvent)
 }
+
+const waitsOf = (o: { held: { taskId: string; reason: string }[]; unmerged: string[]; undecided: string[] }): State['orchestratorWaits'] => ({
+  held: Object.fromEntries(o.held.map((h) => [h.taskId, h.reason])),
+  unmerged: o.unmerged,
+  undecided: o.undecided
+})
 
 export const useAppStore = create<State>((set, get) => ({
   ready: false,
@@ -342,6 +351,7 @@ export const useAppStore = create<State>((set, get) => ({
   approvals: [],
   auditVersion: 0,
   orchestratorPaused: false,
+  orchestratorWaits: { held: {}, unmerged: [], undecided: [] },
   toasts: [],
   memoryVersion: 0,
   filesVersion: 0,
@@ -427,7 +437,10 @@ export const useAppStore = create<State>((set, get) => ({
         return
       }
       case 'orchestrator':
-        return set({ orchestratorPaused: (await call('orchestrator:state')).paused })
+      {
+        const orch = await call('orchestrator:state')
+        return set({ orchestratorPaused: orch.paused, orchestratorWaits: waitsOf(orch) })
+      }
       case 'usage':
         return set({ usage: await call('usage:summary') })
       case 'skills':
@@ -578,7 +591,7 @@ function handleEvent(e: AppEvent): void {
     case 'providers:changed':
       return schedule('providers')
     case 'tasks:changed':
-      return schedule('tasks', 'stats')
+      return schedule('tasks', 'stats', 'orchestrator')
     case 'runs:changed':
       return schedule('runs', 'stats', 'usage')
     case 'usage:changed':
