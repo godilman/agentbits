@@ -10,7 +10,9 @@
     "addTask": "Görev ekle",
     "emptyColumn": "Boş",
     "emptyTitle": "Henüz görev yok",
-    "emptyHint": "Sol paneldeki sohbetten lidere bir iş tarif et ya da yeni görev ekle."
+    "emptyHint": "Sol paneldeki sohbetten lidere bir iş tarif et ya da yeni görev ekle.",
+    "loadOlder_one": "{{count}} eski görevi göster",
+    "loadOlder_other": "{{count}} eski görevi göster"
   },
   "card": {
     "priority": "Öncelik: {{label}}",

@@ -92,6 +92,7 @@ Kullanılan anahtarlar (`AppSettings`, varsayılanlar `shared/settingsRules.ts` 
 | `runMaxTokens` | number | `0` | Bir görev çalışmasının token tavanı (giriş + önbellek + çıkış, `token_usage`'dan); `0` = sınırsız |
 | `runMaxCostUsd` | number | `0` | Bir görev çalışmasının maliyet tavanı (yalnızca Claude Code bildirir); `0` = sınırsız |
 | `cliEnvPassthrough` | string[] | `[]` | Ajan CLI'larına ek olarak aktarılan ortam değişkeni adları (`agentEnv`); `SSH_AUTH_SOCK`, `NODE_OPTIONS`, `ELECTRON_RUN_AS_NODE` reddedilir |
+| `filesQuotaMb` | number | `5120` | Dosya deposunun (içerik adresli orijinaller, `sha256 <> ''`) en büyük boyutu, MB; aşan ekleme / `file_save` reddedilir. Proje klasörü dosyaları sayılmaz; `0` = sınırsız |
 
 ### `providers`
 | Sütun | Tip | Not |

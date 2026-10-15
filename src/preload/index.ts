@@ -10,11 +10,15 @@ const bridge: PreloadBridge = {
   },
   platform: process.platform,
   pathForFile: (file) => {
+    let path = ''
     try {
-      return webUtils.getPathForFile(file)
+      path = webUtils.getPathForFile(file)
     } catch {
       return ''
     }
+    // Only a real dropped / picked File has a path; main trusts it for files:add (security review #13).
+    if (path) ipcRenderer.sendSync('grant-path', path)
+    return path
   }
 }
 

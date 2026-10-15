@@ -34,6 +34,7 @@ import type {
   TaskInput,
   TaskListOpts,
   TaskPage,
+  TaskBoard,
   TaskStatus
 } from '@shared/types'
 import { redactDeep, redactSecrets } from '@shared/redact'
@@ -426,6 +427,24 @@ export const tasksRepo = {
   },
   listAll(): Task[] {
     return (getDb().prepare('SELECT * FROM tasks ORDER BY status, sort_order, seq').all() as Row[]).map(mapTask)
+  },
+  /** Every unfinished task + the newest `doneLimit` done tasks of each project, and how many are done per project. */
+  board(doneLimit: number): TaskBoard {
+    const db = getDb()
+    const open = db.prepare("SELECT * FROM tasks WHERE status <> 'done'").all() as Row[]
+    const done = db
+      .prepare(
+        `SELECT * FROM (
+           SELECT *, ROW_NUMBER() OVER (PARTITION BY project_id ORDER BY COALESCE(completed_at, updated_at) DESC, seq DESC) AS rn
+           FROM tasks WHERE status = 'done'
+         ) WHERE rn <= ?`
+      )
+      .all(doneLimit) as Row[]
+    const doneTotals: Record<string, number> = {}
+    for (const r of db.prepare("SELECT project_id AS p, COUNT(*) AS c FROM tasks WHERE status = 'done' GROUP BY project_id").all() as Row[]) {
+      doneTotals[r.p] = r.c
+    }
+    return { tasks: [...open, ...done].map(mapTask), doneTotals }
   },
   /** A project's tasks that are in review or done, most recently updated first (the lead's follow-up context). */
   recentlyFinished(projectId: string, limit: number): Task[] {
@@ -848,8 +867,17 @@ const mapReport = (r: Row): Report => ({
 })
 
 export const reportsRepo = {
-  list(): Report[] {
-    return (getDb().prepare('SELECT * FROM reports ORDER BY created_at DESC').all() as Row[]).map(mapReport)
+  list(perProject?: number): Report[] {
+    if (!perProject) return (getDb().prepare('SELECT * FROM reports ORDER BY created_at DESC').all() as Row[]).map(mapReport)
+    return (
+      getDb()
+        .prepare(
+          `SELECT * FROM (
+             SELECT *, ROW_NUMBER() OVER (PARTITION BY project_id ORDER BY created_at DESC) AS rn FROM reports
+           ) WHERE rn <= ? ORDER BY created_at DESC`
+        )
+        .all(perProject) as Row[]
+    ).map(mapReport)
   },
   create(r: Omit<Report, 'id' | 'createdAt'>): Report {
     const id = randomUUID()

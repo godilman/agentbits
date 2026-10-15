@@ -5,7 +5,7 @@ import { apiError, call } from '@/lib/api'
 import { useAppStore } from '@/store/useAppStore'
 import { Heading, Row } from './parts'
 
-type NumKey = 'runMaxMinutes' | 'runMaxTokens' | 'runMaxCostUsd'
+type NumKey = 'runMaxMinutes' | 'runMaxTokens' | 'runMaxCostUsd' | 'filesQuotaMb'
 
 /** A number setting saved when the field loses focus; empty or 0 = no limit. */
 function LimitInput({ k, step, suffix }: { k: NumKey; step: number; suffix: string }) {
@@ -92,6 +92,9 @@ export function LimitsSection() {
               </option>
             ))}
           </select>
+        </Row>
+        <Row title={t('settings:limits.privacy.quota')} desc={t('settings:limits.privacy.quotaDesc')}>
+          <LimitInput k="filesQuotaMb" step={512} suffix={t('settings:limits.unit.mb')} />
         </Row>
         <Row title={t('settings:limits.privacy.redact')} desc={t('settings:limits.privacy.redactDesc')}>
           <span className="text-[11.5px] text-emerald-300">{t('settings:limits.privacy.always')}</span>

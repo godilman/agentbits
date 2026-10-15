@@ -126,6 +126,11 @@ function ftsQuery(q: string): string | null {
 }
 
 export const filesRepo = {
+  /** Bytes of the stored originals (content-addressed: each content once; project-folder files are not stored). */
+  storedBytes(): number {
+    const r = getDb().prepare("SELECT COALESCE(SUM(size), 0) AS b FROM (SELECT sha256, MAX(size) AS size FROM files WHERE sha256 <> '' GROUP BY sha256)").get() as { b: number }
+    return r.b
+  },
   create(input: NewFile): FileRecord {
     const id = randomUUID()
     getDb()

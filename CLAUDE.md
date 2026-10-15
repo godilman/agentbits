@@ -71,7 +71,7 @@ Demo sağlayıcı iş türüne göre simülasyon (`shared/demoKind.ts`), paket s
 - **2026-10-15 sahibin onayladığı yol haritası** (fazlar sırayla, her faz sonunda doğrulama + belgeler + commit/push):
   Faz 1 ✅ temizlik → v0.1.1 · Faz 2 ✅ lider ↔ ajan iletişimi (sahibin kararı: **yalnızca lider** ajanlarla konuşur — görev verir,
   biten işleri ve notları görür, göreve not bırakır; ajanlar birbirleriyle doğrudan konuşmaz) · Faz 3 SECURITY.md'deki 🟡/⏳
-  maddeler (🚧: #03 #08 #18 #21 ✅; #13 IPC şeması + #27 kaldı) · Faz 4 OpenAI uyumlu uç nokta (Gemini, yerel modeller) + Codex bağlantı/dosya araçları · Faz 5 ajanların tarayıcı
+  maddeler ✅ (#02 OS yalıtımı ve #24 imza kodla kapanmaz, belgede) · Faz 4 OpenAI uyumlu uç nokta (Gemini, yerel modeller) + Codex bağlantı/dosya araçları · Faz 5 ajanların tarayıcı
   kullanması, özel rapor, özel GitHub skill, MCP kaynakları/istemleri · Faz 6 RTF/.doc/.xls + OCR · Faz 7 vektör hafıza +
   aynı klasörde çakışma yönetimi · ardından **yarış modu** (sahibin isteği: açılıp kapanabilen ayar, varsayılan kapalı; açıkken
   aynı görev farklı sağlayıcılardaki iki ajana paralel verilir, lider sonuçları karşılaştırıp birini seçer). Hedef sürüm v0.2.0.
@@ -185,8 +185,9 @@ Kurulum sorunları (Electron binary eksik, siyah pencere, execution policy, Clau
 ## En önemli kurallar ve tuzaklar
 
 1. **IPC sözleşmesi tek yerden yönetilir.** Yeni bir main çağrısı = `src/shared/ipc.ts`'deki `Api`'ye
-   imza ekle → `src/main/ipc.ts`'deki `handlers`'a handler ekle (`Handlers` tipi eksikte derlemeyi kırar)
-   → renderer'da `call('alan:eylem', ...args)`. `ipcRenderer`'ı doğrudan kullanmayın. Main hatalarını
+   imza ekle → `src/shared/ipcSchema.ts`'teki `IPC_SCHEMA`'ya argüman türlerini ekle (eksikse typecheck kırılır; main her
+   çağrıyı buna göre denetler) → `src/main/ipc.ts`'deki `handlers`'a handler ekle (`Handlers` tipi eksikte derlemeyi kırar)
+   → renderer'da `call('alan:eylem', ...args)`. Yerel yol alan metot `pathGrants.ts`'ten geçer (`assertPathsAllowed`). `ipcRenderer`'ı doğrudan kullanmayın. Main hatalarını
    kullanıcıya `apiError(e)` ile gösterin. Adım adım → [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md#4-ipc).
 2. **Main → renderer güncellemeleri** `emit({ type: '…:changed' })` ile gider (`units:changed`,
    `projects:changed`, `messages:changed` dahil); store bunları `schedule()` ile 120 ms'de birleştirip yeniden

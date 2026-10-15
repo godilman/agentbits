@@ -201,7 +201,8 @@
       "originalGone": "The file's original no longer exists (deleted or moved)",
       "originalGoneShort": "The file's original no longer exists",
       "unsafeOpen": ".{{ext}} files aren't opened directly for security reasons; download them with “Save as”",
-      "revealWorkspaceOnly": "Only files in the project folder can be shown"
+      "revealWorkspaceOnly": "Only files in the project folder can be shown",
+      "quota": "The file store is full ({{used}} MB of {{quota}} MB). Delete files you no longer need or raise the limit in Settings → Security and limits."
     },
     "largeNotExtracted": "Large file; content not extracted (open it from the folder)",
     "audit": {
@@ -385,6 +386,17 @@
     },
     "toast": {
       "approvalRequested": "{{agent}} wants to use {{tool}} on {{app}} — approve it in the bottom-left panel"
+    }
+  },
+  "paths": {
+    "title": "Allow access to a file?",
+    "allow": "Allow",
+    "deny": "Deny",
+    "denied": "Access to the file was not allowed.",
+    "message": {
+      "files": "Agentbits was asked to add files you didn’t pick or drop here. Add them?",
+      "skill": "Agentbits was asked to read a skill from a location you didn’t pick here. Read it?",
+      "sshKey": "This connection will read its SSH key from the file below whenever it connects. Allow?"
     }
   }
 }

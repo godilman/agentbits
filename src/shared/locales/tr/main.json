@@ -201,7 +201,8 @@
       "originalGone": "Dosyanın aslı artık yok (silinmiş ya da taşınmış)",
       "originalGoneShort": "Dosyanın aslı artık yok",
       "unsafeOpen": ".{{ext}} dosyaları güvenlik nedeniyle doğrudan açılmaz; “Farklı kaydet” ile indirin",
-      "revealWorkspaceOnly": "Yalnızca proje klasöründeki dosyalar gösterilebilir"
+      "revealWorkspaceOnly": "Yalnızca proje klasöründeki dosyalar gösterilebilir",
+      "quota": "Dosya deposu dolu ({{quota}} MB sınırın {{used}} MB'ı kullanılıyor). Gerekmeyen dosyaları sil ya da sınırı Ayarlar → Güvenlik ve sınırlar'dan yükselt."
     },
     "largeNotExtracted": "Büyük dosya; içerik çıkarılmadı (klasörden açın)",
     "audit": {
@@ -385,6 +386,17 @@
     },
     "toast": {
       "approvalRequested": "{{agent}}, {{app}} üzerinde {{tool}} aracını kullanmak için onay istiyor — sol alttaki panelden onayla"
+    }
+  },
+  "paths": {
+    "title": "Dosyaya erişime izin verilsin mi?",
+    "allow": "İzin ver",
+    "deny": "Reddet",
+    "denied": "Dosyaya erişime izin verilmedi.",
+    "message": {
+      "files": "Agentbits'ten burada seçmediğin ya da sürüklemediğin dosyaları eklemesi istendi. Eklensin mi?",
+      "skill": "Agentbits'ten burada seçmediğin bir konumdan skill okuması istendi. Okunsun mu?",
+      "sshKey": "Bu bağlantı her bağlanışta SSH anahtarını aşağıdaki dosyadan okuyacak. İzin verilsin mi?"
     }
   }
 }

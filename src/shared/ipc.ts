@@ -47,6 +47,7 @@ import type {
   TaskInput,
   TaskListOpts,
   TaskPage,
+  TaskBoard,
   TaskStatus,
   TerminalSession,
   FileDetail,
@@ -123,6 +124,8 @@ export interface Api {
 
   // tasks
   'tasks:list': (opts?: TaskListOpts) => TaskPage
+  /** Unfinished tasks + the newest `doneLimit` done tasks of each project (security review #27). */
+  'tasks:board': (doneLimit: number) => TaskBoard
   'tasks:create': (input: TaskInput) => Task
   'tasks:update': (id: string, patch: Partial<Pick<Task, 'title' | 'description' | 'priority' | 'assigneeId'>>) => Task
   'tasks:move': (id: string, status: TaskStatus, sortOrder?: number) => Task
@@ -236,7 +239,8 @@ export interface Api {
   'decisions:delete': (id: string) => void
 
   // reports
-  'reports:list': () => Report[]
+  /** Newest `perProject` reports of each project (all when omitted). */
+  'reports:list': (perProject?: number) => Report[]
   'reports:generateDaily': (projectId: string) => Report
   'reports:delete': (id: string) => void
   'stats:get': (projectId?: string) => Stats

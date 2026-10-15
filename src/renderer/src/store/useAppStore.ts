@@ -71,6 +71,14 @@ interface State {
   permissions: AgentPermissions[]
   /** Every project's tasks; views filter by `activeProjectId`. Same for runs, feed, decisions, reports. */
   tasks: Task[]
+  /** Done tasks per project in the database (the store holds the newest `DONE_WINDOW` unless expanded). */
+  doneTotals: Record<string, number>
+  /** Projects whose older done tasks the user loaded. */
+  fullDoneProjects: string[]
+  /** Reports kept per project (newest first); "Show older reports" raises it. */
+  reportsWindow: number
+  loadMoreReports: () => Promise<void>
+  loadAllDone: (projectId: string) => Promise<void>
   units: OrgUnit[]
   projects: Project[]
   templates: TeamTemplate[]
@@ -167,16 +175,28 @@ interface State {
   dismissToast: (id: number) => void
 }
 
-/** `tasks:list` is cursor-paged; the board needs every task, so walk all pages. */
-async function fetchAllTasks(): Promise<Task[]> {
-  const all: Task[] = []
-  let cursor: string | undefined
-  do {
-    const page = await call('tasks:list', { cursor, limit: 200 })
-    all.push(...page.items)
-    cursor = page.nextCursor ?? undefined
-  } while (cursor)
-  return all
+/** Done tasks kept per project; older ones load on request ("Load all" in the Done column). */
+export const DONE_WINDOW = 200
+/** Reports kept per project at first; each "Show older reports" adds this many. */
+const REPORTS_WINDOW = 300
+
+/**
+ * Unfinished tasks + the newest done tasks of each project; projects whose done tasks the user expanded get all of them
+ * (`tasks:list` is cursor-paged). Keeps memory and reloads bounded however many tasks pile up.
+ */
+async function fetchBoardTasks(fullDone: string[]): Promise<{ tasks: Task[]; doneTotals: Record<string, number> }> {
+  const board = await call('tasks:board', DONE_WINDOW)
+  const byId = new Map(board.tasks.map((x) => [x.id, x]))
+  for (const projectId of fullDone) {
+    if ((board.doneTotals[projectId] ?? 0) <= DONE_WINDOW) continue
+    let cursor: string | undefined
+    do {
+      const page = await call('tasks:list', { status: 'done', projectId, cursor, limit: 200 })
+      for (const x of page.items) byId.set(x.id, x)
+      cursor = page.nextCursor ?? undefined
+    } while (cursor)
+  }
+  return { tasks: [...byId.values()], doneTotals: board.doneTotals }
 }
 
 export interface ProjectDraft {
@@ -222,19 +242,19 @@ let flushTimer: ReturnType<typeof setTimeout> | null = null
 /** First load of everything (called by init; separate so a failed load can be retried). */
 async function loadAll(): Promise<void> {
   const set = useAppStore.setState
-  const [settings, providers, agents, permissions, tasks, activeRuns, recentRuns, feed, logs, decisions, reports, orch, units, projects, templates] =
+  const [settings, providers, agents, permissions, board, activeRuns, recentRuns, feed, logs, decisions, reports, orch, units, projects, templates] =
     await Promise.all([
       call('settings:get'),
       call('providers:list'),
       call('agents:list'),
       call('permissions:list'),
-      fetchAllTasks(),
+      fetchBoardTasks([]),
       call('runs:list', { activeOnly: true }),
       call('runs:list', { limit: 60 }),
       call('messages:list', undefined, 200),
       call('logs:list', { limit: 400 }),
       call('decisions:list'),
-      call('reports:list'),
+      call('reports:list', REPORTS_WINDOW),
       call('orchestrator:state'),
       call('units:list'),
       call('projects:list'),
@@ -263,7 +283,8 @@ async function loadAll(): Promise<void> {
     providers,
     agents,
     permissions,
-    tasks,
+    tasks: board.tasks,
+    doneTotals: board.doneTotals,
     activeRuns,
     recentRuns,
     feed,
@@ -290,6 +311,17 @@ export const useAppStore = create<State>((set, get) => ({
   agents: [],
   permissions: [],
   tasks: [],
+  doneTotals: {},
+  fullDoneProjects: [],
+  reportsWindow: REPORTS_WINDOW,
+  loadMoreReports: async () => {
+    const reportsWindow = get().reportsWindow + REPORTS_WINDOW
+    set({ reportsWindow, reports: await call('reports:list', reportsWindow) })
+  },
+  loadAllDone: async (projectId) => {
+    const fullDoneProjects = [...new Set([...get().fullDoneProjects, projectId])]
+    set({ fullDoneProjects, ...(await fetchBoardTasks(fullDoneProjects)) })
+  },
   units: [],
   projects: [],
   templates: [],
@@ -361,7 +393,7 @@ export const useAppStore = create<State>((set, get) => ({
       case 'providers':
         return set({ providers: await call('providers:list') })
       case 'tasks':
-        return set({ tasks: await fetchAllTasks() })
+        return set(await fetchBoardTasks(get().fullDoneProjects))
       case 'runs': {
         const [activeRuns, recentRuns] = await Promise.all([call('runs:list', { activeOnly: true }), call('runs:list', { limit: 60 })])
         return set({ activeRuns, recentRuns })
@@ -369,7 +401,7 @@ export const useAppStore = create<State>((set, get) => ({
       case 'decisions':
         return set({ decisions: await call('decisions:list') })
       case 'reports':
-        return set({ reports: await call('reports:list') })
+        return set({ reports: await call('reports:list', get().reportsWindow) })
       case 'settings':
         return set({ settings: await call('settings:get') })
       case 'stats': {

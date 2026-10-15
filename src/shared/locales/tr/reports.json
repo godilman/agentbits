@@ -21,7 +21,8 @@
     "kindDaily": "Günlük",
     "kindTask": "Görev raporu",
     "emptyTitle": "Henüz rapor yok",
-    "emptyHint": "Ajanlar görev bitirdikçe raporlar burada birikir. İstersen şimdi günlük rapor oluştur."
+    "emptyHint": "Ajanlar görev bitirdikçe raporlar burada birikir. İstersen şimdi günlük rapor oluştur.",
+    "showOlder": "Daha eski raporları göster"
   },
   "usage": {
     "title": "Token kullanımı",

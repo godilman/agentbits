@@ -4,6 +4,22 @@
 > `## YYYY-MM-DD — kısa başlık`, ardından **Eklendi / Değişti / Düzeltildi / Kaldırıldı / Bilinen** maddeleri
 > ve ilgili dosyalar.
 
+## 2026-10-15 — IPC şeması, yerel yol yetkisi, büyük veri (Faz 3, 2. kısım: #13, #27)
+
+### Eklendi
+- **#13 IPC şeması:** `src/shared/ipcSchema.ts` — 127 metodun her argümanının türü; `checkArgs` her çağrıyı denetler
+  (fazla argüman, yanlış tür, NaN → "geçersiz istek"). `satisfies Record<ApiMethod, …>`: şeması unutulan metot typecheck'i
+  kırar; `tests/ipcSchema.test.ts` `Api` ile birebir eşleşmeyi ve olumsuz örnekleri denetler. Yeni metot ekleme adımlarına
+  şema girdisi eklendi (CLAUDE.md kural 1, ARCHITECTURE §4.1).
+- **#13 yerel yollar** (`src/main/pathGrants.ts`): yol, main'in dosya penceresinden ya da preload'un gerçek bir sürüklenen /
+  seçilen `File`'dan ürettiği yoldan geldiyse kabul edilir (`grant-path`, 30 dk); başka bir yol için yerel onay penceresi.
+  Kapsam: `files:add`, `skills:preview` (yol), değişen SSH `keyPath`. Ele geçirilmiş bir renderer artık `~/.ssh/id_rsa`'yı
+  sessizce dosya deposuna alamaz.
+- **#27 büyük veri:** `tasks:board(doneLimit)` (bitmemişlerin hepsi + proje başına en yeni 200 bitmiş, pencere fonksiyonu) +
+  `doneTotals`; panoda "N eski görevi göster". `reports:list(perProject)` proje başına 300 + "Daha eski raporları göster".
+  Dosya deposu kotası `filesQuotaMb` (varsayılan 5 GB; `filesRepo.storedBytes()` içerik adresli, proje klasörü dosyaları hariç;
+  `addFromPaths`, `addFromBytes`, `file_save`). Sorgular bellekte SQLite ile denendi.
+
 ## 2026-10-15 — Güvenlik ve sınırlar (Faz 3, 1. kısım: #03, #08, #18, #21, #13'ün ayar kısmı)
 
 ### Eklendi

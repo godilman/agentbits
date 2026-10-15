@@ -270,7 +270,8 @@
     "none": "sınır yok",
     "unit": {
       "minutes": "dk",
-      "tokens": "token"
+      "tokens": "token",
+      "mb": "MB"
     },
     "run": {
       "title": "Görev çalışması başına",
@@ -287,7 +288,9 @@
       "auditDesc": "Bundan eski bağlantı ve uygulama çağrıları kendiliğinden silinir.",
       "redact": "Transkriptlerde sırları maskele",
       "redactDesc": "API anahtarları, token'lar, özel anahtarlar ve password=… değerleri transkript satırı kaydedilmeden önce maskelenir.",
-      "always": "Her zaman açık"
+      "always": "Her zaman açık",
+      "quota": "Dosya deposu sınırı",
+      "quotaDesc": "Ekler ve kaydedilen dosyalar uygulamanın veri klasörüne kopyalanır; bu boyutun ötesinde yeni dosya eklenmez. Proje klasörlerindeki dosyalar sayılmaz. Boş = sınır yok."
     },
     "env": {
       "title": "Ajan CLI'larının ortamı",

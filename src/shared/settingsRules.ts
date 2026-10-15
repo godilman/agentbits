@@ -59,11 +59,12 @@ export const DEFAULT_SETTINGS: AppSettings = {
   runMaxMinutes: 120,
   runMaxTokens: 0,
   runMaxCostUsd: 0,
-  cliEnvPassthrough: []
+  cliEnvPassthrough: [],
+  filesQuotaMb: 5120
 }
 
 /** Upper bounds of the number settings (0 = no limit / keep forever). */
-export const LIMIT_MAX = { runMaxMinutes: 24 * 60, runMaxTokens: 100_000_000, runMaxCostUsd: 10_000, auditRetentionDays: 3650, logRetentionDays: 3650 }
+export const LIMIT_MAX = { runMaxMinutes: 24 * 60, runMaxTokens: 100_000_000, runMaxCostUsd: 10_000, auditRetentionDays: 3650, logRetentionDays: 3650, filesQuotaMb: 1_000_000 }
 
 /** `invalid`: malformed patch (not something the UI sends); `envName`: a name that can't be passed to agents. */
 export class SettingsError extends Error {
@@ -112,6 +113,7 @@ export function validateSettingsPatch(patch: unknown): Partial<AppSettings> {
       case 'auditRetentionDays':
       case 'runMaxMinutes':
       case 'runMaxTokens':
+      case 'filesQuotaMb':
         out[k] = num(k, v)
         break
       case 'runMaxCostUsd':

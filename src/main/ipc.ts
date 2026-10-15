@@ -21,6 +21,8 @@ import {
 } from './db/repos'
 import { wouldCycle } from '@shared/org'
 import { SettingsError, validateSettingsPatch } from '@shared/settingsRules'
+import { assertPathsAllowed, grantPaths } from './pathGrants'
+import { argsMatch } from '@shared/ipcSchema'
 import { instantiateTemplate, listTemplates } from './core/templates'
 import { assertUsableFolder, folderStatus, inspectFolder } from './core/folders'
 import {
@@ -185,6 +187,7 @@ const handlers: Handlers = {
 
   /* tasks */
   'tasks:list': (opts) => tasksRepo.list(opts),
+  'tasks:board': (doneLimit) => tasksRepo.board(Math.max(1, Math.min(5000, Math.trunc(doneLimit)))),
   'tasks:create': (input) => {
     const { fileIds, ...rest } = input
     const t = tasksRepo.create(rest)
@@ -230,9 +233,11 @@ const handlers: Handlers = {
 
   /* connections */
   'connections:list': () => connectionsRepo.list(),
-  'connections:save': (input, id) => {
+  'connections:save': async (input, id) => {
     const before = id ? connectionsRepo.get(id) : null
     if (id && !before) throw new Error(t('main:connections.errors.notFound'))
+    // The key file is read when connecting: a new path needs the file dialog or the user's yes (security review #13).
+    if (typeof input.keyPath === 'string' && input.keyPath.trim() && input.keyPath !== before?.keyPath) await assertPathsAllowed([input.keyPath], 'sshKey')
     if (input.name !== undefined && !input.name.trim()) throw new Error(t('main:connections.errors.nameEmpty'))
     if (input.kind && !['ssh', 'postgres', 'mysql', 'mssql'].includes(input.kind)) throw new Error(t('main:connections.errors.invalidKind'))
     if (input.kind && before && input.kind !== before.kind) throw new Error(t('main:connections.errors.kindLocked'))
@@ -382,7 +387,10 @@ const handlers: Handlers = {
     if (!f || !f.text) throw new Error(t('main:skills.errors.notInstalled'))
     return decodeText(new Uint8Array(skillsRepo.file(id, path) ?? Buffer.alloc(0))).text.slice(0, 400_000)
   },
-  'skills:preview': (source) => previewSkills(source),
+  'skills:preview': async (source) => {
+    if (source?.type === 'path') await assertPathsAllowed([source.path], 'skill')
+    return previewSkills(source)
+  },
   'skills:install': (stagingId, keys) => {
     const out = installSkills(stagingId, keys)
     emit({ type: 'skills:changed' })
@@ -419,12 +427,14 @@ const handlers: Handlers = {
         ? { title: t('main:skills.dialogs.folder'), properties: ['openDirectory' as const] }
         : { title: t('main:skills.dialogs.file'), properties: ['openFile' as const], filters: [{ name: 'Skill', extensions: ['zip', 'md', 'markdown'] }] }
     const res = win ? await dialog.showOpenDialog(win, opts) : await dialog.showOpenDialog(opts)
+    if (!res.canceled) grantPaths(res.filePaths)
     return res.canceled ? null : (res.filePaths[0] ?? null)
   },
   'app:pickFile': async (title) => {
     const win = BrowserWindow.getFocusedWindow()
     const opts = { title: title ?? t('main:dialogs.pickFile'), properties: ['openFile' as const, 'showHiddenFiles' as const] }
     const res = win ? await dialog.showOpenDialog(win, opts) : await dialog.showOpenDialog(opts)
+    if (!res.canceled) grantPaths(res.filePaths)
     return res.canceled ? null : res.filePaths[0] ?? null
   },
   'instructions:list': (opts) => instructionsRepo.list(opts),
@@ -578,9 +588,13 @@ const handlers: Handlers = {
     const win = focusedDialogWindow()
     const opts = { title: t('main:dialogs.addFiles'), properties: ['openFile' as const, 'multiSelections' as const] }
     const res = win ? await dialog.showOpenDialog(win, opts) : await dialog.showOpenDialog(opts)
+    if (!res.canceled) grantPaths(res.filePaths)
     return res.canceled ? [] : res.filePaths.slice(0, MAX_FILES_PER_SEND)
   },
-  'files:add': (projectId, paths) => addFromPaths(projectId, paths),
+  'files:add': async (projectId, paths) => {
+    await assertPathsAllowed(paths, 'files')
+    return addFromPaths(projectId, paths)
+  },
   'files:addData': (projectId, name, data) => addFromBytes(projectId, name, data),
   'files:delete': (id) => deleteFile(id),
   'files:preview': (id, offset, limit) => preview(id, offset, limit),
@@ -670,7 +684,7 @@ const handlers: Handlers = {
   },
 
   /* reports */
-  'reports:list': () => reportsRepo.list(),
+  'reports:list': (perProject) => reportsRepo.list(perProject ? Math.max(1, Math.min(100_000, Math.trunc(perProject))) : undefined),
   'reports:generateDaily': (projectId) => orchestrator.generateDailyReport(projectId),
   'reports:delete': (id) => {
     reportsRepo.delete(id)
@@ -725,7 +739,7 @@ const handlers: Handlers = {
  * (file://…/renderer/index.html) or, in development, the Vite dev server. Web pages in the Browser section
  * (<webview>, own session, no preload) and sub-frames are refused.
  */
-function trustedSender(e: Electron.IpcMainInvokeEvent): boolean {
+function trustedSender(e: Electron.IpcMainInvokeEvent | Electron.IpcMainEvent): boolean {
   const frame = e.senderFrame
   if (!frame || frame !== e.sender.mainFrame) return false
   if (!BrowserWindow.fromWebContents(e.sender)) return false
@@ -747,6 +761,8 @@ function trustedSender(e: Electron.IpcMainInvokeEvent): boolean {
 const MAX_ARG_STRING = 20 * 1024 * 1024
 function checkArgs(method: string, args: unknown[]): void {
   if (args.length > 8) throw new Error(t('main:errors.badRequest'))
+  // Every method's arguments by kind (shared/ipcSchema.ts); the size and prototype checks below still apply.
+  if (!argsMatch(method, args)) throw new Error(t('main:errors.badRequest'))
   const visit = (v: unknown, depth: number): void => {
     if (depth > 12) throw new Error(t('main:errors.badRequest'))
     if (typeof v === 'string') {
@@ -795,6 +811,12 @@ function checkArgs(method: string, args: unknown[]): void {
 }
 
 export function registerIpc(): void {
+  // The preload reports paths of real dropped / picked files (see pathGrants.ts).
+  ipcMain.on('grant-path', (e, path: unknown) => {
+    const ok = trustedSender(e) && typeof path === 'string'
+    if (ok) grantPaths([path as string])
+    e.returnValue = ok
+  })
   ipcMain.handle('api', async (e, method: ApiMethod, ...args: unknown[]) => {
     if (!trustedSender(e)) throw new Error(t('main:errors.untrustedSender'))
     if (typeof method !== 'string' || !Object.prototype.hasOwnProperty.call(handlers, method)) throw new Error(`Unknown API method: ${String(method)}`)

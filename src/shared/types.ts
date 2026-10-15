@@ -125,6 +125,13 @@ export interface TaskPage {
   total: number
 }
 
+/** What the renderer keeps in memory: every unfinished task plus the newest done tasks of each project. */
+export interface TaskBoard {
+  tasks: Task[]
+  /** All done tasks per project id (the board shows how many older ones were left out). */
+  doneTotals: Record<string, number>
+}
+
 export type RunStatus = 'awaiting_approval' | 'running' | 'paused' | 'succeeded' | 'failed' | 'cancelled'
 
 export interface Run {
@@ -342,6 +349,8 @@ export interface AppSettings {
   runMaxCostUsd: number
   /** Extra environment variable names an agent CLI may inherit (see `shared/settingsRules.ts` → `agentEnv`). */
   cliEnvPassthrough: string[]
+  /** Disk quota of the file store in MB (stored originals; project-folder files don't count). 0 = none. */
+  filesQuotaMb: number
 }
 
 export interface TerminalSession {

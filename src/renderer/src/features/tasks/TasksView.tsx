@@ -16,6 +16,11 @@ export function TasksView() {
   const allTasks = useAppStore((s) => s.tasks)
   const { pid, project, team } = useProjectScope()
   const tasks = useMemo(() => allTasks.filter((x) => x.projectId === pid), [allTasks, pid])
+  // Only the newest done tasks are loaded (store DONE_WINDOW); the rest load on request.
+  const doneTotal = useAppStore((s) => (pid ? s.doneTotals[pid] ?? 0 : 0))
+  const loadAllDone = useAppStore((s) => s.loadAllDone)
+  const [loadingDone, setLoadingDone] = useState(false)
+  const hiddenDone = Math.max(0, doneTotal - tasks.filter((x) => x.status === 'done').length)
   /** Filter chips: project team plus anyone already assigned to a task here. */
   const allAgents = useAppStore((s) => s.agents)
   const agents = useMemo(() => {
@@ -73,7 +78,7 @@ export function TasksView() {
         <div>
           <h1 className="text-[15px] font-semibold text-zinc-100">{project ? t('tasks:board.titleWithProject', { project: project.name }) : t('tasks:board.title')}</h1>
           <div className="text-[11.5px] text-zinc-400">
-            {t('tasks:board.subtitle', { count: tasks.length })}
+            {t('tasks:board.subtitle', { count: tasks.length + hiddenDone })}
           </div>
         </div>
         <div className="ml-auto flex items-center gap-2">
@@ -124,7 +129,7 @@ export function TasksView() {
               <div className="flex items-center gap-2 px-3 py-2.5">
                 <span className={cn('h-2 w-2 rounded-sm', col.accent)} />
                 <span className="text-[12.5px] font-medium text-zinc-200">{col.label}</span>
-                <span className="font-mono text-[11px] text-zinc-400">{items.length}</span>
+                <span className="font-mono text-[11px] text-zinc-400">{col.id === 'done' && !query && !assignee ? items.length + hiddenDone : items.length}</span>
                 {col.id === 'todo' && (
                   <button className="icon-btn ml-auto" onClick={() => setNewTaskOpen(true)} title={t('tasks:board.addTask')}>
                     <Plus size={13} />
@@ -139,8 +144,21 @@ export function TasksView() {
                     setDragId(x.id)
                   }} onDragEnd={() => setDragId(null)} />
                 ))}
-                {items.length === 0 && (
+                {items.length === 0 && hiddenDone === 0 && (
                   <div className="rounded-md border border-dashed border-line-soft py-6 text-center text-[11.5px] text-zinc-400">{t('tasks:board.emptyColumn')}</div>
+                )}
+                {col.id === 'done' && hiddenDone > 0 && pid && (
+                  <button
+                    className="btn-outline h-7 w-full justify-center text-[11.5px]"
+                    disabled={loadingDone}
+                    onClick={() => {
+                      setLoadingDone(true)
+                      void loadAllDone(pid).finally(() => setLoadingDone(false))
+                    }}
+                  >
+                    {loadingDone ? <Loader2 size={12} className="animate-spin" /> : null}
+                    {t('tasks:board.loadOlder', { count: hiddenDone })}
+                  </button>
                 )}
               </div>
             </div>

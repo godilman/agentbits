@@ -21,7 +21,8 @@
     "kindDaily": "Daily",
     "kindTask": "Task report",
     "emptyTitle": "No reports yet",
-    "emptyHint": "Reports collect here as agents finish tasks. You can create a daily report now if you like."
+    "emptyHint": "Reports collect here as agents finish tasks. You can create a daily report now if you like.",
+    "showOlder": "Show older reports"
   },
   "usage": {
     "title": "Token usage",

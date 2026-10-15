@@ -199,6 +199,15 @@ agentbits/
   handler zorunludur**; eksik/yanlış imza `npm run typecheck`'i kırar. Handler senkron ya da `Promise`
   dönebilir. Bilinmeyen metot `Unknown API method` hatası fırlatır.
 - Renderer tarafında tek giriş `call()` (`src/renderer/src/lib/api.ts`), tam tipli.
+- **Çalışma anı denetimi (güvenlik #13, 2026-10-15):** `checkArgs` önce `argsMatch(method, args)` (`src/shared/ipcSchema.ts`):
+  her metodun argüman türleri (`s` / `n` / `b` / `o` / `S` / `A` / `u`, `|null`, `?`) ve fazla argüman yok. `IPC_SCHEMA`
+  `satisfies Record<ApiMethod, …>` olduğundan şeması olmayan metot typecheck'i kırar; `tests/ipcSchema.test.ts` `Api` ile
+  birebir eşleşmeyi denetler. Ardından boyut / `__proto__` / metoda özel denetimler. Derin nesne şekillerini handler'lar denetler
+  (ör. `settings:update` → `validateSettingsPatch`).
+- **Yerel yollar (`src/main/pathGrants.ts`):** renderer'dan gelen yol yalnızca main'in kendi dosya penceresinden
+  (`files:pick`, `app:pickFile`, `skills:pickSource`) ya da preload'un gerçek bir `File`'dan ürettiği yoldan
+  (`pathForFile` → senkron `grant-path` mesajı) geldiyse 30 dk geçerli sayılır. `files:add`, `skills:preview` (yol) ve
+  değişen SSH `keyPath`'i başka bir yol için **yerel onay penceresi** açar (renderer cevaplayamaz).
 - **`AppEvent`** birliği: `agents:changed`, `permissions:changed`, `providers:changed`, `tasks:changed`,
   `runs:changed`, `decisions:changed`, `reports:changed`, `memory:changed`, `settings:changed`,
   `orchestrator:changed`, `units:changed`, `projects:changed`, `messages:changed`, `usage:changed` (main'de 500 ms kısıtlı), `instructions:changed`, `connections:changed`, `approvals:changed`, `audit:changed`, `files:changed` (yalnızca "yeniden çek" sinyali), ayrıca yük taşıyanlar `message:new`, `log:new`,
@@ -209,12 +218,12 @@ agentbits/
 `settings:get|update`, `app:pickFolder|pickFile(title?)|info|openSupport|feedbackMail(kind, rating?)` (sabit adresler `src/shared/support.ts`; main yalnızca bu sabitlerden URL kurar) · `providers:list|save|delete|test|detectCli|models({ kind, providerId?, apiKey? })` (hesabın canlı model listesi; `src/main/providers/models.ts`, katalog `src/shared/models.ts`) ·
 `agents:list|save|delete|setStatus`, `permissions:list|update` ·
 `units:list|save|delete|addMember|removeMember`, `templates:list|instantiate` · `projects:list|save|delete|touch(ids)|folderStatus()|inspectFolder(path)` ·
-`tasks:list|create|update|move|delete|start` (`tasks:list` cursor sayfalıdır: `TaskListOpts` → `TaskPage`) ·
+`tasks:list|board(doneLimit)|create|update|move|delete|start` (`tasks:list` cursor sayfalıdır: `TaskListOpts` → `TaskPage`; `tasks:board` = bitmemiş görevlerin hepsi + her projenin en yeni `doneLimit` bitmiş görevi + `doneTotals`) ·
 `runs:list|pause|resume|stop|approve`, `logs:list({ runId?, taskId?, agentId?, projectId?, beforeId?, limit? })` ·
 `agents:instruct(InstructionInput)` (+ `fileIds`), `instructions:list({ agentId?, projectId?, limit? })` ·
 `usage:summary(projectId?)`, `usage:daily(days, projectId?)` · `messages:list(channel?, limit?, projectId?)|send(channel, content, projectId, opts?: SendOptions { fileIds, share })` ·
 `memory:list({agentId?, query?, limit?, projectId?})|add(content, kind, agentId?, projectId?)|delete` ·
-`decisions:list|save|delete` · `reports:list|generateDaily(projectId)|delete`, `stats:get(projectId?)` ·
+`decisions:list|save|delete` · `reports:list(perProject?)|generateDaily(projectId)|delete`, `stats:get(projectId?)` ·
 `connections:list|save(input, id?)|delete|test|schema(id, refresh?)|permissions|setPermission(connectionId, agentId, level)` ·
 `approvals:list|resolve(id, ok)` · `audit:list({ connectionId?, actorId?, result?, beforeId?, limit? })` (§9b) ·
 `skills:list|get|file(id, path)|preview(SkillSourceInput)|install(stagingId, keys)|saveMd(content, id?)|update|setEnabled|delete|assign(id, { type, id }, on)|forAgent(agentId)|pickSource('folder' | 'file')` (§9e) ·

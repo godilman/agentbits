@@ -15,6 +15,8 @@ const USAGE = '__usage'
 export function ReportsView() {
   const { t } = useTranslation(['common', 'reports'])
   const allReports = useAppStore((s) => s.reports)
+  const reportsWindow = useAppStore((s) => s.reportsWindow)
+  const loadMoreReports = useAppStore((s) => s.loadMoreReports)
   const stats = useAppStore((s) => s.stats)
   const agents = useAppStore((s) => s.agents)
   const refresh = useAppStore((s) => s.refresh)
@@ -120,6 +122,11 @@ export function ReportsView() {
                 </div>
               </button>
             ))}
+            {reports.length >= reportsWindow && (
+              <button className="btn-outline mt-1 h-7 w-full justify-center text-[11.5px]" onClick={() => void loadMoreReports()}>
+                {t('reports:list.showOlder')}
+              </button>
+            )}
           </div>
         </div>
         <div className="selectable min-w-0 flex-1 overflow-y-auto">

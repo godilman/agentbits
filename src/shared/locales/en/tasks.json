@@ -10,7 +10,9 @@
     "addTask": "Add task",
     "emptyColumn": "Empty",
     "emptyTitle": "No tasks yet",
-    "emptyHint": "Describe some work to the lead in the chat on the left, or add a new task."
+    "emptyHint": "Describe some work to the lead in the chat on the left, or add a new task.",
+    "loadOlder_one": "Show {{count}} older task",
+    "loadOlder_other": "Show {{count}} older tasks"
   },
   "card": {
     "priority": "Priority: {{label}}",

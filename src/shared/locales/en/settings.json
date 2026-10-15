@@ -270,7 +270,8 @@
     "none": "no limit",
     "unit": {
       "minutes": "min",
-      "tokens": "tokens"
+      "tokens": "tokens",
+      "mb": "MB"
     },
     "run": {
       "title": "Per task run",
@@ -287,7 +288,9 @@
       "auditDesc": "Connection and app calls older than this are deleted automatically.",
       "redact": "Mask secrets in transcripts",
       "redactDesc": "API keys, tokens, private keys and password=… values are masked before a transcript line is stored.",
-      "always": "Always on"
+      "always": "Always on",
+      "quota": "File store limit",
+      "quotaDesc": "Attachments and saved files are copied into the app’s data folder; adding more is refused past this size. Files in project folders don’t count. Empty = no limit."
     },
     "env": {
       "title": "Environment of agent CLIs",

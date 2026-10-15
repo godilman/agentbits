@@ -6,7 +6,7 @@ import { estimateTokens, extOfName, fileRef, kindFromName, kindLabel, MAX_FILE_B
 import { unitMemberIds } from '@shared/org'
 import { intlLocale } from '@shared/i18n'
 import { resources } from '@shared/locales'
-import { agentsRepo, messagesRepo, projectsRepo, runsRepo, tasksRepo, unitsRepo } from '../db/repos'
+import { agentsRepo, messagesRepo, projectsRepo, runsRepo, settingsRepo, tasksRepo, unitsRepo } from '../db/repos'
 import { instructionsRepo } from '../db/usage'
 import { emit } from '../events'
 import { currentLanguage, t } from '../i18n'
@@ -181,6 +181,16 @@ function assertProject(projectId: string): void {
   if (!projectsRepo.get(projectId)) throw new Error(t('main:errors.projectNotFound'))
 }
 
+/** Disk quota of the file store (Settings → Security and limits; 0 = none). Throws a user-facing error when exceeded. */
+function assertQuota(addBytes: number): void {
+  const quotaMb = settingsRepo.get().filesQuotaMb
+  if (!quotaMb) return
+  const used = filesRepo.storedBytes()
+  if (used + addBytes > quotaMb * 1048576) {
+    throw new Error(t('main:files.errors.quota', { used: (used / 1048576).toFixed(0), quota: quotaMb }))
+  }
+}
+
 /** Copies files from disk into the store; text extraction continues in the background. */
 export async function addFromPaths(projectId: string, paths: string[]): Promise<FileRecord[]> {
   assertProject(projectId)
@@ -194,6 +204,7 @@ export async function addFromPaths(projectId: string, paths: string[]): Promise<
       const st = statSync(p)
       if (!st.isFile()) throw new Error(t('main:files.errors.isFolder'))
       if (st.size > MAX_FILE_BYTES) throw new Error(t('main:files.errors.tooLarge', { size: (st.size / 1048576).toFixed(1), max: MAX_FILE_BYTES / 1048576 }))
+      assertQuota(st.size)
       const sha = await storeFile(p)
       const f = filesRepo.create({
         projectId,
@@ -228,6 +239,7 @@ export function addFromBytes(projectId: string, name: string, data: Uint8Array):
   if (!(data instanceof Uint8Array)) throw new Error(t('main:files.errors.invalidData'))
   if (data.byteLength > MAX_FILE_BYTES) throw new Error(t('main:files.errors.dataTooLarge', { max: MAX_FILE_BYTES / 1048576 }))
   const safe = safeFileName(name, t('main:files.pastedName'))
+  assertQuota(data.byteLength)
   const sha = storeBytes(data)
   const f = filesRepo.create({
     projectId,
@@ -682,6 +694,11 @@ export function toolFileSave(ctx: AgentCtx, name: string, content: string): Tool
   const key = ctx.runId ?? `${ctx.agentId}:${ctx.taskId}`
   const n = savesPerRun.get(key) ?? 0
   if (n >= MAX_SAVES_PER_RUN) return { text: `At most ${MAX_SAVES_PER_RUN} files per run.`, isError: true }
+  try {
+    assertQuota(bytes.byteLength)
+  } catch (e) {
+    return { text: `${(e as Error).message} (file_save)`, isError: true }
+  }
   savesPerRun.set(key, n + 1)
   const sha = storeBytes(bytes)
   const f = filesRepo.create({
