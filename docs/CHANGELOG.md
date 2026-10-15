@@ -4,6 +4,14 @@
 > `## YYYY-MM-DD — kısa başlık`, ardından **Eklendi / Değişti / Düzeltildi / Kaldırıldı / Bilinen** maddeleri
 > ve ilgili dosyalar.
 
+## 2026-10-15 — Test: SSH ile imzalanan makinede worktree testi
+
+### Düzeltildi
+- `tests/worktree.test.ts`, genel git ayarında `gpg.format=ssh` olan makinede yanlışlıkla düşüyordu (git `gpg.program`'ı yok
+  sayıp ssh-keygen ile imzalıyor, beklenen commit hatası gelmiyordu). Test artık `gpg.format=openpgp` ayarlıyor, sonra
+  `commit.gpgsign=false` yapıp biçimi kaldırıyor (genel `commit.gpgsign=true` da etkilemez). `GIT_CONFIG_GLOBAL` ile SSH
+  imzalı ayarda yeniden üretildi; düzeltmeden sonra o ayarla da temiz ayarla da geçiyor.
+
 ## 2026-10-15 — v0.4.0: graph hafıza, yarış düzeltmeleri, kesilen yanıtlar
 
 ### Eklendi

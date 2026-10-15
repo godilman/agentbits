@@ -98,13 +98,17 @@ try {
   await ensureWorktree(root, wt('ta-5'), branchFor('TA-5'), env)
   writeFileSync(join(wt('ta-5'), 'c.txt'), 'agent work\n')
   await sh(root, 'config', 'commit.gpgsign', 'true')
+  // openpgp explicitly: with a global gpg.format=ssh git would sign with ssh-keygen and ignore gpg.program.
+  await sh(root, 'config', 'gpg.format', 'openpgp')
   await sh(root, 'config', 'gpg.program', join(base, 'no-such-gpg'))
   await assert.rejects(commitAll(wt('ta-5'), 'TA-5: work', author, env))
   assert.equal(await isClean(wt('ta-5'), env), false)
   assert.deepEqual(await mergeIntoRoot(root, branchFor('TA-5'), 'Merge TA-5', env), { status: 'nothing' })
   // "What changed?" while the copy exists (staged by the failed commit attempt)
   assert.deepEqual((await taskChanges(root, wt('ta-5'), 'TA-5', env))?.files, [{ path: 'c.txt', added: 1, removed: 0 }])
-  await sh(root, 'config', '--unset', 'commit.gpgsign')
+  // false, not unset: a global commit.gpgsign=true would otherwise apply again.
+  await sh(root, 'config', 'commit.gpgsign', 'false')
+  await sh(root, 'config', '--unset', 'gpg.format')
   assert.equal(await commitAll(wt('ta-5'), 'TA-5: work', author, env), true)
   assert.equal(await isClean(wt('ta-5'), env), true)
   assert.deepEqual(await mergeIntoRoot(root, branchFor('TA-5'), 'Merge TA-5: work', env), { status: 'merged' })
