@@ -4,6 +4,12 @@
 > `## YYYY-MM-DD — kısa başlık`, ardından **Eklendi / Değişti / Düzeltildi / Kaldırıldı / Bilinen** maddeleri
 > ve ilgili dosyalar.
 
+## 2026-10-16 — v0.3.0 sürüm hazırlığı
+
+### Değişti
+- Sürüm **0.3.0**. README (EN + TR): "Bana ihtiyaç var", kabul kriterleri, "Ne değişti?". DEVELOPMENT §9.3: her sürümde site
+  sürüm notları sayfası (agentbits.app/releases) ve indirme verisi güncellenir.
+
 ## 2026-10-16 — "Bana ihtiyaç var", takılma nedenleri, kabul kriterleri, "Ne değişti?"
 
 ### Eklendi

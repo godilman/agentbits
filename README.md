@@ -12,7 +12,7 @@
   <a href="https://github.com/godilman/agentbits/actions/workflows/ci.yml"><img alt="CI" src="https://github.com/godilman/agentbits/actions/workflows/ci.yml/badge.svg"></a>
   <img alt="Platform: Windows" src="https://img.shields.io/badge/platform-Windows-0078D6?logo=windows&logoColor=white">
   <img alt="macOS: experimental" src="https://img.shields.io/badge/macOS-experimental-555?logo=apple&logoColor=white">
-  <img alt="Version 0.2.0" src="https://img.shields.io/badge/version-0.2.0-6366f1">
+  <img alt="Version 0.3.0" src="https://img.shields.io/badge/version-0.3.0-6366f1">
   <a href="LICENSE"><img alt="License: PolyForm Strict 1.0.0" src="https://img.shields.io/badge/license-PolyForm%20Strict%201.0.0-orange"></a>
   <a href="https://buymeacoffee.com/godilman"><img alt="Buy me a coffee" src="https://img.shields.io/badge/Buy%20me%20a%20coffee-%E2%98%95-FFDD00?logoColor=black"></a>
 </p>
@@ -59,7 +59,10 @@ own computer.
 - **Agent terminals.** A persistent transcript for every agent: what it was asked, which tools it used, and token
   counts. You can redirect an agent, queue an instruction or give it a new task from there. Real interactive shells
   (PowerShell / bash) are available too.
-- **Lead review, memory and decisions.** Finished work goes to the lead for review. Accepted decisions are stored as
+- **Needs you.** One list, in the top bar, of everything waiting for you: approvals, unmerged work, reviews the lead
+  couldn't decide, held tasks with their reason. Cards say why a task doesn't move.
+- **Lead review, memory and decisions.** Finished work goes to the lead for review, checked against the task's acceptance
+  criteria when it has them; "What changed?" shows the files and the diff. Accepted decisions are stored as
   ADR-style records, and a persistent project memory (SQLite FTS5) keeps context between runs. Optional semantic
   memory also finds notes by meaning, through your provider's embeddings (local with Ollama / LM Studio).
 - **Files.** Attach PDF, Word, Excel, PowerPoint (also the old .doc / .xls / .ppt and .rtf), CSV, Markdown, JSON, text
@@ -250,7 +253,7 @@ Found a vulnerability? Please report it privately, see [SECURITY.md](SECURITY.md
 
 ## Current limitations
 
-Agentbits is an early release (**v0.2.0**). It does not:
+Agentbits is an early release (**v0.3.0**). It does not:
 
 - update itself (install a newer version over the old one; your data is kept);
 - bundle or sign in to Claude Code / Codex CLI, or support providers that aren't OpenAI-compatible beyond the ones above;

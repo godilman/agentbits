@@ -22,11 +22,11 @@ yalnızca izin verilen **Bağlantılar** (SSH / PostgreSQL / MySQL / SQL Server)
 hissinde, koyu temalı, ajanların ne yaptığını canlı gösteren güvenli bir "yapay zeka şirketi ofisi".
 Ürün vizyonu → [docs/PROJECT.md](docs/PROJECT.md).
 
-Durum: **v0.2.0** (2026-10-15: kod ve belgeler hazır, Release taslağı sahibin denemesini bekliyor) — organizasyon, projeler
-ve tüm proje bölümleri çalışıyor; özellik durumu → [docs/FEATURES.md](docs/FEATURES.md). Depo herkese açık; yayımlanan son
-sürüm v0.1.0 (2026-10-14).
+Durum: **v0.3.0** (2026-10-16) — organizasyon, projeler ve tüm proje bölümleri çalışıyor; özellik durumu →
+[docs/FEATURES.md](docs/FEATURES.md). Depo herkese açık; yayımlanan sürümler v0.1.0 (2026-10-14), v0.2.0 (2026-10-15),
+v0.3.0 (2026-10-16). v0.1.1 GitHub'da taslak olarak kalır (sahibin kararı: arşiv, silinmez).
 
-## Güncel durum ve devir notu (son güncelleme: 2026-10-15)
+## Güncel durum ve devir notu (son güncelleme: 2026-10-16)
 
 > Önceki oturumların bağlamı burada özetlenir; yeni bir oturuma başlayan ajan bunu okuyarak devam edebilmelidir.
 > Ayrıntılar: [docs/CHANGELOG.md](docs/CHANGELOG.md) (en üstteki kayıtlar), [docs/SECURITY.md](docs/SECURITY.md),
@@ -75,7 +75,11 @@ Demo sağlayıcı iş türüne göre simülasyon (`shared/demoKind.ts`), paket s
   maddeler ✅ (#02 OS yalıtımı ve #24 imza kodla kapanmaz, belgede) · Faz 4 ✅ OpenAI uyumlu uç nokta (Gemini, Ollama, LM Studio) + Codex'e Agentbits araçları · Faz 5 ✅ ajanların web
   sayfası okuması (`web_fetch`), özel rapor, özel GitHub skill, MCP kaynakları/istemleri · Faz 6 ✅ RTF/.doc/.xls/.ppt + OCR · Faz 7 ✅ anlamsal hafıza (isteğe bağlı, ADR-027) +
   aynı klasörde çakışma yönetimi (worktree ile ✅) · **yarış modu ✅** (Ayarlar → Genel, varsayılan kapalı; ARCHITECTURE §6.7a). + **paylaşım ✅** (birim / takım / ajan `.agentbits` dışa-içe aktarma, GitHub bağlantısıyla kurulum; galeri ⏳ ayrıca konuşulacak). Sahip: hepsi bitince
-  tek seferde yayın (v0.2.0); v0.1.1 taslağı yayımlanmadı, yerine geçecek.
+  tek seferde yayın (v0.2.0 ✅ 2026-10-15).
+- **2026-10-16 v0.3.0** ✅: dış inceleme bulguları (commit hatasında iş kaybı, worktree yalıtımının sessizce kapanması,
+  birleşmemiş bağımlılık, bekletilenlerin kuyruğu tıkaması, eski karar hafızası, akış hataları) + "Bana ihtiyaç var",
+  kartta takılma nedeni, kabul kriterleri (v16), "Ne değişti?". ⏳ Sahiple konuşulacak: **graph hafıza** (rapor + mockup
+  hazırlandı, karar sahipte), paylaşım galerisi.
 - `docs/screenshots/tr/` ekran görüntüleri eski İngilizce sekme adlarını gösteriyor (Demo + boş veri klasörüyle yeniden çekilmeli).
 - `docs/SECURITY.md`'deki 🟡 / ⏳ maddeler (ör. büyük veride UI sayfalama) ve `docs/FEATURES.md` "Bilinen sorunlar".
 

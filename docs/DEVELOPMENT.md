@@ -389,6 +389,9 @@ Kurulum dosyasını kendi bilgisayarınızda derlemeniz **gerekmez**; GitHub Act
    etiket gönderemez, Release düzenleyemez / yayımlayamaz.
 3. Taslaktaki exe'yi indirip kurun, açılışı deneyin; notları yazın (v0.1.0'ın İngilizce notları örnek alınabilir) ve
    **Publish** deyin. README'ler `releases/latest`'e bağlıdır; sürüm numarası geçmediği için her sürümde değiştirmek gerekmez.
+4. **Site (agentbits_web), her sürümde:** `src/content/releases/{en,tr}.json`'ın en üstüne kullanıcı diliyle sürüm notu
+   (agentbits.app/releases); `src/i18n/download.ts` (`RELEASE`, boyut, tarih), docs `install.md`, SSS ve "Sürüm x" geçen yerler
+   yeni sürüme; JSON-LD `softwareVersion` (`src/layouts/Base.astro`). Site push'u yalnızca Release yayımlandıktan sonra.
 
 macOS paketi henüz doğrulanmadı: macOS işi düşse de Windows paketi başarılıysa taslak Release yine oluşur (yalnızca
 Windows dosyalarıyla). İlk çalıştırmada macOS, boş `CSC_LINK` yüzünden ("<repo> not a file") düşüyordu; düzeltildi

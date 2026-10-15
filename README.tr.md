@@ -12,7 +12,7 @@
   <a href="https://github.com/godilman/agentbits/actions/workflows/ci.yml"><img alt="CI" src="https://github.com/godilman/agentbits/actions/workflows/ci.yml/badge.svg"></a>
   <img alt="Platform: Windows" src="https://img.shields.io/badge/platform-Windows-0078D6?logo=windows&logoColor=white">
   <img alt="macOS: deneysel" src="https://img.shields.io/badge/macOS-deneysel-555?logo=apple&logoColor=white">
-  <img alt="Sürüm 0.2.0" src="https://img.shields.io/badge/s%C3%BCr%C3%BCm-0.2.0-6366f1">
+  <img alt="Sürüm 0.3.0" src="https://img.shields.io/badge/s%C3%BCr%C3%BCm-0.3.0-6366f1">
   <a href="LICENSE"><img alt="Lisans: PolyForm Strict 1.0.0" src="https://img.shields.io/badge/lisans-PolyForm%20Strict%201.0.0-orange"></a>
   <a href="https://buymeacoffee.com/godilman"><img alt="Buy me a coffee" src="https://img.shields.io/badge/Buy%20me%20a%20coffee-%E2%98%95-FFDD00?logoColor=black"></a>
 </p>
@@ -59,7 +59,10 @@ Hepsi tek pencerede, verilerin de kendi bilgisayarında kalır.
 - **Ajan terminalleri.** Her ajanın kalıcı bir dökümü olur: kendisine ne sorulduğu, hangi araçları kullandığı, kaç
   token harcadığı. Buradan ajanı yönlendirebilir, talimatı sıraya koyabilir ya da yeni görev verebilirsin. Gerçek
   etkileşimli kabuklar (PowerShell / bash) da var.
-- **Lider incelemesi, hafıza ve kararlar.** Biten iş liderin incelemesine gider. Kabul edilen kararlar ADR tarzında
+- **Bana ihtiyaç var.** Üst barda, seni bekleyen her şeyin tek listesi: onaylar, birleştirilmemiş işler, liderin karar
+  veremediği incelemeler, nedeniyle bekletilen görevler. Kart, görevin neden ilerlemediğini söyler.
+- **Lider incelemesi, hafıza ve kararlar.** Biten iş liderin incelemesine gider; görevin kabul kriterleri varsa her biri
+  kontrol edilir, "Ne değişti?" dosyaları ve farkı gösterir. Kabul edilen kararlar ADR tarzında
   kaydedilir, kalıcı proje hafızası (SQLite FTS5) da bağlamı çalışmalar arasında korur. İsteğe bağlı anlamsal hafıza,
   sağlayıcının embedding'iyle notları anlamıyla da bulur (Ollama / LM Studio ile yerelde).
 - **Dosyalar.** Sohbetlere, görevlere ve talimatlara PDF, Word, Excel, PowerPoint (eski .doc / .xls / .ppt ve .rtf de),
@@ -253,7 +256,7 @@ Bir güvenlik açığı mı buldun? Lütfen gizli olarak bildir: [SECURITY.md](S
 
 ## Mevcut sınırlamalar
 
-Agentbits erken bir sürümdür (**v0.2.0**). Şunları yapmaz:
+Agentbits erken bir sürümdür (**v0.3.0**). Şunları yapmaz:
 
 - kendini güncellemek (yeni sürümü eskisinin üzerine kurarsın, verilerin korunur);
 - Claude Code / Codex CLI'ı içermek ya da onlarda oturum açmak; yukarıdakiler dışında OpenAI uyumlu olmayan sağlayıcıları
