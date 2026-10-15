@@ -24,7 +24,7 @@ hissinde, koyu temalı, ajanların ne yaptığını canlı gösteren güvenli bi
 
 Durum: **v0.4.0** (2026-10-15) — organizasyon, projeler ve tüm proje bölümleri çalışıyor; özellik durumu →
 [docs/FEATURES.md](docs/FEATURES.md). Depo herkese açık; yayımlanan sürümler v0.1.0 (2026-10-14), v0.2.0 (2026-10-15),
-v0.3.0 (2026-10-15), v0.4.0 (2026-10-15). v0.1.1 GitHub'da taslak olarak kalır (sahibin kararı: arşiv, silinmez).
+v0.3.0 (2026-10-15), v0.4.0 (2026-10-15). v0.1.1 taslağı yayımlanmadı; sahibin isteğiyle 2026-10-15'te silindi.
 
 ## Güncel durum ve devir notu (son güncelleme: 2026-10-15)
 
