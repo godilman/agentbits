@@ -96,8 +96,8 @@ export function MemoryGraphView() {
         let dy = p.y - o.y
         let d2 = dx * dx + dy * dy
         if (d2 < 0.01) (dx = Math.random() - 0.5), (dy = Math.random() - 0.5), (d2 = 0.25)
-        if (d2 > 90_000) continue
-        const f = (700 * a) / d2
+        if (d2 > 160_000) continue
+        const f = (1600 * a) / d2
         p.vx += dx * f
         p.vy += dy * f
         o.vx -= dx * f
@@ -111,7 +111,7 @@ export function MemoryGraphView() {
       const dx = d.x - s.x
       const dy = d.y - s.y
       const dist = Math.sqrt(dx * dx + dy * dy) || 1
-      const f = ((dist - (e.kind === 'supersedes' ? 45 : 70)) / dist) * 0.06 * a
+      const f = ((dist - (e.kind === 'supersedes' ? 55 : 95)) / dist) * 0.06 * a
       s.vx += dx * f
       s.vy += dy * f
       d.vx -= dx * f
@@ -148,7 +148,7 @@ export function MemoryGraphView() {
     const v = view.current
     if (autoFit.current && nodes.current.length) {
       let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity
-      for (const n of nodes.current) (x0 = Math.min(x0, n.x)), (y0 = Math.min(y0, n.y)), (x1 = Math.max(x1, n.x + 12 + Math.min(n.label.length, 42) * 6)), (y1 = Math.max(y1, n.y))
+      for (const n of nodes.current) (x0 = Math.min(x0, n.x)), (y0 = Math.min(y0, n.y)), (x1 = Math.max(x1, n.x + 16 + Math.min(n.label.length, 42) * 7.2)), (y1 = Math.max(y1, n.y))
       v.k = Math.max(0.25, Math.min(1.8, (w - 80) / (x1 - x0 || 1), (h - 140) / (y1 - y0 || 1)))
       v.x = -((x0 + x1) / 2) * v.k
       v.y = -((y0 + y1) / 2) * v.k + 20
@@ -191,7 +191,7 @@ export function MemoryGraphView() {
         g.lineWidth = 2 / v.k
         g.stroke()
       }
-      const label = n.type !== 'memory' || v.k > 1.3 || ns.length <= 30 || n.id === focus || near.has(n.id) || (!!q && matches(n))
+      const label = n.type !== 'memory' || v.k > 1.3 || n.id === focus || near.has(n.id) || (!!q && matches(n))
       if (label) {
         const text = n.type === 'you' ? t('org:memory.you') : n.label.length > 42 ? n.label.slice(0, 41) + '…' : n.label
         g.font = `${(n.type === 'memory' ? 10.5 : 11.5) / v.k}px system-ui, sans-serif`

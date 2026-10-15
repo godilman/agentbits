@@ -4,6 +4,55 @@
 > `## YYYY-MM-DD — kısa başlık`, ardından **Eklendi / Değişti / Düzeltildi / Kaldırıldı / Bilinen** maddeleri
 > ve ilgili dosyalar.
 
+## 2026-10-15 — v0.4.0: graph hafıza, yarış düzeltmeleri, kesilen yanıtlar
+
+### Eklendi
+- **Graph hafıza** (ADR-028, migration v17): hatıralar konulara, öğrenildiği sohbete, göreve, karara ve ajana bağlı;
+  "yerini aldı" (`superseded_by`) eskiyen hatırayı geçmiş olarak tutar, ajanlara göndermez. Geri çağırma bulduklarının
+  konularından bir adım komşuyu da ekler; isteme giren hafıza 2800 karakterlik bütçeyle sınırlı.
+- **"Seni tanıyorum" profili:** organizasyon geneli tercihler her ajanın istemine "About the user" olarak girer.
+- **Sohbetten öğrenme:** ajan kullanıcının mesajından kalıcı bir şey öğrenirse yanıtına ```` ```learn ```` bloğu ekler
+  (ek model çağrısı yok). Varsayılan "Önce bana sor" (mesajın altında, "Bana ihtiyaç var"da ve Hafıza sekmesinde
+  Kaydet / Kaydetme); "Kendin karar ver" ve "Kapalı" (`settings.memoryLearn`). Görev çıktıları, incelemeler ve dosyalar
+  öğrenme üretemez.
+- **Organizasyon → Hafıza:** graf (canvas, filtreler, arama, düğüm ayrıntısı, düzenle / unut), liste (arama, tür filtresi,
+  ekle, düzenle, unut), profil kartı, onay bekleyenler, öğrenme ayarı. Üst barda hafıza kısayolu (onay bekleyen sayısıyla).
+- **"Neyi hatırladım" izleri:** sohbet yanıtının altında "Hatırladıklarım", görevde "Bu görev neyi biliyordu?"
+  (`runs.recalled`, mesaj meta'sı `recalled`).
+- Demo sağlayıcı "bundan sonra / her zaman …" cümlelerinden öğrenme önerisi üretir.
+
+### Düzeltildi
+- **Yarışta bağımlı görev erken başlayabiliyordu:** rakip kazanıp henüz birleştirilmemişken, asıl (kaybeden) göreve bağlı
+  iş başlıyordu. Artık kazananın birleştirilmesini bekler (`mergeBlockers`); kart kazananın anahtarını gösterir.
+- **Yarışta kabul kriterleri denetlenmiyordu:** kriterler karşılaştırma istemine girer, lider her deneme için tek tek
+  işaretler; yalnız hepsini karşılayan kazanır. İkisi de olmadıysa (`"none"` ya da seçilen bir kriteri kaçırdıysa) asıl
+  görev nedeniyle geri gönderilir, kopya kapanır; eksik / bozuk kontrol = karar kullanıcıda.
+- **Token sınırında kesilen yanıt başarı sayılıyordu:** OpenAI uyumlu `finish_reason: length`, Anthropic
+  `stop_reason: max_tokens` ve 16 araç turu sınırı görev / incelemede hata; sohbette metin "kesildi" notuyla kalır
+  (`cutShort`).
+- Uygulama ekle menüsünün arka planı yoktu (tanımsız `bg-surface-1`).
+- Hafıza temizliği ve sıfırlama yeni tabloları da temizler; yerini alanı silinen hatıra yeniden geçerli olur.
+- Doğrudan mesajdan yazılan sohbet hatırası ham kanal kimliğini gösteriyordu (`User (agent:05bb…)`); artık `@Ajan` /
+  `#general`. Graf karar düğümü uygulamanın geri kalanı gibi `ADR-n` yazar.
+- Organizasyon başlığında yeni sekmeyle düğmeler iki satıra kayıyordu ("Şablondan kur" dar ekranda yalnız simge).
+
+### Değişti
+- Hafıza listesi Ayarlar'dan Organizasyon → Hafıza'ya taşındı; Ayarlar → Hafıza'da anlamsal hafıza ve öğrenme ayarı kaldı.
+- Sürüm **0.4.0**.
+
+### Doğrulandı
+- `tests/memoryGraph.test.ts`, `tests/review.test.ts` (yarış kararı `"none"` ve deneme başına kriterler).
+- Gerçek SQLite + sahte sağlayıcı ile uçtan uca: yarış bağımlılığı, yarış kriterleri (kazanan / ikisi de olmadı / kontrol
+  eksik), token sınırı (görev, inceleme, sohbet; OpenAI ve Anthropic) — üçü de eski kodla **düştü**, yenisiyle geçti.
+  Graph hafıza: profil, konu komşusu, Türkçe büyük/küçük harf ("Ödeme" = "ödeme" — test bunu yakaladı, düzeltildi), yerini
+  alma ve geri dönme, bütçe, graf, sohbetten öneri → kabul, `replaces`, auto / off modları, **görev raporundaki öğrenme
+  bloğunun yok sayılması**, temizlik.
+- Arayüz sahte köprüyle tarayıcıda ekran görüntüsüyle denetlendi (sohbet izi + öneri kartı, graf + düğüm paneli, liste,
+  görev çekmecesi, uygulama menüsü).
+- **Ekran görüntüleri yeniden çekildi** (`docs/screenshots/` + `tr/`, yeni `memory.png`): gerçek arka uç (orkestratör, Demo
+  sağlayıcı, SQLite) Electron'suz Node'da, arayüz tarayıcıda; proje yolu `/home/demo/...`, kişisel veri yok. TR görüntüler
+  artık Türkçe sekme adlarını gösteriyor.
+
 ## 2026-10-15 — v0.3.0 sürüm hazırlığı
 
 ### Değişti

@@ -5,7 +5,7 @@ import type { BackupInfo, DataPart, DataUsage, ProjectUsage, ResetMode } from '@
 import Database from 'better-sqlite3'
 import { closeDb, getDb, getDbPath } from '../db'
 import { LATEST_SCHEMA } from '../db/schema'
-import { projectsRepo, settingsRepo } from '../db/repos'
+import { memoriesRepo, projectsRepo, settingsRepo } from '../db/repos'
 import { emit } from '../events'
 import { terminals } from '../terminal/manager'
 import { orchestrator } from './orchestrator'
@@ -152,6 +152,7 @@ export async function clearProject(
     }
     // Attachments: rows (chunks, links, access cascade); originals go below unless a backup still needs them.
     if (want.has('files')) run('DELETE FROM files WHERE project_id = ?', projectId)
+    if (want.has('memories')) memoriesRepo.tidy()
   })()
   if (want.has('files')) gcQuietly()
   compact()
@@ -163,6 +164,9 @@ export function clearOrgMemory(opts: { keepDecisions: boolean }): { deleted: num
   const deleted = getDb()
     .prepare(`DELETE FROM memories WHERE project_id IS NULL ${opts.keepDecisions ? "AND kind <> 'decision'" : ''}`)
     .run().changes
+  // Learned suggestions are organization-wide too.
+  getDb().prepare('DELETE FROM memory_suggestions').run()
+  memoriesRepo.tidy()
   compact()
   emit({ type: 'memory:changed' })
   return { deleted }
@@ -342,7 +346,7 @@ export async function factoryReset(mode: ResetMode): Promise<{ backup: BackupInf
     for (const t of tables) db.prepare(`DELETE FROM ${t}`).run()
   }
   db.transaction(() => {
-    wipe(['agent_logs', 'agent_instructions', 'token_usage', 'file_access', 'file_links', 'file_chunks', 'files', 'runs', 'messages', 'memories', 'decisions', 'reports', 'tasks'])
+    wipe(['agent_logs', 'agent_instructions', 'token_usage', 'file_access', 'file_links', 'file_chunks', 'files', 'runs', 'messages', 'memory_suggestions', 'memories', 'memory_topics', 'decisions', 'reports', 'tasks'])
     if (mode === 'work') {
       db.prepare("UPDATE agents SET status = CASE WHEN enabled = 1 THEN 'idle' ELSE 'offline' END, status_note = NULL").run()
     } else {

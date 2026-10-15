@@ -12,7 +12,7 @@
   <a href="https://github.com/godilman/agentbits/actions/workflows/ci.yml"><img alt="CI" src="https://github.com/godilman/agentbits/actions/workflows/ci.yml/badge.svg"></a>
   <img alt="Platform: Windows" src="https://img.shields.io/badge/platform-Windows-0078D6?logo=windows&logoColor=white">
   <img alt="macOS: experimental" src="https://img.shields.io/badge/macOS-experimental-555?logo=apple&logoColor=white">
-  <img alt="Version 0.3.0" src="https://img.shields.io/badge/version-0.3.0-6366f1">
+  <img alt="Version 0.4.0" src="https://img.shields.io/badge/version-0.4.0-6366f1">
   <a href="LICENSE"><img alt="License: PolyForm Strict 1.0.0" src="https://img.shields.io/badge/license-PolyForm%20Strict%201.0.0-orange"></a>
   <a href="https://buymeacoffee.com/godilman"><img alt="Buy me a coffee" src="https://img.shields.io/badge/Buy%20me%20a%20coffee-%E2%98%95-FFDD00?logoColor=black"></a>
 </p>
@@ -65,6 +65,9 @@ own computer.
   criteria when it has them; "What changed?" shows the files and the diff. Accepted decisions are stored as
   ADR-style records, and a persistent project memory (SQLite FTS5) keeps context between runs. Optional semantic
   memory also finds notes by meaning, through your provider's embeddings (local with Ollama / LM Studio).
+- **Memory that knows you.** Tell an agent how you like to work and it asks "I learned this, shall I keep it?"; every
+  agent is then told about you. Memories link to topics, tasks and decisions in a graph (Organization → Memory) where
+  you search, edit and forget them; a replaced memory stops reaching agents. Replies and tasks show what they remembered.
 - **Files.** Attach PDF, Word, Excel, PowerPoint (also the old .doc / .xls / .ppt and .rtf), CSV, Markdown, JSON, text
   and images to chats, tasks and instructions; scanned PDFs and images are read with offline OCR (English, Turkish). Agents can read only the files they are given, and always as untrusted data.
 - **Connections.** SSH servers and PostgreSQL, MySQL/MariaDB and SQL Server databases. Access is per agent and
@@ -135,6 +138,7 @@ scenario needs.
 | **Chat with the lead.** The request becomes four tasks, each assigned to a specialist. <br><img src="docs/screenshots/chat.png" alt="Project chat: the lead splits a request into four tasks"> | **Task board.** Tasks move from To do to Done as the team works. <br><img src="docs/screenshots/tasks.png" alt="Kanban board with four tasks in progress"> |
 | **Agent terminals.** What each agent was asked and what it did. <br><img src="docs/screenshots/terminal.png" alt="Agent terminals showing transcripts of several agents"> | **Organization.** Companies, departments and teams, each with a lead. <br><img src="docs/screenshots/org-chart.png" alt="Organization chart of an e-commerce company with five teams"> |
 | **Reports.** Completed work, success rate, per-agent output and token usage. <br><img src="docs/screenshots/reports.png" alt="Reports page with task reports and agent performance"> | **Connections.** Per-agent database and server access with a required read-only user. <br><img src="docs/screenshots/connections.png" alt="Connection settings for a staging PostgreSQL database"> |
+| **Memory.** The "Knows you" profile and the graph linking memories to topics, tasks and decisions. <br><img src="docs/screenshots/memory.png" alt="Organization → Memory: the profile on the left, the memory graph on the right"> | |
 
 *Screenshots were taken in Demo mode with example data. The Demo provider simulates the work, including the
 tool calls you see in terminals.*
@@ -253,7 +257,7 @@ Found a vulnerability? Please report it privately, see [SECURITY.md](SECURITY.md
 
 ## Current limitations
 
-Agentbits is an early release (**v0.3.0**). It does not:
+Agentbits is an early release (**v0.4.0**). It does not:
 
 - update itself (install a newer version over the old one; your data is kept);
 - bundle or sign in to Claude Code / Codex CLI, or support providers that aren't OpenAI-compatible beyond the ones above;

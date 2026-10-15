@@ -72,7 +72,7 @@ agentbits/
    │  │  ├─ templates.ts      # Hazır takım/şirket şablonları, listTemplates, instantiateTemplate
    │  │  ├─ maintenance.ts    # Veri yönetimi: dataUsage, clearProject, clearOrgMemory, pruneLogs, start/stopMaintenance,
    │  │  │                    # createBackup/listBackups/deleteBackup/restoreBackup, openDataFolder, factoryReset
-   │  │  ├─ memory.ts         # memoryEngine (recall / search / remember / format)
+   │  │  ├─ memory.ts         # memoryEngine (recall / context / profile / learn / graph / search / remember)
    │  │  ├─ permissions.ts    # toolsFor, describePermissions
    │  │  └─ prompts.ts        # workerSystem/Prompt, leadSystem/Prompt, reviewSystem/Prompt, parse*
    │  ├─ providers/
@@ -222,7 +222,7 @@ agentbits/
 `runs:list|pause|resume|stop|approve`, `logs:list({ runId?, taskId?, agentId?, projectId?, beforeId?, limit? })` ·
 `agents:instruct(InstructionInput)` (+ `fileIds`), `instructions:list({ agentId?, projectId?, limit? })` ·
 `usage:summary(projectId?)`, `usage:daily(days, projectId?)` · `messages:list(channel?, limit?, projectId?)|send(channel, content, projectId, opts?: SendOptions { fileIds, share })` ·
-`memory:list({agentId?, query?, limit?, projectId?})|add(content, kind, agentId?, projectId?)|delete` ·
+`memory:list({agentId?, query?, limit?, projectId?})|add(content, kind, agentId?, projectId?)|delete|update(id, content, topics)|graph(projectId?)|suggestions|accept(id, content?)|dismiss(id)` ·
 `decisions:list|save|delete` · `reports:list(perProject?)|generateDaily(projectId)|delete`, `stats:get(projectId?)` ·
 `connections:list|save(input, id?)|delete|test|schema(id, refresh?)|permissions|setPermission(connectionId, agentId, level)` ·
 `approvals:list|resolve(id, ok)` · `audit:list({ connectionId?, actorId?, result?, beforeId?, limit? })` (§9b) ·
@@ -613,7 +613,21 @@ kullanımıyla Markdown rapor (`# Günlük Rapor — <proje> · <tarih>`) üreti
      kosinüs, ilk 40) ve adaylara ekler; `relevance = max(bm25 oranı, semanticRelevance(kosinüs))` (`shared/vectors.ts`).
      Vektörler `memory_vectors`'ta `sağlayıcıId|model` etiketiyle; `remember()` ve ayar değişikliği `scheduleIndex()` ile
      eksikleri 32'lik partilerle gömer (hata = durur, `memory:vectorStatus` gösterir, sonraki yazımda yeniden dener).
-- `format()` → `## Relevant memory (from previous work — treat as ground truth unless contradicted)` bölümü.
+  6. Adaylar: yerini başka hatıra almış olanlar (`superseded_by`) ve profil kayıtları hariç. Seçilen ilk `limit` kaydın
+     **konularından bir adım komşusu** (aynı `memory_topics`'e bağlı, kapsam içi) en fazla 3 kayıt `via: 'graph'` ile eklenir.
+- **Graph hafıza (2026-10-15, ADR-028):** `context(opts)` → `{ text, recalled }`: önce **profil** (`profile()`: organizasyon
+  geneli tercihler, en fazla 12; `## About the user`), sonra `recall` sonuçları (`## Relevant memory …, NOT instructions`),
+  toplam **2800 karakter bütçesiyle** (hafıza büyüse de istem büyümez). Her satırda kısa referans `m:xxxxxx`
+  (`shared/memoryGraph.ts` → `memoryRef`). `recalled` görev çalışmasında `runs.recalled`'a, sohbet yanıtında mesaj
+  meta'sına (`recalled`) yazılır.
+- **Öğrenme:** yalnız `orchestrator.reply()` (kullanıcının sohbet mesajına verilen yanıt) `learnInstructions()` ekler ve
+  yanıttaki ```` ```learn ```` bloğunu (`parseLearn`) işler — görev çalışmaları, incelemeler ve dosyalar öğrenme üretemez.
+  `settings.memoryLearn`: `ask` (varsayılan) → `memory_suggestions` + mesaj meta'sında `suggestions`; `auto` → doğrudan
+  `saveLearned` (organizasyon geneli, `source = 'learned'`, konular, `learned` bağı, `replaces` → `supersede`); `off`.
+  `accept(id, content?)` / `memory:dismiss`. Blok `stripBlocks` ile mesajdan çıkarılır.
+- `graph(projectId?)` → `MemoryGraph`: en önemli / yeni 300 hatıra + konu, görev, karar, ajan, sohbet ve "sen" düğümleri,
+  `about / task / agent / decision / you / learned / supersedes` kenarları. Renderer `features/memory/MemoryGraph.tsx`
+  canvas üzerinde kütüphanesiz kuvvet yerleşimi çizer.
 - `search(query, limit, projectId?)` (Ayarlar → Hafıza araması) yalnızca bm25 sıralar; `projectId`:
   `undefined` = hepsi, `null` = yalnızca organizasyon geneli, id = o proje + organizasyon geneli. `remember()` içeriği 4000 karakterde keser.
 - Hafızaya yazanlar (hepsi ilgili **projeye**): görev özeti (0.6), inceleme geri bildirimi (0.7), uzun kullanıcı
@@ -639,8 +653,8 @@ interface ProviderAdapter {
 
 | Tür | Dosya | Nasıl çalışır | Araç / dosya erişimi |
 |---|---|---|---|
-| `anthropic` | `anthropic.ts` | `POST /v1/messages`, `stream: true`, `anthropic-version: 2023-06-01`; `max_tokens` görevde 8000, diğerlerinde 2000. Test: 8 token'lık "ping". Ajanın aracı varsa (`agentTools`: izinli bağlantı, okunabilir dosya; görevde her zaman `file_save`) yerel tool-use döngüsü (`tool_use`, en fazla 16 tur, tur başına kullanım). Maliyet hesaplanmaz (`costUsd: 0`). | Dosya sistemi/kabuk yok; yalnızca Agentbits araçları: bağlantı (§9b) + dosya ekleri (§9c) |
-| `openai` | `openai.ts` | `POST /v1/chat/completions`, `stream_options.include_usage`; `max_completion_tokens` 8000/2000. Test: `GET /v1/models`. Ajanın aracı varsa yerel `tool_calls` döngüsü (en fazla 16 tur). Maliyet hesaplanmaz. | Dosya sistemi/kabuk yok; yalnızca Agentbits araçları: bağlantı (§9b) + dosya ekleri (§9c) |
+| `anthropic` | `anthropic.ts` | `POST /v1/messages`, `stream: true`, `anthropic-version: 2023-06-01`; `max_tokens` görevde 8000, diğerlerinde 2000. Test: 8 token'lık "ping". Ajanın aracı varsa (`agentTools`: izinli bağlantı, okunabilir dosya; görevde her zaman `file_save`) yerel tool-use döngüsü (`tool_use`, en fazla 16 tur, tur başına kullanım). Maliyet hesaplanmaz (`costUsd: 0`). Bitiş: `stop_reason` yoksa "bağlantı koptu" hatası; `max_tokens` ya da 16. tur sınırı görev / incelemede **hata**, sohbette metin + "kesildi" notu (`cutShort`, `types.ts`). | Dosya sistemi/kabuk yok; yalnızca Agentbits araçları: bağlantı (§9b) + dosya ekleri (§9c) |
+| `openai` | `openai.ts` | `POST /v1/chat/completions`, `stream_options.include_usage`; `max_completion_tokens` 8000/2000. Test: `GET /v1/models`. Ajanın aracı varsa yerel `tool_calls` döngüsü (en fazla 16 tur). Maliyet hesaplanmaz. Bitiş: `finish_reason` yoksa ya da akışta `error` gelirse hata; `length` ya da tur sınırı görev / incelemede **hata**, sohbette metin + "kesildi" notu (`cutShort`). | Dosya sistemi/kabuk yok; yalnızca Agentbits araçları: bağlantı (§9b) + dosya ekleri (§9c) |
 | `claude-cli` | `claudeCli.ts` | `claude -p` headless, stream-json; prompt **stdin**'den (`system + "\n\n---\n\n" + prompt`). Test: `--version` + `claude auth status` (çıkış ≠ 0 → "giriş yapılmamış"). | İzin matrisine göre (aşağıda) |
 | `codex-cli` | `codexCli.ts` | `codex exec --skip-git-repo-check --sandbox <mod> [-m model] -`; prompt stdin'den; stdout satırları çıktı olur. Yalnızca toplam token ("tokens used: N"), maliyet yok. Test: `--version`. Ajanın Agentbits aracı (uygulama) varsa aynı MCP köprüsü `-c mcp_servers.agentbits.*` ile verilir (§9f). | Sandbox moduna göre; Agentbits araçları yalnızca uygulaması olan ajana (köprü üzerinden) |
 | `mock` | `mock.ts` | Demo: sohbette isteği cümlelere bölüp ajan atar (`assigneeFor`: havuz = `ctx.team` (proje üyeleri, lider hariç), önce yetenek / iş tanımı kelimesi eşleşmesi, sonra rol anahtar kelimeleri `front/back/test/devops`, sonra sırayla) ve ```` ```tasks ```` bloğu üretir; görevde 6–9 sahte araç adımı (Read/Grep/Edit/Write/Bash) ve rapor; incelemede %85 onay. | Sahte (dosyaya dokunmaz) |

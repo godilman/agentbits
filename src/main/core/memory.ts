@@ -240,7 +240,7 @@ export const memoryEngine = {
       }
       if (m.source?.startsWith('decision:')) {
         const d = decisionsRepo.get(m.source.slice(9))
-        if (d) node(`decision:${d.id}`, 'decision', () => `KR-${d.seq} ${d.title}`.slice(0, 60)) && edges.push({ from: id, to: `decision:${d.id}`, kind: 'decision' })
+        if (d) node(`decision:${d.id}`, 'decision', () => `ADR-${d.seq} ${d.title}`.slice(0, 60)) && edges.push({ from: id, to: `decision:${d.id}`, kind: 'decision' })
       }
     }
     const links = db

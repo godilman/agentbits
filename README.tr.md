@@ -12,7 +12,7 @@
   <a href="https://github.com/godilman/agentbits/actions/workflows/ci.yml"><img alt="CI" src="https://github.com/godilman/agentbits/actions/workflows/ci.yml/badge.svg"></a>
   <img alt="Platform: Windows" src="https://img.shields.io/badge/platform-Windows-0078D6?logo=windows&logoColor=white">
   <img alt="macOS: deneysel" src="https://img.shields.io/badge/macOS-deneysel-555?logo=apple&logoColor=white">
-  <img alt="Sürüm 0.3.0" src="https://img.shields.io/badge/s%C3%BCr%C3%BCm-0.3.0-6366f1">
+  <img alt="Sürüm 0.4.0" src="https://img.shields.io/badge/s%C3%BCr%C3%BCm-0.4.0-6366f1">
   <a href="LICENSE"><img alt="Lisans: PolyForm Strict 1.0.0" src="https://img.shields.io/badge/lisans-PolyForm%20Strict%201.0.0-orange"></a>
   <a href="https://buymeacoffee.com/godilman"><img alt="Buy me a coffee" src="https://img.shields.io/badge/Buy%20me%20a%20coffee-%E2%98%95-FFDD00?logoColor=black"></a>
 </p>
@@ -65,6 +65,10 @@ Hepsi tek pencerede, verilerin de kendi bilgisayarında kalır.
   kontrol edilir, "Ne değişti?" dosyaları ve farkı gösterir. Kabul edilen kararlar ADR tarzında
   kaydedilir, kalıcı proje hafızası (SQLite FTS5) da bağlamı çalışmalar arasında korur. İsteğe bağlı anlamsal hafıza,
   sağlayıcının embedding'iyle notları anlamıyla da bulur (Ollama / LM Studio ile yerelde).
+- **Seni tanıyan hafıza.** Bir ajana nasıl çalışmayı sevdiğini söylersin, "Bunu öğrendim, kaydedeyim mi?" diye sorar;
+  sonra her ajana seninle ilgili bu bilgiler söylenir. Hatıralar bir grafta konulara, görevlere ve kararlara bağlanır
+  (Organizasyon → Hafıza); orada arar, düzeltir, unutturursun. Yerini yenisi alan hatıra ajanlara artık gitmez. Yanıtlar
+  ve görevler neyi hatırladıklarını gösterir.
 - **Dosyalar.** Sohbetlere, görevlere ve talimatlara PDF, Word, Excel, PowerPoint (eski .doc / .xls / .ppt ve .rtf de),
   CSV, Markdown, JSON, metin ve görsel ekleyebilirsin; taranmış PDF'ler ve görseller çevrimdışı OCR ile okunur (İngilizce,
   Türkçe). Ajanlar yalnızca kendilerine verilen dosyaları okur ve içeriği her zaman güvenilmeyen veri olarak ele alır.
@@ -133,9 +137,10 @@ senaryonun neye ihtiyaç duyduğunu söyler.
 
 | | |
 |---|---|
-| **Liderle sohbet.** İstek dört göreve ayrılır, her biri bir uzmana atanır. <br><img src="docs/screenshots/tr/chat.png" alt="Proje sohbeti: lider isteği dört göreve böler"> | **Görev panosu.** Ekip çalıştıkça görevler To do'dan Done'a ilerler. <br><img src="docs/screenshots/tr/tasks.png" alt="Devam eden görevlerin olduğu Kanban panosu"> |
+| **Liderle sohbet.** İstek dört göreve ayrılır, her biri bir uzmana atanır. <br><img src="docs/screenshots/tr/chat.png" alt="Proje sohbeti: lider isteği dört göreve böler"> | **Görev panosu.** Ekip çalıştıkça görevler Yapılacak'tan Bitti'ye ilerler. <br><img src="docs/screenshots/tr/tasks.png" alt="Devam eden görevlerin olduğu Kanban panosu"> |
 | **Ajan terminalleri.** Her ajana ne sorulduğu ve ne yaptığı. <br><img src="docs/screenshots/tr/terminal.png" alt="Birkaç ajanın dökümünü gösteren ajan terminalleri"> | **Organizasyon.** Şirket, departman ve takımlar; her birinin lideri var. <br><img src="docs/screenshots/tr/org-chart.png" alt="Beş takımlı bir e-ticaret şirketinin organizasyon şeması"> |
 | **Raporlar.** Tamamlanan işler, başarı oranı, ajan başına üretim ve token kullanımı. <br><img src="docs/screenshots/tr/reports.png" alt="Görev raporları ve ajan performansıyla Raporlar sayfası"> | **Bağlantılar.** Zorunlu salt-okunur kullanıcıyla, ajan bazında veritabanı ve sunucu erişimi. <br><img src="docs/screenshots/tr/connections.png" alt="Staging PostgreSQL veritabanı için bağlantı ayarları"> |
+| **Hafıza.** "Seni tanıyorum" profili ve hatıraların konulara, görevlere ve kararlara bağlandığı graf. <br><img src="docs/screenshots/tr/memory.png" alt="Organizasyon → Hafıza: solda profil, sağda hafıza grafı"> | |
 
 *Ekran görüntüleri Demo modunda örnek verilerle alındı. Demo sağlayıcı, terminallerde görünen araç çağrıları dahil
 işi taklit eder.*
@@ -256,7 +261,7 @@ Bir güvenlik açığı mı buldun? Lütfen gizli olarak bildir: [SECURITY.md](S
 
 ## Mevcut sınırlamalar
 
-Agentbits erken bir sürümdür (**v0.3.0**). Şunları yapmaz:
+Agentbits erken bir sürümdür (**v0.4.0**). Şunları yapmaz:
 
 - kendini güncellemek (yeni sürümü eskisinin üzerine kurarsın, verilerin korunur);
 - Claude Code / Codex CLI'ı içermek ya da onlarda oturum açmak; yukarıdakiler dışında OpenAI uyumlu olmayan sağlayıcıları

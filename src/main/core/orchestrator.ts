@@ -1856,7 +1856,9 @@ class Orchestrator {
     const text = content.trim()
     if (!text && !opts.fileIds?.length) return
     if (text.length >= 20) {
-      memoryEngine.remember(`User (${channel}): ${text.slice(0, 600)}`, 'context', { importance: 0.5, source: 'chat', projectId })
+      // Where it was said, readable for agents and the memory graph (not the channel's raw id).
+      const where = channel === 'general' ? '#general' : channel.startsWith('agent:') ? `@${agentsRepo.get(channel.slice(6))?.name ?? '?'}` : channel
+      memoryEngine.remember(`User (${where}): ${text.slice(0, 600)}`, 'context', { importance: 0.5, source: 'chat', projectId })
     }
     let target: Agent | null = null
     if (channel === 'general') target = projectLead(projectId)

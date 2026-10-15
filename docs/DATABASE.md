@@ -32,7 +32,7 @@ const MIGRATIONS: { version: number; sql: string }[] = [ { version: 1, sql: `...
 
 - `migrate(db)` önce `schema_migrations` tablosunu oluşturur, `MAX(version)`'dan büyük her migration'ı
   **kendi transaction'ında** çalıştırıp sürümünü kaydeder.
-- **Yalnızca ekleyin.** Uygulanmış bir migration'ı (bugün: v1–v16) asla düzenlemeyin, silmeyin, yeniden
+- **Yalnızca ekleyin.** Uygulanmış bir migration'ı (bugün: v1–v17) asla düzenlemeyin, silmeyin, yeniden
   numaralandırmayın — kullanıcı makinelerindeki DB'ler onu zaten çalıştırdı ve değişiklik oraya ulaşmaz.
 - Yeni değişiklik = dizinin sonuna `{ version: N+1, sql: ... }`. SQLite'ta tipik olarak
   `ALTER TABLE x ADD COLUMN y ... NOT NULL DEFAULT ...`; sütun silme/CHECK değiştirme için tabloyu yeniden
@@ -59,6 +59,7 @@ const MIGRATIONS: { version: number; sql: string }[] = [ { version: 1, sql: `...
 | 11 | 2026-10-15 | `tasks.depends_on TEXT NOT NULL DEFAULT '[]'` (bitmesi beklenen görev id'leri; zamanlayıcı `json_each` ile denetler, silinen bağımlılık engellemez). v10→v11 yükseltmesi SQLite ile denendi |
 | 12 | 2026-10-15 | `projects.isolation TEXT NOT NULL DEFAULT 'shared'` CHECK `shared, worktree` (görev başına git worktree, ADR-025) |
 | 13 | 2026-10-15 | `providers.base_url TEXT NOT NULL DEFAULT ''` — OpenAI sağlayıcısının OpenAI uyumlu uç noktası ('' = OpenAI); `kind` CHECK'i değişmediği için tablo yeniden kurulmadı |
+| 17 | 2026-10-15 | Graph hafıza: `memories.superseded_by TEXT` (yerini alan hatıra; geçmiş olarak kalır, ajanlara gitmez), `memory_topics (id PK, name UNIQUE COLLATE NOCASE)`, `memory_links (memory_id → memories ON DELETE CASCADE, target, kind CHECK about/learned, PK üçlü)` + `idx_memory_links_target`, `memory_suggestions` (onay bekleyen öğrenmeler), `runs.recalled TEXT` (çalışmaya giren hatıraların JSON anlık görüntüsü). Gerçek SQLite ile uçtan uca denendi |
 | 16 | 2026-10-15 | Kabul kriterleri: `tasks.acceptance TEXT NOT NULL DEFAULT ''` (satır başına bir kriter), `tasks.acceptance_check TEXT` (liderin son kontrolü, JSON `[{text, met, note}]`) |
 | 15 | 2026-10-15 | Anlamsal hafıza: `memory_vectors (memory_id PK → memories ON DELETE CASCADE, model TEXT, vec BLOB)` — normalize Float32 vektör, `model` = `sağlayıcıId\|model` (başka model = yeniden gömülür). Gerçek SQLite ile uçtan uca denendi (silmede vektör de gidiyor) |
 | 14 | 2026-10-15 | Yarış modu: `tasks.race_of TEXT` (rakip kopyanın asıl görevi), `tasks.race_result TEXT` CHECK `won, lost`, `idx_tasks_race (race_of)`. SQL bellekte SQLite ile denendi (CHECK geçersiz değeri reddediyor) |
@@ -172,7 +173,7 @@ transaction'da yazılır.
 | `race_of` | TEXT | *(v14)* Yarış modunda rakip kopyanın asıl görevi (`tasksRepo.challengerOf(id)` tersini bulur) |
 | `race_result` | TEXT | *(v14)* CHECK `won, lost`; NULL = yarış yok ya da sürüyor |
 | `acceptance` | TEXT DEFAULT `''` | *(v16)* Kabul kriterleri, satır başına bir tane |
-| `acceptance_check` | TEXT | *(v16)* Liderin son incelemedeki kontrolü, JSON `[{text, met, note}]` |
+| `acceptance_check` | TEXT | *(v16)* Liderin son incelemedeki kontrolü, JSON `[{text, met, note}]`. Yarışta her iki deneme için ayrı ayrı yazılır |
 
 İndeksler: `idx_tasks_status (status, sort_order)`, `idx_tasks_assignee (assignee_id)`, `idx_tasks_project (project_id, status)`.
 `tasksRepo.nextFor(agentId, exclude, assignedIn, unassignedIn)` — ajana atanmış görevleri `assignedIn`
@@ -194,6 +195,7 @@ Main içi tam liste için `tasksRepo.listAll()`.
 | `cost_usd` | REAL DEFAULT 0 | Yalnızca Claude Code raporlar |
 | `started_at`, `ended_at` | TEXT | |
 | `project_id` | TEXT | *(v3, FK yok)* `runsRepo.create(taskId, agentId, status, projectId)` |
+| `recalled` | TEXT | *(v17)* Çalışmanın istemine giren hatıralar, JSON `[{id, kind, content, via}]` (`via`: `profile`, `match`, `graph`) — görev ayrıntısındaki "Bu görev neyi biliyordu?" |
 
 İndeksler: `idx_runs_status`, `idx_runs_task`. Açılışta yarım kalanlar `cancelled` yapılır (`cancelStale`).
 
@@ -274,13 +276,33 @@ denetim kaydı (`instructionsRepo`).
 | `kind` | TEXT | CHECK `fact, decision, context, preference, summary` |
 | `content` | TEXT NOT NULL | En fazla 4000 karakter (`remember`) |
 | `importance` | REAL DEFAULT 0.5 | 0–1; ≥0.9 olanlar her geri çağırmada sabitlenir |
-| `source` | TEXT | `user`, `chat`, `review`, `run:<id>`, `decision:<id>` |
+| `source` | TEXT | `user`, `chat`, `review`, `run:<id>`, `decision:<id>`, `learned` (sohbetten öğrenilen, v17) |
 | `task_id` | TEXT | FK yok |
 | `access_count` | INTEGER DEFAULT 0 | `recall` her seçişte artırır |
 | `created_at`, `last_accessed_at` | TEXT | |
 | `project_id` | TEXT | *(v3, FK yok)* NULL = **organizasyon geneli** (tüm projelerde geri çağrılır); dolu = yalnızca o proje. Geri çağırma: `project_id IS NULL OR project_id = <aktif proje>` |
+| `superseded_by` | TEXT | *(v17, FK yok)* Bu hatıranın yerini alan hatıra. Doluysa geri çağrılmaz, grafta soluk görünür. Yerini alan silinirse NULL'a döner (eskisi yeniden geçerli) |
 
 İndeksler: `idx_memories_agent`, `idx_memories_project`.
+
+**Profil ("Seni tanıyorum"):** `kind = 'preference' AND agent_id IS NULL AND project_id IS NULL AND task_id IS NULL AND
+superseded_by IS NULL` — en önemli 12 tanesi her istemin "About the user" bölümüne girer; normal geri çağırmada aday olmaz.
+
+### `memory_topics`, `memory_links` *(v17)*
+| Sütun | Tip | Not |
+|---|---|---|
+| `memory_topics.id` / `name` | TEXT PK / TEXT UNIQUE | Konu düğümü. Eşleme Türkçe küçük harfle JS'te yapılır ("Ödeme" = "ödeme"; NOCASE yalnız ASCII katlar). Hiçbir bağın göstermediği konu silinir (`pruneTopics`) |
+| `memory_links.memory_id` | TEXT FK → `memories` ON DELETE CASCADE | |
+| `memory_links.target` | TEXT | `topic:<id>` (kind `about`) ya da `chat:<projectId>\|<kanal>` (kind `learned`, öğrenildiği yer) |
+| `memory_links.kind` | TEXT | CHECK `about, learned` |
+
+Görev, ajan, karar ve "sen" bağları ayrı satır tutmaz: `memories.task_id`, `agent_id`, `source = decision:<id>` ve profil
+koşulundan türetilir (`memoryEngine.graph`).
+
+### `memory_suggestions` *(v17)*
+Ajanın kullanıcının sohbet mesajından öğrendiği, onay bekleyen kayıtlar: `id`, `content`, `kind` CHECK `preference, fact`,
+`topics` (JSON), `replaces` (yerini alacağı hatıra), `project_id`, `channel`, `agent_id`, `created_at`. Kabul → organizasyon
+geneli hatıra (`source = 'learned'`), ret → silinir. Organizasyon hafızası temizlenince ve sıfırlamada silinir.
 
 ### `memories_fts` (FTS5) ve trigger'lar
 ```sql

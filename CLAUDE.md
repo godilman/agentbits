@@ -22,9 +22,9 @@ yalnızca izin verilen **Bağlantılar** (SSH / PostgreSQL / MySQL / SQL Server)
 hissinde, koyu temalı, ajanların ne yaptığını canlı gösteren güvenli bir "yapay zeka şirketi ofisi".
 Ürün vizyonu → [docs/PROJECT.md](docs/PROJECT.md).
 
-Durum: **v0.3.0** (2026-10-15) — organizasyon, projeler ve tüm proje bölümleri çalışıyor; özellik durumu →
+Durum: **v0.4.0** (2026-10-15) — organizasyon, projeler ve tüm proje bölümleri çalışıyor; özellik durumu →
 [docs/FEATURES.md](docs/FEATURES.md). Depo herkese açık; yayımlanan sürümler v0.1.0 (2026-10-14), v0.2.0 (2026-10-15),
-v0.3.0 (2026-10-15). v0.1.1 GitHub'da taslak olarak kalır (sahibin kararı: arşiv, silinmez).
+v0.3.0 (2026-10-15), v0.4.0 (2026-10-15). v0.1.1 GitHub'da taslak olarak kalır (sahibin kararı: arşiv, silinmez).
 
 ## Güncel durum ve devir notu (son güncelleme: 2026-10-15)
 
@@ -78,9 +78,11 @@ Demo sağlayıcı iş türüne göre simülasyon (`shared/demoKind.ts`), paket s
   tek seferde yayın (v0.2.0 ✅ 2026-10-15).
 - **2026-10-15 v0.3.0** ✅: dış inceleme bulguları (commit hatasında iş kaybı, worktree yalıtımının sessizce kapanması,
   birleşmemiş bağımlılık, bekletilenlerin kuyruğu tıkaması, eski karar hafızası, akış hataları) + "Bana ihtiyaç var",
-  kartta takılma nedeni, kabul kriterleri (v16), "Ne değişti?". ⏳ Sahiple konuşulacak: **graph hafıza** (rapor + mockup
-  hazırlandı, karar sahipte), paylaşım galerisi.
-- `docs/screenshots/tr/` ekran görüntüleri eski İngilizce sekme adlarını gösteriyor (Demo + boş veri klasörüyle yeniden çekilmeli).
+  kartta takılma nedeni, kabul kriterleri (v16), "Ne değişti?".
+- **2026-10-15 v0.4.0** ✅: **graph hafıza** (ADR-028, v17; sahibin kararları: tam graf, öğrenme önce sorar, tek profil,
+  tercihler organizasyon geneli, Organizasyon → Hafıza + üst bar kısayolu), yarışta bağımlılık / kabul kriteri açıkları,
+  token / tur sınırında kesilen yanıt, uygulama menüsü arka planı. ⏳ Sahiple konuşulacak: paylaşım galerisi; ileride
+  çoklu profil (sahip: "şimdi değil").
 - `docs/SECURITY.md`'deki 🟡 / ⏳ maddeler (ör. büyük veride UI sayfalama) ve `docs/FEATURES.md` "Bilinen sorunlar".
 
 **Önceki oturumlardan öğrenilenler**

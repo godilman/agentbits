@@ -947,6 +947,11 @@ export const memoriesRepo = {
   supersede(oldId: string, newId: string): void {
     getDb().prepare('UPDATE memories SET superseded_by = ? WHERE id = ? AND id != ?').run(newId, oldId, newId)
   },
+  /** After bulk deletes: memories whose replacement is gone count again, topics nobody links to go. */
+  tidy(): void {
+    getDb().prepare('UPDATE memories SET superseded_by = NULL WHERE superseded_by IS NOT NULL AND superseded_by NOT IN (SELECT id FROM memories)').run()
+    this.pruneTopics()
+  },
   pruneTopics(): void {
     getDb().prepare(`DELETE FROM memory_topics WHERE 'topic:' || id NOT IN (SELECT target FROM memory_links WHERE kind = 'about')`).run()
   },

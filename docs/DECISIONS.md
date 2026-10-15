@@ -534,3 +534,22 @@ Durum değerleri: *Kabul edildi*, *Önerildi*, *Yerini aldı*, *Geri alındı*.
 - **Elenen:** `sqlite-vec` (native, her platform için ikili; bu ölçekte kaba kuvvet yeterli), pakete gömülü çok dilli yerel
   model (~120 MB, paket iki katına yakın büyür), küçük İngilizce model (~25 MB, Türkçede zayıf).
 
+
+## ADR-028 — Graph hafıza: konular, "yerini aldı", profil, sohbetten onaylı öğrenme (2026-10-15)
+
+- **Bağlam:** Hatıralar birbirinden habersiz tek satırlardı: kullanıcı her projede kendini yeniden anlatıyor, eskiyen bilgi
+  ajanlara gitmeye devam ediyordu, ajanın neye dayandığı görünmüyordu. Sahibin kararı (rapor + mockup sonrası): tam graf
+  (seçenek C), öğrenme varsayılan sorar ("kendin karar ver" ayarlanabilir), tek profil, tercihler organizasyon geneli,
+  hatıralar aranabilir ve silinebilir, Organizasyon'da ayrı sekme + sağ üstte kısayol. Amaç token'ı boşa harcamamak.
+- **Karar:** Mevcut `memories` korunur; yanına `memory_topics` + `memory_links` (about / learned) ve `superseded_by` (v17).
+  Görev, ajan, karar ve "sen" bağları mevcut sütunlardan türetilir (ayrı satır yok). Öğrenme **ek model çağrısı yapmaz**:
+  kullanıcının mesajına zaten yanıt veren ajan, gerekirse yanıtına ```` ```learn ```` bloğu ekler. Geri çağırma: profil
+  (en fazla 12) + FTS / anlam + konulardan bir adım komşu (en fazla 3), yerini başkası almış olanlar hariç, **2800
+  karakterlik bütçe** içinde. Graf ekranı canvas + basit kuvvet yerleşimi (kütüphane yok).
+- **Güvenlik:** Öğrenme yalnız `reply()` yolunda (kullanıcının sohbet mesajı) işlenir; görev / inceleme çıktısı, dosya, web
+  içeriği öğrenme üretemez (uçtan uca olumsuz test). Varsayılan kullanıcı onayı; profil paylaşım paketine girmez.
+- **Bedel:** Her sohbet isteminde birkaç satır öğrenme talimatı (~150 token, "Kapalı"da yok). Profil ve konular yanlış
+  genellenebilir — görünür, düzenlenebilir, unutturulabilir. Graf O(n²) yerleşim; 300 hatıra çizilir.
+- **Elenen:** Her sohbet / görev sonunda ayrı "çıkarım" çağrısı (çağrı başına 1–3 bin token), serbest metin bağ türleri
+  (çorbaya döner), graf kütüphanesi (d3 / sigma: bağımlılık, bu ölçekte gereksiz), kişi başına profil (şimdilik tek
+  kullanıcı), proje bazlı tercihler (sahibi organizasyon geneli istedi).
