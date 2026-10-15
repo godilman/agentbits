@@ -283,7 +283,12 @@
       "text": "Metin",
       "truncated": "Metin {{max}} karakterde kesildi",
       "encoding": "Karakter kodlaması: {{encoding}}",
-      "noText": "Dosyada okunabilir metin bulunamadı"
+      "noText": "Dosyada okunabilir metin bulunamadı",
+      "docNotes": "Dipnotlar ve sonnotlar",
+      "docHeaders": "Üstbilgiler ve altbilgiler",
+      "legacyEncrypted": "Dosya parolayla korunuyor; okunamıyor",
+      "xlsOld": "Excel 5.0/95 ya da daha eski çalışma kitapları desteklenmiyor; .xlsx ya da .xls (97–2003) olarak kaydet",
+      "legacyInvalid": "Bu Office 97–2003 dosyası okunamadı ({{message}})"
     }
   },
   "feedback": {

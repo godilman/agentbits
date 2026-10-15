@@ -283,7 +283,12 @@
       "text": "Text",
       "truncated": "Text cut off at {{max}} characters",
       "encoding": "Character encoding: {{encoding}}",
-      "noText": "No readable text was found in the file"
+      "noText": "No readable text was found in the file",
+      "docNotes": "Footnotes and endnotes",
+      "docHeaders": "Headers and footers",
+      "legacyEncrypted": "The file is password-protected; it can't be read",
+      "xlsOld": "Excel 5.0/95 or older workbooks are not supported; save it as .xlsx or .xls (97–2003)",
+      "legacyInvalid": "Could not read this Office 97–2003 file ({{message}})"
     }
   },
   "feedback": {

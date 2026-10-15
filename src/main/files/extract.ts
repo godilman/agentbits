@@ -4,13 +4,15 @@
  * timeout: attachments are untrusted input. Also imported directly by the unit
  * tests (`tests/files.extract.test.ts`).
  *
- * Supported: PDF (text layer, per page), DOCX (paragraphs, headings, lists,
+ * Supported: PDF (text layer, per page), DOCX, legacy DOC / XLS / PPT (legacyOffice.ts), RTF (paragraphs, headings, lists,
  * tables), XLSX (all sheets, shared strings, dates, formulas without cached
  * value), PPTX (text per slide), CSV / TSV (delimiter detection), TXT and code,
  * Markdown, JSON (pretty-printed), images (dimensions only — no OCR).
  */
 import { Unzip, UnzipInflate, type UnzipFile } from 'fflate'
 import Papa from 'papaparse'
+// Explicit .ts: this module is also loaded directly by Node in the unit tests (no bundler there).
+import { readDoc, readPpt, readXls } from './legacyOffice.ts'
 import type { I18nKey } from '../../shared/i18n'
 
 /**
@@ -29,7 +31,7 @@ export interface ExtractText {
 const keyT: ExtractT = (key, opts) => (opts ? `${key} ${Object.values(opts).join(' ')}` : key)
 export const DEFAULT_TEXT: ExtractText = { t: keyT, locale: 'en-US' }
 
-export type ExtractKind = 'pdf' | 'docx' | 'xlsx' | 'pptx' | 'rtf' | 'csv' | 'text' | 'markdown' | 'json' | 'image' | 'other'
+export type ExtractKind = 'pdf' | 'docx' | 'xlsx' | 'pptx' | 'rtf' | 'doc' | 'xls' | 'ppt' | 'csv' | 'text' | 'markdown' | 'json' | 'image' | 'other'
 export type ExtractStatus = 'ready' | 'partial' | 'unsupported' | 'failed'
 
 export interface ExtractLimits {
@@ -108,6 +110,11 @@ export function detectKind(name: string, bytes: Uint8Array): { kind: ExtractKind
   if ((ext === 'xlsx' || ext === 'xlsm') && isZip) return { kind: 'xlsx', mime: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' }
   if (ext === 'pptx' && isZip) return { kind: 'pptx', mime: 'application/vnd.openxmlformats-officedocument.presentationml.presentation' }
   if (bytes.length > 5 && String.fromCharCode(...bytes.subarray(0, 5)) === '{\\rtf') return { kind: 'rtf', mime: 'application/rtf' }
+  // Office 97–2003: an OLE compound file; the extension says which application.
+  const isOle = bytes.length > 512 && [0xd0, 0xcf, 0x11, 0xe0, 0xa1, 0xb1, 0x1a, 0xe1].every((b, i) => bytes[i] === b)
+  if (isOle && (ext === 'doc' || ext === 'dot')) return { kind: 'doc', mime: 'application/msword' }
+  if (isOle && (ext === 'xls' || ext === 'xlt')) return { kind: 'xls', mime: 'application/vnd.ms-excel' }
+  if (isOle && (ext === 'ppt' || ext === 'pps' || ext === 'pot')) return { kind: 'ppt', mime: 'application/vnd.ms-powerpoint' }
   const img = imageInfo(bytes)
   if (img) return { kind: 'image', mime: img.mime }
   if (IMAGE_MIME[ext]) return { kind: 'other', mime: IMAGE_MIME[ext] } // extension says image, bytes do not
@@ -797,6 +804,45 @@ export function rtfToText(src: string): string {
     .trim()
 }
 
+/* Office 97–2003 (legacyOffice.ts) */
+
+async function readLegacy(kind: 'doc' | 'xls' | 'ppt', bytes: Uint8Array, limits: ExtractLimits, cx: Cx): Promise<Partial_> {
+  const { t } = cx
+  try {
+    if (kind === 'doc') {
+      const d = await readDoc(bytes)
+      const sections: TextSection[] = [{ label: t('main:files.extract.text'), text: d.body.trim().slice(0, limits.maxChars) }]
+      if (d.notes) sections.push({ label: t('main:files.extract.docNotes'), text: d.notes.slice(0, 200_000) })
+      if (d.headers) sections.push({ label: t('main:files.extract.docHeaders'), text: d.headers.slice(0, 50_000) })
+      return { sections, warnings: d.body.length > limits.maxChars ? [t('main:files.extract.truncated', { max: limits.maxChars.toLocaleString(cx.locale) })] : [] }
+    }
+    if (kind === 'xls') {
+      const r = readXls(bytes, limits.maxRows)
+      if (r.encrypted) throw new Error(t('main:files.extract.legacyEncrypted'))
+      if (r.old) throw new Error(t('main:files.extract.xlsOld'))
+      const warnings: string[] = []
+      for (const s of r.sheets) {
+        if (s.hidden) warnings.push(t('main:files.extract.hiddenSheet', { name: s.name }))
+        if (s.truncated) warnings.push(t('main:files.extract.sheetRowLimit', { name: s.name, row: s.rows[s.rows.length - 1]?.n ?? 0 }))
+      }
+      return { sections: r.sheets.map((s) => ({ label: s.name, rows: s.rows })), sheets: r.sheets.map((s) => s.name), warnings }
+    }
+    const r = readPpt(bytes)
+    const sections: TextSection[] = r.slides.map((text, i) => ({
+      label: numberedLabel(cx, 'slide', i + 1),
+      text: text + (r.notes[i] ? `\n\n[${t('main:files.extract.speakerNotes')}]\n${r.notes[i]}` : ''),
+      marker: true
+    }))
+    // No slide list (unusual writers): whatever text the file holds, in order.
+    if (!sections.length && r.loose.length) sections.push({ label: t('main:files.extract.text'), text: r.loose.join('\n') })
+    return { sections, pages: r.slides.length || undefined, warnings: [] }
+  } catch (e) {
+    const msg = String((e as Error)?.message ?? e)
+    if (msg === t('main:files.extract.legacyEncrypted') || msg === t('main:files.extract.xlsOld')) throw e
+    throw new Error(t('main:files.extract.legacyInvalid', { message: msg.slice(0, 120) }))
+  }
+}
+
 function readCsv(text: string, ext: string, limits: ExtractLimits, { t, locale }: Cx): Partial_ {
   const res = Papa.parse<string[]>(text, {
     delimiter: ext === 'tsv' ? '\t' : '',
@@ -936,6 +982,7 @@ export async function extractFile(
     else if (kind === 'docx') r = readDocx(bytes, limits, cx)
     else if (kind === 'xlsx') r = readXlsx(bytes, limits, cx)
     else if (kind === 'pptx') r = readPptx(bytes, limits, cx)
+    else if (kind === 'doc' || kind === 'xls' || kind === 'ppt') r = await readLegacy(kind, bytes, limits, cx)
     else if (kind === 'rtf') {
       const text = rtfToText(new TextDecoder('latin1').decode(bytes))
       r = { sections: [{ label: t('main:files.extract.text'), text: text.slice(0, limits.maxChars) }], warnings: text.length > limits.maxChars ? [t('main:files.extract.truncated', { max: limits.maxChars.toLocaleString(cx.locale) })] : [] }

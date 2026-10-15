@@ -5,7 +5,7 @@ import react from '@vitejs/plugin-react'
 export default defineConfig({
   main: {
     // Parsers are bundled (not loaded from node_modules) so the extraction worker is self-contained.
-    plugins: [externalizeDepsPlugin({ exclude: ['unpdf', 'fflate', 'papaparse'] })],
+    plugins: [externalizeDepsPlugin({ exclude: ['unpdf', 'fflate', 'papaparse', 'cfb', 'word-extractor'] })],
     resolve: { alias: { '@shared': resolve('src/shared') } },
     build: {
       rollupOptions: {
