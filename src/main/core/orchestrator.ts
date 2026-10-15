@@ -4,6 +4,7 @@ import { intlLocale } from '@shared/i18n'
 import { allTranslations, currentLanguage, t } from '../i18n'
 import type { Agent, AgentInstruction, FileRecord, InstructionInput, LogLevel, Project, Provider, Task, UsageDelta, UsageMode } from '@shared/types'
 import type { LeadMessage } from '@shared/leadComms'
+import { isTwin } from '@shared/org'
 import {
   agentsRepo,
   decisionsRepo,
@@ -338,9 +339,29 @@ class Orchestrator {
       if (!agent.enabled || agent.isLead || agent.status !== 'idle' || this.busy.has(agent.id)) continue
       // Unassigned work only from projects the agent belongs to and does not lead.
       const workable = memberProjectIds(agent.id).filter((pid) => leads.get(pid) !== agent.id)
-      const task = tasksRepo.nextFor(agent.id, this.blocked, active, workable)
+      const task = tasksRepo.nextFor(agent.id, this.blocked, active, workable) ?? (settings.shareWithTwins ? this.takeFromTwin(agent, workable) : null)
       if (task) void this.startTask(task.id, agent.id)
     }
+  }
+
+  /**
+   * An idle agent takes over a task queued for a busy twin (same role and skills, e.g. a duplicated developer) in a
+   * project both work in. Tasks with a revision note stay with their agent (it has the context).
+   */
+  private takeFromTwin(agent: Agent, projectIds: string[]): Task | null {
+    if (!projectIds.length) return null
+    const busyTwins = agentsRepo
+      .list()
+      .filter((o) => o.enabled && !o.isLead && isTwin(agent, o) && (o.status !== 'idle' || this.busy.has(o.id)))
+    const task = tasksRepo.queuedFor(busyTwins.map((o) => o.id), projectIds).find((x) => !this.blocked.has(x.id))
+    if (!task) return null
+    const from = busyTwins.find((o) => o.id === task.assigneeId)?.name ?? '?'
+    tasksRepo.update(task.id, { assigneeId: agent.id })
+    const note = t('orchestrator:chat.handedToTwin', { key: task.key, from, to: agent.name })
+    this.post(`task:${task.id}`, 'system', null, note, task.projectId)
+    this.log({ agentId: agent.id, taskId: task.id, projectId: task.projectId, level: 'status', message: note })
+    emit({ type: 'tasks:changed' })
+    return tasksRepo.get(task.id)
   }
 
   private providerFor(agent: Agent): { provider: Provider; adapter: ProviderAdapter; apiKey: string | null; model: string } {

@@ -351,6 +351,8 @@ export interface AppSettings {
   cliEnvPassthrough: string[]
   /** Disk quota of the file store in MB (stored originals; project-folder files don't count). 0 = none. */
   filesQuotaMb: number
+  /** An idle agent takes over a task queued for a busy twin (same role and skills). */
+  shareWithTwins: boolean
 }
 
 export interface TerminalSession {

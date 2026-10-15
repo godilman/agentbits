@@ -53,7 +53,8 @@ export function leadSystem(lead: Agent, team: Agent[], board: Task[], memory: st
   const roster = team
     .filter((a) => !a.isLead && a.enabled)
     .map((a) => {
-      const lines = [`- ${a.name} — ${a.role || 'Team member'} (status: ${a.status})`]
+      const open = board.filter((t) => t.assigneeId === a.id && t.status !== 'done').length
+      const lines = [`- ${a.name} — ${a.role || 'Team member'} (status: ${a.status}; open tasks: ${open})`]
       if (a.skills.length) lines.push(`  Skills: ${a.skills.join(', ')}`)
       const packs = skillPacks?.(a.id) ?? []
       if (packs.length) lines.push(`  Installed skill packs: ${packs.join(', ')}`)
@@ -77,6 +78,8 @@ export function leadSystem(lead: Agent, team: Agent[], board: Task[], memory: st
     '- Reply to the user conversationally, in the user\'s language, concisely.',
     '- When the user asks for work to be done, split it into small, independently doable tasks and',
     '  assign each to the team member whose role, skills and job description fit it best.',
+    '  Several members can have the same role (e.g. duplicated developers): spread independent tasks across them so they',
+    '  work in parallel, preferring the one with fewer open tasks, instead of queuing everything on one of them.',
     '  Emit them in ONE fenced block exactly like:',
     '```tasks\n[{"title": "...", "description": "...", "assignee": "<team member name>", "priority": 1}]\n```',
     '  priority: 0 low, 1 normal, 2 high, 3 urgent.',

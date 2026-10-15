@@ -62,3 +62,16 @@ export function wouldCycle(units: OrgUnit[], unitId: string, candidateParentId: 
   if (!candidateParentId) return false
   return descendantIds(units, unitId).includes(candidateParentId)
 }
+
+/**
+ * Twins: same role and the same skill tags (case-insensitive) — e.g. a duplicated developer. A free twin may take over a
+ * task queued for a busy one (`settings.shareWithTwins`). `tests/team.test.ts`.
+ */
+export function isTwin(a: { id: string; role: string; skills: string[] }, b: { id: string; role: string; skills: string[] }): boolean {
+  if (a.id === b.id) return false
+  const norm = (s: string): string => s.trim().toLocaleLowerCase('en')
+  if (!norm(a.role) || norm(a.role) !== norm(b.role)) return false
+  const sa = [...new Set(a.skills.map(norm))].sort()
+  const sb = [...new Set(b.skills.map(norm))].sort()
+  return sa.length === sb.length && sa.every((x, i) => x === sb[i])
+}

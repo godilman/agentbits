@@ -594,6 +594,9 @@ function GeneralSection() {
         <Row title={t('settings:general.review.title')} desc={t('settings:general.review.desc')}>
           <Toggle checked={settings.reviewByLead} onChange={(v) => update({ reviewByLead: v })} />
         </Row>
+        <Row title={t('settings:general.twins.title')} desc={t('settings:general.twins.desc')}>
+          <Toggle checked={settings.shareWithTwins} onChange={(v) => update({ shareWithTwins: v })} />
+        </Row>
         <Row title={t('settings:general.wizard.title')} desc={t('settings:general.wizard.desc')}>
           <button className="btn-outline h-7" onClick={() => update({ onboarded: false })}>
             {t('settings:general.wizard.restart')}

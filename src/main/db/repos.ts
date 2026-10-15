@@ -579,6 +579,20 @@ export const tasksRepo = {
     const r = rows.find((x) => !exclude.has(x.id))
     return r ? mapTask(r) : null
   },
+  /** `todo` tasks queued for the given agents in the given projects, without a revision note, most urgent first. */
+  queuedFor(agentIds: string[], projectIds: string[]): Task[] {
+    if (!agentIds.length || !projectIds.length) return []
+    const ph = (n: number): string => Array(n).fill('?').join(',')
+    return (
+      getDb()
+        .prepare(
+          `SELECT * FROM tasks WHERE status = 'todo' AND review_note IS NULL
+             AND assignee_id IN (${ph(agentIds.length)}) AND project_id IN (${ph(projectIds.length)})
+           ORDER BY priority DESC, sort_order LIMIT 25`
+        )
+        .all(...agentIds, ...projectIds) as Row[]
+    ).map(mapTask)
+  },
   delete(id: string): void {
     getDb().prepare('DELETE FROM tasks WHERE id = ?').run(id)
   }

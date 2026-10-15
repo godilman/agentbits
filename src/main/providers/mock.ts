@@ -52,8 +52,8 @@ function tokenHit(skillTok: string, textToks: string[]): boolean {
   return textToks.some((w) => w === skillTok || w.startsWith(prefix))
 }
 
-/** Scores each worker against the task text; returns the best one above the threshold. */
-function profileMatch(text: string, workers: Agent[]): Agent | undefined {
+/** Scores each worker against the task text; returns every worker with the best score above the threshold. */
+function profileMatch(text: string, workers: Agent[]): Agent[] {
   const textToks = tokens(text)
   const textStems = new Set(textToks.filter((w) => w.length >= 5 && !STOPWORDS.has(w)).map(stem))
   // Job-description stems shared by several workers are not discriminative.
@@ -64,7 +64,7 @@ function profileMatch(text: string, workers: Agent[]): Agent | undefined {
   jdStems.forEach((set) => set.forEach((st) => df.set(st, (df.get(st) ?? 0) + 1)))
   const maxDf = Math.max(1, Math.floor(workers.length / 2))
 
-  let best: Agent | undefined
+  let best: Agent[] = []
   let bestScore = 0
   workers.forEach((w, i) => {
     let score = 0
@@ -78,25 +78,34 @@ function profileMatch(text: string, workers: Agent[]): Agent | undefined {
     })
     score += Math.min(jd, 4)
     if (score > bestScore) {
-      best = w
+      best = [w]
       bestScore = score
-    }
+    } else if (score === bestScore && score > 0) best.push(w)
   })
-  return bestScore >= 2 ? best : undefined
+  return bestScore >= 2 ? best : []
 }
 
-function assigneeFor(text: string, fallbackIdx: number, team: Agent[] | undefined, leadId: string): string | undefined {
+/** Among equally good candidates (e.g. duplicated developers), the one given the fewest tasks in this plan. */
+function leastLoaded(candidates: Agent[], load: Map<string, number>): Agent | undefined {
+  return [...candidates].sort((a, b) => (load.get(a.id) ?? 0) - (load.get(b.id) ?? 0))[0]
+}
+
+function assigneeFor(text: string, fallbackIdx: number, team: Agent[] | undefined, leadId: string, load: Map<string, number>): string | undefined {
   const pool = team ?? agentsRepo.list()
   const workers = pool.filter((a) => !a.isLead && a.enabled && a.id !== leadId)
+  const pick = (a: Agent | undefined): string | undefined => {
+    if (a) load.set(a.id, (load.get(a.id) ?? 0) + 1)
+    return a?.name
+  }
   const byProfile = profileMatch(text, workers)
-  if (byProfile) return byProfile.name
+  if (byProfile.length) return pick(leastLoaded(byProfile, load))
   for (const [kw, role] of ROLE_KEYWORDS) {
     if (kw.test(text)) {
-      const a = workers.find((w) => role.test(w.role))
-      if (a) return a.name
+      const matching = workers.filter((w) => role.test(w.role))
+      if (matching.length) return pick(leastLoaded(matching, load))
     }
   }
-  return workers.length ? workers[fallbackIdx % workers.length].name : undefined
+  return workers.length ? pick(workers[fallbackIdx % workers.length]) : undefined
 }
 
 function extractUserMessage(prompt: string): string {
@@ -140,10 +149,11 @@ function chatReplyText(ctx: RunContext): string {
     .map((s) => s.trim())
     .filter((s) => s.split(/\s+/).length >= 3)
     .slice(0, 4)
+  const load = new Map<string, number>()
   const items = (parts.length ? parts : [msg]).map((p, i) => ({
     title: p.charAt(0).toUpperCase() + p.slice(1, 90),
     description: t('demo:chat.taskDescription', { request: msg.slice(0, 280), scope: p }),
-    assignee: assigneeFor(p, i, ctx.team, ctx.agent.id),
+    assignee: assigneeFor(p, i, ctx.team, ctx.agent.id, load),
     priority: i === 0 ? 2 : 1
   }))
   const lines = items.map((it) => `- **${it.title}** → ${it.assignee ?? t('demo:chat.unassigned')}`).join('\n')

@@ -108,7 +108,8 @@
     "leadNotesSent_one": "🎯 Note added to {{keys}}.",
     "leadNotesSent_other": "🎯 Notes added to {{count}} tasks: {{keys}}.",
     "leadNotesUnknown": "⚠️ No such task in this project, note not delivered: {{keys}}",
-    "limitStopped": "⏱ {{agent}} · {{key}}: {{reason}}"
+    "limitStopped": "⏱ {{agent}} · {{key}}: {{reason}}",
+    "handedToTwin": "↔ {{key}} handed from {{from}} (busy) to {{to}}, same role and skills"
   },
   "errors": {
     "noFolder": "No folder selected for “{{project}}”. CLI agents can touch files, so choose a folder in the project settings.",

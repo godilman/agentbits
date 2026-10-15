@@ -116,6 +116,10 @@
       "title": "Kurulum sihirbazı",
       "desc": "İlk açılış ekranını yeniden göster.",
       "restart": "Yeniden başlat"
+    },
+    "twins": {
+      "title": "İkizler arasında iş paylaşımı",
+      "desc": "Boştaki ajan, aynı rol ve yeteneklere sahip meşgul bir ajanın sırada bekleyen görevini devralır (ör. çoğaltılmış yazılımcı). İnceleme notuyla geri gönderilen görevler kendi ajanında kalır."
     }
   },
   "data": {

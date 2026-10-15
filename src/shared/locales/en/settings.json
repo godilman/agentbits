@@ -116,6 +116,10 @@
       "title": "Setup wizard",
       "desc": "Show the first-run screen again.",
       "restart": "Restart"
+    },
+    "twins": {
+      "title": "Share work between twins",
+      "desc": "A free agent takes over a task queued for a busy agent with the same role and skills (e.g. a duplicated developer). Tasks sent back with a review note stay with their agent."
     }
   },
   "data": {
