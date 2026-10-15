@@ -13,6 +13,7 @@ import type {
   ConnectionPermission,
   AppSettings,
   Decision,
+  MemorySuggestion,
   Message,
   OrgUnit,
   Project,
@@ -30,7 +31,7 @@ import { t } from '@/i18n'
 export type Tab = 'chat' | 'office' | 'team' | 'terminal' | 'tasks' | 'files' | 'reports' | 'decisions' | 'browser'
 /** Top level: the organization page or one of the open project tabs. */
 export type View = 'org' | 'project'
-export type OrgTab = 'chart' | 'teams' | 'agents' | 'templates' | 'skills' | 'apps' | 'connections'
+export type OrgTab = 'chart' | 'teams' | 'agents' | 'templates' | 'skills' | 'apps' | 'connections' | 'memory'
 export type SettingsSection = 'agents' | 'permissions' | 'providers' | 'memory' | 'data' | 'limits' | 'general'
 
 export interface Toast {
@@ -54,6 +55,8 @@ type Resource =
   | 'orchestrator'
   | 'units'
   | 'projects'
+  /** What agents learned from chat, waiting for the user's yes. */
+  | 'memory'
   /** Chat feed, per-channel caches and agent logs (after bulk deletes). */
   | 'messages'
   /** Token usage summary (all projects). */
@@ -110,6 +113,7 @@ interface State {
   orchestratorWaits: { held: Record<string, string>; unmerged: string[]; undecided: string[] }
   toasts: Toast[]
   memoryVersion: number
+  memorySuggestions: MemorySuggestion[]
   /** Bumped on `files:changed`; file lists, chips and previews refetch. */
   filesVersion: number
   /** Setup guide drawer (Kılavuz). */
@@ -305,6 +309,7 @@ async function loadAll(): Promise<void> {
     ready: true
   })
   if (!unsubscribe) unsubscribe = bridge().on(handleEvent)
+  void useAppStore.getState().refresh('memory')
 }
 
 const waitsOf = (o: { held: { taskId: string; reason: string }[]; unmerged: string[]; undecided: string[] }): State['orchestratorWaits'] => ({
@@ -354,6 +359,7 @@ export const useAppStore = create<State>((set, get) => ({
   orchestratorWaits: { held: {}, unmerged: [], undecided: [] },
   toasts: [],
   memoryVersion: 0,
+  memorySuggestions: [],
   filesVersion: 0,
   filePreview: null,
   guideOpen: false,
@@ -420,6 +426,8 @@ export const useAppStore = create<State>((set, get) => ({
       }
       case 'units':
         return set({ units: await call('units:list') })
+      case 'memory':
+        return set({ memorySuggestions: await call('memory:suggestions') })
       case 'projects': {
         const projects = await call('projects:list')
         const before = get()
@@ -629,7 +637,7 @@ function handleEvent(e: AppEvent): void {
       return schedule('messages', 'stats')
     case 'memory:changed':
       useAppStore.setState({ memoryVersion: s.memoryVersion + 1 })
-      return schedule('stats')
+      return schedule('stats', 'memory')
     case 'message:new': {
       const m = e.message
       if (s.feed.some((x) => x.id === m.id)) return

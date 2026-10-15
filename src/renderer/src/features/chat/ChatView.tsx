@@ -1,8 +1,8 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { Hash, Send, Sparkles } from 'lucide-react'
+import { Brain, Hash, Send, Sparkles } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import type { I18nKey } from '@shared/i18n'
-import type { FileKind, FileRecord, FileShare, Message } from '@shared/types'
+import type { FileKind, FileRecord, FileShare, Message, RecalledMemory } from '@shared/types'
 import { descendantIds } from '@shared/org'
 import { PixelAvatar } from '@/components/common/PixelAvatar'
 import { call } from '@/lib/api'
@@ -13,6 +13,7 @@ import { apiError } from '@/lib/api'
 import { agentById, channelKey, useAppStore } from '@/store/useAppStore'
 import { useAttachments, useFileDrop, useFileRecords } from '@/features/files/hooks'
 import { AttachButton, AttachmentTray, DropOverlay, FileChip } from '@/features/files/parts'
+import { RecalledTrace, SuggestionRow } from '@/features/memory/parts'
 
 type MessageFile = { id: string; name: string; kind?: FileKind; size?: number }
 const messageFiles = (m: Message): MessageFile[] => (Array.isArray(m.meta?.files) ? (m.meta!.files as MessageFile[]) : [])
@@ -298,7 +299,38 @@ function MessageRow({ m, prev, files }: { m: Message; prev?: Message; files: Map
           <Markdown text={m.content} />
         </div>
         {chips}
+        {!isUser && <MessageMemory m={m} />}
       </div>
+    </div>
+  )
+}
+
+/** Graph memory under an agent's reply: what it learned (ask / saved) and what it remembered. */
+function MessageMemory({ m }: { m: Message }) {
+  const { t } = useTranslation()
+  const pending = useAppStore((s) => s.memorySuggestions)
+  const showOrg = useAppStore((s) => s.showOrg)
+  const asked = Array.isArray(m.meta?.suggestions) ? (m.meta!.suggestions as { id: string }[]) : []
+  const open = pending.filter((p) => asked.some((a) => a.id === p.id))
+  const learned = Array.isArray(m.meta?.learned) ? (m.meta!.learned as { id: string; content: string }[]) : []
+  const recalled = Array.isArray(m.meta?.recalled) ? (m.meta!.recalled as RecalledMemory[]) : []
+  if (!open.length && !learned.length && !recalled.length) return null
+  return (
+    <div className="max-w-[560px]">
+      {open.map((s) => (
+        <div key={s.id} className="mt-2">
+          <SuggestionRow s={s} compact />
+        </div>
+      ))}
+      {learned.map((l) => (
+        <div key={l.id} className="mt-1.5 flex items-center gap-1.5 text-[11.5px] text-pink-200/90">
+          <Brain size={12} /> {t('org:memory.learnedLine', { text: l.content })}
+          <button className="text-zinc-400 underline-offset-2 hover:text-zinc-200 hover:underline" onClick={() => showOrg('memory')}>
+            {t('org:memory.seeInMemory')}
+          </button>
+        </div>
+      ))}
+      <RecalledTrace items={recalled} title={t('org:memory.trace.chat')} />
     </div>
   )
 }

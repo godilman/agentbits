@@ -1,5 +1,5 @@
 import type { Provider, ProviderTestResult } from '@shared/types'
-import { AbortedError, readSse, type ProviderAdapter, type RunContext, type RunResult } from './types'
+import { AbortedError, cutShort, readSse, type ProviderAdapter, type RunContext, type RunResult } from './types'
 
 /** One model request (streamed) may take at most this long. */
 const REQUEST_TIMEOUT_MS = 10 * 60_000
@@ -108,11 +108,13 @@ export const anthropicAdapter: ProviderAdapter = {
       ctx.onUsage?.({ input: tokensIn, output: tokensOut, cacheRead, cacheWrite, costUsd: 0 })
       totalIn += tokensIn + cacheRead + cacheWrite
       totalOut += tokensOut
+      // Stopped by the output token limit: the answer is unfinished.
+      if (stop === 'max_tokens') text += cutShort(ctx, t('orchestrator:providers.tokenLimit', { provider: 'Anthropic' }))
 
       const calls = blocks.filter((b) => b?.type === 'tool_use')
       if (stop !== 'tool_use' || !calls.length || !ctx.callTool) break
       if (round === MAX_TOOL_ROUNDS) {
-        ctx.onLog('warn', t('orchestrator:providers.toolRoundLimit', { max: MAX_TOOL_ROUNDS }))
+        text += cutShort(ctx, t('orchestrator:providers.toolRoundLimit', { max: MAX_TOOL_ROUNDS }))
         break
       }
       const content = blocks

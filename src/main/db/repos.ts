@@ -15,6 +15,7 @@ import type {
   LogLevel,
   Memory,
   MemoryKind,
+  MemorySuggestion,
   MemoryScope,
   Message,
   OrgUnit,
@@ -649,7 +650,8 @@ const mapRun = (r: Row): Run => ({
   tokensOut: r.tokens_out,
   costUsd: r.cost_usd,
   startedAt: r.started_at,
-  endedAt: r.ended_at
+  endedAt: r.ended_at,
+  recalled: r.recalled ? JSON.parse(r.recalled) : []
 })
 
 export const runsRepo = {
@@ -681,12 +683,14 @@ export const runsRepo = {
       tokensIn: 'tokens_in',
       tokensOut: 'tokens_out',
       costUsd: 'cost_usd',
-      endedAt: 'ended_at'
+      endedAt: 'ended_at',
+      recalled: 'recalled'
     }
     const sets: string[] = []
     const vals: unknown[] = []
     for (const [k, col] of Object.entries(map)) {
-      const v = (patch as any)[k]
+      let v = (patch as any)[k]
+      if (k === 'recalled' && v !== undefined) v = JSON.stringify(v)
       if (v === undefined) continue
       sets.push(`${col} = ?`)
       vals.push(v)
@@ -827,8 +831,53 @@ export const mapMemory = (r: Row): Memory => ({
   taskId: r.task_id,
   accessCount: r.access_count,
   createdAt: r.created_at,
-  lastAccessedAt: r.last_accessed_at
+  lastAccessedAt: r.last_accessed_at,
+  supersededBy: r.superseded_by ?? null,
+  topics: r.topics ? JSON.parse(r.topics) : []
 })
+
+/** Select column with a memory's topic names (JSON array); the memories table must be aliased `m`. */
+export const MEM_TOPICS = `(SELECT json_group_array(t.name) FROM memory_links l JOIN memory_topics t ON l.target = 'topic:' || t.id
+  WHERE l.memory_id = m.id AND l.kind = 'about') AS topics`
+
+const mapSuggestion = (r: Row): MemorySuggestion => ({
+  id: r.id,
+  content: r.content,
+  kind: r.kind,
+  topics: JSON.parse(r.topics || '[]'),
+  replaces: r.replaces ?? null,
+  replacesText: r.replaces_text ?? null,
+  projectId: r.project_id ?? null,
+  channel: r.channel,
+  agentId: r.agent_id ?? null,
+  createdAt: r.created_at
+})
+
+export const suggestionsRepo = {
+  list(): MemorySuggestion[] {
+    return (
+      getDb()
+        .prepare('SELECT s.*, m.content AS replaces_text FROM memory_suggestions s LEFT JOIN memories m ON m.id = s.replaces ORDER BY s.created_at')
+        .all() as Row[]
+    ).map(mapSuggestion)
+  },
+  get(id: string): MemorySuggestion | null {
+    const r = getDb()
+      .prepare('SELECT s.*, m.content AS replaces_text FROM memory_suggestions s LEFT JOIN memories m ON m.id = s.replaces WHERE s.id = ?')
+      .get(id) as Row | undefined
+    return r ? mapSuggestion(r) : null
+  },
+  add(s: Omit<MemorySuggestion, 'id' | 'createdAt' | 'replacesText'>): MemorySuggestion {
+    const id = randomUUID()
+    getDb()
+      .prepare('INSERT INTO memory_suggestions(id, content, kind, topics, replaces, project_id, channel, agent_id, created_at) VALUES (?,?,?,?,?,?,?,?,?)')
+      .run(id, s.content, s.kind, JSON.stringify(s.topics), s.replaces, s.projectId, s.channel, s.agentId, now())
+    return this.get(id)!
+  },
+  delete(id: string): void {
+    getDb().prepare('DELETE FROM memory_suggestions WHERE id = ?').run(id)
+  }
+}
 
 export const memoriesRepo = {
   add(m: {
@@ -860,7 +909,46 @@ export const memoriesRepo = {
         now(),
         m.projectId ?? null
       )
-    return mapMemory(getDb().prepare('SELECT * FROM memories WHERE id = ?').get(id) as Row)
+    return this.get(id)!
+  },
+  get(id: string): Memory | null {
+    const r = getDb().prepare(`SELECT m.*, ${MEM_TOPICS} FROM memories m WHERE m.id = ?`).get(id) as Row | undefined
+    return r ? mapMemory(r) : null
+  },
+  /** New text: the old vector is dropped (re-embedded when semantic memory is on). */
+  update(id: string, content: string): void {
+    getDb().prepare('UPDATE memories SET content = ? WHERE id = ?').run(content, id)
+    getDb().prepare('DELETE FROM memory_vectors WHERE memory_id = ?').run(id)
+  },
+  /** A memory's topics (graph links), at most 5; topics nobody links to any more are removed. */
+  setTopics(id: string, names: string[]): void {
+    const db = getDb()
+    const clean = [...new Map(names.map((n) => n.trim().slice(0, 60)).filter(Boolean).map((n) => [n.toLocaleLowerCase('tr'), n])).values()].slice(0, 5)
+    db.transaction(() => {
+      db.prepare(`DELETE FROM memory_links WHERE memory_id = ? AND kind = 'about'`).run(id)
+      // Same topic whatever the case ("Ödeme" = "ödeme"): SQLite's NOCASE only folds ASCII.
+      const known = new Map((db.prepare('SELECT id, name FROM memory_topics').all() as Row[]).map((r) => [String(r.name).toLocaleLowerCase('tr'), r.id as string]))
+      for (const name of clean) {
+        let topicId = known.get(name.toLocaleLowerCase('tr'))
+        if (!topicId) {
+          topicId = randomUUID()
+          db.prepare('INSERT INTO memory_topics(id, name) VALUES (?, ?)').run(topicId, name)
+          known.set(name.toLocaleLowerCase('tr'), topicId)
+        }
+        db.prepare(`INSERT OR IGNORE INTO memory_links(memory_id, target, kind) VALUES (?, ?, 'about')`).run(id, `topic:${topicId}`)
+      }
+      this.pruneTopics()
+    })()
+  },
+  link(id: string, target: string, kind: 'about' | 'learned'): void {
+    getDb().prepare('INSERT OR IGNORE INTO memory_links(memory_id, target, kind) VALUES (?, ?, ?)').run(id, target, kind)
+  },
+  /** `oldId` stays as history; agents only get `newId`. */
+  supersede(oldId: string, newId: string): void {
+    getDb().prepare('UPDATE memories SET superseded_by = ? WHERE id = ? AND id != ?').run(newId, oldId, newId)
+  },
+  pruneTopics(): void {
+    getDb().prepare(`DELETE FROM memory_topics WHERE 'topic:' || id NOT IN (SELECT target FROM memory_links WHERE kind = 'about')`).run()
   },
   /** `projectId`: undefined = all, null = organization-wide only, id = that project + organization-wide. */
   list(opts: { agentId?: string | null; limit?: number; projectId?: string | null } = {}): Memory[] {
@@ -870,15 +958,20 @@ export const memoriesRepo = {
     if (opts.projectId === null) where.push('project_id IS NULL')
     else if (opts.projectId) (where.push('(project_id IS NULL OR project_id = ?)'), vals.push(opts.projectId))
     const rows = getDb()
-      .prepare(`SELECT * FROM memories ${where.length ? 'WHERE ' + where.join(' AND ') : ''} ORDER BY created_at DESC LIMIT ?`)
+      .prepare(`SELECT m.*, ${MEM_TOPICS} FROM memories m ${where.length ? 'WHERE ' + where.join(' AND ') : ''} ORDER BY created_at DESC LIMIT ?`)
       .all(...vals, opts.limit ?? 200)
     return (rows as Row[]).map(mapMemory)
   },
+  /** Forgetting a memory brings back the one it had replaced; its topics go when nothing else links to them. */
   delete(id: string): void {
+    getDb().prepare('UPDATE memories SET superseded_by = NULL WHERE superseded_by = ?').run(id)
     getDb().prepare('DELETE FROM memories WHERE id = ?').run(id)
+    this.pruneTopics()
   },
   deleteBySource(source: string): number {
-    return getDb().prepare('DELETE FROM memories WHERE source = ?').run(source).changes
+    const ids = (getDb().prepare('SELECT id FROM memories WHERE source = ?').all(source) as Row[]).map((r) => r.id as string)
+    for (const id of ids) this.delete(id)
+    return ids.length
   }
 }
 

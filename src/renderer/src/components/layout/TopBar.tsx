@@ -22,7 +22,8 @@ import {
   Users,
   X,
   Paperclip,
-  BookOpen
+  BookOpen,
+  Brain
 } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import type { Project } from '@shared/types'
@@ -126,6 +127,7 @@ function ProjectStrip() {
       <div className="no-drag ml-auto flex shrink-0 items-center gap-1">
         <NeedsYouButton />
         <GuideButton />
+        <MemoryButton />
         <button
           onClick={() => void call(paused ? 'orchestrator:resumeAll' : 'orchestrator:pauseAll')}
           className={cn(
@@ -144,6 +146,19 @@ function ProjectStrip() {
         </button>
       </div>
     </div>
+  )
+}
+
+/** Shortcut to Organization → Memory; the badge counts what agents learned and wait for the user's yes. */
+function MemoryButton() {
+  const { t } = useTranslation()
+  const pending = useAppStore((s) => s.memorySuggestions.length)
+  const showOrg = useAppStore((s) => s.showOrg)
+  return (
+    <button data-testid="memory-shortcut" className="icon-btn relative h-7 w-7" onClick={() => showOrg('memory')} title={t('layout:topBar.memory')}>
+      <Brain size={15} />
+      {pending > 0 && <span className="absolute -right-0.5 -top-0.5 rounded bg-pink-500 px-1 text-[9.5px] font-semibold leading-[14px] text-white">{pending}</span>}
+    </button>
   )
 }
 

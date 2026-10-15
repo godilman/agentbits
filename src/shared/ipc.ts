@@ -30,6 +30,8 @@ import type {
   Decision,
   DecisionInput,
   Memory,
+  MemoryGraph,
+  MemorySuggestion,
   MemoryKind,
   Message,
   OrgUnit,
@@ -248,6 +250,15 @@ export interface Api {
   /** `projectId` null/omitted = organization-wide memory. */
   'memory:add': (content: string, kind: MemoryKind, agentId?: string | null, projectId?: string | null) => Memory
   'memory:delete': (id: string) => void
+  /** Edit a memory's text and topics (re-embedded when semantic memory is on). */
+  'memory:update': (id: string, content: string, topics: string[]) => Memory
+  /** The memory graph (organization-wide + the project's, or everything when omitted). */
+  'memory:graph': (projectId?: string | null) => MemoryGraph
+  /** What agents learned from chat and wait for the user's yes. */
+  'memory:suggestions': () => MemorySuggestion[]
+  /** Save a suggestion (optionally with edited text); it replaces the memory it names. */
+  'memory:accept': (id: string, content?: string) => Memory
+  'memory:dismiss': (id: string) => void
   /** Semantic memory: on, how many memories have a vector for the current model, last error ('' = none). */
   'memory:vectorStatus': () => { enabled: boolean; indexed: number; total: number; error: string }
 

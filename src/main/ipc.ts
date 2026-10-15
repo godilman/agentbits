@@ -9,6 +9,7 @@ import {
   getStats,
   logsRepo,
   memoriesRepo,
+  suggestionsRepo,
   messagesRepo,
   permissionsRepo,
   projectsRepo,
@@ -731,6 +732,26 @@ const handlers: Handlers = {
   },
   'memory:delete': (id) => {
     memoriesRepo.delete(id)
+    emit({ type: 'memory:changed' })
+  },
+  'memory:update': (id, content, topics) => {
+    const text = content.trim().slice(0, 4000)
+    if (!text || !memoriesRepo.get(id)) throw new Error('memory: not found or empty')
+    memoriesRepo.update(id, text)
+    memoriesRepo.setTopics(id, topics)
+    scheduleIndex()
+    emit({ type: 'memory:changed' })
+    return memoriesRepo.get(id)!
+  },
+  'memory:graph': (projectId) => memoryEngine.graph(projectId ?? undefined),
+  'memory:suggestions': () => suggestionsRepo.list(),
+  'memory:accept': (id, content) => {
+    const m = memoryEngine.accept(id, content ?? undefined)
+    emit({ type: 'memory:changed' })
+    return m
+  },
+  'memory:dismiss': (id) => {
+    suggestionsRepo.delete(id)
     emit({ type: 'memory:changed' })
   },
 

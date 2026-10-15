@@ -48,8 +48,10 @@ import { fileRef } from '@shared/files'
 import { AbortedError, getAdapter, type ProviderAdapter } from '../providers'
 import { getDb, getDbPath } from '../db'
 import { memoryEngine } from './memory'
+import { parseLearn } from '@shared/memoryGraph'
 import { activeProjectIds, getProject, memberProjectIds, projectLead, projectMembers } from './org'
 import {
+  learnInstructions,
   leadPrompt,
   leadSystem,
   parseDecisions,
@@ -348,6 +350,16 @@ class Orchestrator {
     return out
   }
 
+  /**
+   * What holds back dependent tasks: the unmerged done tasks, plus a race's losing attempt whose winner isn't merged yet
+   * (tasks keep depending on the original even when the challenger won).
+   */
+  private mergeBlockers(): Set<string> {
+    const out = this.unmergedDone()
+    for (const t of tasksRepo.listAll()) if (t.status === 'done' && t.raceResult === 'lost' && out.has(this.raceWinner(t).id)) out.add(t.id)
+    return out
+  }
+
   private saveHeld(): void {
     const live = new Set(tasksRepo.listAll().map((x) => x.id))
     for (const id of [...this.blocked]) if (!live.has(id)) this.blocked.delete(id)
@@ -385,7 +397,7 @@ class Orchestrator {
     const active = activeProjectIds()
     if (!active.length) return
     const leads = new Map(active.map((pid) => [pid, projectLead(pid)?.id ?? null]))
-    const unmerged = this.unmergedDone()
+    const unmerged = this.mergeBlockers()
     for (const agent of agentsRepo.list()) {
       if (!agent.enabled || agent.isLead || agent.status !== 'idle' || this.busy.has(agent.id)) continue
       // Unassigned work only from projects the agent belongs to and does not lead.
@@ -649,9 +661,11 @@ class Orchestrator {
     senderId: string | null,
     content: string,
     projectId: string | null,
-    files: FileRecord[] = []
+    files: FileRecord[] = [],
+    extra: Record<string, unknown> = {}
   ): void {
-    const meta = files.length ? { files: files.map((f) => ({ id: f.id, name: f.name, kind: f.kind, size: f.size })) } : undefined
+    const all = { ...extra, ...(files.length ? { files: files.map((f) => ({ id: f.id, name: f.name, kind: f.kind, size: f.size })) } : {}) }
+    const meta = Object.keys(all).length ? all : undefined
     const message = messagesRepo.create(channel, senderType, senderId, content, projectId, meta)
     for (const f of files) filesRepo.link(f.id, 'message', message.id, f.origin === 'user' ? 'attached' : 'generated')
     emit({ type: 'message:new', message })
@@ -810,8 +824,9 @@ class Orchestrator {
           })
         : null
     const ws = wt?.dir ?? this.workspace(project)
-    const memories = await memoryEngine.recall({ agentId: agent.id, taskId: task.id, projectId: pid, query: `${task.title} ${task.description}` })
-    let system = workerSystem(agent, perms, memoryEngine.format(memories), ws) + '\n\n' + this.projectContext(project)
+    const memory = await memoryEngine.context({ agentId: agent.id, taskId: task.id, projectId: pid, query: `${task.title} ${task.description}` })
+    runsRepo.update(runId, { recalled: memory.recalled })
+    let system = workerSystem(agent, perms, memory.text, ws) + '\n\n' + this.projectContext(project)
     if (wt) {
       system +=
         `\n\n## Your working copy\nYou work in your own git worktree of the project (branch ${wt.branch}), not in the project folder itself; ` +
@@ -873,7 +888,7 @@ class Orchestrator {
     if (taskFiles.given.length) {
       this.log({ ...logCtx, level: 'info', message: t('orchestrator:log.filesGiven', { count: taskFiles.given.length, names: taskFiles.given.map((f) => f.name).join(', ') }) })
     }
-    if (memories.length) this.log({ ...logCtx, level: 'debug', message: t('orchestrator:log.memoriesRecalled', { count: memories.length }) })
+    if (memory.recalled.length) this.log({ ...logCtx, level: 'debug', message: t('orchestrator:log.memoriesRecalled', { count: memory.recalled.length }) })
     this.post(`task:${task.id}`, 'system', null, t('orchestrator:chat.taskStarted', { agent: agent.name }), pid)
 
     let lineBuf = ''
@@ -1465,7 +1480,8 @@ class Orchestrator {
     this.setStatus(lead.id, 'working', t('orchestrator:race.comparing', { a: orig.key, b: chal.key }))
     const leadCtx = { agentId: lead.id, taskId: orig.id, projectId: pid }
     const prompt = racePrompt(orig, { agent: a, label: label(a), output: runA.output }, { agent: b, label: label(b), output: runB.output })
-    const system = raceSystem(lead)
+    const criteria = acceptanceList(orig.acceptance)
+    const system = raceSystem(lead, criteria.length)
     this.log({ ...leadCtx, level: 'prompt', message: t('orchestrator:race.comparing', { a: orig.key, b: chal.key }), meta: { from: 'system', prompt, system } })
     const aux = this.auxStart(pid)
     try {
@@ -1491,10 +1507,32 @@ class Orchestrator {
       const o = tasksRepo.get(orig.id)
       const c = tasksRepo.get(chal.id)
       if (!o || !c || o.status !== 'in_review' || c.status !== 'in_review') return // the user moved one meanwhile
-      if (!v.valid || !v.winner) {
+      // Acceptance criteria: the lead checks each one for both attempts; only an attempt that meets all of them can win.
+      const checkA = criteria.length ? judgeCriteria(criteria, v.criteriaA) : []
+      const checkB = criteria.length ? judgeCriteria(criteria, v.criteriaB) : []
+      if (!v.valid || !v.winner || !checkA || !checkB) {
         for (const x of [o, c]) this.post(`task:${x.id}`, 'system', null, t('orchestrator:race.unclear', { lead: lead.name }), pid)
         for (const x of [o, c]) this.undecided.add(x.id)
         emit({ type: 'orchestrator:changed' })
+        return
+      }
+      if (checkA.length) tasksRepo.update(o.id, { acceptanceCheck: checkA })
+      if (checkB.length) tasksRepo.update(c.id, { acceptanceCheck: checkB })
+      const unmetOf = (check: typeof checkA): string => check.filter((x) => !x.met).map((x) => `${x.text}${x.note ? ` (${x.note})` : ''}`).join('; ')
+      const picked = v.winner === 'A' ? checkA : v.winner === 'B' ? checkB : null
+      if (!picked || picked.some((x) => !x.met)) {
+        // Neither attempt does the task (or the pick misses a criterion): the original goes back to its agent, the copy closes.
+        const unmet = unmetOf(checkA)
+        const note = unmet ? `${v.note}\n${t('orchestrator:review.unmet', { list: unmet })}` : v.note
+        tasksRepo.update(o.id, { status: 'todo', progress: 0, reviewNote: note })
+        tasksRepo.update(c.id, { raceResult: 'lost', reviewNote: t('orchestrator:race.noneNote', { key: o.key }) })
+        tasksRepo.move(c.id, 'done')
+        void this.discardTaskBranch(c)
+        const text = t('orchestrator:race.none', { a: o.key, b: c.key, note })
+        this.post('general', 'agent', lead.id, text, pid)
+        for (const x of [o, c]) this.post(`task:${x.id}`, 'agent', lead.id, text, pid)
+        this.log({ ...leadCtx, level: 'status', message: text })
+        emit({ type: 'tasks:changed' })
         return
       }
       const [win, lose, winner] = v.winner === 'A' ? [o, c, a] : [c, o, b]
@@ -1854,14 +1892,16 @@ class Orchestrator {
       const members = projectMembers(projectId)
       const isLeadHere = projectLead(projectId)?.id === agent.id
       const history = messagesRepo.list(channel, 24, projectId).slice(0, -1)
-      const memories = await memoryEngine.recall({ agentId: agent.id, projectId, query: content, limit: 6 })
+      const memory = await memoryEngine.context({ agentId: agent.id, projectId, query: content, limit: 6 })
+      const learning = settingsRepo.get().memoryLearn !== 'off'
       const team = members.some((m) => m.id === agent.id) ? members : [agent, ...members]
       let system =
         (isLeadHere
-          ? leadSystem(agent, team, tasksRepo.listAll().filter((t) => t.projectId === projectId), memoryEngine.format(memories), skillNamesFor) +
+          ? leadSystem(agent, team, tasksRepo.listAll().filter((t) => t.projectId === projectId), memory.text, skillNamesFor) +
             [this.interventionsContext(projectId), this.finishedWorkContext(projectId)].map((c) => (c ? '\n\n' + c : '')).join('')
-          : workerSystem(agent, permissionsRepo.get(agent.id), memoryEngine.format(memories), this.workspace(project)) +
+          : workerSystem(agent, permissionsRepo.get(agent.id), memory.text, this.workspace(project)) +
             '\n\nYou are chatting directly with the user. Answer briefly.') +
+        (learning ? '\n\n' + learnInstructions() : '') +
         '\n\n' +
         this.projectContext(project)
       // Files of this message are inlined while the budget lasts; the rest is read with tools where available.
@@ -1957,7 +1997,15 @@ class Orchestrator {
       if (answer) this.log({ ...chatCtx, level: 'output', message: answer.slice(0, 4000) })
       const planned = isLeadHere ? parseTasks(result.text) : []
       const decisions = parseDecisions(result.text)
-      this.post(channel, 'agent', agent.id, stripBlocks(result.text) || t('orchestrator:chat.planFallback'), projectId)
+      // Learning comes only from a reply to the user's own chat message (never from task runs, reviews or files).
+      const learned = learning ? memoryEngine.learn(parseLearn(result.text), { agentId: agent.id, projectId, channel, known: memory.recalled }) : null
+      const meta = {
+        ...(memory.recalled.length ? { recalled: memory.recalled } : {}),
+        ...(learned?.suggested.length ? { suggestions: learned.suggested.map((s) => ({ id: s.id, content: s.content })) } : {}),
+        ...(learned?.saved.length ? { learned: learned.saved.map((m) => ({ id: m.id, content: m.content })) } : {})
+      }
+      if (learned && (learned.suggested.length || learned.saved.length)) emit({ type: 'memory:changed' })
+      this.post(channel, 'agent', agent.id, stripBlocks(result.text) || t('orchestrator:chat.planFallback'), projectId, [], meta)
       const memberByName = (name: string): string | null => {
         const n = name.trim().toLocaleLowerCase('tr')
         return members.find((m) => m.name.toLocaleLowerCase('tr') === n)?.id ?? null

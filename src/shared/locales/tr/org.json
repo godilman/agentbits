@@ -27,7 +27,8 @@
       "templates": "Şablonlar",
       "connections": "Bağlantılar",
       "skills": "Skill'ler",
-      "apps": "Uygulamalar"
+      "apps": "Uygulamalar",
+      "memory": "Hafıza"
     },
     "fromTemplate": "Şablondan kur",
     "newUnit": "Yeni birim"
@@ -191,6 +192,113 @@
       "done_one": "{{name}} içe aktarıldı · {{count}} ajan",
       "done_other": "{{name}} içe aktarıldı · {{count}} ajan",
       "reused": "Bu skill'ler zaten kuruluydu, seninkiler korundu: {{names}}"
+    }
+  },
+  "memory": {
+    "kinds": {
+      "all": "Hepsi",
+      "preference": "Tercih",
+      "fact": "Bilgi",
+      "decision": "Karar",
+      "context": "Bağlam",
+      "summary": "Özet"
+    },
+    "topicsPlaceholder": "Konular, virgülle ayır (ör. Ödeme, PHP 5.5)",
+    "suggest": {
+      "title": "Bunu öğrendim, kaydedeyim mi?",
+      "replaces": "Şunun yerini alır: “{{text}}”",
+      "keep": "Kaydet",
+      "keepReplace": "Kaydet, eskisinin yerini alsın",
+      "drop": "Kaydetme",
+      "heading_one": "Onayını bekleyenler ({{count}})",
+      "heading_other": "Onayını bekleyenler ({{count}})"
+    },
+    "via": {
+      "profile": "seninle ilgili",
+      "match": "eşleşme",
+      "graph": "bağlantılı"
+    },
+    "learn": {
+      "title": "Sohbetten öğrenme",
+      "desc": "Bir ajana kendinle ya da ekibin nasıl çalışacağıyla ilgili kalıcı bir şey söylediğinde, bunu tüm organizasyon için hatırlayabilir. Yalnız senin sohbet mesajların sayılır; dosyalar, web sayfaları ve raporlar asla.",
+      "ask": "Önce bana sor",
+      "auto": "Kendin karar ver",
+      "off": "Kapalı",
+      "askHint": "Her yeni hatıra senin onayını bekler.",
+      "autoHint": "Hemen kaydedilir; burada düzeltebilir ya da unutturabilirsin.",
+      "offHint": "Ajanlar sohbetten öğrenmez."
+    },
+    "tabs": {
+      "graph": "Graf",
+      "list_one": "Liste ({{count}})",
+      "list_other": "Liste ({{count}})"
+    },
+    "graphHint": "Sürükleyerek gez, tekerlekle yakınlaş, ayrıntı için bir noktaya tıkla.",
+    "listHint": "Her hatırayı ara, düzelt ya da unuttur.",
+    "profile": {
+      "title": "Seni tanıyorum",
+      "desc": "Her ajana seninle ilgili bunlar söylenir.",
+      "empty": "Henüz bir şey yok. Bir ajana nasıl çalışmayı sevdiğini söyle ya da buraya ekle.",
+      "addPlaceholder": "Kendinle ilgili bir şey ekle…"
+    },
+    "source": {
+      "learned": "sohbetten öğrenildi",
+      "user": "sen ekledin"
+    },
+    "forget": "Unut",
+    "add": {
+      "placeholder": "Ekibin hatırlaması gereken bir şey…",
+      "allAgents": "Tüm ajanlar",
+      "onlyAgent": "Yalnız {{name}}",
+      "allProjects": "Tüm projeler",
+      "onlyProject": "Yalnız {{name}}"
+    },
+    "search": "Hafızada ara…",
+    "superseded": "yerini aldı",
+    "shared": "Ortak",
+    "used_one": "{{count}} kez kullanıldı",
+    "used_other": "{{count}} kez kullanıldı",
+    "empty": "Eşleşen hatıra yok.",
+    "you": "Sen",
+    "youDesc": "Sen. Tercihler buraya bağlanır; her ajana söylenir.",
+    "graphSearch": "Grafta bul…",
+    "nodeTypes": {
+      "you": "Sen",
+      "memory": "Hatıra",
+      "topic": "Konu",
+      "task": "Görev",
+      "decision": "Karar",
+      "agent": "Ajan",
+      "chat": "Sohbet"
+    },
+    "graphCount": "{{nodes}} nokta · {{edges}} bağ",
+    "graphTruncated": "en önemli 300 hatıra çiziliyor",
+    "legendSupersedes": "yerini aldı",
+    "graphEmpty": "Hafıza boş. Ekip çalıştıkça ve sen sohbet ettikçe hatıralar ve bağları burada belirir.",
+    "supersededDesc": "Bunun yerini daha yeni bir hatıra aldı. Geçmiş olarak durur, ajanlara artık gönderilmez.",
+    "links_one": "{{count}} bağ",
+    "links_other": "{{count}} bağ",
+    "edge": {
+      "about": "konu",
+      "aboutIn": "hakkında",
+      "task": "görevden",
+      "taskIn": "hatıra",
+      "agent": "ajan",
+      "agentIn": "hatıra",
+      "decision": "karar",
+      "decisionIn": "hatıra",
+      "you": "seninle ilgili",
+      "youIn": "tercih",
+      "learned": "öğrenildiği yer",
+      "learnedIn": "burada öğrenildi",
+      "supersedes": "yerini aldı",
+      "supersedesIn": "yerini alan"
+    },
+    "learnedLine": "Öğrendim: “{{text}}”",
+    "seeInMemory": "Hafızada gör",
+    "trace": {
+      "chat": "Hatırladıklarım",
+      "task": "Bu görev neyi biliyordu?"
     }
   }
 }

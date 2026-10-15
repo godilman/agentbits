@@ -125,8 +125,21 @@ async function stream(ctx: RunContext, text: string): Promise<void> {
 function chatReply(ctx: RunContext): string {
   const filesPart = /## Files attached to this message\n([\s\S]*?)(\n### |$)/.exec(ctx.prompt)?.[1] ?? ''
   const fileCount = (filesPart.match(/^- \[[0-9a-f]{8}\]/gm) ?? []).length
-  const reply = chatReplyText(ctx)
+  const reply = chatReplyText(ctx) + learnedFrom(ctx)
   return fileCount ? `${t('demo:chat.filesReceived', { count: fileCount })}\n\n${reply}` : reply
+}
+
+/** Graph memory: a sentence like "from now on …" / "bundan sonra …" is something lasting about the user (```learn block). */
+function learnedFrom(ctx: RunContext): string {
+  if (!ctx.system.includes('## Learning about the user')) return ''
+  const cue = /\b(always|from now on|i prefer|bundan sonra|her zaman|her seferinde|tercih ederim)\b/i // i18n-ignore
+  const sentence = extractUserMessage(ctx.prompt)
+    .split(/[.!?\n]+/)
+    .map((s) => s.trim())
+    .find((s) => cue.test(s))
+  if (!sentence) return ''
+  const item = { text: sentence.charAt(0).toUpperCase() + sentence.slice(1, 300), kind: 'preference', topics: [t('demo:chat.learnTopic')] }
+  return `\n\n${t('demo:chat.learned')}\n\n\`\`\`learn\n${JSON.stringify([item], null, 2)}\n\`\`\``
 }
 
 function chatReplyText(ctx: RunContext): string {
@@ -452,7 +465,11 @@ export const mockAdapter: ProviderAdapter = {
       await stream(ctx, text)
     } else if (ctx.mode === 'review' && ctx.prompt.includes('\n## Attempt A by ')) {
       await sleep(rand(1500, 3000), ctx.signal)
-      text = JSON.stringify({ winner: Math.random() < 0.5 ? 'A' : 'B', note: t('demo:review.race') })
+      // Acceptance criteria: the winner meets every one, the other attempt misses the first.
+      const n = Number(/have exactly (\d+) entries each/.exec(ctx.system)?.[1] ?? 0)
+      const winner = Math.random() < 0.5 ? 'A' : 'B'
+      const check = (won: boolean): { met: boolean; note: string }[] => Array.from({ length: n }, (_, i) => ({ met: won || i > 0, note: '' }))
+      text = JSON.stringify({ winner, note: t('demo:review.race'), ...(n ? { criteriaA: check(winner === 'A'), criteriaB: check(winner === 'B') } : {}) })
     } else if (ctx.mode === 'review') {
       await sleep(rand(1500, 3000), ctx.signal)
       const approved = Math.random() < 0.85

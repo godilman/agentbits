@@ -64,7 +64,8 @@ export const DEFAULT_SETTINGS: AppSettings = {
   shareWithTwins: true,
   raceMode: false,
   memoryEmbedProviderId: '',
-  memoryEmbedModel: ''
+  memoryEmbedModel: '',
+  memoryLearn: 'ask'
 }
 
 /** Upper bounds of the number settings (0 = no limit / keep forever). */
@@ -115,6 +116,10 @@ export function validateSettingsPatch(patch: unknown): Partial<AppSettings> {
         break
       case 'startupProjects':
         if (v !== 'ask' && v !== 'restore') throw new SettingsError('invalid', k)
+        out[k] = v
+        break
+      case 'memoryLearn':
+        if (v !== 'ask' && v !== 'auto' && v !== 'off') throw new SettingsError('invalid', k)
         out[k] = v
         break
       case 'logRetentionDays':

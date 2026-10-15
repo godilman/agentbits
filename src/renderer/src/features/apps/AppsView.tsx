@@ -123,7 +123,7 @@ function AddMenu({ onPick }: { onPick: (k: AddKind) => void }) {
         <Plus size={13} /> {t('apps:add')} <ChevronDown size={12} />
       </button>
       {open && (
-        <div className="absolute right-0 top-8 z-30 w-[250px] rounded-lg border border-line bg-surface-1 p-1 shadow-xl">
+        <div className="card shadow-pop absolute right-0 top-8 z-30 w-[250px] p-1">
           {items.map(({ k, icon: Icon, label }) => (
             <button key={k} className="flex w-full items-center gap-2 rounded-md px-2.5 py-2 text-left text-[12.5px] text-zinc-200 hover:bg-surface-2" onClick={() => {
                 setOpen(false)

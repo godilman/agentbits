@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { AlertTriangle, BellRing, GitMerge, KeyRound, PauseCircle, ShieldAlert, UserCheck } from 'lucide-react'
+import { AlertTriangle, BellRing, Brain, GitMerge, KeyRound, PauseCircle, ShieldAlert, UserCheck } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { cn } from '@/lib/format'
 import { useAppStore } from '@/store/useAppStore'
@@ -26,6 +26,7 @@ export function NeedsYouButton() {
   const agents = useAppStore((s) => s.agents)
   const waits = useAppStore((s) => s.orchestratorWaits)
   const reviewByLead = useAppStore((s) => s.settings.reviewByLead)
+  const suggestions = useAppStore((s) => s.memorySuggestions)
   const [open, setOpen] = useState(false)
   const ref = useRef<HTMLDivElement>(null)
 
@@ -75,11 +76,14 @@ export function NeedsYouButton() {
       if (!x || x.status !== 'todo') continue
       out.push({ id: `hd-${id}`, icon: PauseCircle, tone: 'text-amber-300', title: reason ? t('layout:needsYou.held', { reason }) : t('layout:needsYou.heldNoReason'), detail: label(id), taskId: id, projectId: x.projectId })
     }
+    for (const m of suggestions) {
+      out.push({ id: `mem-${m.id}`, icon: Brain, tone: 'text-pink-300', title: t('layout:needsYou.memory'), detail: m.content, taskId: null, projectId: null })
+    }
     for (const a of agents.filter((x) => x.enabled && x.status === 'error')) {
       out.push({ id: `ag-${a.id}`, icon: AlertTriangle, tone: 'text-rose-300', title: t('layout:needsYou.agentError', { agent: a.name }), detail: a.statusNote ?? '', taskId: null, projectId: null })
     }
     return out
-  }, [approvals, activeRuns, tasks, agents, waits, reviewByLead, t])
+  }, [approvals, activeRuns, tasks, agents, waits, reviewByLead, suggestions, t])
 
   const go = (it: Item): void => {
     const s = useAppStore.getState()
@@ -90,6 +94,8 @@ export function NeedsYouButton() {
       s.selectTask(it.taskId)
     } else if (it.id.startsWith('ag-')) {
       s.openAgentProfile(it.id.slice(3))
+    } else if (it.id.startsWith('mem-')) {
+      s.showOrg('memory')
     }
   }
 

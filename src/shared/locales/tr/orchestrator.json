@@ -172,7 +172,7 @@
     "openaiKeyMissing": "OpenAI API anahtarı tanımlı değil",
     "apiKeyMissing": "API anahtarı girilmemiş",
     "connectionOk": "Bağlantı başarılı ({{model}})",
-    "toolRoundLimit": "Araç çağrısı sınırına ulaşıldı ({{max}} tur)",
+    "toolRoundLimit": "Ajan işi bitirmeden araç çağrısı sınırına ulaştı ({{max}} tur). Görevi daha küçük adımlara böl ya da yeniden başlat.",
     "claudeNotFound": "Claude Code CLI bulunamadı. `npm i -g @anthropic-ai/claude-code` veya resmi kurulumla yükleyin.",
     "permissionDenied": "İzin reddedildi (izin matrisi / çalışma alanı dışı): {{tool}} {{target}}",
     "claudeError": "Claude Code hata döndürdü",
@@ -184,7 +184,8 @@
     "codexNotFound": "Codex CLI bulunamadı. `npm i -g @openai/codex` ile yükleyin.",
     "codexFound": "Codex bulundu: {{version}}",
     "codexNeedsRead": "Codex sandbox içinde her zaman dosya okur; bu ajana \"Dosya okuma\" izni ver ya da başka bir sağlayıcı seç",
-    "streamIncomplete": "{{provider}}: yanıt bitmeden kesildi (bağlantı koptu). Yeniden dene."
+    "streamIncomplete": "{{provider}}: yanıt bitmeden kesildi (bağlantı koptu). Yeniden dene.",
+    "tokenLimit": "{{provider}}: yanıt çıktı uzunluğu sınırına takıldı ve bitmeden kesildi. Görevi daha küçük adımlara böl ya da yeniden dene."
   },
   "terminal": {
     "processExited": "[süreç sonlandı: {{code}}]",
@@ -250,7 +251,9 @@
     "unclear": "🏁 {{lead}} kazananı seçemedi; iki deneme de incelemede seni bekliyor.",
     "lostNote": "Yarışı kaybetti; {{key}} tutuldu.",
     "decided": "🏁 {{winner}} ({{wName}}) kazandı; {{loser}} kapatıldı, değişiklikleri atıldı. {{note}}",
-    "needsWorktree": "🏁 {{key}} için yarış modu atlandı: bu projenin klasörü var ama göreve ayrı çalışma kopyası kapalı, iki deneme birbirinin üzerine yazar. Proje ayarlarından \"Her görev kendi git çalışma kopyasında\" ayarını aç."
+    "needsWorktree": "🏁 {{key}} için yarış modu atlandı: bu projenin klasörü var ama göreve ayrı çalışma kopyası kapalı, iki deneme birbirinin üzerine yazar. Proje ayarlarından \"Her görev kendi git çalışma kopyasında\" ayarını aç.",
+    "none": "🏁 Ne {{a}} ne {{b}} görevi karşıladı: {{a}} ajanına geri gönderildi, {{b}} kapatıldı ve değişiklikleri silindi. {{note}}",
+    "noneNote": "Kapatıldı: iki deneme de görevi karşılamadı; {{key}} ajanına geri gönderildi."
   },
   "held": {
     "interrupted": "Agentbits kapanırken yarıda kaldı",

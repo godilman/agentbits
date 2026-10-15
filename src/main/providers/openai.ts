@@ -1,5 +1,5 @@
 import type { Provider, ProviderTestResult } from '@shared/types'
-import { AbortedError, readSse, type ProviderAdapter, type RunContext, type RunResult } from './types'
+import { AbortedError, cutShort, readSse, type ProviderAdapter, type RunContext, type RunResult } from './types'
 
 /** One model request (streamed) may take at most this long. */
 const REQUEST_TIMEOUT_MS = 10 * 60_000
@@ -104,10 +104,12 @@ export const openaiAdapter: ProviderAdapter = {
       ctx.onUsage?.({ input: Math.max(0, tokensIn - cached), output: tokensOut, cacheRead: cached, cacheWrite: 0, costUsd: 0 })
       totalIn += tokensIn
       totalOut += tokensOut
+      // Stopped by the output token limit: the answer is unfinished.
+      if (finish === 'length') text += cutShort(ctx, t('orchestrator:providers.tokenLimit', { provider: ep.compat ? ctx.provider.label : 'OpenAI' }))
 
       if (finish !== 'tool_calls' || !calls.length || !ctx.callTool) break
       if (round === MAX_TOOL_ROUNDS) {
-        ctx.onLog('warn', t('orchestrator:providers.toolRoundLimit', { max: MAX_TOOL_ROUNDS }))
+        text += cutShort(ctx, t('orchestrator:providers.toolRoundLimit', { max: MAX_TOOL_ROUNDS }))
         break
       }
       messages.push({

@@ -172,7 +172,7 @@
     "openaiKeyMissing": "No OpenAI API key configured",
     "apiKeyMissing": "No API key entered",
     "connectionOk": "Connection successful ({{model}})",
-    "toolRoundLimit": "Tool call limit reached ({{max}} rounds)",
+    "toolRoundLimit": "The agent hit the tool call limit ({{max}} rounds) before finishing. Split the task into smaller steps or start it again.",
     "claudeNotFound": "Claude Code CLI not found. Install it with `npm i -g @anthropic-ai/claude-code` or the official installer.",
     "permissionDenied": "Permission denied (permission matrix / outside the workspace): {{tool}} {{target}}",
     "claudeError": "Claude Code returned an error",
@@ -184,7 +184,8 @@
     "codexNotFound": "Codex CLI not found. Install it with `npm i -g @openai/codex`.",
     "codexFound": "Codex found: {{version}}",
     "codexNeedsRead": "Codex always reads files in its sandbox; give this agent the \"File read\" permission or choose another provider",
-    "streamIncomplete": "{{provider}}: the answer stopped before it was finished (connection dropped). Try again."
+    "streamIncomplete": "{{provider}}: the answer stopped before it was finished (connection dropped). Try again.",
+    "tokenLimit": "{{provider}}: the answer hit the output length limit and was cut off before it was finished. Split the task into smaller steps or try again."
   },
   "terminal": {
     "processExited": "[process exited: {{code}}]",
@@ -250,7 +251,9 @@
     "unclear": "🏁 {{lead}} could not pick a winner; both attempts wait in review for you.",
     "lostNote": "Lost the race; {{key}} was kept.",
     "decided": "🏁 {{winner}} ({{wName}}) won; {{loser}} was closed and its changes discarded. {{note}}",
-    "needsWorktree": "🏁 Race mode skipped for {{key}}: this project has a folder but no separate working copies per task, so two attempts would overwrite each other. Turn on \"Each task in its own git working copy\" in the project settings."
+    "needsWorktree": "🏁 Race mode skipped for {{key}}: this project has a folder but no separate working copies per task, so two attempts would overwrite each other. Turn on \"Each task in its own git working copy\" in the project settings.",
+    "none": "🏁 Neither {{a}} nor {{b}} did the task: {{a}} goes back to its agent, {{b}} was closed and its changes discarded. {{note}}",
+    "noneNote": "Closed: neither attempt did the task; {{key}} goes back to its agent."
   },
   "held": {
     "interrupted": "Interrupted when Agentbits closed",

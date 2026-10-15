@@ -13,6 +13,7 @@ import { TemplatesView } from './TemplatesView'
 import { ConnectionsView } from '@/features/connections/ConnectionsView'
 import { SkillsView } from '@/features/skills/SkillsView'
 import { AppsView } from '@/features/apps/AppsView'
+import { MemoryView } from '@/features/memory/MemoryView'
 
 const TABS: { value: OrgTab; labelKey: I18nKey }[] = [
   { value: 'chart', labelKey: 'org:view.tabs.chart' },
@@ -21,7 +22,8 @@ const TABS: { value: OrgTab; labelKey: I18nKey }[] = [
   { value: 'templates', labelKey: 'org:view.tabs.templates' },
   { value: 'skills', labelKey: 'org:view.tabs.skills' },
   { value: 'apps', labelKey: 'org:view.tabs.apps' },
-  { value: 'connections', labelKey: 'org:view.tabs.connections' }
+  { value: 'connections', labelKey: 'org:view.tabs.connections' },
+  { value: 'memory', labelKey: 'org:view.tabs.memory' }
 ]
 
 /** Organization page: chart, teams (units), agents and templates. */
@@ -64,10 +66,10 @@ export function OrgView() {
         </div>
         <Segmented value={orgTab} options={TABS.map((tab) => ({ value: tab.value, label: t(tab.labelKey) }))} onChange={(v) => showOrg(v)} />
         <div className="ml-auto flex items-center gap-1.5">
-          <button className="btn-ghost" onClick={() => showOrg('templates')}>
-            <Wand2 size={13} /> {t('org:view.fromTemplate')}
+          <button className="btn-ghost whitespace-nowrap" onClick={() => showOrg('templates')} title={t('org:view.fromTemplate')}>
+            <Wand2 size={13} /> <span className="hidden min-[1600px]:inline">{t('org:view.fromTemplate')}</span>
           </button>
-          <button className="btn-primary" onClick={() => void createUnit()}>
+          <button className="btn-primary whitespace-nowrap" onClick={() => void createUnit()}>
             <Plus size={14} /> {t('org:view.newUnit')}
           </button>
         </div>
@@ -80,6 +82,7 @@ export function OrgView() {
         {orgTab === 'skills' && <SkillsView />}
         {orgTab === 'apps' && <AppsView />}
         {orgTab === 'connections' && <ConnectionsView />}
+        {orgTab === 'memory' && <MemoryView />}
       </div>
     </div>
   )

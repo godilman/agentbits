@@ -96,18 +96,7 @@
   },
   "memory": {
     "title": "Kalıcı Hafıza",
-    "desc": "Lider ve ajanların asla unutmadığı bağlam. Her çalışmada organizasyon geneli + o projenin en alakalı kayıtları (FTS5 + önem + tazelik) prompt’a eklenir.",
-    "scopeOrg": "Organizasyon geneli",
-    "scopeProject": "Bu proje",
-    "addToProject": "{{name}} hafızasına ekle",
-    "projectFallback": "Proje",
-    "addToOrg": "Organizasyon hafızasına ekle",
-    "placeholder": "Ör. Tüm UI metinleri Türkçe olmalı; kod yorumları İngilizce.",
-    "sharedAll": "Ortak (tüm ajanlar)",
-    "onlyAgent": "Yalnızca {{name}}",
-    "search": "Hafızada ara…",
-    "shared": "ortak",
-    "empty": "Kayıt bulunamadı",
+    "desc": "Lider ve ajanların unutmadığı bağlam: her çalışmaya seninle ilgili bildikleri ve en alakalı hatıralar (kelime dizini; anlamsal hafıza açıksa anlam da) sabit bir bütçeyle eklenir. Hatıraların kendisi, graf ve \"Seni tanıyorum\" Organizasyon → Hafıza'da.",
     "semantic": {
       "title": "Anlamsal hafıza",
       "desc": "Kapalıyken ajanlar hafızayı kelime eşleşmesiyle hatırlar. Açıkken anlamıyla da bulur (\"giriş hatası\" → \"oturum açılamıyor\"). OpenAI uyumlu bir sağlayıcının embedding uç noktasını kullanır: OpenAI ya da hiçbir şeyin bilgisayardan çıkmadığı yerel Ollama / LM Studio.",
@@ -118,7 +107,8 @@
       "leaves": "Hafıza metni embedding için bu sağlayıcıya gönderilir (ona giden her istem gibi).",
       "status": "{{total}} hafızanın {{indexed}} tanesi anlamıyla dizinlendi.",
       "error": "Embedding başarısız, şimdilik yalnız kelimeler: {{error}}"
-    }
+    },
+    "open": "Hafızayı aç"
   },
   "general": {
     "title": "Genel",

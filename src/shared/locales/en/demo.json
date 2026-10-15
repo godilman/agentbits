@@ -13,7 +13,9 @@
     "plan_other": "Done — I split the work into {{count}} parts and handed them out to the team:",
     "planFooter": "You can follow progress live in the Tasks tab and in the office. I'll review the finished work.",
     "noteSent_one": "Got it — I passed it on to the team member working on {{keys}}.",
-    "noteSent_other": "Got it — I passed it on to the team members working on {{keys}}."
+    "noteSent_other": "Got it — I passed it on to the team members working on {{keys}}.",
+    "learned": "I noted this as something to keep in mind from now on.",
+    "learnTopic": "Working style"
   },
   "connections": {
     "none": "There are no connections I can access.",

@@ -96,18 +96,7 @@
   },
   "memory": {
     "title": "Persistent Memory",
-    "desc": "Context the lead and agents never forget. Every run adds the organization-wide records plus the project's most relevant ones (FTS5 + importance + recency) to the prompt.",
-    "scopeOrg": "Organization-wide",
-    "scopeProject": "This project",
-    "addToProject": "Add to {{name}} memory",
-    "projectFallback": "Project",
-    "addToOrg": "Add to organization memory",
-    "placeholder": "E.g. Keep UI copy short; code comments in English.",
-    "sharedAll": "Shared (all agents)",
-    "onlyAgent": "Only {{name}}",
-    "search": "Search memory…",
-    "shared": "shared",
-    "empty": "No records found",
+    "desc": "What the lead and agents never forget: each run gets what the team knows about you plus the most relevant memories (word index + meaning when semantic memory is on), within a fixed budget. The memories themselves, the graph and \"Knows you\" are in Organization → Memory.",
     "semantic": {
       "title": "Semantic memory",
       "desc": "Off: agents recall memories by matching words. On: memories are also found by meaning (\"login error\" finds \"sign-in fails\"). Uses the embeddings endpoint of an OpenAI-compatible provider: OpenAI, or a local Ollama / LM Studio so nothing leaves this computer.",
@@ -118,7 +107,8 @@
       "leaves": "Memory text is sent to this provider to be embedded (like any prompt to it).",
       "status": "{{indexed}} of {{total}} memories indexed by meaning.",
       "error": "Embedding failed, words only for now: {{error}}"
-    }
+    },
+    "open": "Open memory"
   },
   "general": {
     "title": "General",

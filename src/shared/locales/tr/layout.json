@@ -68,7 +68,8 @@
     "projectFolderTitle": "Proje klasörü: {{path}}",
     "noFolderTitle": "Bu projenin klasörü yok — CLI ajanları çalışamaz",
     "noFolderChip": "Klasör seçilmedi",
-    "projectSettings": "Proje ayarları"
+    "projectSettings": "Proje ayarları",
+    "memory": "Hafıza"
   },
   "sidebar": {
     "runningWork": "Çalışan işler",
@@ -121,6 +122,7 @@
     "unmerged": "Bitti, henüz klasöre birleştirilmedi",
     "held": "Bekletiliyor: {{reason}}",
     "heldNoReason": "Bekletiliyor",
-    "agentError": "{{agent}} bir hatayla durdu"
+    "agentError": "{{agent}} bir hatayla durdu",
+    "memory": "Hatırlanacak bir şey"
   }
 }

@@ -27,7 +27,8 @@
       "templates": "Templates",
       "connections": "Connections",
       "skills": "Skills",
-      "apps": "Apps"
+      "apps": "Apps",
+      "memory": "Memory"
     },
     "fromTemplate": "Set up from template",
     "newUnit": "New unit"
@@ -191,6 +192,113 @@
       "done_one": "{{name}} imported · {{count}} agent",
       "done_other": "{{name}} imported · {{count}} agents",
       "reused": "These skills were already installed, so yours were kept: {{names}}"
+    }
+  },
+  "memory": {
+    "kinds": {
+      "all": "All",
+      "preference": "Preference",
+      "fact": "Fact",
+      "decision": "Decision",
+      "context": "Context",
+      "summary": "Summary"
+    },
+    "topicsPlaceholder": "Topics, comma separated (e.g. Payments, PHP 5.5)",
+    "suggest": {
+      "title": "I learned this, shall I keep it?",
+      "replaces": "Replaces: “{{text}}”",
+      "keep": "Keep",
+      "keepReplace": "Keep, replace the old one",
+      "drop": "Don't keep",
+      "heading_one": "Waiting for your yes ({{count}})",
+      "heading_other": "Waiting for your yes ({{count}})"
+    },
+    "via": {
+      "profile": "about you",
+      "match": "match",
+      "graph": "linked"
+    },
+    "learn": {
+      "title": "Learning from chat",
+      "desc": "When you tell an agent something lasting about yourself or how the team should work, it can remember it for the whole organization. Only your own chat messages count — never files, web pages or reports.",
+      "ask": "Ask me first",
+      "auto": "Decide yourself",
+      "off": "Off",
+      "askHint": "Each new memory waits for your yes.",
+      "autoHint": "Saved right away; you can edit or forget it here.",
+      "offHint": "Agents don't learn from chat."
+    },
+    "tabs": {
+      "graph": "Graph",
+      "list_one": "List ({{count}})",
+      "list_other": "List ({{count}})"
+    },
+    "graphHint": "Drag to move, scroll to zoom, click a dot for details.",
+    "listHint": "Search, edit or forget any memory.",
+    "profile": {
+      "title": "Knows you",
+      "desc": "Every agent is told this about you.",
+      "empty": "Nothing yet. Tell an agent how you like to work, or add it here.",
+      "addPlaceholder": "Add something about you…"
+    },
+    "source": {
+      "learned": "learned from chat",
+      "user": "added by you"
+    },
+    "forget": "Forget",
+    "add": {
+      "placeholder": "Something the team should remember…",
+      "allAgents": "All agents",
+      "onlyAgent": "Only {{name}}",
+      "allProjects": "All projects",
+      "onlyProject": "Only {{name}}"
+    },
+    "search": "Search memories…",
+    "superseded": "replaced",
+    "shared": "Shared",
+    "used_one": "used {{count}} time",
+    "used_other": "used {{count}} times",
+    "empty": "No memories match.",
+    "you": "You",
+    "youDesc": "You. Preferences point here: every agent is told them.",
+    "graphSearch": "Find in the graph…",
+    "nodeTypes": {
+      "you": "You",
+      "memory": "Memory",
+      "topic": "Topic",
+      "task": "Task",
+      "decision": "Decision",
+      "agent": "Agent",
+      "chat": "Conversation"
+    },
+    "graphCount": "{{nodes}} dots · {{edges}} links",
+    "graphTruncated": "the most important 300 memories are drawn",
+    "legendSupersedes": "replaced by",
+    "graphEmpty": "Memory is empty. As the team works and you chat, memories and their links appear here.",
+    "supersededDesc": "A newer memory replaced this one. It stays as history and is no longer sent to agents.",
+    "links_one": "{{count}} link",
+    "links_other": "{{count}} links",
+    "edge": {
+      "about": "topic",
+      "aboutIn": "about it",
+      "task": "from task",
+      "taskIn": "memory",
+      "agent": "agent",
+      "agentIn": "memory",
+      "decision": "decision",
+      "decisionIn": "memory",
+      "you": "about",
+      "youIn": "preference",
+      "learned": "learned in",
+      "learnedIn": "learned here",
+      "supersedes": "replaced",
+      "supersedesIn": "replaced by"
+    },
+    "learnedLine": "Learned: “{{text}}”",
+    "seeInMemory": "See in memory",
+    "trace": {
+      "chat": "What I remembered",
+      "task": "What this task knew"
     }
   }
 }

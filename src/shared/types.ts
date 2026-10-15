@@ -172,6 +172,8 @@ export interface Run {
   costUsd: number
   startedAt: string
   endedAt: string | null
+  /** Memories that went into this run's prompt ("What did this task know?"). */
+  recalled: RecalledMemory[]
 }
 
 export type SenderType = 'user' | 'agent' | 'system'
@@ -309,6 +311,43 @@ export interface Memory {
   accessCount: number
   createdAt: string
   lastAccessedAt: string | null
+  /** The memory that replaced this one ("yerini aldı"): kept as history, never sent to agents. */
+  supersededBy: string | null
+  /** Topics it is linked to in the memory graph. */
+  topics: string[]
+}
+
+/** A memory that went into a prompt: snapshot, so the trace stays readable after the memory changes. */
+export interface RecalledMemory {
+  id: string
+  kind: MemoryKind
+  content: string
+  /** profile = about the user (always sent); match = found by words / meaning; graph = one step away in the graph. */
+  via: 'profile' | 'match' | 'graph'
+}
+
+/** Something an agent learned from the user's chat message, waiting for the user's yes (Settings → Memory → learning). */
+export interface MemorySuggestion {
+  id: string
+  content: string
+  kind: 'preference' | 'fact'
+  topics: string[]
+  /** The memory it would replace, if any. */
+  replaces: string | null
+  replacesText: string | null
+  projectId: string | null
+  channel: string
+  agentId: string | null
+  createdAt: string
+}
+
+export type MemoryNodeType = 'you' | 'memory' | 'topic' | 'task' | 'decision' | 'agent' | 'chat'
+export interface MemoryGraph {
+  /** Memory nodes also carry their full `text` and `topics`. */
+  nodes: { id: string; type: MemoryNodeType; label: string; kind?: MemoryKind; faded?: boolean; text?: string; topics?: string[] }[]
+  edges: { from: string; to: string; kind: 'about' | 'task' | 'agent' | 'decision' | 'you' | 'learned' | 'supersedes' }[]
+  /** More memories exist than the graph shows (the most important / recent are drawn). */
+  truncated: boolean
 }
 
 export type DecisionStatus = 'proposed' | 'accepted' | 'rejected' | 'superseded'
@@ -384,6 +423,8 @@ export interface AppSettings {
   memoryEmbedProviderId: string
   /** Embedding model of that provider (e.g. text-embedding-3-small, nomic-embed-text). */
   memoryEmbedModel: string
+  /** Learning from chat (graph memory): 'ask' = suggest and wait for the user, 'auto' = save right away, 'off'. */
+  memoryLearn: 'ask' | 'auto' | 'off'
 }
 
 export interface TerminalSession {

@@ -628,6 +628,39 @@ const MIGRATIONS: { version: number; sql: string }[] = [
       ALTER TABLE tasks ADD COLUMN acceptance TEXT NOT NULL DEFAULT '';
       ALTER TABLE tasks ADD COLUMN acceptance_check TEXT;
     `
+  },
+  {
+    version: 17,
+    sql: `
+      -- Graph memory: a memory replaced by a newer one stays as history but never reaches agents.
+      ALTER TABLE memories ADD COLUMN superseded_by TEXT;
+      -- Topics (graph nodes) and a memory's links: 'about' → topic:<id>, 'learned' → chat:<projectId>|<channel>.
+      CREATE TABLE IF NOT EXISTS memory_topics (
+        id TEXT PRIMARY KEY,
+        name TEXT NOT NULL UNIQUE COLLATE NOCASE
+      );
+      CREATE TABLE IF NOT EXISTS memory_links (
+        memory_id TEXT NOT NULL REFERENCES memories(id) ON DELETE CASCADE,
+        target TEXT NOT NULL,
+        kind TEXT NOT NULL CHECK (kind IN ('about','learned')),
+        PRIMARY KEY (memory_id, target, kind)
+      );
+      CREATE INDEX IF NOT EXISTS idx_memory_links_target ON memory_links(target);
+      -- What an agent learned from the user's chat message, waiting for the user's yes.
+      CREATE TABLE IF NOT EXISTS memory_suggestions (
+        id TEXT PRIMARY KEY,
+        content TEXT NOT NULL,
+        kind TEXT NOT NULL CHECK (kind IN ('preference','fact')),
+        topics TEXT NOT NULL DEFAULT '[]',
+        replaces TEXT,
+        project_id TEXT,
+        channel TEXT NOT NULL,
+        agent_id TEXT,
+        created_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ','now'))
+      );
+      -- Memories that went into a run's prompt (JSON snapshot), for "What did this task know?".
+      ALTER TABLE runs ADD COLUMN recalled TEXT;
+    `
   }
 ]
 

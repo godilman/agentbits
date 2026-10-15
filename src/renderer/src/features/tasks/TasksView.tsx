@@ -199,6 +199,13 @@ function TaskCard({ task, dragging, onDragStart, onDragEnd }: { task: Task; drag
   const waitsMerge = useAppStore((s) =>
     task.status === 'todo'
       ? task.dependsOn
+          .map((id) => {
+            // A race's losing attempt stands for its winner: the dependent waits for the winner's merge.
+            const d = s.tasks.find((x) => x.id === id)
+            if (d?.raceResult !== 'lost') return id
+            const p = d.raceOf ? s.tasks.find((x) => x.id === d.raceOf) : s.tasks.find((x) => x.raceOf === d.id)
+            return p?.raceResult === 'won' ? p.id : id
+          })
           .filter((id) => s.orchestratorWaits.unmerged.includes(id))
           .map((id) => s.tasks.find((x) => x.id === id)?.key ?? '')
           .filter(Boolean)

@@ -86,11 +86,11 @@ export function judgeCriteria(lines: string[], raw: unknown): { text: string; me
 
 /**
  * The lead's race verdict (race mode: two attempts at the same task). Same strictness as `parseReview`: only a
- * top-level object with exactly one "winner" that is "A" or "B"; several disagreeing verdicts or anything else =
+ * top-level object with exactly one "winner" that is "A", "B" or "none" (neither does the task); several disagreeing verdicts or anything else =
  * no verdict (`valid: false`, the user decides).
  */
-export function parseRaceVerdict(text: string): { winner: 'A' | 'B' | null; note: string; valid: boolean } {
-  const found: { winner: 'A' | 'B'; note: string }[] = []
+export function parseRaceVerdict(text: string): { winner: 'A' | 'B' | 'none' | null; note: string; valid: boolean; criteriaA?: unknown; criteriaB?: unknown } {
+  const found: { winner: 'A' | 'B' | 'none'; note: string; criteriaA?: unknown; criteriaB?: unknown }[] = []
   for (const raw of topLevelObjects(text)) {
     let v: unknown
     try {
@@ -100,13 +100,18 @@ export function parseRaceVerdict(text: string): { winner: 'A' | 'B' | null; note
     }
     if (!v || typeof v !== 'object' || Array.isArray(v)) continue
     const w = (v as { winner?: unknown }).winner
-    if (w !== 'A' && w !== 'B') continue
+    if (w !== 'A' && w !== 'B' && w !== 'none') continue
     if ((raw.match(/"winner"\s*:/g) ?? []).length !== 1) return { winner: null, note: text.trim().slice(0, 300), valid: false }
-    found.push({ winner: w, note: String((v as { note?: unknown }).note ?? '').slice(0, 2000) })
+    const o = v as { note?: unknown; criteriaA?: unknown; criteriaB?: unknown }
+    found.push({
+      winner: w,
+      note: String(o.note ?? '').slice(0, 2000),
+      ...(o.criteriaA !== undefined ? { criteriaA: o.criteriaA } : {}),
+      ...(o.criteriaB !== undefined ? { criteriaB: o.criteriaB } : {})
+    })
   }
   if (!found.length || found.some((x) => x.winner !== found[0].winner)) return { winner: null, note: text.trim().slice(0, 300), valid: false }
-  const last = found[found.length - 1]
-  return { winner: last.winner, note: last.note, valid: true }
+  return { ...found[found.length - 1], valid: true }
 }
 
 /**

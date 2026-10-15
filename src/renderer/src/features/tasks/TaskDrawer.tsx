@@ -13,12 +13,13 @@ import { agentById, channelKey, useAppStore } from '@/store/useAppStore'
 import { useFileDrop } from '@/features/files/hooks'
 import { DropOverlay } from '@/features/files/parts'
 import { TaskChanges } from './TaskChanges'
+import { RecalledTrace } from '@/features/memory/parts'
 import { TaskFiles } from '@/features/files/TaskFiles'
 
 type Pane = 'thread' | 'logs' | 'runs'
 
 export function TaskDrawer() {
-  const { t } = useTranslation(['common', 'tasks'])
+  const { t } = useTranslation(['common', 'tasks', 'org'])
   const id = useAppStore((s) => s.selectedTaskId)
   // Only tasks of the active project open here (the selection is cleared on project switch anyway).
   const task = useAppStore((s) => s.tasks.find((x) => x.id === s.selectedTaskId && x.projectId === s.activeProjectId))
@@ -222,6 +223,7 @@ export function TaskDrawer() {
         )}
         <TaskFiles task={task} droppedFiles={dropped} />
         <TaskChanges task={task} />
+        <RecalledTrace items={runs.find((r) => r.recalled.length)?.recalled ?? []} title={t('org:memory.trace.task')} />
       </div>
 
       <div className="flex items-center justify-between px-4 pb-1 pt-3">

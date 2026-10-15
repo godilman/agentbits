@@ -68,7 +68,8 @@
     "projectFolderTitle": "Project folder: {{path}}",
     "noFolderTitle": "This project has no folder — CLI agents can't run",
     "noFolderChip": "No folder selected",
-    "projectSettings": "Project settings"
+    "projectSettings": "Project settings",
+    "memory": "Memory"
   },
   "sidebar": {
     "runningWork": "Running work",
@@ -121,6 +122,7 @@
     "unmerged": "Done, not merged into the folder yet",
     "held": "On hold: {{reason}}",
     "heldNoReason": "On hold",
-    "agentError": "{{agent}} stopped with an error"
+    "agentError": "{{agent}} stopped with an error",
+    "memory": "Something to remember"
   }
 }

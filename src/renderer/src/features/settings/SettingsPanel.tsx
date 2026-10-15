@@ -1,14 +1,14 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Trans, useTranslation } from 'react-i18next'
-import { Brain, Cpu, Database, FolderOpen, Gauge, Plus, Search, Shield, SlidersHorizontal, Trash2, Users, X, Zap } from 'lucide-react'
-import type { AccessLevel, Memory, MemoryKind } from '@shared/types'
+import { Brain, Cpu, Database, FolderOpen, Gauge, Plus, Shield, SlidersHorizontal, Trash2, Users, X, Zap } from 'lucide-react'
+import type { AccessLevel } from '@shared/types'
 import { ENV_LABEL, KIND_LABEL, LEVEL_LABEL, LEVEL_ORDER } from '@shared/connections'
 import { LANGUAGES, languageName, resolveLanguage, type I18nKey } from '@shared/i18n'
 import { PixelAvatar } from '@/components/common/PixelAvatar'
 import { Segmented, Toggle } from '@/components/common/ui'
 import { PERMISSIONS } from '@/features/agents/constants'
 import { apiError, call } from '@/lib/api'
-import { cn, timeAgo } from '@/lib/format'
+import { cn } from '@/lib/format'
 import { shortPath } from '@/lib/org'
 import { useAppStore, type SettingsSection } from '@/store/useAppStore'
 import { KindIcon, ProviderForm } from './ProviderForm'
@@ -17,6 +17,7 @@ import { DataSection } from './DataSection'
 import { LimitsSection } from './LimitsSection'
 import { isLocalUrl } from '@shared/endpoints'
 import { Heading, Row } from './parts'
+import { LearnMode } from '@/features/memory/parts'
 
 const SECTIONS: { id: SettingsSection; labelKey: I18nKey; icon: React.ComponentType<{ size?: number }> }[] = [
   { id: 'agents', labelKey: 'settings:sections.agents', icon: Users },
@@ -469,118 +470,34 @@ function SemanticCard() {
   )
 }
 
-const KINDS: MemoryKind[] = ['fact', 'decision', 'context', 'preference', 'summary']
-const KIND_CLS: Record<MemoryKind, string> = {
-  fact: 'text-sky-300 bg-sky-500/10',
-  decision: 'text-emerald-300 bg-emerald-500/10',
-  context: 'text-zinc-300 bg-white/5',
-  preference: 'text-pink-300 bg-pink-500/10',
-  summary: 'text-violet-300 bg-violet-500/10'
-}
-
-type MemScope = 'org' | 'project'
-
+/** Memory settings: semantic search and learning; the memories themselves live in Organization → Memory. */
 function MemorySection() {
   const { t } = useTranslation()
-  const agents = useAppStore((s) => s.agents)
-  const version = useAppStore((s) => s.memoryVersion)
-  const pid = useAppStore((s) => s.activeProjectId)
-  const project = useAppStore((s) => s.projects.find((p) => p.id === s.activeProjectId))
-  const [query, setQuery] = useState('')
-  const [items, setItems] = useState<Memory[]>([])
-  const [content, setContent] = useState('')
-  const [kind, setKind] = useState<MemoryKind>('preference')
-  const [scope, setScope] = useState<string>('')
-  const [memScope, setMemScope] = useState<MemScope>(pid ? 'project' : 'org')
-  const projectScoped = memScope === 'project' && !!pid
-
-  useEffect(() => {
-    // `projectId: pid` returns organization-wide + project rows; keep only the project's own here.
-    const projectId = projectScoped ? pid : null
-    const timer = setTimeout(
-      () =>
-        void call('memory:list', { query: query || undefined, limit: 200, projectId }).then((list) =>
-          setItems(projectScoped ? list.filter((m) => m.projectId === pid) : list)
-        ),
-      150
-    )
-    return () => clearTimeout(timer)
-  }, [query, version, projectScoped, pid])
-
+  const showOrg = useAppStore((s) => s.showOrg)
+  const closeSettings = useAppStore((s) => s.closeSettings)
   return (
     <>
       <Heading
         title={t('settings:memory.title')}
         desc={t('settings:memory.desc')}
         action={
-          <div className="shrink-0">
-            <Segmented<MemScope>
-              value={projectScoped ? 'project' : 'org'}
-              onChange={setMemScope}
-              options={[
-                { value: 'org', label: t('settings:memory.scopeOrg') },
-                ...(pid ? [{ value: 'project' as const, label: t('settings:memory.scopeProject') }] : [])
-              ]}
-            />
-          </div>
+          <button
+            data-testid="memory-open"
+            className="btn-outline shrink-0"
+            onClick={() => {
+              closeSettings()
+              showOrg('memory')
+            }}
+          >
+            <Brain size={13} /> {t('settings:memory.open')}
+          </button>
         }
       />
       <SemanticCard />
       <div className="card mb-5 p-4">
-        <label className="label">{projectScoped ? t('settings:memory.addToProject', { name: project?.name ?? t('settings:memory.projectFallback') }) : t('settings:memory.addToOrg')}</label>
-        <textarea className="textarea" rows={2} value={content} onChange={(e) => setContent(e.target.value)} placeholder={t('settings:memory.placeholder')} />
-        <div className="mt-2 flex items-center gap-2">
-          <select className="input h-7 w-36 text-[12px]" value={kind} onChange={(e) => setKind(e.target.value as MemoryKind)}>
-            {KINDS.map((k) => (
-              <option key={k} value={k}>
-                {k}
-              </option>
-            ))}
-          </select>
-          <select className="input h-7 w-44 text-[12px]" value={scope} onChange={(e) => setScope(e.target.value)}>
-            <option value="">{t('settings:memory.sharedAll')}</option>
-            {agents.map((a) => (
-              <option key={a.id} value={a.id}>
-                {t('settings:memory.onlyAgent', { name: a.name })}
-              </option>
-            ))}
-          </select>
-          <button
-            className="btn-primary ml-auto"
-            disabled={!content.trim()}
-            onClick={async () => {
-              await call('memory:add', content.trim(), kind, scope || null, projectScoped ? pid : null)
-              setContent('')
-            }}
-          >
-            {t('actions.add')}
-          </button>
-        </div>
-      </div>
-      <div className="relative mb-3">
-        <Search size={13} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-zinc-400" />
-        <input className="input pl-8" placeholder={t('settings:memory.search')} value={query} onChange={(e) => setQuery(e.target.value)} />
-      </div>
-      <div className="space-y-1.5">
-        {items.map((m) => {
-          const a = agents.find((x) => x.id === m.agentId)
-          return (
-            <div key={m.id} className="group flex items-start gap-3 rounded-md border border-line bg-surface px-3 py-2.5">
-              <span className={cn('mt-px shrink-0 rounded px-1.5 py-px text-[10px] font-medium', KIND_CLS[m.kind])}>{m.kind}</span>
-              <div className="selectable min-w-0 flex-1 text-[12.5px] leading-snug text-zinc-300">{m.content}</div>
-              <div className="shrink-0 text-right text-[10.5px] text-zinc-400">
-                <div>{a ? a.name : t('settings:memory.shared')}</div>
-                <div>
-                  ★{m.importance.toFixed(1)} · {m.accessCount}× · {timeAgo(m.createdAt)}
-                </div>
-              </div>
-              <button className="icon-btn opacity-0 group-hover:opacity-100 hover:text-rose-400" onClick={() => void call('memory:delete', m.id)}>
-                <Trash2 size={12} />
-              </button>
-            </div>
-          )
-        })}
-        {items.length === 0 && <div className="py-6 text-center text-[12px] text-zinc-400">{t('settings:memory.empty')}</div>}
+        <div className="text-[13px] font-semibold text-zinc-100">{t('org:memory.learn.title')}</div>
+        <div className="mb-3 mt-0.5 text-[12px] leading-relaxed text-zinc-400">{t('org:memory.learn.desc')}</div>
+        <LearnMode />
       </div>
     </>
   )

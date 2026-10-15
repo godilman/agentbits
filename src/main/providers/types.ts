@@ -115,3 +115,14 @@ export async function* readSse(res: Response, signal: AbortSignal): AsyncGenerat
     reader.releaseLock()
   }
 }
+
+/**
+ * A reply cut off by a limit (output tokens, tool rounds). Task and review work is unfinished, so the run fails;
+ * a chat reply keeps its text with the reason appended (returned, to add to the text).
+ */
+export function cutShort(ctx: RunContext, reason: string): string {
+  if (ctx.mode !== 'chat') throw new Error(reason)
+  const note = `\n\n⚠️ ${reason}`
+  ctx.onText(note)
+  return note
+}

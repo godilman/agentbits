@@ -36,6 +36,12 @@ for (const bad of ['{"winner": "b"}', '{"winner": "C"}', '{"winner": 2}', 'B win
   assert.equal(parseRaceVerdict(bad).valid, false, bad)
 }
 assert.equal(parseRaceVerdict('{"winner": "A", "note": "a"} {"winner": "A", "note": "b"}').note, 'b')
+// Neither attempt does the task: "none" is a verdict; per-attempt criteria checks come along.
+assert.deepEqual(parseRaceVerdict('{"winner": "none", "note": "both miss tests"}'), { winner: 'none', note: 'both miss tests', valid: true })
+const rv = parseRaceVerdict('{"winner": "A", "note": "x", "criteriaA": [{"met": true}], "criteriaB": [{"met": false}]}')
+assert.deepEqual(judgeCriteria(['has tests'], rv.criteriaA)?.[0].met, true)
+assert.deepEqual(judgeCriteria(['has tests'], rv.criteriaB)?.[0].met, false)
+assert.equal(judgeCriteria(['has tests'], parseRaceVerdict('{"winner": "A"}').criteriaA), null)
 
 // Race rival: never the same provider+model; another provider kind first; nobody suitable → null.
 const c = (id: string, key: string): { id: string; key: string } => ({ id, key })
