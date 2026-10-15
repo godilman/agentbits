@@ -140,6 +140,10 @@
     "twins": {
       "title": "Share work between twins",
       "desc": "A free agent takes over a task queued for a busy agent with the same role and skills (e.g. a duplicated developer). Tasks sent back with a review note stay with their agent."
+    },
+    "race": {
+      "title": "Race mode",
+      "desc": "When a task starts, a copy also goes to a free member on another provider or model; the lead keeps the better attempt and discards the other. Needs the lead's review. Costs about twice as much."
     }
   },
   "data": {

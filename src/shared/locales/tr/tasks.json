@@ -21,7 +21,11 @@
     "paused": "durdu",
     "unassigned": "Atanmadı",
     "waitsFor": "{{keys}} bekleniyor",
-    "waitsForHint": "Otopilot bunlar bitince başlatır; sen yine de kendin başlatabilirsin."
+    "waitsForHint": "Otopilot bunlar bitince başlatır; sen yine de kendin başlatabilirsin.",
+    "race": "Yarış",
+    "raceWon": "Kazandı",
+    "raceLost": "Kaybetti",
+    "raceHint": "Yarış modu: aynı görevde iki üye çalıştı; lider iyi olan denemeyi tutar."
   },
   "fields": {
     "title": "Başlık",

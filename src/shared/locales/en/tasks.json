@@ -21,7 +21,11 @@
     "paused": "paused",
     "unassigned": "Unassigned",
     "waitsFor": "Waits for {{keys}}",
-    "waitsForHint": "Autopilot starts it once these are done; you can still start it yourself."
+    "waitsForHint": "Autopilot starts it once these are done; you can still start it yourself.",
+    "race": "Race",
+    "raceWon": "Won",
+    "raceLost": "Lost",
+    "raceHint": "Race mode: two members worked on the same task; the lead keeps the better attempt."
   },
   "fields": {
     "title": "Title",

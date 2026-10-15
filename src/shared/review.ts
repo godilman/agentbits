@@ -59,3 +59,38 @@ export function parseReview(text: string): { approved: boolean; note: string; va
   const last = verdicts[verdicts.length - 1]
   return { approved: last.approved, note: last.note, valid: true }
 }
+
+/**
+ * The lead's race verdict (race mode: two attempts at the same task). Same strictness as `parseReview`: only a
+ * top-level object with exactly one "winner" that is "A" or "B"; several disagreeing verdicts or anything else =
+ * no verdict (`valid: false`, the user decides).
+ */
+export function parseRaceVerdict(text: string): { winner: 'A' | 'B' | null; note: string; valid: boolean } {
+  const found: { winner: 'A' | 'B'; note: string }[] = []
+  for (const raw of topLevelObjects(text)) {
+    let v: unknown
+    try {
+      v = JSON.parse(raw)
+    } catch {
+      continue
+    }
+    if (!v || typeof v !== 'object' || Array.isArray(v)) continue
+    const w = (v as { winner?: unknown }).winner
+    if (w !== 'A' && w !== 'B') continue
+    if ((raw.match(/"winner"\s*:/g) ?? []).length !== 1) return { winner: null, note: text.trim().slice(0, 300), valid: false }
+    found.push({ winner: w, note: String((v as { note?: unknown }).note ?? '').slice(0, 2000) })
+  }
+  if (!found.length || found.some((x) => x.winner !== found[0].winner)) return { winner: null, note: text.trim().slice(0, 300), valid: false }
+  const last = found[found.length - 1]
+  return { winner: last.winner, note: last.note, valid: true }
+}
+
+/**
+ * Race mode: the challenger for an attempt. `key` is "kind|baseUrl|model"; only a candidate on a different key counts,
+ * and another provider kind beats the same provider with another model.
+ */
+export function pickRival<T extends { key: string }>(mine: string, free: T[]): T | null {
+  const kind = (k: string): string => k.split('|')[0]
+  const other = free.filter((a) => a.key !== mine)
+  return other.find((a) => kind(a.key) !== kind(mine)) ?? other[0] ?? null
+}

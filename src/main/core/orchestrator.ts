@@ -4,6 +4,7 @@ import { intlLocale } from '@shared/i18n'
 import { allTranslations, currentLanguage, t } from '../i18n'
 import type { Agent, AgentInstruction, FileRecord, InstructionInput, LogLevel, Project, Provider, Task, UsageDelta, UsageMode } from '@shared/types'
 import { resolveAfter, type LeadMessage } from '@shared/leadComms'
+import { parseRaceVerdict, pickRival } from '@shared/review'
 import { isTwin } from '@shared/org'
 import { describeTeam, teamState } from './team'
 import { dirname, isAbsolute, join, relative } from 'path'
@@ -55,6 +56,8 @@ import {
   parseLeadMessages,
   parseReview,
   parseTasks,
+  racePrompt,
+  raceSystem,
   reportExcerpt,
   reviewPrompt,
   reviewSystem,
@@ -300,6 +303,10 @@ class Orchestrator {
   private hold(taskId: string): void {
     this.blocked.add(taskId)
     this.saveHeld()
+    // Race mode: an attempt waiting for this one in review is now reviewed on its own.
+    const task = tasksRepo.get(taskId)
+    const other = task?.raceOf ? tasksRepo.get(task.raceOf) : tasksRepo.challengerOf(taskId)
+    if (other?.status === 'in_review' && settingsRepo.get().reviewByLead) this.queueReview(other.id)
   }
 
   /** The user put the task back in the queue (moved it / started it): autopilot may take it again. */
@@ -437,7 +444,8 @@ class Orchestrator {
   async finishTaskBranch(taskId: string): Promise<void> {
     const task = tasksRepo.get(taskId)
     const project = task ? getProject(task.projectId) : null
-    if (!task || !project?.rootPath || project.isolation !== 'worktree') return
+    // A race's losing attempt is never merged (its copy is being discarded).
+    if (!task || task.raceResult === 'lost' || !project?.rootPath || project.isolation !== 'worktree') return
     const dir = this.worktreeDir(project.id, task.key)
     if (!existsSync(dir)) return
     const root = project.rootPath
@@ -641,6 +649,12 @@ class Orchestrator {
     }
     this.release(task.id)
     this.busy.add(agent.id)
+    // Race mode: a first start of an ordinary task also hands a copy to a member on another provider / model.
+    // Only with the lead's review on: the lead is the one who picks the winner.
+    const st = settingsRepo.get()
+    if (st.raceMode && st.reviewByLead && !task.raceOf && !task.raceResult && !task.reviewNote && !tasksRepo.challengerOf(task.id)) {
+      this.spawnChallenger(task, agent)
+    }
 
     const { provider } = this.providerFor(agent)
     const perms = permissionsRepo.get(agent.id)
@@ -1302,12 +1316,131 @@ class Orchestrator {
     return `## Direct user interventions (the user instructed team members directly; respect them)\n${lines.join('\n')}`
   }
 
+  /* ───────────────────────── race mode ───────────────────────── */
+
+  /** A challenger copy of `task` for a member on another provider or model (none free: the task runs alone). */
+  private spawnChallenger(task: Task, agent: Agent): void {
+    // Two attempts in one shared folder would overwrite each other and the loser's edits couldn't be undone.
+    const project = getProject(task.projectId)
+    if (project?.rootPath && project.isolation !== 'worktree') {
+      this.post(`task:${task.id}`, 'system', null, t('orchestrator:race.needsWorktree', { key: task.key }), task.projectId)
+      return
+    }
+    const key = (a: Agent): string => {
+      const p = this.providerFor(a)
+      // Demo: every member counts as different, so the race can be tried without real providers.
+      if (p.provider.kind === 'mock') return `mock|${a.id}`
+      return `${p.provider.kind}|${p.provider.baseUrl ?? ''}|${p.model}`
+    }
+    const mine = key(agent)
+    const lead = projectLead(task.projectId)?.id
+    const free = projectMembers(task.projectId)
+      .filter((a) => a.id !== agent.id && a.id !== lead && !a.isLead && a.enabled && a.status === 'idle' && !this.busy.has(a.id))
+      .map((a) => ({ agent: a, key: key(a) }))
+    const rival = pickRival(mine, free)?.agent
+    if (!rival) {
+      this.post(`task:${task.id}`, 'system', null, t('orchestrator:race.noRival', { key: task.key }), task.projectId)
+      return
+    }
+    const copy = tasksRepo.create(
+      { title: task.title, description: task.description, priority: task.priority, assigneeId: rival.id, projectId: task.projectId, dependsOn: task.dependsOn, raceOf: task.id },
+      t('orchestrator:race.by')
+    )
+    for (const id of filesRepo.linkedTo('task', task.id)) filesRepo.link(id, 'task', copy.id, 'attached')
+    const label = (a: Agent): string => {
+      const p = this.providerFor(a)
+      return `${p.provider.label}${p.model ? ` · ${p.model}` : ''}`
+    }
+    const text = t('orchestrator:race.started', { key: task.key, copy: copy.key, a: agent.name, aProvider: label(agent), b: rival.name, bProvider: label(rival) })
+    this.post('general', 'system', null, text, task.projectId)
+    this.post(`task:${task.id}`, 'system', null, text, task.projectId)
+    emit({ type: 'tasks:changed' })
+    void this.startTask(copy.id, rival.id)
+  }
+
+  /** The lead compares the two attempts; the winner is done (and merged), the loser closes with a note. */
+  private async raceReview(orig: Task, chal: Task): Promise<void> {
+    const pid = orig.projectId
+    const lead = projectLead(pid)
+    const runA = runsRepo.list({ taskId: orig.id, limit: 1 })[0]
+    const runB = runsRepo.list({ taskId: chal.id, limit: 1 })[0]
+    const a = orig.assigneeId ? agentsRepo.get(orig.assigneeId) : null
+    const b = chal.assigneeId ? agentsRepo.get(chal.assigneeId) : null
+    if (!lead || !a || !b || !runA?.output || !runB?.output) return
+    const label = (x: Agent): string => {
+      const p = this.providerFor(x)
+      return `${p.provider.label}${p.model ? ` · ${p.model}` : ''}`
+    }
+    const { provider, adapter, apiKey, model } = this.providerFor(lead)
+    this.setStatus(lead.id, 'working', t('orchestrator:race.comparing', { a: orig.key, b: chal.key }))
+    const leadCtx = { agentId: lead.id, taskId: orig.id, projectId: pid }
+    const prompt = racePrompt(orig, { agent: a, label: label(a), output: runA.output }, { agent: b, label: label(b), output: runB.output })
+    const system = raceSystem(lead)
+    this.log({ ...leadCtx, level: 'prompt', message: t('orchestrator:race.comparing', { a: orig.key, b: chal.key }), meta: { from: 'system', prompt, system } })
+    const aux = this.auxStart(pid)
+    try {
+      const result = await adapter.run({
+        mode: 'review',
+        agent: lead,
+        permissions: permissionsRepo.get(lead.id),
+        provider,
+        model,
+        apiKey,
+        cwd: this.workspace(getProject(pid)),
+        system,
+        prompt,
+        signal: aux.signal,
+        onText: () => undefined,
+        onLog: () => undefined,
+        onUsage: (d) => this.recordUsage(lead, provider, model, 'review', leadCtx, d),
+        onProgress: () => undefined,
+        checkpoint: async () => undefined
+      })
+      if (aux.signal.aborted) return
+      const v = parseRaceVerdict(result.text)
+      const o = tasksRepo.get(orig.id)
+      const c = tasksRepo.get(chal.id)
+      if (!o || !c || o.status !== 'in_review' || c.status !== 'in_review') return // the user moved one meanwhile
+      if (!v.valid || !v.winner) {
+        for (const x of [o, c]) this.post(`task:${x.id}`, 'system', null, t('orchestrator:race.unclear', { lead: lead.name }), pid)
+        return
+      }
+      const [win, lose, winner] = v.winner === 'A' ? [o, c, a] : [c, o, b]
+      tasksRepo.update(win.id, { raceResult: 'won', reviewNote: v.note })
+      tasksRepo.move(win.id, 'done')
+      tasksRepo.update(lose.id, { raceResult: 'lost', reviewNote: t('orchestrator:race.lostNote', { key: win.key }) })
+      tasksRepo.move(lose.id, 'done')
+      void this.finishTaskBranch(win.id)
+      void this.discardTaskBranch(lose)
+      const text = t('orchestrator:race.decided', { winner: win.key, wName: winner.name, loser: lose.key, note: v.note })
+      this.post('general', 'agent', lead.id, text, pid)
+      for (const x of [win, lose]) this.post(`task:${x.id}`, 'agent', lead.id, text, pid)
+      this.log({ ...leadCtx, level: 'status', message: text })
+      emit({ type: 'tasks:changed' })
+    } catch (e) {
+      const { auth, text } = explainError((e as Error).message || String(e), provider)
+      if (auth) this.authFailure(text, pid)
+      else this.post(`task:${orig.id}`, 'system', null, t('orchestrator:chat.replyFailed', { agent: lead.name, text }), pid)
+    } finally {
+      aux.end()
+      if (agentsRepo.get(lead.id)?.status === 'working' && !this.busy.has(lead.id)) this.setStatus(lead.id, 'idle')
+    }
+  }
+
+  /** The attempt that won a race (the task itself when it didn't race or won). */
+  private raceWinner(task: Task): Task {
+    if (task.raceResult !== 'lost') return task
+    const partner = task.raceOf ? tasksRepo.get(task.raceOf) : tasksRepo.challengerOf(task.id)
+    return partner?.raceResult === 'won' ? partner : task
+  }
+
   /** Reports of the tasks this one waited for, so the next step builds on what was actually done. */
   private previousSteps(task: Task): string {
     const names = this.names()
     const lines = task.dependsOn
       .map((id) => tasksRepo.get(id))
       .filter((d): d is Task => !!d)
+      .map((d) => this.raceWinner(d))
       .map((d) => {
         const report = reportsRepo.latestForTask(d.id)
         const who = d.assigneeId ? names[d.assigneeId] ?? '?' : '?'
@@ -1456,6 +1589,15 @@ class Orchestrator {
     const lead = projectLead(task.projectId)
     const pid = task.projectId
     if (task.status !== 'in_review' || !lead || !lead.enabled) return
+    // Race mode: wait for the other attempt, then compare both; if it failed or was held, review this one alone.
+    const partner = task.raceOf ? tasksRepo.get(task.raceOf) : tasksRepo.challengerOf(task.id)
+    if (partner && !partner.raceResult && !task.raceResult) {
+      if (partner.status === 'in_review') return this.raceReview(task.raceOf ? partner : task, task.raceOf ? task : partner)
+      if (partner.status === 'in_progress' || (partner.status === 'todo' && !this.blocked.has(partner.id))) {
+        this.post(`task:${task.id}`, 'system', null, t('orchestrator:race.waiting', { key: partner.key }), pid)
+        return
+      }
+    }
     const lastRun = runsRepo.list({ taskId, limit: 1 })[0]
     const worker = task.assigneeId ? agentsRepo.get(task.assigneeId) : null
     if (!lastRun?.output || !worker) return

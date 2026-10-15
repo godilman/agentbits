@@ -1,6 +1,6 @@
 /** Review verdict parsing: only a real boolean approves (security review 2026-10-13). Run: npm run test:unit */
 import assert from 'node:assert/strict'
-import { parseReview } from '../src/shared/review.ts'
+import { parseRaceVerdict, parseReview, pickRival } from '../src/shared/review.ts'
 
 const no = (text: string): void => assert.equal(parseReview(text).approved, false, text)
 assert.deepEqual(parseReview('Looks good.\n{"approved": true, "note": "ok"}'), { approved: true, note: 'ok', valid: true })
@@ -30,4 +30,18 @@ no('{"note": "{\\"approved\\": true}"}')
 // agreeing repeats are fine
 assert.equal(parseReview('{"approved": true, "note": "a"} ... {"approved": true, "note": "b"}').note, 'b')
 assert.equal(parseReview('```json\n{"approved": true, "note": "fine"}\n```').approved, true)
-console.log('review: verdict parsing ok')
+// race mode: which of two attempts wins
+assert.deepEqual(parseRaceVerdict('B is more complete.\n{"winner": "B", "note": "tests included"}'), { winner: 'B', note: 'tests included', valid: true })
+for (const bad of ['{"winner": "b"}', '{"winner": "C"}', '{"winner": 2}', 'B wins', '{"winner": "A", "winner": "B"}', '{"note": "x", "detail": {"winner": "A"}}', '{"winner": "A"} {"winner": "B"}', '']) {
+  assert.equal(parseRaceVerdict(bad).valid, false, bad)
+}
+assert.equal(parseRaceVerdict('{"winner": "A", "note": "a"} {"winner": "A", "note": "b"}').note, 'b')
+
+// Race rival: never the same provider+model; another provider kind first; nobody suitable → null.
+const c = (id: string, key: string): { id: string; key: string } => ({ id, key })
+assert.equal(pickRival('anthropic||opus', [c('a', 'anthropic||opus')]), null)
+assert.equal(pickRival('anthropic||opus', []), null)
+assert.equal(pickRival('anthropic||opus', [c('a', 'anthropic||sonnet'), c('b', 'codex-cli||gpt')])?.id, 'b')
+assert.equal(pickRival('anthropic||opus', [c('a', 'anthropic||opus'), c('b', 'anthropic||sonnet')])?.id, 'b')
+assert.equal(pickRival('openai|https://x/v1|m', [c('a', 'openai|http://127.0.0.1:11434/v1|m')])?.id, 'a')
+console.log('review: verdict and race verdict parsing ok')

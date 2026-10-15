@@ -120,6 +120,20 @@ export function reviewSystem(lead: Agent): string {
   ].join('\n')
 }
 
+/** Race mode: the lead compares two independent attempts at the same task and keeps the better one. */
+export function raceSystem(lead: Agent): string {
+  return [
+    `You are ${lead.name}, comparing two independent attempts at the same task by different team members (race mode).`,
+    'Judge correctness first, then completeness and quality; the reports are their own account of the work.',
+    'Respond with ONLY a JSON object: {"winner": "A" | "B", "note": "one or two sentences on why, in the task\'s language"}'
+  ].join('\n')
+}
+
+export function racePrompt(task: Task, a: { agent: Agent; label: string; output: string }, b: { agent: Agent; label: string; output: string }): string {
+  const one = (tag: string, x: typeof a): string => `## Attempt ${tag} by ${x.agent.name} (${x.label})\n${x.output.slice(0, 10_000)}`
+  return [`## Task\n${task.key}: ${task.title}\n${task.description}`, one('A', a), one('B', b)].join('\n\n')
+}
+
 export function reviewPrompt(task: Task, agent: Agent, output: string): string {
   return `## Task\n${task.key}: ${task.title}\n${task.description}\n\n## Work report by ${agent.name}\n${output.slice(0, 12000)}`
 }

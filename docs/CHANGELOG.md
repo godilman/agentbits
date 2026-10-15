@@ -4,6 +4,15 @@
 > `## YYYY-MM-DD — kısa başlık`, ardından **Eklendi / Değişti / Düzeltildi / Kaldırıldı / Bilinen** maddeleri
 > ve ilgili dosyalar.
 
+## 2026-10-15 — Yarış modu
+
+### Eklendi
+- **Yarış modu** (Ayarlar → Genel, varsayılan kapalı): görev başlarken kopyası başka sağlayıcı ya da modeldeki boştaki bir üyeye
+  de verilir; ikisi de bitince lider karşılaştırır, kazanan tamamlanır (worktree'de birleşir), kaybeden kapanır ve dalı silinir.
+  Kartta 🏁 rozeti. Lider incelemesi açık olmalı; klasörlü projede worktree yalıtımı gerekir (yoksa yarış atlanır ve nedeni yazılır).
+  Uygun rakip yoksa görev tek başına çalışır. Demo sağlayıcıda denenebilir.
+- Migration **v14**: `tasks.race_of`, `tasks.race_result`. `shared/review.ts` → `parseRaceVerdict`, `pickRival` (+ testler).
+
 ## 2026-10-15 — Faz 6: RTF, Office 97–2003 (.doc / .xls / .ppt) ve OCR (ADR-026)
 
 ### Eklendi

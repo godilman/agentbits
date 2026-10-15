@@ -405,7 +405,9 @@ const mapTask = (r: Row): Task => ({
   updatedAt: r.updated_at,
   startedAt: r.started_at,
   completedAt: r.completed_at,
-  dependsOn: JSON.parse(r.depends_on || '[]')
+  dependsOn: JSON.parse(r.depends_on || '[]'),
+  raceOf: r.race_of ?? null,
+  raceResult: r.race_result === 'won' || r.race_result === 'lost' ? r.race_result : null
 })
 
 /** SQL condition: every dependency of the `tasks` row is done (a deleted dependency no longer blocks). */
@@ -513,8 +515,8 @@ export const tasksRepo = {
         db.prepare('SELECT COALESCE(MAX(sort_order), 0) + 1 AS o FROM tasks WHERE status = ?').get(status) as Row
       ).o
       db.prepare(
-        `INSERT INTO tasks(id, seq, key, title, description, status, priority, assignee_id, sort_order, created_by, project_id, depends_on)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+        `INSERT INTO tasks(id, seq, key, title, description, status, priority, assignee_id, sort_order, created_by, project_id, depends_on, race_of)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
       ).run(
         id,
         seq,
@@ -527,7 +529,8 @@ export const tasksRepo = {
         order,
         createdBy,
         input.projectId ?? projectsRepo.defaultId(),
-        JSON.stringify([...new Set(input.dependsOn ?? [])])
+        JSON.stringify([...new Set(input.dependsOn ?? [])]),
+        input.raceOf ?? null
       )
     })()
     return this.get(id)!
@@ -543,7 +546,8 @@ export const tasksRepo = {
       sortOrder: 'sort_order',
       reviewNote: 'review_note',
       startedAt: 'started_at',
-      completedAt: 'completed_at'
+      completedAt: 'completed_at',
+      raceResult: 'race_result'
     }
     const sets: string[] = []
     const vals: unknown[] = []
@@ -585,6 +589,11 @@ export const tasksRepo = {
       )
       .all(agentId, ...assignedIn, ...unassignedIn) as Row[]
     const r = rows.find((x) => !exclude.has(x.id))
+    return r ? mapTask(r) : null
+  },
+  /** Race mode: the challenger copy of a task (null when it isn't racing). */
+  challengerOf(taskId: string): Task | null {
+    const r = getDb().prepare('SELECT * FROM tasks WHERE race_of = ? ORDER BY seq LIMIT 1').get(taskId) as Row | undefined
     return r ? mapTask(r) : null
   },
   /** `todo` tasks queued for the given agents in the given projects, without a revision note, most urgent first. */

@@ -238,5 +238,16 @@
     "conflict": "⚠️ {{key}}: {{branch}} dalı projeyle çakışıyor ({{files}}). Görev, çakışmaları kendi çalışma kopyasında çözmesi için ajanına geri döndü.",
     "conflictNote": "Bu görevi projeye birleştirirken şu dosyalarda çakışma çıktı: {{files}}. Projenin son hâli senin dalına alındı; bu dosyalardaki çakışma işaretlerini (<<<<<<< ======= >>>>>>>) iki değişiklik birlikte çalışacak şekilde çöz, sonra raporunla bitir.",
     "mergeFailed": "⚠️ {{key}}: {{branch}} birleştirilemedi: {{error}}"
+  },
+  "race": {
+    "by": "Yarış modu",
+    "started": "🏁 Yarış: {{key}}, {{copy}} olarak {{b}} üyesine de verildi ({{bProvider}}); asıl görevde {{a}} çalışıyor ({{aProvider}}). Lider iyi olan denemeyi tutar.",
+    "noRival": "🏁 Yarış modu: başka sağlayıcı ya da modelde boşta üye yok, {{key}} tek başına çalışıyor.",
+    "waiting": "🏁 {{key}} bitmesi bekleniyor; ardından lider iki denemeyi karşılaştıracak.",
+    "comparing": "{{a}} ve {{b}} denemeleri karşılaştırılıyor",
+    "unclear": "🏁 {{lead}} kazananı seçemedi; iki deneme de incelemede seni bekliyor.",
+    "lostNote": "Yarışı kaybetti; {{key}} tutuldu.",
+    "decided": "🏁 {{winner}} ({{wName}}) kazandı; {{loser}} kapatıldı, değişiklikleri atıldı. {{note}}",
+    "needsWorktree": "🏁 {{key}} için yarış modu atlandı: bu projenin klasörü var ama göreve ayrı çalışma kopyası kapalı, iki deneme birbirinin üzerine yazar. Proje ayarlarından \"Her görev kendi git çalışma kopyasında\" ayarını aç."
   }
 }

@@ -61,7 +61,8 @@ export const DEFAULT_SETTINGS: AppSettings = {
   runMaxCostUsd: 0,
   cliEnvPassthrough: [],
   filesQuotaMb: 5120,
-  shareWithTwins: true
+  shareWithTwins: true,
+  raceMode: false
 }
 
 /** Upper bounds of the number settings (0 = no limit / keep forever). */
@@ -100,6 +101,7 @@ export function validateSettingsPatch(patch: unknown): Partial<AppSettings> {
       case 'autopilot':
       case 'reviewByLead':
       case 'shareWithTwins':
+      case 'raceMode':
         out[k] = bool(k, v)
         break
       case 'workspaceRoot':

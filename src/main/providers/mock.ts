@@ -450,6 +450,9 @@ export const mockAdapter: ProviderAdapter = {
       await sleep(rand(700, 1600), ctx.signal)
       text = chatReply(ctx)
       await stream(ctx, text)
+    } else if (ctx.mode === 'review' && ctx.prompt.includes('\n## Attempt A by ')) {
+      await sleep(rand(1500, 3000), ctx.signal)
+      text = JSON.stringify({ winner: Math.random() < 0.5 ? 'A' : 'B', note: t('demo:review.race') })
     } else if (ctx.mode === 'review') {
       await sleep(rand(1500, 3000), ctx.signal)
       const approved = Math.random() < 0.85

@@ -238,5 +238,16 @@
     "conflict": "⚠️ {{key}}: merging {{branch}} conflicts with the project ({{files}}). The task went back to its agent to resolve the conflicts in its working copy.",
     "conflictNote": "Merging this task into the project hit conflicts in: {{files}}. The project's latest state was merged into your branch; resolve the conflict markers (<<<<<<< ======= >>>>>>>) in those files so both changes work together, then finish with your report.",
     "mergeFailed": "⚠️ {{key}}: merging {{branch}} failed: {{error}}"
+  },
+  "race": {
+    "by": "Race mode",
+    "started": "🏁 Race: {{key}} also went to {{b}} ({{bProvider}}) as {{copy}}; {{a}} ({{aProvider}}) works on the original. The lead keeps the better attempt.",
+    "noRival": "🏁 Race mode: no free member on another provider or model, so {{key}} runs alone.",
+    "waiting": "🏁 Waiting for {{key}} to finish; the lead then compares both attempts.",
+    "comparing": "Comparing attempts {{a}} and {{b}}",
+    "unclear": "🏁 {{lead}} could not pick a winner; both attempts wait in review for you.",
+    "lostNote": "Lost the race; {{key}} was kept.",
+    "decided": "🏁 {{winner}} ({{wName}}) won; {{loser}} was closed and its changes discarded. {{note}}",
+    "needsWorktree": "🏁 Race mode skipped for {{key}}: this project has a folder but no separate working copies per task, so two attempts would overwrite each other. Turn on \"Each task in its own git working copy\" in the project settings."
   }
 }

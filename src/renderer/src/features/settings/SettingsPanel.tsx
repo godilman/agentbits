@@ -597,6 +597,9 @@ function GeneralSection() {
         <Row title={t('settings:general.review.title')} desc={t('settings:general.review.desc')}>
           <Toggle checked={settings.reviewByLead} onChange={(v) => update({ reviewByLead: v })} />
         </Row>
+        <Row title={t('settings:general.race.title')} desc={t('settings:general.race.desc')}>
+          <Toggle checked={settings.raceMode} onChange={(v) => update({ raceMode: v })} />
+        </Row>
         <Row title={t('settings:general.twins.title')} desc={t('settings:general.twins.desc')}>
           <Toggle checked={settings.shareWithTwins} onChange={(v) => update({ shareWithTwins: v })} />
         </Row>

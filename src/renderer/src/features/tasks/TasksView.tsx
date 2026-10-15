@@ -184,6 +184,8 @@ function TaskCard({ task, dragging, onDragStart, onDragEnd }: { task: Task; drag
   const agent = agentById(agents, task.assigneeId)
   const pr = PRIORITY_META[task.priority]
   // Unfinished dependencies (a string, so the selector returns a primitive); an unloaded dependency is an old done task.
+  // The original of a race has no raceOf; it is raced when a challenger points at it.
+  const isRaced = useAppStore((s) => s.tasks.some((x) => x.raceOf === task.id))
   const waitsFor = useAppStore((s) =>
     task.status === 'todo'
       ? task.dependsOn
@@ -210,6 +212,17 @@ function TaskCard({ task, dragging, onDragStart, onDragEnd }: { task: Task; drag
       <div className="flex items-center gap-1.5">
         <span className="font-mono text-[10.5px] text-zinc-400">{task.key}</span>
         <span className={cn('h-1.5 w-1.5 rounded-full', pr.dot)} title={t('tasks:card.priority', { label: pr.label })} />
+        {(task.raceOf || task.raceResult || isRaced) && (
+          <span
+            className={cn(
+              'rounded px-1 text-[10px]',
+              task.raceResult === 'won' ? 'bg-emerald-500/15 text-emerald-300' : task.raceResult === 'lost' ? 'bg-zinc-500/15 text-zinc-400' : 'bg-orange-500/15 text-orange-300'
+            )}
+            title={t('tasks:card.raceHint')}
+          >
+            🏁 {task.raceResult === 'won' ? t('tasks:card.raceWon') : task.raceResult === 'lost' ? t('tasks:card.raceLost') : t('tasks:card.race')}
+          </span>
+        )}
         {task.reviewNote && task.status === 'todo' && (
           <MessageSquareWarning size={12} className="text-amber-400/80" aria-label={t('tasks:card.revisionNote')} />
         )}

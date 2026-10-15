@@ -103,6 +103,10 @@ export interface Task {
   completedAt: string | null
   /** Ids of tasks that must be done before this one starts (autopilot waits; the user can still start it). */
   dependsOn: string[]
+  /** Race mode: the original task this one is a challenger copy of (null for an ordinary task). */
+  raceOf: string | null
+  /** Race mode: the lead's comparison picked this attempt (`won`) or the other one (`lost`). */
+  raceResult: 'won' | 'lost' | null
 }
 
 export interface TaskInput {
@@ -117,6 +121,8 @@ export interface TaskInput {
   fileIds?: string[]
   /** Ids of tasks (same project) that must be done first. */
   dependsOn?: string[]
+  /** Race mode: this is a challenger copy of that task. */
+  raceOf?: string | null
 }
 
 export interface TaskListOpts {
@@ -360,6 +366,8 @@ export interface AppSettings {
   filesQuotaMb: number
   /** An idle agent takes over a task queued for a busy twin (same role and skills). */
   shareWithTwins: boolean
+  /** Race mode: each task also goes to a member with another provider / model; the lead keeps the better result. */
+  raceMode: boolean
 }
 
 export interface TerminalSession {

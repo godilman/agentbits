@@ -600,6 +600,15 @@ const MIGRATIONS: { version: number; sql: string }[] = [
       -- OpenAI provider on an OpenAI-compatible endpoint (Gemini, Ollama, LM Studio…); '' = OpenAI itself.
       ALTER TABLE providers ADD COLUMN base_url TEXT NOT NULL DEFAULT '';
     `
+  },
+  {
+    version: 14,
+    sql: `
+      -- Race mode: a challenger copy points at the original task; the lead's comparison marks the winner and the loser.
+      ALTER TABLE tasks ADD COLUMN race_of TEXT;
+      ALTER TABLE tasks ADD COLUMN race_result TEXT CHECK (race_result IN ('won','lost'));
+      CREATE INDEX IF NOT EXISTS idx_tasks_race ON tasks(race_of);
+    `
   }
 ]
 

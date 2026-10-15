@@ -32,7 +32,7 @@ const MIGRATIONS: { version: number; sql: string }[] = [ { version: 1, sql: `...
 
 - `migrate(db)` önce `schema_migrations` tablosunu oluşturur, `MAX(version)`'dan büyük her migration'ı
   **kendi transaction'ında** çalıştırıp sürümünü kaydeder.
-- **Yalnızca ekleyin.** Uygulanmış bir migration'ı (bugün: v1–v13) asla düzenlemeyin, silmeyin, yeniden
+- **Yalnızca ekleyin.** Uygulanmış bir migration'ı (bugün: v1–v14) asla düzenlemeyin, silmeyin, yeniden
   numaralandırmayın — kullanıcı makinelerindeki DB'ler onu zaten çalıştırdı ve değişiklik oraya ulaşmaz.
 - Yeni değişiklik = dizinin sonuna `{ version: N+1, sql: ... }`. SQLite'ta tipik olarak
   `ALTER TABLE x ADD COLUMN y ... NOT NULL DEFAULT ...`; sütun silme/CHECK değiştirme için tabloyu yeniden
@@ -59,6 +59,7 @@ const MIGRATIONS: { version: number; sql: string }[] = [ { version: 1, sql: `...
 | 11 | 2026-10-15 | `tasks.depends_on TEXT NOT NULL DEFAULT '[]'` (bitmesi beklenen görev id'leri; zamanlayıcı `json_each` ile denetler, silinen bağımlılık engellemez). v10→v11 yükseltmesi SQLite ile denendi |
 | 12 | 2026-10-15 | `projects.isolation TEXT NOT NULL DEFAULT 'shared'` CHECK `shared, worktree` (görev başına git worktree, ADR-025) |
 | 13 | 2026-10-15 | `providers.base_url TEXT NOT NULL DEFAULT ''` — OpenAI sağlayıcısının OpenAI uyumlu uç noktası ('' = OpenAI); `kind` CHECK'i değişmediği için tablo yeniden kurulmadı |
+| 14 | 2026-10-15 | Yarış modu: `tasks.race_of TEXT` (rakip kopyanın asıl görevi), `tasks.race_result TEXT` CHECK `won, lost`, `idx_tasks_race (race_of)`. SQL bellekte SQLite ile denendi (CHECK geçersiz değeri reddediyor) |
 
 ## 3. Tablolar
 
@@ -166,6 +167,8 @@ transaction'da yazılır.
 | `review_note` | TEXT | Liderin son inceleme notu |
 | `created_at`, `updated_at`, `started_at`, `completed_at` | TEXT | |
 | `project_id` | TEXT FK → `projects(id)` ON DELETE CASCADE | *(v3)* Görevin projesi. `TaskInput.projectId` verilmezse varsayılan proje. `seq`/`key` tüm projelerde ortak artar |
+| `race_of` | TEXT | *(v14)* Yarış modunda rakip kopyanın asıl görevi (`tasksRepo.challengerOf(id)` tersini bulur) |
+| `race_result` | TEXT | *(v14)* CHECK `won, lost`; NULL = yarış yok ya da sürüyor |
 
 İndeksler: `idx_tasks_status (status, sort_order)`, `idx_tasks_assignee (assignee_id)`, `idx_tasks_project (project_id, status)`.
 `tasksRepo.nextFor(agentId, exclude, assignedIn, unassignedIn)` — ajana atanmış görevleri `assignedIn`

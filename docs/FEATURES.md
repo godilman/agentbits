@@ -241,6 +241,7 @@ yukarıdaki ⏳ satırları ve "Bilinen sorunlar"dır.
 | Ajanı çoğalt (ikiz: aynı rol, izinler, takımlar, erişimler) | ✅ | 2026-10-15; Organizasyon → Ajanlar → Çoğalt (`agents:duplicate`) |
 | İş dağıtımı: lider aynı roldekilere dağıtır; boştaki ikiz meşgul ikizin sıradaki görevini devralır | ✅ | 2026-10-15; Ayarlar → Genel → "İkizler arasında iş paylaşımı" (varsayılan açık) |
 | Görev bağımlılıkları (`"after"`), sonraki adım önceki raporları görür, kartta "… bekleniyor" | ✅ | 2026-10-15; migration v11; elle başlatma serbest |
+| Yarış modu: aynı görev başka sağlayıcı/modeldeki ikinci üyeye de verilir, lider iki denemeyi karşılaştırıp birini tutar | ✅ | 2026-10-15; Ayarlar → Genel → "Yarış modu" (varsayılan kapalı, lider incelemesi gerekir, ~2 kat maliyet). Kartta 🏁 Yarış / Kazandı / Kaybetti. Klasörlü projede "Her görev kendi git çalışma kopyasında" açık olmalı; kaybedenin dalı silinir. Migration v14 |
 | Ekip farkındalığı: "Team right now" + `team_status` aracı (kim, hangi görev, hangi dosyalar) | ✅ | 2026-10-15; `core/team.ts`. Dosya bilgisi Claude Code ve Demo'dan; Codex ve API sağlayıcıları dosya yazdığını bildirmez |
 
 ## 6. Sağlayıcılar

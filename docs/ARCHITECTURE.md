@@ -555,6 +555,17 @@ onay bekleyen çalışma da veritabanı kapandıktan sonra yürümez (açılış
   `instructionTurn` başlığı kaynağa göre değişir). Başka projenin / bilinmeyen anahtar → "⚠️ … not iletilmedi". Çalışanların
   (görev ya da DM) ```` ```message ```` blokları yok sayılır.
 
+### 6.7a Yarış modu (2026-10-15, `settings.raceMode`, varsayılan kapalı)
+Yalnızca lider incelemesi açıkken. `startTask()` sıradan bir görevi ilk kez başlatırken (rakibi, revizyon notu, `raceOf`'u yok)
+`spawnChallenger()` boştaki, başka sağlayıcı/modeldeki bir üyeye kopya açar (`race_of` = asıl; açıklama, öncelik, bağımlılıklar
+ve dosya ekleri kopyalanır). Rakip `pickRival()` (`shared/review.ts`) ile seçilir: aynı `tür|uç nokta|model` asla, başka sağlayıcı
+türü önce. Demo'da her üye farklı sayılır. Klasörlü ama worktree yalıtımı kapalı projede yarış başlamaz (iki deneme aynı dosyalara
+yazar, kaybeden geri alınamaz) — görev akışına neden yazılır. `review()`: eş hâlâ çalışıyor / sırada ise bekler; ikisi de
+`in_review` olunca `raceReview()` → `raceSystem` + `racePrompt` (her çıktının ilk 10 000 karakteri) → `parseRaceVerdict`
+(`{"winner":"A"|"B","note"}`). Kazanan `done` + `race_result=won` + `finishTaskBranch`; kaybeden `done` + `lost` +
+`discardTaskBranch`. Karar belirsizse ikisi incelemede kalır. Eş bekletilirse (`hold`) bekleyen deneme tek başına incelenir.
+`previousSteps()` kaybeden bağımlılık yerine kazananın raporunu kullanır.
+
 ### 6.7b Paralel çalışma (ADR-025, 2026-10-15)
 - **İkizler:** `isTwin` (`shared/org.ts`: aynı rol + aynı yetenek etiketleri). `tick()`'te boştaki ajanın kendi işi yoksa
   `takeFromTwin()` meşgul ikizlerinin `tasksRepo.queuedFor()` görevini (revizyon notsuz, bağımlılıkları bitmiş) devralır,
