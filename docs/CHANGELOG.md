@@ -4,6 +4,25 @@
 > `## YYYY-MM-DD — kısa başlık`, ardından **Eklendi / Değişti / Düzeltildi / Kaldırıldı / Bilinen** maddeleri
 > ve ilgili dosyalar.
 
+## 2026-10-15 — Faz 6: RTF, Office 97–2003 (.doc / .xls / .ppt) ve OCR (ADR-026)
+
+### Eklendi
+- **RTF** (kendi ayrıştırıcısı: kod sayfaları, `\uN`, tablolar / resimler / `\*` hedefleri atlanır).
+- **.doc** (word-extractor), **.xls** (kendi BIFF8 okuyucusu, cfb: paylaşılan dizeler, CONTINUE, RK / MULRK, formül önbelleği,
+  tarih biçimleri, gizli sayfalar), **.ppt** (slayt sırası, konuşmacı notları, ana şablon metni hariç); parolalı ve Excel 95
+  dosyaları açık mesajla. Fikstürler: word-extractor (MIT) ve Apache POI (Apache-2.0) test verisi, fuzz dosyaları dahil.
+- **OCR** (tesseract.js WASM, İngilizce + Türkçe, çevrimdışı): görseller ve metin katmanı olmayan PDF sayfaları.
+
+### Doğrulandı
+- `tests/ocr.test.ts` ağsız bir ad alanında (`unshare -rn`) geçti. Linux için `electron-builder --dir` paketi üretildi; paketin
+  kendi Electron'u ve `files-worker.js`'i ile ağsız ortamda görsel + taranmış PDF okundu. Bu deneme, Tesseract'ın her zaman
+  "-lstm" olmayan çekirdeği yüklediğini ortaya çıkardı (paket dışlamaları buna göre).
+
+### Değişti
+- Yeni bağımlılıklar `cfb`, `word-extractor`, `tesseract.js`, `@tesseract.js-data/{eng,tur}` (tam sürüm, `npm audit` temiz);
+  `THIRD_PARTY_NOTICES.md` yeniden üretildi. `tsconfig.node.json` → `allowImportingTsExtensions`. `.gitattributes`: .doc / .xls /
+  .ppt / .gz / .wasm ikili.
+
 ## 2026-10-15 — Faz 5: ajanlar web sayfası okur, özel rapor, özel GitHub skill'leri, MCP kaynakları ve istemleri
 
 ### Eklendi

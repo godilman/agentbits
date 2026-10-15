@@ -505,3 +505,18 @@ Durum değerleri: *Kabul edildi*, *Önerildi*, *Yerini aldı*, *Geri alındı*.
 - **Elenen:** kopyaları proje içinde tutmak; dosya kilidi (Claude Code'un Edit aracını araya girerek engelleyemiyoruz,
   modele bağlı bir "kilit" garanti değil); tek ajana sıralı çalıştırma (paralellik kaybı).
 
+## ADR-026 — Dosyalar: eski Office biçimleri ve OCR saf JS / WASM ile (2026-10-15)
+
+- **Bağlam:** Eski .doc / .xls / .ppt / .rtf yalnızca saklanıyordu; taranmış PDF'ler ve görseller metinsizdi ("Kısmen okundu").
+  Kural: native modül ADR ister ve Build Tools gerektirmemeli (ADR-002, ADR-016).
+- **Karar:**
+  - .doc → `word-extractor` (MIT); .xls → kendi BIFF8 okuyucusu `cfb` (Apache-2.0) üzerinde; .ppt → `cfb` + kayıt ağacı; .rtf →
+    kendi ayrıştırıcısı. npm'deki `xlsx` 0.18.5 **kullanılmadı** (bilinen güvenlik açıkları, npm'de güncellenmiyor).
+  - OCR → `tesseract.js` 7.0.0 (Apache-2.0, WASM; native değil). Dil verisi İngilizce + Türkçe `4.0.0_best_int` pakete gömülü,
+    **çevrimdışı** (yerel `langPath`; varsayılan CDN indirmesi hiç kullanılmaz). Sürüm tam sabit: 7.0.0'da `getCore()` her zaman
+    "-lstm" olmayan çekirdekleri yükler, pakete yalnızca onlar girer — yükseltmede paketlenmiş uygulamayla OCR yeniden denenmeli.
+  - Hepsi ayrıştırma worker'ında (bellek / süre sınırı); OCR dosya başına sayfa ve süre bütçeli.
+- **Bedel:** kurulum paketi büyür (Tesseract çekirdekleri ~20 MB, dil verisi ~5 MB, sıkıştırılmadan). El yazısı OCR'ı yok.
+- **Elenen:** Python / sistem Tesseract'ı (kurulum gerektirir), bulut OCR (veri dışarı çıkar), `@napi-rs/canvas` ile sayfa çizimi
+  (native), görselleri yalnızca görsel destekli modele bırakmak (Codex / yerel modeller / Demo okuyamaz).
+

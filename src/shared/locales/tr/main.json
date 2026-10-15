@@ -288,7 +288,12 @@
       "docHeaders": "Üstbilgiler ve altbilgiler",
       "legacyEncrypted": "Dosya parolayla korunuyor; okunamıyor",
       "xlsOld": "Excel 5.0/95 ya da daha eski çalışma kitapları desteklenmiyor; .xlsx ya da .xls (97–2003) olarak kaydet",
-      "legacyInvalid": "Bu Office 97–2003 dosyası okunamadı ({{message}})"
+      "legacyInvalid": "Bu Office 97–2003 dosyası okunamadı ({{message}})",
+      "ocrText": "Görselde tanınan metin (OCR)",
+      "imageOcr": "Görsel; metni OCR ile tanındı (hatalar olabilir)",
+      "pdfOcr_one": "{{n}} taranmış sayfa OCR ile okundu (hatalar olabilir)",
+      "pdfOcr_other": "{{n}} taranmış sayfa OCR ile okundu (hatalar olabilir)",
+      "ocrPartial": "Taranmış sayfaların hepsi OCR ile okunamadı (sayfa ya da süre sınırı)"
     }
   },
   "feedback": {

@@ -273,6 +273,11 @@ seçicilerinde yeni dizi/nesne üretimi arayın (bkz. §5).
 - Kalıcı veri kod deposunda değil, kullanıcı veri klasöründedir ([DATABASE.md](DATABASE.md)).
 - Belgeler `docs/` altında; değişiklik sonrası güncelleme kuralı [../CLAUDE.md](../CLAUDE.md)'de.
 
+### 7b. Bağımlılıklar değişince (2026-10-15)
+`package-lock.json` değiştiyse (ör. `cfb`, `word-extractor`, `tesseract.js` eklendi) çekmeden sonra **`npm ci`** çalıştırın; eski
+`node_modules` ile `npm run dev` yeni modülleri bulamaz. `tesseract.js` yükseltilirse paketlenmiş uygulamada OCR yeniden denenmeli
+(hangi çekirdeğin yüklendiği `electron-builder.config.js` → `files` dışlamalarını etkiler, ADR-026).
+
 ## 8. Dağıtım paketleri (Windows / macOS)
 
 **Nerede derlenir:** Windows paketi Windows'ta (`npm run dist:win`). macOS paketi **yalnızca macOS'ta** derlenebilir

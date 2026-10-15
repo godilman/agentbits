@@ -72,7 +72,7 @@ Demo sağlayıcı iş türüne göre simülasyon (`shared/demoKind.ts`), paket s
   Faz 1 ✅ temizlik → v0.1.1 · Faz 2 ✅ lider ↔ ajan iletişimi · **P ✅ paralel yazılımcılar** (çoğalt, iş dağıtımı, bağımlılık, farkındalık, worktree — ADR-025) (sahibin kararı: **yalnızca lider** ajanlarla konuşur — görev verir,
   biten işleri ve notları görür, göreve not bırakır; ajanlar birbirleriyle doğrudan konuşmaz) · Faz 3 SECURITY.md'deki 🟡/⏳
   maddeler ✅ (#02 OS yalıtımı ve #24 imza kodla kapanmaz, belgede) · Faz 4 ✅ OpenAI uyumlu uç nokta (Gemini, Ollama, LM Studio) + Codex'e Agentbits araçları · Faz 5 ✅ ajanların web
-  sayfası okuması (`web_fetch`), özel rapor, özel GitHub skill, MCP kaynakları/istemleri · Faz 6 RTF/.doc/.xls + OCR · Faz 7 vektör hafıza +
+  sayfası okuması (`web_fetch`), özel rapor, özel GitHub skill, MCP kaynakları/istemleri · Faz 6 ✅ RTF/.doc/.xls/.ppt + OCR · Faz 7 vektör hafıza +
   aynı klasörde çakışma yönetimi · ardından **yarış modu** (sahibin isteği: açılıp kapanabilen ayar, varsayılan kapalı; açıkken
   aynı görev farklı sağlayıcılardaki iki ajana paralel verilir, lider sonuçları karşılaştırıp birini seçer). + **paylaşım** (birim / takım / ajan dışa-içe aktarma, bağlantıyla kurulum; galeri sonra). Sahip: hepsi bitince
   tek seferde yayın (v0.2.0); v0.1.1 taslağı yayımlanmadı, yerine geçecek.
@@ -98,7 +98,7 @@ Demo sağlayıcı iş türüne göre simülasyon (`shared/demoKind.ts`), paket s
 | UI | React `^19.2`, TypeScript `~5.9` (strict), Tailwind CSS `^3.4` (v4 **değil**), lucide-react `^0.577` |
 | Durum yönetimi | Zustand `^5` (tek store: `src/renderer/src/store/useAppStore.ts`) |
 | Veritabanı | SQLite — `better-sqlite3` `^13` (WAL, FTS5), N-API hazır binary → rebuild gerekmez |
-| Dosya çıkarma | `unpdf` `1.8.1` (PDF.js), `fflate` `0.8.3` (ZIP/Office), `papaparse` `5.7.0` (CSV) — saf JS, `files-worker`'a paketlenir (externalize edilmez) |
+| Dosya çıkarma | `unpdf` `1.8.1` (PDF.js), `fflate` `0.8.3` (ZIP/Office), `papaparse` `5.7.0` (CSV), `cfb` `1.2.2` + `word-extractor` `1.0.4` (Office 97–2003) — saf JS, `files-worker`'a paketlenir (externalize edilmez); OCR `tesseract.js` `7.0.0` (WASM, tam sabit; dil verisi `@tesseract.js-data/{eng,tur}`, çevrimdışı; `asarUnpack`'te — ADR-026) |
 | Uygulamalar (MCP) | `@modelcontextprotocol/sdk` `1.31.0` (sabit; 1.30.x'te OAuth güvenlik açığı vardı; bağımlılık değişince `npm ci` — kurulu SDK eskiyse OAuth reddedilir) — yalnızca main'de istemci (stdio, Streamable HTTP/SSE, OAuth); saf JS |
 | Terminal | `@xterm/xterm` `^5.5` + `@lydell/node-pty` `1.2.0-beta.15` (gerçek PTY, hazır N-API binary; yüklenemezse pipe yedeği) |
 | Ofis | Saf HTML5 Canvas, kodla çizilen sprite'lar (harici görsel yok) |

@@ -172,8 +172,8 @@ Lejant: ✅ tamam · 🟡 kısmi · 🚧 geliştiriliyor · ⏳ planlı · — y
 | Üretilen dosyalar: `file_save` (metin biçimleri, 2 MB, çalışma başına 20); CLI ajanlarında (fsWrite) çalışma sonrası proje klasörü taraması → "Klasör" dosyaları (kopyalanmaz); görev akışında çipler, #general'de "📎 N dosya", transkriptte "📎 Üretilen dosyalar", görev raporunda "## Dosyalar" | ✅ | `recordWorkspaceChanges` |
 | Denetim: reddedilen okumalar, `file_save`, kullanıcı silmeleri, erişim değişiklikleri (`file:grant` / `file:revoke` / `file:share-project`) | ✅ | `audit_log` ("📎 <ad>") |
 | Veri yönetimi: "Dosyalar" istatistiği, proje başına sayı, proje temizliğinde "Dosyalar" parçası; sıfırlama ve proje silme sonrası GC | ✅ | |
-| OCR (taranmış PDF / görsel metni) | ⏳ | Planlanmadı; açık mesajla "Kısmen okundu" |
-| Eski Office biçimleri (.doc / .xls / .ppt) ve .rtf okuma | ⏳ | Yalnızca saklanır |
+| OCR (taranmış PDF / görsel metni) | ✅ | 2026-10-15: tesseract.js (WASM, native değil), İngilizce + Türkçe dil verisi pakette, **çevrimdışı** (ağsız ortamda paketlenmiş uygulamayla denendi). Görseller ve metin katmanı olmayan PDF sayfaları (en fazla 20 sayfa / 75 sn); "OCR ile okundu, hatalar olabilir" uyarısı. `files/ocr.ts`, `tests/ocr.test.ts` |
+| Eski Office biçimleri (.doc / .xls / .ppt) ve .rtf okuma | ✅ | 2026-10-15: .doc (word-extractor), .xls (kendi BIFF8 okuyucusu, cfb), .ppt (kayıt ağacı, slayt sırası, notlar), .rtf (kendi ayrıştırıcısı, kod sayfaları). Parolalı ve Excel 95 dosyaları açık mesajla. `files/legacyOffice.ts`, `tests/files.legacy.test.ts` (fuzz dosyaları dahil) |
 
 ## 3e. Skill'ler — Organizasyon → Skill'ler
 
@@ -361,7 +361,7 @@ Kullanıcıya dürüstçe söylenmesi gerekenler (kodla doğrulandı, 2026-10-13
 | İşletim sistemi bildirimleri | — | Yalnızca uygulama içi toast'lar ve rozetler |
 | Git entegrasyonu (dal, commit, PR) | — | Agentbits git kullanmaz; terminal izinli bir ajan kendisi çalıştırabilir |
 | Aynı klasörde eşzamanlı düzenleme çakışma yönetimi | ✅ | Proje ayarı: görev başına git worktree (ADR-025) |
-| OCR, eski Office biçimleri (.doc/.xls/.ppt/.rtf) | ⏳ | §3c |
+| El yazısı ve karmaşık düzen OCR'ı | ⏳ | OCR basılı metin içindir; tablolar ve çok sütunlu düzen yaklaşık |
 | Ajanların dosya eklerini değiştirmesi / silmesi | — | Bilinçli: ajanlar yalnızca okur, `file_save` yalnızca yeni metin dosyası (ADR-021) |
 | Proje klasörlerinin yedeklenmesi | — | Yedek yalnızca veritabanıdır; proje klasörü ve dosyaları silinmez de |
 | Vektör (embedding) hafıza | ⏳ | §9 (özel rapor 2026-10-15'te eklendi) |
@@ -419,8 +419,8 @@ eklendi; bunlar CHANGELOG'da kayıtlı ve gözden geçirilmeli.
 34. MySQL ve SQL Server sürücüleri yalnızca bağlantı hatası yolunda test edildi (sunucu yoktu); PostgreSQL PGlite'a (soket), SSH yerel bir ssh2 sunucusuna karşı test edildi.
 35. `ssh2`'nin opsiyonel native kripto eklentisi Build Tools olmayan Windows'ta `npm install` sırasında derleme uyarısı basabilir; saf JS'e düşer (işlevsel sorun yok).
 36. Denetim kaydı varsayılan 180 gün saklanır (Ayarlar → Güvenlik ve sınırlar; 2026-10-15 öncesi süresizdi). Codex CLI'da bağlantı araçları yok. İzin değişiklikleri sonraki çalışmada ya da araç çağrısında geçerli olur (çalışan prompt'u güncellenmez).
-37. Dosyalar — OCR yok: metin katmanı olmayan taranmış PDF'ler "Kısmen okundu" olur (açık mesajla); görseller yalnızca görsel destekleyen sağlayıcılara gider (Demo'da görsel yok).
-38. Eski .doc / .xls / .ppt / .rtf okunmaz (yalnızca saklanır). DOCX üst/alt bilgi, dipnotlar ve belge içi görseller çıkarılmaz. XLSX'te önbellekli değeri olmayan formüller `=FORMÜL` olarak görünür. PDF'te yalnızca metin katmanı; düzen ve tablolar yaklaşık.
+37. Dosyalar — OCR (2026-10-15): taranmış PDF sayfaları ve görseller OCR ile okunur; tanıma hatalı olabilir (uyarı gösterilir), en fazla 20 sayfa / 75 sn, el yazısı desteklenmez. Görseller ayrıca görsel destekleyen sağlayıcılara gider (Demo'da görsel yok).
+38. Eski .doc / .xls / .ppt ve .rtf okunur (2026-10-15); parolalı Office dosyaları ve Excel 5.0/95 okunmaz. DOCX üst/alt bilgi, dipnotlar ve belge içi görseller çıkarılmaz. XLSX'te önbellekli değeri olmayan formüller `=FORMÜL` olarak görünür. PDF'te yalnızca metin katmanı; düzen ve tablolar yaklaşık.
 39. Talimat benzeri satır tespiti sezgiseldir; içerik her durumda güvenilmeyen veri olarak işlenir.
 40. OpenAI'ye PDF yerel olarak gönderilmez; tool mesajları yalnızca metin olduğundan `file_read` görselleri ayrı bir kullanıcı turu olarak eklenir.
 41. Codex'in `--image` bayrağı yalnızca sahte bir codex ile test edildi; Codex dosyalarda sayfalanamaz (araç yok, yalnızca prompt bütçesi; sığmayan parçalar için açık not).

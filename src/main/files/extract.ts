@@ -7,12 +7,13 @@
  * Supported: PDF (text layer, per page), DOCX, legacy DOC / XLS / PPT (legacyOffice.ts), RTF (paragraphs, headings, lists,
  * tables), XLSX (all sheets, shared strings, dates, formulas without cached
  * value), PPTX (text per slide), CSV / TSV (delimiter detection), TXT and code,
- * Markdown, JSON (pretty-printed), images (dimensions only — no OCR).
+ * Markdown, JSON (pretty-printed), images (dimensions; text by OCR when the caller provides it — ocr.ts), scanned PDF pages (OCR).
  */
 import { Unzip, UnzipInflate, type UnzipFile } from 'fflate'
 import Papa from 'papaparse'
-// Explicit .ts: this module is also loaded directly by Node in the unit tests (no bundler there).
+// Explicit .ts: these modules are also loaded directly by Node in the unit tests (no bundler there).
 import { readDoc, readPpt, readXls } from './legacyOffice.ts'
+import { encodeGrayPng, toGray, type OcrFn } from './ocr.ts'
 import type { I18nKey } from '../../shared/i18n'
 
 /**
@@ -47,6 +48,9 @@ export interface ExtractLimits {
   maxPages: number
   /** Target characters per chunk. */
   chunkChars: number
+  /** OCR: at most this many image-only PDF pages, within this many milliseconds (the worker's own limit is 120 s). */
+  ocrPages: number
+  ocrMs: number
 }
 
 export const DEFAULT_LIMITS: ExtractLimits = {
@@ -55,7 +59,9 @@ export const DEFAULT_LIMITS: ExtractLimits = {
   maxChars: 8_000_000,
   maxRows: 200_000,
   maxPages: 3000,
-  chunkChars: 3500
+  chunkChars: 3500,
+  ocrPages: 20,
+  ocrMs: 75_000
 }
 
 export interface Chunk {
@@ -417,9 +423,9 @@ function numberedLabel(cx: Cx, kind: 'page' | 'slide', n: number): string {
   return label
 }
 
-async function readPdf(bytes: Uint8Array, limits: ExtractLimits, cx: Cx): Promise<Partial_> {
+async function readPdf(bytes: Uint8Array, limits: ExtractLimits, cx: Cx, ocr?: OcrFn): Promise<Partial_> {
   const { t } = cx
-  const { getDocumentProxy } = await import('unpdf')
+  const { getDocumentProxy, extractImages } = await import('unpdf')
   let pdf: Awaited<ReturnType<typeof getDocumentProxy>>
   try {
     // pdf.js takes ownership of the buffer; give it a copy.
@@ -460,6 +466,39 @@ async function readPdf(bytes: Uint8Array, limits: ExtractLimits, cx: Cx): Promis
     if (chars > limits.maxChars) {
       warnings.push(t('main:files.extract.textLimitPage', { n: i }))
       break
+    }
+  }
+  // Scanned pages (no text layer): OCR the page's largest image.
+  const allBlank = sections.filter((s) => !s.text)
+  const blank = allBlank.slice(0, ocr ? limits.ocrPages : 0)
+  if (ocr && blank.length) {
+    const pngs: { section: TextSection; png: Uint8Array }[] = []
+    for (const s of blank) {
+      const n = cx.numbered.get(s.label)?.n
+      if (!n) continue
+      try {
+        const imgs = await extractImages(pdf, n)
+        const big = imgs.sort((a, b) => b.width * b.height - a.width * a.height)[0]
+        const gray = big && big.width >= 200 && big.height >= 60 ? toGray(big) : null
+        if (gray) pngs.push({ section: s, png: encodeGrayPng(big.width, big.height, gray) })
+      } catch {
+        /* an image pdf.js can't decode */
+      }
+    }
+    if (pngs.length) {
+      const { texts, timedOut } = await ocr(
+        pngs.map((p) => p.png),
+        limits.ocrMs
+      )
+      let read = 0
+      texts.forEach((text, k) => {
+        if (!text) return
+        pngs[k].section.text = text
+        chars += text.length
+        read++
+      })
+      if (read) warnings.push(t('main:files.extract.pdfOcr', { n: read }))
+      if (timedOut || allBlank.length > limits.ocrPages) warnings.push(t('main:files.extract.ocrPartial'))
     }
   }
   await (pdf as unknown as { destroy?: () => Promise<void> }).destroy?.()
@@ -944,7 +983,9 @@ export async function extractFile(
   bytes: Uint8Array,
   name: string,
   limits: ExtractLimits = DEFAULT_LIMITS,
-  strings: ExtractText = DEFAULT_TEXT
+  strings: ExtractText = DEFAULT_TEXT,
+  /** OCR for images and scanned PDF pages (worker: tesseract.js); without it images only report their size. */
+  ocr?: OcrFn
 ): Promise<ExtractResult> {
   const cx: Cx = { ...strings, numbered: new Map() }
   const { t } = cx
@@ -967,7 +1008,19 @@ export async function extractFile(
   }
   if (kind === 'image') {
     const info = imageInfo(bytes)!
-    return { ...base, width: info.width || null, height: info.height || null, message: t('main:files.extract.image') }
+    const sized = { ...base, width: info.width || null, height: info.height || null, message: t('main:files.extract.image') }
+    // OCR only where Tesseract reads the format; tiny icons and huge scans are skipped.
+    const readable = /png|jpeg|bmp|gif|webp|tiff/.test(info.mime) && info.width >= 40 && info.height >= 16 && info.width * info.height <= 40_000_000
+    if (!ocr || !readable) return sized
+    try {
+      const { texts } = await ocr([bytes], limits.ocrMs)
+      const text = (texts[0] ?? '').trim()
+      if (text.replace(/\W/g, '').length < 3) return sized
+      const chunks = chunkSections([{ label: t('main:files.extract.ocrText'), text }], limits.chunkChars, mergeLabelFor(cx), t)
+      return { ...sized, message: t('main:files.extract.imageOcr'), chunks, chars: text.length, suspicious: findSuspicious(text) }
+    } catch {
+      return sized
+    }
   }
   if (kind === 'other') {
     return {
@@ -978,7 +1031,7 @@ export async function extractFile(
   }
   let r: Partial_
   try {
-    if (kind === 'pdf') r = await readPdf(bytes, limits, cx)
+    if (kind === 'pdf') r = await readPdf(bytes, limits, cx, ocr)
     else if (kind === 'docx') r = readDocx(bytes, limits, cx)
     else if (kind === 'xlsx') r = readXlsx(bytes, limits, cx)
     else if (kind === 'pptx') r = readPptx(bytes, limits, cx)

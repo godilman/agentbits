@@ -994,6 +994,19 @@ fabrika sıfırlaması (iki mod) dosya tablolarını siler + FTS rebuild + GC; p
 canlı DB'nin **ya da** `<veri>/backups`'taki herhangi bir yedeğin (salt-okunur açılır) başvurduğu SHA'ları korur;
 yedek silinince/dönünce GC tekrar çalışır.
 
+### 9c-2. RTF, Office 97–2003 ve OCR (Faz 6, 2026-10-15; ADR-026)
+- `detectKind`: RTF içerikten (`{\rtf`), OLE dosyası (`D0 CF 11 E0…`) uzantıyla `doc` / `xls` / `ppt`. `extract.ts` bunları
+  `rtfToText` ve `legacyOffice.ts` (`readDoc` → word-extractor, `readXls` → kendi BIFF8 okuyucusu `cfb` üzerinde, `readPpt` →
+  "PowerPoint Document" kayıt ağacı) ile okur; her okuma sınır denetimlidir (fuzz fikstürleri).
+- **OCR** (`files/ocr.ts`): `extractFile(..., ocr?)` enjekte edilen `OcrFn` ile görsellerin metnini (`ocrText` bölümü) ve metin
+  katmanı olmayan PDF sayfalarını (sayfanın en büyük görüntüsü → gri PNG → Tesseract; `ocrPages` 20, `ocrMs` 75 sn) okur.
+  Worker `createOcr(ocrLangPath)` kurar; ana süreç dil verisini (`@tesseract.js-data/{eng,tur}/4.0.0_best_int`, asar içinde)
+  bir kez `<veri>/ocr/4.0.0_best_int/`'e kopyalar (`ocrLangPath`). `langPath` yerel olduğu için Tesseract diske bakar, hiçbir şey
+  indirmez. Tesseract kendi worker'ını betik yolundan açtığından `tesseract.js`, `tesseract.js-core` ve çalışma zamanı
+  bağımlılıkları `asarUnpack`'te; yalnızca kullanılan çekirdekler pakete girer (`electron-builder.config.js`).
+- `extract.ts` testlerde doğrudan Node ile yüklendiği için `./legacyOffice.ts` / `./ocr.ts` açık `.ts` uzantısıyla import edilir
+  (`tsconfig.node.json` → `allowImportingTsExtensions`).
+
 ## 9d. Çoklu dil (i18n; `src/shared/i18n.ts`, ayrıntı [I18N.md](I18N.md))
 
 - **Kaynak:** `src/shared/locales/<dil>/<bölüm>.json`; `en` referans, `tr` aynı anahtarlar. Hepsi derlemeye gömülür

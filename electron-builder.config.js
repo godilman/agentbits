@@ -31,13 +31,30 @@ module.exports = {
     output: 'release',
     buildResources: 'build-resources'
   },
-  files: ['out/**/*', 'package.json'],
+  files: [
+    'out/**/*',
+    'package.json',
+    // OCR cores: tesseract.js 7.0.0 (pinned) passes a boolean to getCore() and so always loads the non "-lstm" builds
+    // (they run LSTM too); the "-lstm" builds are never used. Re-check with a packaged build when upgrading tesseract.js.
+    // The larger "4.0.0" language models are never loaded either (best_int is used).
+    '!**/node_modules/tesseract.js-core/tesseract-core{,-simd,-relaxedsimd}-lstm.{js,wasm,wasm.js}',
+    '!**/node_modules/@tesseract.js-data/*/4.0.0/**'
+  ],
   // License texts next to the app (resources/): ours and the bundled open-source packages'.
   extraResources: [
     { from: 'LICENSE', to: 'LICENSE.txt' },
     { from: 'THIRD_PARTY_NOTICES.md', to: 'THIRD_PARTY_NOTICES.md' }
   ],
-  asarUnpack: ['**/node_modules/better-sqlite3/**', '**/node_modules/@lydell/node-pty*/**', 'out/main/mcp-connections.js', 'out/main/files-worker.js', 'out/main/chunks/**'],
+  // OCR (tesseract.js) starts its own worker thread from a script path, so it and its runtime dependencies live outside
+  // the asar; the language data is copied to the data folder at first use (files/service.ts → ocrLangPath).
+  asarUnpack: [
+    '**/node_modules/better-sqlite3/**',
+    '**/node_modules/@lydell/node-pty*/**',
+    'out/main/mcp-connections.js',
+    'out/main/files-worker.js',
+    'out/main/chunks/**',
+    '**/node_modules/{tesseract.js,tesseract.js-core,bmp-js,idb-keyval,is-url,node-fetch,regenerator-runtime,tr46,wasm-feature-detect,webidl-conversions,whatwg-url,zlibjs}/**'
+  ],
   win: {
     target: [{ target: 'nsis', arch: ['x64'] }],
     icon: 'build-resources/icon.ico',

@@ -8,8 +8,16 @@
 import { readFileSync } from 'fs'
 import { parentPort, workerData } from 'worker_threads'
 import { DEFAULT_LIMITS, DEFAULT_TEXT, extractFile, type ExtractT } from './extract'
+import { createOcr } from './ocr'
 
-const { path, name, strings, locale } = workerData as { path: string; name: string; strings?: Record<string, string>; locale?: string }
+const { path, name, strings, locale, ocrLangPath } = workerData as {
+  path: string
+  name: string
+  strings?: Record<string, string>
+  locale?: string
+  /** Folder with the shipped OCR language data (null: no OCR). */
+  ocrLangPath?: string | null
+}
 
 const PREFIX = 'main:files.extract.'
 const t: ExtractT = (key, opts) => {
@@ -18,6 +26,6 @@ const t: ExtractT = (key, opts) => {
   return opts ? s.replace(/\{\{\s*(\w+)\s*\}\}/g, (m, k: string) => (k in opts ? String(opts[k]) : m)) : s
 }
 
-extractFile(new Uint8Array(readFileSync(path)), name, DEFAULT_LIMITS, { t, locale: locale || DEFAULT_TEXT.locale })
+extractFile(new Uint8Array(readFileSync(path)), name, DEFAULT_LIMITS, { t, locale: locale || DEFAULT_TEXT.locale }, ocrLangPath ? createOcr(ocrLangPath) : undefined)
   .then((result) => parentPort?.postMessage({ ok: true, result }))
   .catch((e: unknown) => parentPort?.postMessage({ ok: false, error: e instanceof Error ? e.message : String(e) }))

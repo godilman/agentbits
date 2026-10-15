@@ -1,4 +1,4 @@
-import { copyFileSync, existsSync, mkdirSync, readdirSync, readFileSync, rmSync, statSync } from 'fs'
+import { copyFileSync, existsSync, mkdirSync, readdirSync, readFileSync, rmSync, statSync, writeFileSync } from 'fs'
 import { basename, dirname, join, relative } from 'path'
 import { Worker } from 'worker_threads'
 import type { Agent, FileDetail, FileKind, FileLink, FilePreview, FileRecord, FileShare, ProviderKind } from '@shared/types'
@@ -16,6 +16,7 @@ import type { AgentCtx, ToolOutput } from '../connections/service'
 import { projectLead, projectMembers } from '../core/org'
 import { filesRepo, originalPath } from './repo'
 import { blobPath, gcBlobs, storeBytes, storeFile } from './storage'
+import { OCR_LANGS } from './ocr'
 
 /**
  * Attachments: ingest (copy → content-addressed store → text extraction in a
@@ -88,11 +89,36 @@ function extractStrings(): Record<string, string> {
   return { ...pick('en'), ...pick(currentLanguage()) }
 }
 
+/**
+ * OCR language data (shipped in node_modules/@tesseract.js-data, possibly inside app.asar) copied once into one folder
+ * of the data directory, where Tesseract reads it from disk in the worker. null when it can't be prepared: extraction
+ * then runs without OCR.
+ */
+let ocrDir: string | null | undefined
+function ocrLangPath(): string | null {
+  if (ocrDir !== undefined) return ocrDir
+  try {
+    const dir = join(dirname(getDbPath()), 'ocr', '4.0.0_best_int')
+    mkdirSync(dir, { recursive: true })
+    for (const lang of OCR_LANGS) {
+      const dst = join(dir, `${lang}.traineddata.gz`)
+      if (existsSync(dst)) continue
+      const src = join(dirname(require.resolve(`@tesseract.js-data/${lang}/package.json`)), '4.0.0_best_int', `${lang}.traineddata.gz`)
+      writeFileSync(dst, readFileSync(src))
+    }
+    ocrDir = dir
+  } catch (e) {
+    console.warn('[agentbits] OCR language data unavailable', e)
+    ocrDir = null
+  }
+  return ocrDir
+}
+
 function runWorker(path: string, name: string): Promise<WorkerResult> {
   return new Promise((resolve, reject) => {
     let done = false
     const w = new Worker(workerPath(), {
-      workerData: { path, name, strings: extractStrings(), locale: intlLocale(currentLanguage()) },
+      workerData: { path, name, strings: extractStrings(), locale: intlLocale(currentLanguage()), ocrLangPath: ocrLangPath() },
       // A hostile file can at most exhaust this budget, not the app.
       resourceLimits: { maxOldGenerationSizeMb: 768, maxYoungGenerationSizeMb: 96, stackSizeMb: 8 }
     })

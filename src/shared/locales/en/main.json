@@ -288,7 +288,12 @@
       "docHeaders": "Headers and footers",
       "legacyEncrypted": "The file is password-protected; it can't be read",
       "xlsOld": "Excel 5.0/95 or older workbooks are not supported; save it as .xlsx or .xls (97–2003)",
-      "legacyInvalid": "Could not read this Office 97–2003 file ({{message}})"
+      "legacyInvalid": "Could not read this Office 97–2003 file ({{message}})",
+      "ocrText": "Text recognised in the image (OCR)",
+      "imageOcr": "Image; its text was recognised with OCR (may contain mistakes)",
+      "pdfOcr_one": "{{n}} scanned page was read with OCR (may contain mistakes)",
+      "pdfOcr_other": "{{n}} scanned pages were read with OCR (may contain mistakes)",
+      "ocrPartial": "Not every scanned page could be read with OCR (page or time limit)"
     }
   },
   "feedback": {
