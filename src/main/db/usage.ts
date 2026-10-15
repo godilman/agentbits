@@ -155,6 +155,7 @@ const mapInstruction = (r: Row): AgentInstruction => ({
   text: r.text,
   mode: r.mode,
   status: r.status,
+  source: r.source === 'lead' ? 'lead' : 'user',
   note: r.note ?? null,
   createdAt: r.created_at,
   appliedAt: r.applied_at ?? null
@@ -170,12 +171,13 @@ export const instructionsRepo = {
     mode: InstructionMode
     status: InstructionStatus
     note?: string | null
+    source?: 'user' | 'lead'
   }): AgentInstruction {
     const id = randomUUID()
     getDb()
       .prepare(
-        `INSERT INTO agent_instructions (id, agent_id, project_id, task_id, run_id, text, mode, status, note, created_at, applied_at)
-         VALUES (?,?,?,?,?,?,?,?,?,?,?)`
+        `INSERT INTO agent_instructions (id, agent_id, project_id, task_id, run_id, text, mode, status, note, created_at, applied_at, source)
+         VALUES (?,?,?,?,?,?,?,?,?,?,?,?)`
       )
       .run(
         id,
@@ -188,7 +190,8 @@ export const instructionsRepo = {
         e.status,
         e.note ?? null,
         now(),
-        e.status === 'applied' || e.status === 'started_task' ? now() : null
+        e.status === 'applied' || e.status === 'started_task' ? now() : null,
+        e.source ?? 'user'
       )
     return this.get(id)!
   },
@@ -217,12 +220,12 @@ export const instructionsRepo = {
     const sql = `SELECT * FROM agent_instructions ${where.length ? 'WHERE ' + where.join(' AND ') : ''} ORDER BY created_at DESC LIMIT ?`
     return (getDb().prepare(sql).all(...vals, opts.limit ?? 50) as Row[]).map(mapInstruction)
   },
-  /** Recent direct interventions in a project, for the lead's context. */
+  /** Recent direct interventions of the user in a project, for the lead's context (the lead's own notes are not repeated). */
   recentForProject(projectId: string, limit = 6): AgentInstruction[] {
     return (
       getDb()
         .prepare(
-          "SELECT * FROM agent_instructions WHERE project_id = ? AND status IN ('queued','applied','started_task') ORDER BY created_at DESC LIMIT ?"
+          "SELECT * FROM agent_instructions WHERE project_id = ? AND source = 'user' AND status IN ('queued','applied','started_task') ORDER BY created_at DESC LIMIT ?"
         )
         .all(projectId, limit) as Row[]
     ).map(mapInstruction)

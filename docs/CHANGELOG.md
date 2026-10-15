@@ -4,6 +4,30 @@
 > `## YYYY-MM-DD — kısa başlık`, ardından **Eklendi / Değişti / Düzeltildi / Kaldırıldı / Bilinen** maddeleri
 > ve ilgili dosyalar.
 
+## 2026-10-15 — Lider ↔ ekip iletişimi (Faz 2)
+
+Sahibin kararı: **yalnızca lider** ajanlarla konuşur (görev verir, biten işleri ve notları görür, göreve not bırakır);
+ajanlar birbirine doğrudan yazmaz.
+
+### Eklendi
+- Liderin sistem prompt'unda **"Recently finished work"**: projenin `in_review` / `done` son 8 görevi, atananı ve son
+  raporunun özeti (Summary + Notes, ≤400 karakter). `tasksRepo.recentlyFinished`, `reportsRepo.latestForTask`.
+- Lider yanıtında ```` ```message ```` bloğu (`[{"task": "TA-3", "text": "…"}]`): not görevin akışına liderin mesajı olarak
+  yazılır; görev çalışıyor ya da onay bekliyorsa ayrıca sıraya girer ve mevcut adımdan sonra ajana
+  "Note from your project lead" olarak iletilir. Bilinmeyen / başka projenin anahtarı reddedilir ("⚠️ … not iletilmedi").
+  Bloklar yalnızca proje liderinin yanıtından okunur; çalışanlarınki yok sayılır.
+- `src/shared/leadComms.ts` (`parseLeadMessages`, `reportExcerpt`) + `tests/leadComms.test.ts` (geçersiz öğeler, sınırlar,
+  başka blok türleri, TR/EN rapor başlıkları).
+- Migration **v10**: `agent_instructions.source` (`user` | `lead`, eski satırlar `user`), `idx_reports_task`. v9→v10 yükseltmesi,
+  CHECK kısıtı ve yeni sorgular bellekte SQLite ile denendi (sorgu planı indeksi kullanıyor).
+- Demo lideri: mesajda projenin bir görev anahtarı geçerse o göreve not iletir (özelliği anahtarsız denemek için).
+- Ajan terminalindeki "N talimat sırada" ipucunda liderin notları "Liderden:" etiketiyle.
+
+### Değişti
+- Liderin "Direct user interventions" bağlamı yalnızca kullanıcının talimatlarını içerir (liderin kendi notları tekrar edilmez).
+- `instructionTurn`: başlık kaynağa göre (kullanıcı / lider / karışık); Demo sağlayıcı her başlığı tanır.
+- `stripBlocks` ```` ```message ```` bloklarını da sohbet balonundan çıkarır.
+
 ## 2026-10-15 — v0.1.1: açık işlerin temizliği (Faz 1)
 
 ### Değişti

@@ -11,7 +11,9 @@
     "unassigned": "atanmadı",
     "plan_one": "Tamamdır, işi {{count}} parçaya böldüm ve ekibe dağıttım:",
     "plan_other": "Tamamdır, işi {{count}} parçaya böldüm ve ekibe dağıttım:",
-    "planFooter": "İlerlemeyi Görevler sekmesinden ve ofisten canlı takip edebilirsin. Biten işleri ben inceleyeceğim."
+    "planFooter": "İlerlemeyi Görevler sekmesinden ve ofisten canlı takip edebilirsin. Biten işleri ben inceleyeceğim.",
+    "noteSent_one": "Tamam, {{keys}} üzerinde çalışan ekip arkadaşına ilettim.",
+    "noteSent_other": "Tamam, {{keys}} üzerinde çalışan ekip arkadaşlarına ilettim."
   },
   "connections": {
     "none": "Erişebildiğim bir bağlantı yok.",

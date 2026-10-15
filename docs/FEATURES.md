@@ -74,6 +74,7 @@ Lejant: ✅ tamam · 🟡 kısmi · 🚧 geliştiriliyor · ⏳ planlı · — y
 | Sekme / özellik | Durum | Not |
 |---|---|---|
 | **Chat** — projenin `#general` kanalında proje lideri ile sohbet | ✅ | Lider ```` ```tasks ```` bloğu → projede otomatik görevler; atananlar yalnızca proje üyeleri |
+| Lider ↔ ekip: lider biten işlerin rapor özetlerini görür, ```` ```message ```` ile göreve not bırakır (çalışan göreve mevcut adımdan sonra iletilir) | ✅ | 2026-10-15; yalnızca lider ekiple konuşur, ajanlar birbirine yazmaz (sahibin kararı). `shared/leadComms.ts`, `tests/leadComms.test.ts`; Demo lideri mesajda geçen görev anahtarına not iletir. Sıradaki talimat ipucunda "Liderden" etiketi |
 | Chat — ajanlara DM (`agent:<id>`) | ✅ | Çalışan ajan kendi persona'sıyla kısa cevap verir |
 | Chat — görev akışları (`task:<id>`) | ✅ | Not bırakılır, cevap gelmez; sonraki çalışmada prompt'a girer |
 | Chat — "yazıyor…" göstergesi, öneri düğmeleri, Markdown | ✅ | |

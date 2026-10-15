@@ -122,6 +122,14 @@ function chatReply(ctx: RunContext): string {
 
 function chatReplyText(ctx: RunContext): string {
   const msg = extractUserMessage(ctx.prompt)
+  // As the lead: a message naming one of the project's tasks is passed on to that task (```message block).
+  const keys = ctx.system.includes('## Open tasks')
+    ? [...new Set((msg.match(/\b[A-Za-z][A-Za-z0-9]{0,9}-\d{1,6}\b/g) ?? []).map((k) => k.toUpperCase()))].filter((k) => ctx.system.includes(`- ${k} [`))
+    : []
+  if (keys.length) {
+    const notes = keys.map((task) => ({ task, text: msg.slice(0, 1000) }))
+    return `${t('demo:chat.noteSent', { count: keys.length, keys: keys.join(', ') })}\n\n\`\`\`message\n${JSON.stringify(notes, null, 2)}\n\`\`\``
+  }
   const words = msg.split(/\s+/).filter(Boolean)
   const isQuestion = /\?\s*$/.test(msg) || words.length < 4
   if (isQuestion) {
@@ -333,7 +341,7 @@ async function taskWork(ctx: RunContext): Promise<string> {
   const original = ctx.history?.find((h) => h.role === 'user')?.content ?? ctx.prompt
   // Only the user's words (the prompt also carries the English wrapper around them).
   const instruction = ctx.history?.length
-    ? ctx.prompt.replace(/^## Direct instruction[^\n]*\n/, '').split('\n\nTake this into account')[0].trim()
+    ? ctx.prompt.replace(/^## [^\n]*\n/, '').split('\n\nTake this into account')[0].trim()
     : null
   const title = (original.match(/## Task\s+\S+: (.*)/)?.[1] ?? t('demo:task.defaultTitle')).trim()
   // Only the task itself (not its thread) and the agent's profile decide what kind of work this looks like.

@@ -434,6 +434,14 @@ export const tasksRepo = {
   listAll(): Task[] {
     return (getDb().prepare('SELECT * FROM tasks ORDER BY status, sort_order, seq').all() as Row[]).map(mapTask)
   },
+  /** A project's tasks that are in review or done, most recently updated first (the lead's follow-up context). */
+  recentlyFinished(projectId: string, limit: number): Task[] {
+    return (
+      getDb()
+        .prepare("SELECT * FROM tasks WHERE project_id = ? AND status IN ('in_review','done') ORDER BY updated_at DESC LIMIT ?")
+        .all(projectId, limit) as Row[]
+    ).map(mapTask)
+  },
   get(id: string): Task | null {
     const r = getDb().prepare('SELECT * FROM tasks WHERE id = ?').get(id) as Row | undefined
     return r ? mapTask(r) : null
@@ -860,6 +868,10 @@ export const reportsRepo = {
   },
   delete(id: string): void {
     getDb().prepare('DELETE FROM reports WHERE id = ?').run(id)
+  },
+  latestForTask(taskId: string): Report | null {
+    const r = getDb().prepare("SELECT * FROM reports WHERE task_id = ? AND kind = 'task' ORDER BY created_at DESC LIMIT 1").get(taskId) as Row | undefined
+    return r ? mapReport(r) : null
   }
 }
 

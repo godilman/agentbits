@@ -82,6 +82,11 @@ export function leadSystem(lead: Agent, team: Agent[], board: Task[], memory: st
     '  priority: 0 low, 1 normal, 2 high, 3 urgent.',
     '  Files: the files attached to the user\'s message go to every task you create. To give a task only',
     '  specific files, add "files": ["<file ref>", ...] to it ("files": [] for none). Assignees can only read the files given.',
+    '- To pass a note, a correction or an answer to the team member working on a task, add a fenced block:',
+    '```message\n[{"task": "<task key>", "text": "..."}]\n```',
+    '  It goes into that task\'s thread; if the task is running, its assignee gets it after the current step.',
+    '  Use it when the user asks you to tell the team something, or a finished report shows a task needs a follow-up.',
+    '  Team members do not message each other: you are the only one who talks to them.',
     '- When the user (or you) settles an important decision, record it with:',
     '```decision\n{"title": "...", "context": "...", "decision": "...", "rationale": "..."}\n```',
     '- Never invent work that was not asked for.'
@@ -163,7 +168,8 @@ export function parseDecisions(text: string): PlannedDecision[] {
 
 /** Removes machine blocks so chat bubbles stay readable. */
 export function stripBlocks(text: string): string {
-  return text.replace(/```(tasks|decision)\s*\n[\s\S]*?```/g, '').trim()
+  return text.replace(/```(tasks|decision|message)\s*\n[\s\S]*?```/g, '').trim()
 }
 
 export { parseReview } from '@shared/review'
+export { parseLeadMessages, reportExcerpt } from '@shared/leadComms'

@@ -570,6 +570,15 @@ const MIGRATIONS: { version: number; sql: string }[] = [
       );
       CREATE INDEX idx_mcp_perm_agent ON mcp_permissions(agent_id);
     `
+  },
+  {
+    version: 10,
+    sql: `
+      -- Who sent an instruction: the user, or the project lead (a note to a running task from the lead's chat reply).
+      ALTER TABLE agent_instructions ADD COLUMN source TEXT NOT NULL DEFAULT 'user' CHECK (source IN ('user','lead'));
+      -- The lead's chat context reads the latest report of recently finished tasks.
+      CREATE INDEX IF NOT EXISTS idx_reports_task ON reports(task_id, created_at);
+    `
   }
 ]
 

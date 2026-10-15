@@ -71,6 +71,7 @@
     "redirect": "Redirect",
     "queue": "Queue",
     "queueTitle": "Applied when the current step finishes, before going to review",
-    "giveTask": "Give task"
+    "giveTask": "Give task",
+    "fromLead": "From the lead"
   }
 }

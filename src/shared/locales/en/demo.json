@@ -11,7 +11,9 @@
     "unassigned": "unassigned",
     "plan_one": "Done — I turned the work into {{count}} task and handed it to the team:",
     "plan_other": "Done — I split the work into {{count}} parts and handed them out to the team:",
-    "planFooter": "You can follow progress live in the Tasks tab and in the office. I'll review the finished work."
+    "planFooter": "You can follow progress live in the Tasks tab and in the office. I'll review the finished work.",
+    "noteSent_one": "Got it — I passed it on to the team member working on {{keys}}.",
+    "noteSent_other": "Got it — I passed it on to the team members working on {{keys}}."
   },
   "connections": {
     "none": "There are no connections I can access.",

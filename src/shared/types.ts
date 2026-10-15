@@ -235,6 +235,8 @@ export interface AgentInstruction {
   text: string
   mode: InstructionMode
   status: InstructionStatus
+  /** `lead`: a note the project lead sent to a running task (the user's own instructions are `user`). */
+  source: 'user' | 'lead'
   note: string | null
   createdAt: string
   appliedAt: string | null

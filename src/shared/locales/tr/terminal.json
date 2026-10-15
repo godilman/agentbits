@@ -71,6 +71,7 @@
     "redirect": "Yönlendir",
     "queue": "Sıraya al",
     "queueTitle": "Mevcut adım bitince, incelemeye gitmeden önce uygulanır",
-    "giveTask": "Görev ver"
+    "giveTask": "Görev ver",
+    "fromLead": "Liderden"
   }
 }

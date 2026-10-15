@@ -40,7 +40,8 @@
     "redirect": "Yönlendirme",
     "applyAfterStep": "Mevcut adım bitince uygulanacak",
     "applyOnApproval": "Çalışma onaylanınca ilk prompta eklenecek",
-    "stepInterrupted": "Mevcut adım kesildi"
+    "stepInterrupted": "Mevcut adım kesildi",
+    "leadNote": "Proje liderinden not (mevcut adımdan sonra uygulanır)"
   },
   "log": {
     "staleRunsCancelled_one": "{{count}} yarım kalan çalışma iptal edildi (uygulama yeniden başladı)",
@@ -69,7 +70,8 @@
     "tasksPlanned_one": "📋 {{count}} görev planlandı:",
     "tasksPlanned_other": "📋 {{count}} görev planlandı:",
     "unassigned": "atanmadı",
-    "reviewUnclear": "{{key}}: incelemede net bir karar yok (approved: true / false); kullanıcı bekleniyor"
+    "reviewUnclear": "{{key}}: incelemede net bir karar yok (approved: true / false); kullanıcı bekleniyor",
+    "leadNote": "🎯 Lider {{lead}} → {{key}}: {{text}}"
   },
   "chat": {
     "awaitingApproval": "🔐 {{agent}}, {{key}} için onay bekliyor ({{caps}} erişimi).",
@@ -102,7 +104,10 @@
     "replyFailed": "⚠️ {{agent}} cevap veremedi: {{text}}",
     "interruptedHeld": "⏸ Bu görev Agentbits kapanırken yarıda kaldı. İşin bir kısmını yapmış olabileceği için kendiliğinden yeniden başlatılmaz — hazır olduğunda yeniden başlat.",
     "reviewUnclear": "⚠ {{lead}} incelemesinde net bir karar vermedi. Görev incelemede kalıyor: onayla (Tamamlandı'ya taşı) ya da kendin geri gönder.",
-    "revisionLimit": "⏸ {{count}} kez geri gönderildi. Görev artık yeniden çalışmak yerine seni bekliyor — inceleme notlarına bakıp hazır olduğunda başlat."
+    "revisionLimit": "⏸ {{count}} kez geri gönderildi. Görev artık yeniden çalışmak yerine seni bekliyor — inceleme notlarına bakıp hazır olduğunda başlat.",
+    "leadNotesSent_one": "🎯 {{keys}} görevine not eklendi.",
+    "leadNotesSent_other": "🎯 {{count}} göreve not eklendi: {{keys}}.",
+    "leadNotesUnknown": "⚠️ Bu projede böyle bir görev yok, not iletilmedi: {{keys}}"
   },
   "errors": {
     "noFolder": "“{{project}}” için klasör seçilmedi. CLI ajanları dosyalara dokunabildiği için proje ayarlarından bir klasör seçin.",

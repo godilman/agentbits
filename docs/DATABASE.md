@@ -32,7 +32,7 @@ const MIGRATIONS: { version: number; sql: string }[] = [ { version: 1, sql: `...
 
 - `migrate(db)` önce `schema_migrations` tablosunu oluşturur, `MAX(version)`'dan büyük her migration'ı
   **kendi transaction'ında** çalıştırıp sürümünü kaydeder.
-- **Yalnızca ekleyin.** Uygulanmış bir migration'ı (bugün: v1–v9) asla düzenlemeyin, silmeyin, yeniden
+- **Yalnızca ekleyin.** Uygulanmış bir migration'ı (bugün: v1–v10) asla düzenlemeyin, silmeyin, yeniden
   numaralandırmayın — kullanıcı makinelerindeki DB'ler onu zaten çalıştırdı ve değişiklik oraya ulaşmaz.
 - Yeni değişiklik = dizinin sonuna `{ version: N+1, sql: ... }`. SQLite'ta tipik olarak
   `ALTER TABLE x ADD COLUMN y ... NOT NULL DEFAULT ...`; sütun silme/CHECK değiştirme için tabloyu yeniden
@@ -55,6 +55,7 @@ const MIGRATIONS: { version: number; sql: string }[] = [ { version: 1, sql: `...
 | 7 | 2026-10-13 | Dosya ekleri (Faz 3): `files`, `file_chunks` + FTS5 `file_chunks_fts` (+ ai/ad trigger'ları), `file_links`, `file_access` (varsayılan reddet). Orijinaller DB'de değil, `<veri klasörü>/files/`'ta |
 | 8 | 2026-10-13 | Skill'ler: `skills`, `skill_files` (dosyalar BLOB), `skill_assignments` (ajan / birim) + `idx_skill_assign_target`; ajan ya da birim silinince atamayı silen trigger'lar `skill_assign_agent_gone`, `skill_assign_unit_gone` |
 | 9 | 2026-10-13 | Uygulamalar (MCP): `mcp_servers` (env/başlık/OAuth şifreli), `mcp_tool_policies`, `mcp_permissions` (varsayılan reddet) + `idx_mcp_perm_agent` |
+| 10 | 2026-10-15 | Lider ↔ ekip: `agent_instructions.source TEXT NOT NULL DEFAULT 'user'` CHECK `user, lead` (eski satırlar `user`); `idx_reports_task (task_id, created_at)` — liderin "son biten işler" bağlamı. v9→v10 yükseltmesi bellekte SQLite ile doğrulandı |
 
 ## 3. Tablolar
 
@@ -227,8 +228,9 @@ Model çağrısı / çalışma segmenti başına token kullanımı (`src/main/db
 `getStats` token sayıları bu tablodan gelir. Proje silinince **silinmez** (ajanların tüketim geçmişi; tüm zamanlar
 toplamı doğru kalır); fabrika sıfırlaması siler.
 
-### `agent_instructions` *(v5)*
-Kullanıcının ajanlara doğrudan talimatları — geçmiş, kuyruk ve denetim kaydı (`instructionsRepo`).
+### `agent_instructions` *(v5, `source` v10)*
+Kullanıcının ajanlara doğrudan talimatları ve proje liderinin çalışan görevlere bıraktığı notlar — geçmiş, kuyruk ve
+denetim kaydı (`instructionsRepo`).
 
 | Sütun | Tip | Not |
 |---|---|---|
@@ -239,6 +241,7 @@ Kullanıcının ajanlara doğrudan talimatları — geçmiş, kuyruk ve denetim 
 | `mode` | TEXT | CHECK `redirect, queue, task` |
 | `status` | TEXT | CHECK `queued, applied, started_task, cancelled, rejected` |
 | `note` | TEXT | Neden/ne zaman ("İlk prompta eklendi", "Adım bitince uygulandı", "Çalışma durduruldu"…) |
+| `source` | TEXT NOT NULL DEFAULT `'user'` | CHECK `user, lead` (v10). `lead`: liderin sohbet yanıtındaki ```` ```message ```` notu (her zaman `mode = 'queue'`); liderin "Direct user interventions" bağlamına yalnızca `user` satırları girer |
 | `created_at`, `applied_at` | TEXT | |
 
 İndeksler: `idx_instructions_agent (agent_id, created_at)`, `idx_instructions_run (run_id, status)`. Açılışta

@@ -59,7 +59,7 @@ agentbits/
    │  ├─ secrets.ts           # safeStorage şifreleme
    │  ├─ db/
    │  │  ├─ index.ts          # openDb (yol, pragmalar, migrate), getDb, closeDb
-   │  │  ├─ schema.ts         # MIGRATIONS v1–v9 (sürümlü, yalnızca ekleme)
+   │  │  ├─ schema.ts         # MIGRATIONS v1–v10 (sürümlü, yalnızca ekleme)
    │  │  ├─ repos.ts          # settingsRepo, providersRepo, agentsRepo, permissionsRepo, unitsRepo, projectsRepo,
    │  │  │                    # tasksRepo, runsRepo, messagesRepo, logsRepo, memoriesRepo, decisionsRepo,
    │  │  │                    # reportsRepo, getStats(projectId?)
@@ -535,6 +535,16 @@ onay bekleyen çalışma da veritabanı kapandıktan sonra yürümez (açılış
   büyük/küçük harf duyarsız çözülür; üye değilse atanmamış kalır; başlık 140 karakter) + "📋 N görev
   oluşturuldu" sistem mesajı. ```` ```decision ```` blokları → `proposed` kararlar + "🧭" mesajı.
   Makine blokları `stripBlocks` ile sohbet balonundan çıkarılır.
+- **Lider ↔ ekip (2026-10-15; yalnızca lider ekiple konuşur, ajanlar birbirine yazmaz).** Liderin sistem prompt'una
+  `finishedWorkContext()` eklenir: projenin `in_review` / `done` son 8 görevi, atananı ve son görev raporunun özeti
+  (`reportExcerpt`: "Summary" + "Notes", ≤400 karakter; `reportsRepo.latestForTask`, `tasksRepo.recentlyFinished`).
+  Lider yanıtındaki ```` ```message ```` bloğu (`[{task: "<anahtar>", text}]`, `shared/leadComms.ts` → `parseLeadMessages`;
+  en fazla 10 not, 4000 karakter) **yalnızca `isLeadHere` iken** `deliverLeadNotes()` ile işlenir: not görevin
+  `task:<id>` akışına liderin mesajı olarak yazılır (atanan bir sonraki çalışmada `workerPrompt` → "Task thread"te görür);
+  görevin aktif ya da onay bekleyen çalışması varsa ayrıca `agent_instructions` (`source = 'lead'`, `mode = 'queue'`) olarak
+  sıraya girer ve mevcut adımdan sonra uygulanır (`instructionWithFiles` → `[From your project lead <ad>]` öneki;
+  `instructionTurn` başlığı kaynağa göre değişir). Başka projenin / bilinmeyen anahtar → "⚠️ … not iletilmedi". Çalışanların
+  (görev ya da DM) ```` ```message ```` blokları yok sayılır.
 
 ### 6.8 Günlük rapor — `generateDailyReport(projectId)`
 Projenin pano sayıları, bugün biten görevleri, üyelerinin performansı, bugünkü kararları ve kaynak

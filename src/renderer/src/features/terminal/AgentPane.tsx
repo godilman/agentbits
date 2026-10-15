@@ -494,7 +494,7 @@ function Composer({
           <Trans i18nKey="terminal:composer.heading" components={{ b: <b className="font-medium text-zinc-400" /> }} />
         </span>
         {queued.length > 0 && (
-          <span className="ml-auto rounded bg-amber-500/10 px-1.5 text-amber-300" title={queued.map((q) => `• ${q.text}`).join('\n')}>
+          <span className="ml-auto rounded bg-amber-500/10 px-1.5 text-amber-300" title={queued.map((q) => `• ${q.source === 'lead' ? `${t('terminal:composer.fromLead')}: ` : ''}${q.text}`).join('\n')}>
             {t('terminal:composer.queued', { count: queued.length })}
           </span>
         )}

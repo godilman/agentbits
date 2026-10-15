@@ -40,7 +40,8 @@
     "redirect": "Redirect",
     "applyAfterStep": "Will be applied when the current step finishes",
     "applyOnApproval": "Will be added to the first prompt once the run is approved",
-    "stepInterrupted": "Current step interrupted"
+    "stepInterrupted": "Current step interrupted",
+    "leadNote": "Note from the project lead (applied after the current step)"
   },
   "log": {
     "staleRunsCancelled_one": "{{count}} unfinished run cancelled (the app restarted)",
@@ -69,7 +70,8 @@
     "tasksPlanned_one": "📋 {{count}} task planned:",
     "tasksPlanned_other": "📋 {{count}} tasks planned:",
     "unassigned": "unassigned",
-    "reviewUnclear": "{{key}}: the review gave no clear verdict (approved: true / false); waiting for the user"
+    "reviewUnclear": "{{key}}: the review gave no clear verdict (approved: true / false); waiting for the user",
+    "leadNote": "🎯 Lead {{lead}} → {{key}}: {{text}}"
   },
   "chat": {
     "awaitingApproval": "🔐 {{agent}} is waiting for approval on {{key}} ({{caps}} access).",
@@ -102,7 +104,10 @@
     "replyFailed": "⚠️ {{agent}} could not reply: {{text}}",
     "interruptedHeld": "⏸ This task was interrupted when Agentbits closed. It may have done part of its work, so it is not restarted automatically — start it again when you are ready.",
     "reviewUnclear": "⚠ {{lead}}’s review did not contain a clear verdict. The task stays in review: approve it (move it to Done) or send it back yourself.",
-    "revisionLimit": "⏸ Sent back {{count}} times. The task waits for you now instead of running again — check the review notes and start it when ready."
+    "revisionLimit": "⏸ Sent back {{count}} times. The task waits for you now instead of running again — check the review notes and start it when ready.",
+    "leadNotesSent_one": "🎯 Note added to {{keys}}.",
+    "leadNotesSent_other": "🎯 Notes added to {{count}} tasks: {{keys}}.",
+    "leadNotesUnknown": "⚠️ No such task in this project, note not delivered: {{keys}}"
   },
   "errors": {
     "noFolder": "No folder selected for “{{project}}”. CLI agents can touch files, so choose a folder in the project settings.",
