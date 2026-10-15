@@ -22,7 +22,8 @@
     "kindTask": "Task report",
     "emptyTitle": "No reports yet",
     "emptyHint": "Reports collect here as agents finish tasks. You can create a daily report now if you like.",
-    "showOlder": "Show older reports"
+    "showOlder": "Show older reports",
+    "kindCustom": "Custom"
   },
   "usage": {
     "title": "Token usage",
@@ -62,5 +63,12 @@
     "noRecordsRange": "No records in this range.",
     "dayTitle": "{{day}}\nInput {{input}}\nOutput {{output}}\nCache {{cache}}",
     "note": "Values are as reported by the provider: Claude Code and the API providers report input/output/cache separately; Codex CLI only gives the total; the Demo provider's numbers are estimates. Cache reads are usually billed much cheaper than normal input."
+  },
+  "custom": {
+    "button": "Custom",
+    "hint": "The project lead writes a report on any question, from the project's tasks, decisions and reports",
+    "placeholder": "e.g. Progress this week, open risks and what is blocked",
+    "note": "Written by the lead from the project's data · Ctrl+Enter",
+    "write": "Write report"
   }
 }

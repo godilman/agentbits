@@ -116,5 +116,16 @@
       "rejected1": "Hesaplama yöntemi açıklanmamış, lütfen ekle.",
       "rejected2": "Aykırı değerlere bakılmamış, lütfen kontrol et."
     }
+  },
+  "customReport": {
+    "summary": "Özet",
+    "noData": "Henüz veri yok",
+    "open_one": "Açık görev ({{count}})",
+    "open_other": "Açık görevler ({{count}})",
+    "done_one": "Son bitenler ({{count}})",
+    "done_other": "Son bitenler ({{count}})",
+    "decisions_one": "Karar ({{count}})",
+    "decisions_other": "Kararlar ({{count}})",
+    "none": "yok"
   }
 }

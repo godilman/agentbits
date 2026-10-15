@@ -712,6 +712,7 @@ const handlers: Handlers = {
   /* reports */
   'reports:list': (perProject) => reportsRepo.list(perProject ? Math.max(1, Math.min(100_000, Math.trunc(perProject))) : undefined),
   'reports:generateDaily': (projectId) => orchestrator.generateDailyReport(projectId),
+  'reports:generateCustom': (projectId, request) => orchestrator.generateCustomReport(projectId, request),
   'reports:delete': (id) => {
     reportsRepo.delete(id)
     emit({ type: 'reports:changed' })

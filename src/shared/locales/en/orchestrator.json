@@ -141,7 +141,8 @@
     "cost": "**Cost:** ${{cost}}",
     "files": "Files",
     "fileInProjectFolder": "`{{path}}` (project folder)",
-    "fileInFiles": "{{name}} (Files · {{ref}})"
+    "fileInFiles": "{{name}} (Files · {{ref}})",
+    "customEmpty": "Describe what the report should cover."
   },
   "daily": {
     "heading": "Daily Report — {{project}} · {{date}}",

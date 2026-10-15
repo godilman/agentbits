@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { CalendarDays, Coins, FileText, Trash2 } from 'lucide-react'
+import { CalendarDays, Coins, FileText, Loader2, Sparkles, Trash2 } from 'lucide-react'
 import { UsagePanel } from './UsagePanel'
 import { PixelAvatar } from '@/components/common/PixelAvatar'
 import { Empty } from '@/components/common/ui'
@@ -24,6 +24,24 @@ export function ReportsView() {
   const { pid, project, teamIds } = useProjectScope()
   const [selected, setSelected] = useState<string | null>(null)
   const [generating, setGenerating] = useState(false)
+  // Custom report: the lead writes it on request from the project's data.
+  const [asking, setAsking] = useState(false)
+  const [request, setRequest] = useState('')
+  const [writing, setWriting] = useState(false)
+  const custom = async (): Promise<void> => {
+    if (!pid || !request.trim()) return
+    setWriting(true)
+    try {
+      const r = await call('reports:generateCustom', pid, request.trim())
+      setSelected(r.id)
+      setRequest('')
+      setAsking(false)
+    } catch (e) {
+      toast('error', apiError(e))
+    } finally {
+      setWriting(false)
+    }
+  }
   const reports = useMemo(() => allReports.filter((r) => r.projectId === pid), [allReports, pid])
   const showUsage = selected === USAGE
   const report = showUsage ? undefined : reports.find((r) => r.id === selected) ?? reports[0]
@@ -92,10 +110,37 @@ export function ReportsView() {
           </div>
           <div className="flex items-center justify-between px-3 pb-1.5 pt-3">
             <span className="panel-title" title={project?.name}>{t('reports:list.title')}</span>
-            <button className="btn-outline h-6 text-[11.5px]" disabled={generating} onClick={() => void generate()}>
-              <CalendarDays size={12} /> {t('reports:list.daily')}
-            </button>
+            <div className="flex items-center gap-1">
+              <button className="btn-outline h-6 text-[11.5px]" disabled={writing} onClick={() => setAsking((v) => !v)} title={t('reports:custom.hint')}>
+                <Sparkles size={12} /> {t('reports:custom.button')}
+              </button>
+              <button className="btn-outline h-6 text-[11.5px]" disabled={generating} onClick={() => void generate()}>
+                <CalendarDays size={12} /> {t('reports:list.daily')}
+              </button>
+            </div>
           </div>
+          {asking && (
+            <div className="mx-3 mb-2 rounded-md border border-line bg-surface-2 p-2">
+              <textarea
+                data-testid="custom-report-request"
+                className="textarea min-h-[56px] w-full text-[12px]"
+                rows={3}
+                autoFocus
+                placeholder={t('reports:custom.placeholder')}
+                value={request}
+                onChange={(e) => setRequest(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) void custom()
+                }}
+              />
+              <div className="mt-1.5 flex items-center justify-between gap-2">
+                <span className="text-[10.5px] text-zinc-400">{t('reports:custom.note')}</span>
+                <button className="btn-primary h-6 text-[11.5px]" disabled={writing || !request.trim()} onClick={() => void custom()}>
+                  {writing && <Loader2 size={12} className="animate-spin" />} {t('reports:custom.write')}
+                </button>
+              </div>
+            </div>
+          )}
           <div className="min-h-0 flex-1 space-y-0.5 overflow-y-auto px-2 pb-2">
             <button
               onClick={() => setSelected(USAGE)}
@@ -117,7 +162,7 @@ export function ReportsView() {
                 <div className="min-w-0 flex-1">
                   <div className="truncate text-[12.5px] text-zinc-200">{r.title}</div>
                   <div className="text-[10.5px] text-zinc-400">
-                    {r.kind === 'daily' ? t('reports:list.kindDaily') : t('reports:list.kindTask')} · {timeAgo(r.createdAt)}
+                    {r.kind === 'daily' ? t('reports:list.kindDaily') : r.kind === 'custom' ? t('reports:list.kindCustom') : t('reports:list.kindTask')} · {timeAgo(r.createdAt)}
                   </div>
                 </div>
               </button>

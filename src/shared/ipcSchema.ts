@@ -120,6 +120,7 @@ export const IPC_SCHEMA = {
   'decisions:delete': ['s'],
   'reports:list': ['n?'],
   'reports:generateDaily': ['s'],
+  'reports:generateCustom': ['s', 's'],
   'reports:delete': ['s'],
   'stats:get': ['s?'],
   'terminal:list': [],

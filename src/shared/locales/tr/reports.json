@@ -22,7 +22,8 @@
     "kindTask": "Görev raporu",
     "emptyTitle": "Henüz rapor yok",
     "emptyHint": "Ajanlar görev bitirdikçe raporlar burada birikir. İstersen şimdi günlük rapor oluştur.",
-    "showOlder": "Daha eski raporları göster"
+    "showOlder": "Daha eski raporları göster",
+    "kindCustom": "Özel"
   },
   "usage": {
     "title": "Token kullanımı",
@@ -62,5 +63,12 @@
     "noRecordsRange": "Bu aralıkta kayıt yok.",
     "dayTitle": "{{day}}\nGiriş {{input}}\nÇıkış {{output}}\nÖnbellek {{cache}}",
     "note": "Değerler sağlayıcının bildirdiği ölçüdedir: Claude Code ve API sağlayıcıları giriş/çıkış/önbellek ayrımını bildirir; Codex CLI yalnızca toplamı verir; Demo sağlayıcının sayıları tahminidir. Önbellek okumaları genellikle normal girişten çok daha ucuza faturalanır."
+  },
+  "custom": {
+    "button": "Özel",
+    "hint": "Proje lideri, projenin görevlerinden, kararlarından ve raporlarından istediğin konuda bir rapor yazar",
+    "placeholder": "ör. Bu haftaki ilerleme, açık riskler ve neyin tıkandığı",
+    "note": "Lider projenin verisinden yazar · Ctrl+Enter",
+    "write": "Raporu yaz"
   }
 }

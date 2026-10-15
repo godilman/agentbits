@@ -247,6 +247,8 @@ export interface Api {
   /** Newest `perProject` reports of each project (all when omitted). */
   'reports:list': (perProject?: number) => Report[]
   'reports:generateDaily': (projectId: string) => Report
+  /** The project lead writes a report on the user's request from the project's data (kind "custom"). */
+  'reports:generateCustom': (projectId: string, request: string) => Report
   'reports:delete': (id: string) => void
   'stats:get': (projectId?: string) => Stats
 

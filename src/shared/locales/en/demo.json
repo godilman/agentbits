@@ -116,5 +116,16 @@
       "rejected1": "The calculation method is not explained, please add it.",
       "rejected2": "Outliers were not addressed, please check them."
     }
+  },
+  "customReport": {
+    "summary": "Summary",
+    "noData": "No data yet",
+    "open_one": "Open task ({{count}})",
+    "open_other": "Open tasks ({{count}})",
+    "done_one": "Done recently ({{count}})",
+    "done_other": "Done recently ({{count}})",
+    "decisions_one": "Decision ({{count}})",
+    "decisions_other": "Decisions ({{count}})",
+    "none": "none"
   }
 }

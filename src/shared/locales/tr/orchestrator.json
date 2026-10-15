@@ -141,7 +141,8 @@
     "cost": "**Maliyet:** ${{cost}}",
     "files": "Dosyalar",
     "fileInProjectFolder": "`{{path}}` (proje klasörü)",
-    "fileInFiles": "{{name}} (Dosyalar · {{ref}})"
+    "fileInFiles": "{{name}} (Dosyalar · {{ref}})",
+    "customEmpty": "Raporun neyi kapsayacağını yaz."
   },
   "daily": {
     "heading": "Günlük Rapor — {{project}} · {{date}}",

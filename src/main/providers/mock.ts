@@ -409,10 +409,44 @@ async function taskWork(ctx: RunContext): Promise<string> {
   return summary
 }
 
+/** Demo "custom report": a Markdown summary built from the report data the lead was given. */
+function demoReport(ctx: RunContext): string {
+  const request = ctx.prompt.replace(/^## Report request\n/, '').trim()
+  const section = (name: string): string[] => {
+    const m = new RegExp(`### ${name}\\n([\\s\\S]*?)(?=\\n### |$)`).exec(ctx.system)
+    return (m?.[1] ?? '').split('\n').filter((l) => l.startsWith('- '))
+  }
+  const board = /Board: ([^\n]*)/.exec(ctx.system)?.[1] ?? ''
+  const open = section('Open tasks')
+  const done = section('Recently done')
+  const decisions = section('Decisions')
+  return [
+    `# ${request.slice(0, 80)}`,
+    '',
+    `## ${t('demo:customReport.summary')}`,
+    board ? `- ${board}` : `- ${t('demo:customReport.noData')}`,
+    '',
+    `## ${t('demo:customReport.open', { count: open.length })}`,
+    ...(open.length ? open.slice(0, 10) : [`- ${t('demo:customReport.none')}`]),
+    '',
+    `## ${t('demo:customReport.done', { count: done.length })}`,
+    ...(done.length ? done.slice(0, 10) : [`- ${t('demo:customReport.none')}`]),
+    '',
+    `## ${t('demo:customReport.decisions', { count: decisions.length })}`,
+    ...(decisions.length ? decisions.slice(0, 8) : [`- ${t('demo:customReport.none')}`]),
+    '',
+    `> ${t('demo:report.demoNote')}`
+  ].join('\n')
+}
+
 export const mockAdapter: ProviderAdapter = {
   async run(ctx: RunContext): Promise<RunResult> {
     let text: string
-    if (ctx.mode === 'chat') {
+    if (ctx.mode === 'chat' && ctx.system.includes('## Report data')) {
+      await sleep(rand(900, 1800), ctx.signal)
+      text = demoReport(ctx)
+      await stream(ctx, text)
+    } else if (ctx.mode === 'chat') {
       await sleep(rand(700, 1600), ctx.signal)
       text = chatReply(ctx)
       await stream(ctx, text)
