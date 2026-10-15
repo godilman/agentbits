@@ -4,6 +4,14 @@
 > `## YYYY-MM-DD — kısa başlık`, ardından **Eklendi / Değişti / Düzeltildi / Kaldırıldı / Bilinen** maddeleri
 > ve ilgili dosyalar.
 
+## 2026-10-15 — v0.2.0 sürüm hazırlığı
+
+### Değişti
+- Sürüm **0.2.0** (`package.json`, kilit dosyası). README (EN + TR): öne çıkanlar (lider ↔ ekip, paralel yazılımcılar, yarış
+  modu, paylaşım, anlamsal hafıza, eski Office + OCR, web okuma, özel rapor, güvenlik sınırları), sağlayıcı tablosu (OpenAI
+  uyumlu uç noktalar, Codex araçları), sınırlamalar ve yol haritası güncellendi. FEATURES §12'deki eskimiş satırlar düzeltildi
+  (harcama tavanı, git, vektör hafıza, ağ trafiği listesi). v0.1.1 taslağı yayımlanmadı; v0.2.0 onun yerine geçer.
+
 ## 2026-10-15 — Faz 7: anlamsal (vektör) hafıza (ADR-027)
 
 ### Eklendi

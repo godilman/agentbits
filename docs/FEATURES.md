@@ -350,10 +350,10 @@ Kullanıcıya dürüstçe söylenmesi gerekenler (kodla doğrulandı, 2026-10-13
 | Uygulama içinde Claude hesabı/aboneliğiyle giriş | — | Anthropic'in politikası nedeniyle sunulmaz; API anahtarı ya da kullanıcının kendi Claude Code girişi |
 | OpenAI uyumlu olmayan sağlayıcılar | ⏳ | Claude Code CLI, Codex CLI, Anthropic API, OpenAI API (+ OpenAI uyumlu uç noktalar: Gemini, Ollama, LM Studio, özel adres), Demo |
 | API sağlayıcılarıyla dosya düzenleme / komut çalıştırma | — | Anthropic/OpenAI ajanları yalnızca metin + Agentbits araçları (bağlantılar, dosya ekleri); kod değişikliği için CLI sağlayıcısı gerekir |
-| API'lerde maliyet ($) hesabı, bütçe / harcama sınırı | — | Token sayılır; $ yalnızca Claude Code bildirirse görünür; sınır koyan bir ayar yok |
+| API'lerde maliyet ($) hesabı, proje bütçesi | — | Token sayılır; $ yalnızca Claude Code bildirirse görünür. Görev çalışması başına süre / token / $ tavanı var (2026-10-15, Ayarlar → Güvenlik ve sınırlar; $ tavanı yalnızca Claude Code'da işler); proje ya da aylık bütçe yok |
 | Bulut senkronizasyonu, çok kullanıcı, ekip hesabı, uzaktan erişim | — | Tek makine, tek kullanıcı; her şey yerel SQLite'ta (`%APPDATA%\Agentbits`) |
 | Uygulama içi hesap / giriş | — | Tek kullanıcılı masaüstü uygulaması; sahte giriş ekranı kaldırıldı (Bilinen sorunlar #1) |
-| Telemetri / analitik, Agentbits sunucusu | — | Ağ trafiği yalnızca seçilen sağlayıcılara, CLI'ların kendisine, tanımlı bağlantılara, eklenen uygulamalara (MCP), skill kurulurken GitHub'a, Browser sekmesine ve tıklanınca destek sayfasına (sistem tarayıcısında) |
+| Telemetri / analitik, Agentbits sunucusu | — | Ağ trafiği yalnızca seçilen sağlayıcılara (anlamsal hafıza açıksa embedding için seçilen sağlayıcıya da), CLI'ların kendisine, tanımlı bağlantılara, eklenen uygulamalara (MCP), skill ya da paylaşım paketi kurulurken GitHub'a, `web_fetch` izni olan ajanın okuduğu sayfalara, Browser sekmesine ve tıklanınca destek sayfasına (sistem tarayıcısında) |
 | Ajanların JavaScript çalıştıran tam tarayıcı kullanması | ⏳ | `web_fetch` sayfayı metin olarak okur (2026-10-15); tıklama / form / JS yok |
 | Codex CLI ile bağlantı / dosya araçları | ✅ | 2026-10-15: köprü üzerinden; ekler ayrıca prompt bütçesiyle ve `--image` ile |
 | Uygulama (MCP) sunucularını kurmak, Node.js / uv getirmek | — | Kullanıcı sunucunun komutunu ya da adresini verir; Agentbits yalnızca bağlanır |
@@ -361,12 +361,13 @@ Kullanıcıya dürüstçe söylenmesi gerekenler (kodla doğrulandı, 2026-10-13
 | Özel GitHub depolarından skill | ✅ | Token ile (2026-10-15) |
 | Zamanlanmış / tekrarlanan görev, son tarih | — | Görevler sohbetten, elle ya da talimatla oluşur; otopilot yalnızca sıradakini alır |
 | İşletim sistemi bildirimleri | — | Yalnızca uygulama içi toast'lar ve rozetler |
-| Git entegrasyonu (dal, commit, PR) | — | Agentbits git kullanmaz; terminal izinli bir ajan kendisi çalıştırabilir |
+| Git entegrasyonu (PR, uzak depoya gönderme) | — | Yalnızca proje ayarı "Her görev kendi git çalışma kopyasında" açıkken Agentbits yerel dal / commit / birleştirme yapar (ADR-025); push, PR, uzak depo yok |
 | Aynı klasörde eşzamanlı düzenleme çakışma yönetimi | ✅ | Proje ayarı: görev başına git worktree (ADR-025) |
 | El yazısı ve karmaşık düzen OCR'ı | ⏳ | OCR basılı metin içindir; tablolar ve çok sütunlu düzen yaklaşık |
 | Ajanların dosya eklerini değiştirmesi / silmesi | — | Bilinçli: ajanlar yalnızca okur, `file_save` yalnızca yeni metin dosyası (ADR-021) |
 | Proje klasörlerinin yedeklenmesi | — | Yedek yalnızca veritabanıdır; proje klasörü ve dosyaları silinmez de |
-| Vektör (embedding) hafıza | ⏳ | §9 (özel rapor 2026-10-15'te eklendi) |
+| Vektör (embedding) hafıza | ✅ | İsteğe bağlı, sağlayıcının embedding uç noktasıyla (2026-10-15, ADR-027, §9) |
+| Paylaşım galerisi (çevrimiçi paket vitrini) | ⏳ | Bugün: `.agentbits` dosyası ve GitHub bağlantısıyla içe aktarma (§2) |
 | Doğrulanmış macOS paketi, Linux paketi, web / mobil sürüm | — | macOS yapılandırması var ama denenmedi; Linux yalnızca kaynaktan; yalnızca Electron masaüstü |
 
 ## Bilinen sorunlar / gözden geçirilmeli

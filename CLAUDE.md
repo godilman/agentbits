@@ -22,8 +22,9 @@ yalnızca izin verilen **Bağlantılar** (SSH / PostgreSQL / MySQL / SQL Server)
 hissinde, koyu temalı, ajanların ne yaptığını canlı gösteren güvenli bir "yapay zeka şirketi ofisi".
 Ürün vizyonu → [docs/PROJECT.md](docs/PROJECT.md).
 
-Durum: **MVP (v0.1.0)** — organizasyon, projeler ve tüm proje bölümleri çalışıyor; özellik durumu →
-[docs/FEATURES.md](docs/FEATURES.md). Depo herkese açık, v0.1.0 GitHub Releases'te yayımlandı (2026-10-14).
+Durum: **v0.2.0** (2026-10-15: kod ve belgeler hazır, Release taslağı sahibin denemesini bekliyor) — organizasyon, projeler
+ve tüm proje bölümleri çalışıyor; özellik durumu → [docs/FEATURES.md](docs/FEATURES.md). Depo herkese açık; yayımlanan son
+sürüm v0.1.0 (2026-10-14).
 
 ## Güncel durum ve devir notu (son güncelleme: 2026-10-15)
 

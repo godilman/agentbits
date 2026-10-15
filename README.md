@@ -12,7 +12,7 @@
   <a href="https://github.com/godilman/agentbits/actions/workflows/ci.yml"><img alt="CI" src="https://github.com/godilman/agentbits/actions/workflows/ci.yml/badge.svg"></a>
   <img alt="Platform: Windows" src="https://img.shields.io/badge/platform-Windows-0078D6?logo=windows&logoColor=white">
   <img alt="macOS: experimental" src="https://img.shields.io/badge/macOS-experimental-555?logo=apple&logoColor=white">
-  <img alt="Version 0.1.0 (MVP)" src="https://img.shields.io/badge/version-0.1.0%20MVP-6366f1">
+  <img alt="Version 0.2.0" src="https://img.shields.io/badge/version-0.2.0-6366f1">
   <a href="LICENSE"><img alt="License: PolyForm Strict 1.0.0" src="https://img.shields.io/badge/license-PolyForm%20Strict%201.0.0-orange"></a>
   <a href="https://buymeacoffee.com/godilman"><img alt="Buy me a coffee" src="https://img.shields.io/badge/Buy%20me%20a%20coffee-%E2%98%95-FFDD00?logoColor=black"></a>
 </p>
@@ -44,7 +44,15 @@ own computer.
   have a role, a job description, skills, a look and a permission preset. Six ready-made templates (Core Team,
   Software Team, Research & Analysis, Product Development, Marketing & Content, E-commerce Company), or start from scratch.
 - **Projects with a lead.** Each project is a folder plus the teams that work on it. You chat with the lead, and it
-  turns the request into tasks on the board.
+  turns the request into tasks on the board. Only the lead talks to the team: it hands out work, sees what members
+  finished and leaves them notes.
+- **Parallel developers.** Duplicate an agent into twins; the lead splits work between them, tasks can wait for each
+  other, and everyone sees who is working on which files. Optionally each task works in its own git working copy and is
+  merged when approved, so agents never overwrite each other.
+- **Race mode (optional).** A task also goes to a member on another provider or model; the lead compares both attempts
+  and keeps the better one.
+- **Share teams.** Export a unit or an agent as a `.agentbits` file and import one from a file or a GitHub link, with a
+  full preview first. Keys, connections, tasks and chat never leave.
 - **Live pixel-art office.** Agents sit at their desks while they work, take coffee breaks, and show approval or
   error badges. Click an agent to see what it is doing.
 - **Kanban board.** To do → In progress → In review → Done, with drag and drop, per-task activity, logs and runs.
@@ -52,17 +60,21 @@ own computer.
   counts. You can redirect an agent, queue an instruction or give it a new task from there. Real interactive shells
   (PowerShell / bash) are available too.
 - **Lead review, memory and decisions.** Finished work goes to the lead for review. Accepted decisions are stored as
-  ADR-style records, and a persistent project memory (SQLite FTS5) keeps context between runs.
-- **Files.** Attach PDF, Word, Excel, PowerPoint, CSV, Markdown, JSON, text and images to chats, tasks and
-  instructions. Agents can read only the files they are given, and always as untrusted data.
+  ADR-style records, and a persistent project memory (SQLite FTS5) keeps context between runs. Optional semantic
+  memory also finds notes by meaning, through your provider's embeddings (local with Ollama / LM Studio).
+- **Files.** Attach PDF, Word, Excel, PowerPoint (also the old .doc / .xls / .ppt and .rtf), CSV, Markdown, JSON, text
+  and images to chats, tasks and instructions; scanned PDFs and images are read with offline OCR (English, Turkish). Agents can read only the files they are given, and always as untrusted data.
 - **Connections.** SSH servers and PostgreSQL, MySQL/MariaDB and SQL Server databases. Access is per agent and
   denied by default, Production changes need your approval, agent reads use a read-only database user, and every
   call is written to an audit log.
 - **Apps (MCP) and skills.** Connect MCP servers (local or remote, with OAuth sign-in, or import them from Claude
   Desktop) with per-tool "ask me first" rules. Install instruction packs (skills) from public GitHub repos, folders,
   .zip or .md files.
+- **Web reading.** Agents with the web permission can read public pages as text; local network addresses are blocked.
 - **Reports.** Completed tasks, success rate, per-agent performance, task reports, a daily report and token usage
-  per project and per agent.
+  per project and per agent, plus custom reports you describe in your own words.
+- **Safety limits.** Per-run time, token and cost caps, a reviewed list of environment variables passed to CLIs, and
+  secrets masked in transcripts.
 - **Two languages.** English and Turkish UI. New translations are welcome.
 
 ## How it works
@@ -129,9 +141,9 @@ tool calls you see in terminals.*
 | Provider | What you need | What agents can do |
 |---|---|---|
 | **Claude Code CLI** | [Claude Code](https://code.claude.com/docs/en/overview) installed and signed in on your computer (`claude auth login`) | Read/edit files in the project folder, run terminal commands, browse the web, use connections, files, skills and apps. Each depends on the permissions you grant. |
-| **Codex CLI** | Codex CLI installed and signed in (`codex login`) | Edit files inside the project folder (sandboxed), run commands, network access only with permission, use apps |
+| **Codex CLI** | Codex CLI installed and signed in (`codex login`) | Edit files inside the project folder (sandboxed), run commands, network access only with permission, use connections, files and apps |
 | **Anthropic API** | An Anthropic API key | Text work plus Agentbits tools (connections, files, skills, apps). No file editing or shell. |
-| **OpenAI API** | An OpenAI API key | Same as Anthropic API |
+| **OpenAI API** | An OpenAI API key, or an OpenAI-compatible endpoint: Google Gemini, Ollama, LM Studio or your own address (local servers need no key) | Same as Anthropic API |
 | **Demo (simulation)** | Nothing | Simulates realistic agent behaviour so you can explore the app for free. Doesn't do real work. |
 
 You can mix providers: set a default and choose a different one per agent. Agentbits does not include, install or
@@ -238,14 +250,14 @@ Found a vulnerability? Please report it privately, see [SECURITY.md](SECURITY.md
 
 ## Current limitations
 
-Agentbits is an **MVP (v0.1.0)**. It does not:
+Agentbits is an early release (**v0.2.0**). It does not:
 
 - update itself (install a newer version over the old one; your data is kept);
-- bundle or sign in to Claude Code / Codex CLI, or support providers other than the five above (no Gemini or local models yet);
-- let API-based agents (Anthropic / OpenAI) edit files or run commands; that needs a CLI provider;
-- let agents use the built-in browser, run scheduled/recurring tasks, send OS notifications or manage git for you;
-- handle conflicts when several agents edit the same folder at once (use git branches);
-- OCR scanned PDFs or read legacy .doc/.xls/.ppt/.rtf files;
+- bundle or sign in to Claude Code / Codex CLI, or support providers that aren't OpenAI-compatible beyond the ones above;
+- let API-based agents (Anthropic / OpenAI-compatible) edit files or run commands; that needs a CLI provider;
+- let agents drive a full browser (clicks, forms, JavaScript; they read pages as text), run scheduled/recurring tasks,
+  send OS notifications, or push to remotes / open pull requests;
+- read handwriting with OCR, or host a shared gallery of teams (sharing works with files and GitHub links);
 - ship signed installers, a tested macOS package or a Linux package.
 
 Also: CLI "pause" holds the output stream but does not freeze the process on Windows, backups cover the database
@@ -257,15 +269,10 @@ details: [docs/FEATURES.md](docs/FEATURES.md).
 These items are already listed as planned in [docs/FEATURES.md](docs/FEATURES.md). There are no dates.
 
 - [ ] Code-signed installers and a macOS package tested on a real Mac
-- [ ] More providers (e.g. Gemini, local models)
-- [ ] Agents using the browser as a tool (the `browser` permission)
-- [ ] Connection and file tools for Codex CLI agents
-- [ ] MCP resources, prompts and sampling (today: tools only)
-- [ ] Skills from private GitHub repositories
-- [ ] Spending limits per task or project
-- [ ] Conflict handling for agents editing the same folder
-- [ ] Vector (embedding) memory and custom reports
-- [ ] OCR and legacy Office formats
+- [ ] An online gallery for shared teams and agents
+- [ ] Agents driving a full browser (today: reading pages as text)
+- [ ] MCP sampling and elicitation (today: tools, resources and prompts)
+- [ ] Project or monthly budgets (today: per-run caps)
 - [ ] More UI languages (community translations)
 
 ## Contributing

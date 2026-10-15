@@ -12,7 +12,7 @@
   <a href="https://github.com/godilman/agentbits/actions/workflows/ci.yml"><img alt="CI" src="https://github.com/godilman/agentbits/actions/workflows/ci.yml/badge.svg"></a>
   <img alt="Platform: Windows" src="https://img.shields.io/badge/platform-Windows-0078D6?logo=windows&logoColor=white">
   <img alt="macOS: deneysel" src="https://img.shields.io/badge/macOS-deneysel-555?logo=apple&logoColor=white">
-  <img alt="Sürüm 0.1.0 (MVP)" src="https://img.shields.io/badge/s%C3%BCr%C3%BCm-0.1.0%20MVP-6366f1">
+  <img alt="Sürüm 0.2.0" src="https://img.shields.io/badge/s%C3%BCr%C3%BCm-0.2.0-6366f1">
   <a href="LICENSE"><img alt="Lisans: PolyForm Strict 1.0.0" src="https://img.shields.io/badge/lisans-PolyForm%20Strict%201.0.0-orange"></a>
   <a href="https://buymeacoffee.com/godilman"><img alt="Buy me a coffee" src="https://img.shields.io/badge/Buy%20me%20a%20coffee-%E2%98%95-FFDD00?logoColor=black"></a>
 </p>
@@ -43,7 +43,15 @@ Hepsi tek pencerede, verilerin de kendi bilgisayarında kalır.
   yetenekleri, görünüşü ve izin ön ayarı olur. Altı hazır şablon var (Çekirdek Ekip, Yazılım Takımı, Araştırma & Analiz,
   Ürün Geliştirme, Pazarlama & İçerik, E-ticaret Şirketi); istersen sıfırdan da kurabilirsin.
 - **Lideri olan projeler.** Her proje bir klasör ve orada çalışan takımlardan oluşur. Liderle sohbet edersin, o da
-  isteği panoda görevlere çevirir.
+  isteği panoda görevlere çevirir. Ekiple yalnızca lider konuşur: iş verir, üyelerin bitirdiklerini görür, onlara not
+  bırakır.
+- **Paralel yazılımcılar.** Bir ajanı ikizlere çoğaltırsın; lider işi aralarında paylaştırır, görevler birbirini
+  bekleyebilir, kimin hangi dosyada çalıştığını herkes görür. İstersen her görev kendi git çalışma kopyasında çalışır ve
+  onaylanınca birleştirilir; ajanlar birbirinin üzerine yazmaz.
+- **Yarış modu (isteğe bağlı).** Görev başka sağlayıcı ya da modeldeki bir üyeye de verilir; lider iki denemeyi
+  karşılaştırıp iyi olanı tutar.
+- **Takım paylaşımı.** Bir birimi ya da ajanı `.agentbits` dosyası olarak dışa aktarırsın; dosyadan ya da GitHub
+  bağlantısından, önce her şeyi önizleyerek içe aktarırsın. Anahtarlar, bağlantılar, görevler ve sohbet asla çıkmaz.
 - **Canlı pikselli ofis.** Ajanlar çalışırken masalarında oturur, kahve molası verir, onay ya da hata rozetleri
   gösterir. Ne yaptığını görmek için bir ajana tıklaman yeter.
 - **Kanban panosu (Görevler).** Yapılacak → Devam eden → İncelemede → Bitti. Sürükle-bırak, görev başına akış, log ve
@@ -52,17 +60,22 @@ Hepsi tek pencerede, verilerin de kendi bilgisayarında kalır.
   token harcadığı. Buradan ajanı yönlendirebilir, talimatı sıraya koyabilir ya da yeni görev verebilirsin. Gerçek
   etkileşimli kabuklar (PowerShell / bash) da var.
 - **Lider incelemesi, hafıza ve kararlar.** Biten iş liderin incelemesine gider. Kabul edilen kararlar ADR tarzında
-  kaydedilir, kalıcı proje hafızası (SQLite FTS5) da bağlamı çalışmalar arasında korur.
-- **Dosyalar.** Sohbetlere, görevlere ve talimatlara PDF, Word, Excel, PowerPoint, CSV, Markdown, JSON, metin ve görsel
-  ekleyebilirsin. Ajanlar yalnızca kendilerine verilen dosyaları okur ve içeriği her zaman güvenilmeyen veri olarak ele alır.
+  kaydedilir, kalıcı proje hafızası (SQLite FTS5) da bağlamı çalışmalar arasında korur. İsteğe bağlı anlamsal hafıza,
+  sağlayıcının embedding'iyle notları anlamıyla da bulur (Ollama / LM Studio ile yerelde).
+- **Dosyalar.** Sohbetlere, görevlere ve talimatlara PDF, Word, Excel, PowerPoint (eski .doc / .xls / .ppt ve .rtf de),
+  CSV, Markdown, JSON, metin ve görsel ekleyebilirsin; taranmış PDF'ler ve görseller çevrimdışı OCR ile okunur (İngilizce,
+  Türkçe). Ajanlar yalnızca kendilerine verilen dosyaları okur ve içeriği her zaman güvenilmeyen veri olarak ele alır.
 - **Bağlantılar.** SSH sunucuları ve PostgreSQL, MySQL/MariaDB, SQL Server veritabanları. Erişim ajan başına verilir ve
   varsayılan olarak kapalıdır. Production değişiklikleri senin onayını bekler, ajan okumaları salt-okunur bir
   veritabanı kullanıcısıyla yapılır, her çağrı denetim kaydına yazılır.
 - **Uygulamalar (MCP) ve skill'ler.** MCP sunucularını bağlayabilirsin: yerel ya da uzak, OAuth girişli ya da Claude
   Desktop'tan içe aktarılmış. Her araç için "önce bana sor" kuralı koyabilirsin. Talimat paketlerini (skill) herkese
   açık GitHub depolarından, klasörden, .zip ya da .md dosyasından kurabilirsin.
+- **Web okuma.** Web izni olan ajanlar herkese açık sayfaları metin olarak okuyabilir; yerel ağ adresleri engellidir.
 - **Raporlar.** Tamamlanan görevler, başarı oranı, ajan bazında performans, görev raporları, günlük rapor ve proje ve
-  ajan bazında token kullanımı.
+  ajan bazında token kullanımı; ayrıca kendi cümlelerinle tarif ettiğin özel raporlar.
+- **Güvenlik sınırları.** Çalışma başına süre, token ve maliyet tavanı, CLI'lara geçen ortam değişkenlerinin denetlenmiş
+  listesi ve dökümlerde maskelenen sırlar.
 - **İki dil.** İngilizce ve Türkçe arayüz. Yeni çevirilere açığız.
 
 ## Nasıl çalışır?
@@ -129,9 +142,9 @@ işi taklit eder.*
 | Sağlayıcı | Gerekenler | Ajanlar neler yapabilir |
 |---|---|---|
 | **Claude Code CLI** | Bilgisayarında kurulu ve giriş yapılmış [Claude Code](https://code.claude.com/docs/en/overview) (`claude auth login`) | Proje klasöründe dosya okuma/düzenleme, terminal komutları, web'de gezinme, bağlantılar, dosyalar, skill'ler ve uygulamalar. Hepsi verdiğin izinlere bağlıdır. |
-| **Codex CLI** | Kurulu ve giriş yapılmış Codex CLI (`codex login`) | Proje klasörü içinde dosya düzenleme (sandbox'lı), komut çalıştırma, yalnızca izinle ağ erişimi, uygulamalar |
+| **Codex CLI** | Kurulu ve giriş yapılmış Codex CLI (`codex login`) | Proje klasörü içinde dosya düzenleme (sandbox'lı), komut çalıştırma, yalnızca izinle ağ erişimi, bağlantılar, dosyalar ve uygulamalar |
 | **Anthropic API** | Anthropic API anahtarı | Metin işleri ve Agentbits araçları (bağlantılar, dosyalar, skill'ler, uygulamalar). Dosya düzenleme ya da kabuk yok. |
-| **OpenAI API** | OpenAI API anahtarı | Anthropic API ile aynı |
+| **OpenAI API** | OpenAI API anahtarı ya da OpenAI uyumlu bir uç nokta: Google Gemini, Ollama, LM Studio ya da kendi adresin (yerel sunucuda anahtar gerekmez) | Anthropic API ile aynı |
 | **Demo (simülasyon)** | Hiçbir şey | Uygulamayı ücretsiz keşfetmen için gerçekçi ajan davranışını taklit eder. Gerçek iş yapmaz. |
 
 Sağlayıcıları karıştırabilirsin: bir varsayılan belirler, ajan bazında başka bir sağlayıcı seçersin. Agentbits CLI'ları
@@ -240,16 +253,17 @@ Bir güvenlik açığı mı buldun? Lütfen gizli olarak bildir: [SECURITY.md](S
 
 ## Mevcut sınırlamalar
 
-Agentbits bir **MVP'dir (v0.1.0)**. Şunları yapmaz:
+Agentbits erken bir sürümdür (**v0.2.0**). Şunları yapmaz:
 
 - kendini güncellemek (yeni sürümü eskisinin üzerine kurarsın, verilerin korunur);
-- Claude Code / Codex CLI'ı içermek ya da onlarda oturum açmak; yukarıdaki beş sağlayıcı dışındakileri desteklemek
-  (Gemini ya da yerel modeller henüz yok);
-- API tabanlı ajanlara (Anthropic / OpenAI) dosya düzenletmek ya da komut çalıştırtmak (bunun için CLI sağlayıcısı gerekir);
-- ajanlara yerleşik tarayıcıyı kullandırmak; zamanlanmış/tekrarlanan görev, işletim sistemi bildirimi ya da senin
-  yerine git yönetimi;
-- birden fazla ajan aynı klasörü aynı anda düzenlediğinde çakışmaları yönetmek (git dalları kullan);
-- taranmış PDF'lerde OCR ya da eski .doc/.xls/.ppt/.rtf dosyalarını okumak;
+- Claude Code / Codex CLI'ı içermek ya da onlarda oturum açmak; yukarıdakiler dışında OpenAI uyumlu olmayan sağlayıcıları
+  desteklemek;
+- API tabanlı ajanlara (Anthropic / OpenAI uyumlu) dosya düzenletmek ya da komut çalıştırtmak (bunun için CLI sağlayıcısı
+  gerekir);
+- ajanlara tam bir tarayıcı kullandırmak (tıklama, form, JavaScript; sayfaları metin olarak okurlar); zamanlanmış /
+  tekrarlanan görev, işletim sistemi bildirimi, uzak depoya gönderme ya da pull request;
+- el yazısını OCR ile okumak ya da paylaşılan takımlar için çevrimiçi bir galeri sunmak (paylaşım dosya ve GitHub
+  bağlantısıyla çalışır);
 - imzalı kurulum dosyası, denenmiş macOS paketi ya da Linux paketi sunmak.
 
 Ayrıca: CLI'larda "duraklat" çıktı akışını bekletir ama Windows'ta süreci dondurmaz; yedekler veritabanını kapsar,
@@ -261,15 +275,10 @@ proje klasörlerini kapsamaz; MySQL ve SQL Server sürücüleri PostgreSQL ve SS
 Bu maddeler [docs/FEATURES.md](docs/FEATURES.md)'de zaten planlı olarak geçiyor. Tarih verilmedi.
 
 - [ ] Kod imzalı kurulum dosyaları ve gerçek bir Mac'te denenmiş macOS paketi
-- [ ] Daha fazla sağlayıcı (ör. Gemini, yerel modeller)
-- [ ] Ajanların tarayıcıyı araç olarak kullanması (`browser` izni)
-- [ ] Codex CLI ajanları için bağlantı ve dosya araçları
-- [ ] MCP kaynakları, istemleri ve sampling (bugün yalnızca araçlar)
-- [ ] Özel GitHub depolarından skill
-- [ ] Görev ya da proje başına harcama sınırı
-- [ ] Aynı klasörü düzenleyen ajanlar için çakışma yönetimi
-- [ ] Vektör (embedding) hafıza ve özel raporlar
-- [ ] OCR ve eski Office biçimleri
+- [ ] Paylaşılan takımlar ve ajanlar için çevrimiçi galeri
+- [ ] Ajanların tam tarayıcı kullanması (bugün: sayfaları metin olarak okuma)
+- [ ] MCP sampling ve elicitation (bugün: araçlar, kaynaklar ve istemler)
+- [ ] Proje ya da aylık bütçe (bugün: çalışma başına tavan)
 - [ ] Daha fazla arayüz dili (topluluk çevirileri)
 
 ## Katkıda bulunma
