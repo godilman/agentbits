@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { AlertTriangle, ChevronDown, ChevronRight, FolderOpen, Github, Loader2, Upload } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import type { SkillPreview, SkillSourceInput } from '@shared/skills'
@@ -134,6 +134,7 @@ export function AddSkillModal({ open, onClose, onInstalled }: { open: boolean; o
                   </button>
                 </div>
                 <p className="mt-1.5 text-[11.5px] leading-snug text-zinc-400">{t('skills:modal.githubHint')}</p>
+                <GithubTokenRow />
               </div>
             )}
             {tab === 'computer' && (
@@ -271,5 +272,63 @@ export function AddSkillModal({ open, onClose, onInstalled }: { open: boolean; o
         {error && <div className="mt-3 whitespace-pre-wrap rounded-md border border-rose-500/25 bg-rose-500/[0.06] px-3 py-2 text-[12px] text-rose-200">{error}</div>}
       </div>
     </Modal>
+  )
+}
+
+/** Private repositories: a GitHub token kept in the OS keychain; only "stored or not" comes back from main. */
+function GithubTokenRow() {
+  const { t } = useTranslation()
+  const [has, setHas] = useState<boolean | null>(null)
+  const [open, setOpen] = useState(false)
+  const [token, setToken] = useState('')
+  const [error, setError] = useState<string | null>(null)
+  useEffect(() => {
+    void call('skills:githubToken').then(setHas, () => setHas(false))
+  }, [])
+  const save = async (value: string): Promise<void> => {
+    setError(null)
+    try {
+      setHas(await call('skills:setGithubToken', value))
+      setToken('')
+      setOpen(false)
+    } catch (e) {
+      setError(apiError(e))
+    }
+  }
+  return (
+    <div className="mt-2 rounded-md border border-line bg-surface-2/60 px-2.5 py-2 text-[11.5px]">
+      <div className="flex items-center gap-2">
+        <span className="text-zinc-300">{t('skills:modal.token.title')}</span>
+        <span className={has ? 'text-emerald-300' : 'text-zinc-400'}>{has ? t('skills:modal.token.stored') : t('skills:modal.token.none')}</span>
+        <div className="ml-auto flex gap-1">
+          {has && (
+            <button className="btn-ghost h-6 text-[11px]" onClick={() => void save('')}>
+              {t('skills:modal.token.remove')}
+            </button>
+          )}
+          <button className="btn-outline h-6 text-[11px]" onClick={() => setOpen((v) => !v)}>
+            {has ? t('skills:modal.token.replace') : t('skills:modal.token.add')}
+          </button>
+        </div>
+      </div>
+      {open && (
+        <div className="mt-2 flex gap-2">
+          <input
+            type="password"
+            className="input h-7 flex-1 font-mono text-[11.5px]"
+            placeholder="github_pat_…"
+            value={token}
+            onChange={(e) => setToken(e.target.value)}
+            onKeyDown={(e) => e.key === 'Enter' && token.trim() && void save(token)}
+            autoFocus
+          />
+          <button className="btn-primary h-7 text-[11.5px]" disabled={!token.trim()} onClick={() => void save(token)}>
+            {t('actions.save')}
+          </button>
+        </div>
+      )}
+      {error && <div className="mt-1 text-rose-300">{error}</div>}
+      <div className="mt-1 text-zinc-400">{t('skills:modal.token.hint')}</div>
+    </div>
   )
 }

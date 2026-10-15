@@ -19,6 +19,7 @@ import {
 import { decodeText, findSuspicious } from '../files/extract'
 import { t } from '../i18n'
 import { skillsRepo } from './repo'
+import { getGithubToken } from './githubToken'
 
 /**
  * Reading skills from their sources (GitHub, .zip, folder, single .md) into memory, finding the SKILL.md folders
@@ -115,12 +116,15 @@ function stripCommonRoot(files: Files): Files {
   return out
 }
 
-async function download(url: string, maxBytes: number): Promise<Uint8Array> {
+class NotFoundError extends Error {}
+
+async function download(url: string, maxBytes: number, headers: Record<string, string> = {}): Promise<Uint8Array> {
   const ctrl = new AbortController()
   const timer = setTimeout(() => ctrl.abort(), 60_000)
   try {
-    const res = await fetch(url, { signal: ctrl.signal, headers: { 'user-agent': 'Agentbits' }, redirect: 'follow' })
-    if (res.status === 404) throw new Error(t('main:skills.errors.notFound'))
+    // A redirect to another host (codeload.github.com) drops the Authorization header (fetch spec); the signed URL suffices.
+    const res = await fetch(url, { signal: ctrl.signal, headers: { 'user-agent': 'Agentbits', ...headers }, redirect: 'follow' })
+    if (res.status === 404) throw new NotFoundError(t('main:skills.errors.notFound'))
     if (!res.ok) throw new Error(t('main:skills.errors.download', { status: `${res.status} ${res.statusText}` }))
     const len = Number(res.headers.get('content-length') || 0)
     if (len > maxBytes) throw new Error(t('main:skills.errors.tooLarge'))
@@ -153,20 +157,50 @@ async function download(url: string, maxBytes: number): Promise<Uint8Array> {
   }
 }
 
+/**
+ * Public download first; a 404 with a stored token goes through the GitHub API (private repositories). The token is only
+ * ever sent to api.github.com.
+ */
+async function githubFetch(publicUrl: string, apiPath: string, accept: string, maxBytes: number): Promise<Uint8Array> {
+  try {
+    return await download(publicUrl, maxBytes)
+  } catch (e) {
+    if (!(e instanceof NotFoundError)) throw e
+    const token = getGithubToken()
+    if (!token) throw new Error(t('main:skills.errors.notFoundPrivate'))
+    return download(`https://api.github.com${apiPath}`, maxBytes, {
+      authorization: `Bearer ${token}`,
+      accept,
+      'x-github-api-version': '2022-11-28'
+    })
+  }
+}
+
 async function loadGithub(url: string): Promise<Loaded> {
   const g = parseGithubUrl(url)
   if (!g) throw new Error(t('main:skills.errors.badUrl'))
+  const repoPath = `/repos/${encodeURIComponent(g.owner)}/${encodeURIComponent(g.repo)}`
   const ref = g.ref ?? 'HEAD'
   const label = `${g.owner}/${g.repo}${g.path ? '/' + g.path : ''}`
   const base = { type: 'github' as const, location: `https://github.com/${g.owner}/${g.repo}`, ref: g.ref ?? undefined }
   const isFile = /\.md$/i.test(g.path)
   if (isFile && !/(^|\/)skill\.md$/i.test(g.path)) {
     // A single Markdown file (not part of a SKILL.md folder).
-    const bytes = await download(`https://raw.githubusercontent.com/${g.owner}/${g.repo}/${ref}/${g.path}`, SKILL_LIMITS.maxFileBytes)
+    const bytes = await githubFetch(
+      `https://raw.githubusercontent.com/${g.owner}/${g.repo}/${ref}/${g.path}`,
+      `${repoPath}/contents/${g.path.split('/').map(encodeURIComponent).join('/')}${g.ref ? `?ref=${encodeURIComponent(g.ref)}` : ''}`,
+      'application/vnd.github.raw+json',
+      SKILL_LIMITS.maxFileBytes
+    )
     return { label, base: { ...base, type: 'github' }, files: new Map(), subpath: g.path, markdown: { name: basename(g.path, extname(g.path)), text: decodeText(bytes).text }, notes: [] }
   }
   const subpath = isFile ? g.path.split('/').slice(0, -1).join('/') : g.path
-  const zip = await download(`https://github.com/${g.owner}/${g.repo}/archive/${ref}.zip`, SKILL_LIMITS.maxArchiveBytes)
+  const zip = await githubFetch(
+    `https://github.com/${g.owner}/${g.repo}/archive/${ref}.zip`,
+    `${repoPath}/zipball${g.ref ? `/${encodeURIComponent(g.ref)}` : ''}`,
+    'application/vnd.github+json',
+    SKILL_LIMITS.maxArchiveBytes
+  )
   const { files, skipped } = unzipBounded(zip, () => true)
   return { label, base, files: stripCommonRoot(files), subpath, notes: skipped.length ? [t('main:skills.notes.skippedLarge', { count: skipped.length })] : [] }
 }

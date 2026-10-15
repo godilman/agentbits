@@ -178,6 +178,9 @@ export interface Api {
   'skills:forAgent': (agentId: string) => AgentSkill[]
   /** Folder or .zip / .md file picker for installing from the computer. */
   'skills:pickSource': (kind: 'folder' | 'file') => string | null
+  /** Private GitHub repositories: whether a token is stored / store one ('' removes). The token never comes back. */
+  'skills:githubToken': () => boolean
+  'skills:setGithubToken': (token: string) => boolean
 
   // apps (MCP servers; see src/shared/apps.ts)
   'apps:list': () => AppServer[]

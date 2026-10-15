@@ -91,7 +91,16 @@
     "sizeLine": "{{files}} · {{size}}",
     "files_one": "{{count}} dosya",
     "files_other": "{{count}} dosya",
-    "binaries": "program dosyaları"
+    "binaries": "program dosyaları",
+    "token": {
+      "title": "Özel depolar",
+      "stored": "token kayıtlı",
+      "none": "token yok",
+      "add": "Token ekle",
+      "replace": "Değiştir",
+      "remove": "Kaldır",
+      "hint": "Deponun içeriğini okuma izni olan bir GitHub token'ı (fine-grained: Contents → Read). Bu bilgisayarda şifreli saklanır, yalnızca herkese açık indirme bulunamazsa ve yalnızca api.github.com'a gönderilir."
+    }
   },
   "edit": {
     "title": "{{name}} düzenle",

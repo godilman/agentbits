@@ -81,6 +81,8 @@ export const IPC_SCHEMA = {
   'skills:assign': ['s', 'o', 'b'],
   'skills:forAgent': ['s'],
   'skills:pickSource': ['s'],
+  'skills:githubToken': [],
+  'skills:setGithubToken': ['s'],
   'apps:list': [],
   'apps:save': ['o', 's?'],
   'apps:delete': ['s'],

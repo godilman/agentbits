@@ -91,7 +91,16 @@
     "sizeLine": "{{files}} · {{size}}",
     "files_one": "{{count}} file",
     "files_other": "{{count}} files",
-    "binaries": "program files"
+    "binaries": "program files",
+    "token": {
+      "title": "Private repositories",
+      "stored": "token stored",
+      "none": "no token",
+      "add": "Add token",
+      "replace": "Replace",
+      "remove": "Remove",
+      "hint": "A GitHub token with read access to the repository contents (fine-grained: Contents → Read). Kept encrypted on this computer and only sent to api.github.com, only when a public download is not found."
+    }
   },
   "edit": {
     "title": "Edit {{name}}",

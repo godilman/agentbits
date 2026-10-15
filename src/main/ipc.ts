@@ -23,6 +23,7 @@ import { wouldCycle } from '@shared/org'
 import { SettingsError, validateSettingsPatch } from '@shared/settingsRules'
 import { assertPathsAllowed, grantPaths } from './pathGrants'
 import { checkBaseUrl } from '@shared/endpoints'
+import { hasGithubToken, setGithubToken } from './skills/githubToken'
 import { argsMatch } from '@shared/ipcSchema'
 import { instantiateTemplate, listTemplates } from './core/templates'
 import { assertUsableFolder, folderStatus, inspectFolder } from './core/folders'
@@ -410,6 +411,11 @@ const handlers: Handlers = {
     const f = skillsRepo.files(id).find((x) => x.path === path)
     if (!f || !f.text) throw new Error(t('main:skills.errors.notInstalled'))
     return decodeText(new Uint8Array(skillsRepo.file(id, path) ?? Buffer.alloc(0))).text.slice(0, 400_000)
+  },
+  'skills:githubToken': () => hasGithubToken(),
+  'skills:setGithubToken': (token) => {
+    setGithubToken(token)
+    return hasGithubToken()
   },
   'skills:preview': async (source) => {
     if (source?.type === 'path') await assertPathsAllowed([source.path], 'skill')

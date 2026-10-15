@@ -320,7 +320,9 @@
       "nameTaken": "\"{{name}}\" adında bir skill zaten var.",
       "empty": "SKILL.md boş.",
       "needFrontmatter": "SKILL.md bir başlık bloğuyla başlamalı:\n---\nname: benim-skillim\ndescription: Ne zaman kullanılacağı\n---",
-      "needDescription": "Bir açıklama ekle: ajanlar skill'i ne zaman kullanacaklarına buna bakarak karar verir."
+      "needDescription": "Bir açıklama ekle: ajanlar skill'i ne zaman kullanacaklarına buna bakarak karar verir.",
+      "badToken": "Bu bir GitHub token'ı değil (yalnızca harf, rakam ve _ içerir, ör. github_pat_…).",
+      "notFoundPrivate": "Bulunamadı. Depo özelse aşağıdan bir GitHub token'ı ekle (içeriğini okuma izni yeterli)."
     },
     "notes": {
       "skippedLarge_one": "2 MB'tan büyük {{count}} dosya atlandı.",

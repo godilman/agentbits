@@ -320,7 +320,9 @@
       "nameTaken": "A skill named \"{{name}}\" already exists.",
       "empty": "SKILL.md is empty.",
       "needFrontmatter": "SKILL.md must start with a front matter block:\n---\nname: my-skill\ndescription: When to use it\n---",
-      "needDescription": "Add a description: agents use it to decide when to use the skill."
+      "needDescription": "Add a description: agents use it to decide when to use the skill.",
+      "badToken": "That is not a GitHub token (letters, digits and _ only, e.g. github_pat_…).",
+      "notFoundPrivate": "Not found. If the repository is private, add a GitHub token below (read access to its contents is enough)."
     },
     "notes": {
       "skippedLarge_one": "{{count}} file over 2 MB was skipped.",
