@@ -107,7 +107,18 @@
     "onlyAgent": "Only {{name}}",
     "search": "Search memory…",
     "shared": "shared",
-    "empty": "No records found"
+    "empty": "No records found",
+    "semantic": {
+      "title": "Semantic memory",
+      "desc": "Off: agents recall memories by matching words. On: memories are also found by meaning (\"login error\" finds \"sign-in fails\"). Uses the embeddings endpoint of an OpenAI-compatible provider: OpenAI, or a local Ollama / LM Studio so nothing leaves this computer.",
+      "off": "Off (words only)",
+      "modelHint": "Embedding model, e.g. text-embedding-3-small or nomic-embed-text",
+      "noProvider": "Add an OpenAI API provider (OpenAI, Gemini, Ollama or LM Studio) under Providers first.",
+      "stays": "Local server: memory text stays on this computer.",
+      "leaves": "Memory text is sent to this provider to be embedded (like any prompt to it).",
+      "status": "{{indexed}} of {{total}} memories indexed by meaning.",
+      "error": "Embedding failed, words only for now: {{error}}"
+    }
   },
   "general": {
     "title": "General",

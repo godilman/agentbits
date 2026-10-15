@@ -12,6 +12,7 @@ import { startFiles } from './files/service'
 import { stopBridge } from './connections/bridge'
 import { closeAllApps } from './apps/client'
 import { rejectAllApprovals } from './connections/service'
+import { scheduleIndex } from './core/embeddings'
 import { terminals } from './terminal/manager'
 
 const isWin = process.platform === 'win32'
@@ -156,6 +157,7 @@ app.whenReady().then(() => {
   dropUnboundOAuth()
   registerIpc()
   orchestrator.init()
+  scheduleIndex(10_000) // semantic memory (if on): embed what's missing, a little after start-up
   startMaintenance()
   startFiles()
   createWindow()

@@ -246,6 +246,8 @@ export interface Api {
   /** `projectId` null/omitted = organization-wide memory. */
   'memory:add': (content: string, kind: MemoryKind, agentId?: string | null, projectId?: string | null) => Memory
   'memory:delete': (id: string) => void
+  /** Semantic memory: on, how many memories have a vector for the current model, last error ('' = none). */
+  'memory:vectorStatus': () => { enabled: boolean; indexed: number; total: number; error: string }
 
   // decisions
   'decisions:list': () => Decision[]

@@ -368,6 +368,10 @@ export interface AppSettings {
   shareWithTwins: boolean
   /** Race mode: each task also goes to a member with another provider / model; the lead keeps the better result. */
   raceMode: boolean
+  /** Semantic memory: OpenAI-kind provider whose `/embeddings` endpoint embeds memories ('' = off, words only). */
+  memoryEmbedProviderId: string
+  /** Embedding model of that provider (e.g. text-embedding-3-small, nomic-embed-text). */
+  memoryEmbedModel: string
 }
 
 export interface TerminalSession {

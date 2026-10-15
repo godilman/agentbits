@@ -1,6 +1,8 @@
 import { getDb } from '../db'
 import { mapMemory, memoriesRepo } from '../db/repos'
 import type { Memory, MemoryKind } from '@shared/types'
+import { semanticRelevance } from '@shared/vectors'
+import { queryVector, scheduleIndex, semanticHits } from './embeddings'
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
@@ -21,12 +23,12 @@ function toFtsQuery(text: string): string | null {
 /**
  * Memory Engine
  * Recalls the most relevant memories for an agent working on a task, combining
- * full-text relevance (BM25), importance and recency. Shared (global) memories —
+ * full-text relevance (BM25) — plus meaning when semantic memory is on — importance and recency. Shared (global) memories —
  * including every accepted decision — are always eligible, so the lead and the
  * agents never lose past context.
  */
 export const memoryEngine = {
-  recall(opts: { agentId?: string | null; taskId?: string | null; projectId?: string | null; query: string; limit?: number }): Memory[] {
+  async recall(opts: { agentId?: string | null; taskId?: string | null; projectId?: string | null; query: string; limit?: number }): Promise<Memory[]> {
     const db = getDb()
     const limit = opts.limit ?? 8
     const fts = toFtsQuery(opts.query)
@@ -55,8 +57,16 @@ export const memoryEngine = {
       )
       .all(params)
 
+    // Semantic memory: the closest memories by meaning join the candidates (null when off or unavailable).
+    const q = await queryVector(opts.query)
+    const cos = new Map((q ? semanticHits(q, scopeFilter, params) : []).map((h) => [h.id, h.cos]))
+
     const byId = new Map<string, any>()
     for (const r of [...rows, ...pinned]) if (!byId.has(r.id)) byId.set(r.id, r)
+    const missing = [...cos.keys()].filter((id) => !byId.has(id))
+    if (missing.length) {
+      for (const r of db.prepare(`SELECT m.*, 0 AS rank FROM memories m WHERE m.id IN (${missing.map(() => '?').join(',')})`).all(...missing) as any[]) byId.set(r.id, r)
+    }
     const all = [...byId.values()]
     if (!all.length) return []
 
@@ -64,7 +74,7 @@ export const memoryEngine = {
     const maxRank = Math.max(...ranks, 1e-6)
     const nowMs = Date.now()
     const scored = all.map((r, i) => {
-      const relevance = ranks[i] / maxRank
+      const relevance = Math.max(ranks[i] / maxRank, semanticRelevance(cos.get(r.id) ?? 0))
       const ageDays = (nowMs - Date.parse(r.created_at)) / 86_400_000
       const recency = Math.exp(-ageDays / 14)
       return { r, score: relevance * 0.6 + Number(r.importance) * 0.3 + recency * 0.1 }
@@ -100,7 +110,9 @@ export const memoryEngine = {
     kind: MemoryKind,
     opts: { agentId?: string | null; taskId?: string | null; projectId?: string | null; importance?: number; source?: string } = {}
   ): Memory {
-    return memoriesRepo.add({ content: content.slice(0, 4000), kind, ...opts })
+    const m = memoriesRepo.add({ content: content.slice(0, 4000), kind, ...opts })
+    scheduleIndex()
+    return m
   },
 
   /** Renders memories as a compact prompt section. */

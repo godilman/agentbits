@@ -4,6 +4,23 @@
 > `## YYYY-MM-DD — kısa başlık`, ardından **Eklendi / Değişti / Düzeltildi / Kaldırıldı / Bilinen** maddeleri
 > ve ilgili dosyalar.
 
+## 2026-10-15 — Faz 7: anlamsal (vektör) hafıza (ADR-027)
+
+### Eklendi
+- Ayarlar → Hafıza → **Anlamsal hafıza** (varsayılan kapalı): OpenAI uyumlu sağlayıcının embedding uç noktası + model;
+  hafızalar arka planda dizinlenir, ajanlar kayıtları anlamıyla da hatırlar. Durum satırı (dizinlenen / toplam, son hata).
+- Migration **v15** `memory_vectors`; `core/embeddings.ts`, `shared/vectors.ts`; IPC `memory:vectorStatus`;
+  ayarlar `memoryEmbedProviderId`, `memoryEmbedModel`.
+
+### Değişti
+- `memoryEngine.recall` async (görev ve sohbet istemleri bekler; kapalıyken ek istek yok).
+
+### Doğrulandı
+- `tests/vectors.test.ts` (normalize, BLOB gidiş-dönüş — kaydırılmış tampon dahil, yanıt sırası, bozuk yanıtlar; testin yakaladığı
+  "tekrarlanan index" buğu düzeltildi). Gerçek SQLite + sahte embedding sunucusuyla uçtan uca: kapalıyken istek yok, ortak
+  kelimesi olmayan sorgu anlamca bulunuyor, yeni hafıza kendiliğinden dizinleniyor, sunucu 500 dönünce kelimeyle devam +
+  hata gösteriliyor, model değişince yeniden gömülüyor, silinen hafızanın vektörü gidiyor.
+
 ## 2026-10-15 — Paylaşım: birim / takım / ajan dışa-içe aktarma
 
 ### Eklendi

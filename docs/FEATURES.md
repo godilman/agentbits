@@ -303,7 +303,7 @@ yukarıdaki ⏳ satırları ve "Bilinen sorunlar"dır.
 | Otomatik hafıza yazımı (görev özeti, inceleme notu, uzun kullanıcı mesajı, kabul edilen karar) | ✅ | |
 | Ayarlar → Hafıza: arama, ekleme (ortak / ajana özel), silme | ✅ | Kapsam seçici: Organizasyon geneli / Bu proje |
 | Proje kapsamlı hafıza (geri çağırma = proje + organizasyon geneli) | ✅ | Görev özetleri, inceleme notları, sohbet ve kabul edilen kararlar projeye yazılır |
-| Vektör (embedding) hafıza | ⏳ | sqlite-vec düşünülüyor |
+| Anlamsal (vektör) hafıza — isteğe bağlı | ✅ | 2026-10-15; Ayarlar → Hafıza → "Anlamsal hafıza" (varsayılan kapalı): OpenAI uyumlu bir sağlayıcı (OpenAI, Gemini, Ollama, LM Studio) + embedding modeli seçilir; hafızalar arka planda dizinlenir, geri çağırma kelime + anlam (`max(bm25, kosinüs)`). Sağlayıcı yanıt vermezse yalnız kelimeler. Yerel sunucuda metin bilgisayardan çıkmaz. Migration v15, ADR-027 |
 
 ## 10. Veri yönetimi (Ayarlar → Veri yönetimi)
 

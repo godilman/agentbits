@@ -37,6 +37,7 @@ export const IPC_SCHEMA = {
   'units:removeMember': ['s', 's'],
   'templates:list': [],
   'templates:instantiate': ['s', 'o?'],
+  'memory:vectorStatus': [],
   'share:export': ['o'],
   'share:preview': ['o'],
   'share:import': ['s', 's|null'],

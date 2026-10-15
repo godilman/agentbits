@@ -27,6 +27,7 @@ import { hasGithubToken, setGithubToken } from './skills/githubToken'
 import { argsMatch } from '@shared/ipcSchema'
 import { instantiateTemplate, listTemplates } from './core/templates'
 import { buildPackage, importPackage, previewPackage } from './core/share'
+import { scheduleIndex, vectorStatus } from './core/embeddings'
 import { SHARE_EXT } from '@shared/share'
 import { assertUsableFolder, folderStatus, inspectFolder } from './core/folders'
 import {
@@ -112,6 +113,7 @@ const handlers: Handlers = {
     }
     const before = settingsRepo.get().language
     const s = settingsRepo.update(patch)
+    if (patch.memoryEmbedProviderId !== undefined || patch.memoryEmbedModel !== undefined) scheduleIndex(300)
     if (patch.language !== undefined && patch.language !== before) {
       applyLanguageSetting(s.language)
       relabelDefaults()
@@ -707,6 +709,7 @@ const handlers: Handlers = {
   'files:detachFromTask': (taskId, fileId) => detachFromTask(taskId, fileId),
 
   /* memory */
+  'memory:vectorStatus': () => vectorStatus(),
   'memory:list': (opts) =>
     opts?.query
       ? memoryEngine.search(opts.query, opts.limit, opts.projectId)

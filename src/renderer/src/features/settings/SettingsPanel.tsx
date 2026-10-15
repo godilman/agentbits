@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Trans, useTranslation } from 'react-i18next'
 import { Brain, Cpu, Database, FolderOpen, Gauge, Plus, Search, Shield, SlidersHorizontal, Trash2, Users, X, Zap } from 'lucide-react'
 import type { AccessLevel, Memory, MemoryKind } from '@shared/types'
@@ -412,6 +412,63 @@ function ProvidersSection() {
 
 /* ───────────────────────────── memory ───────────────────────────── */
 
+/** Semantic memory: which OpenAI-compatible provider embeds memories (off by default), and how far indexing got. */
+function SemanticCard() {
+  const { t } = useTranslation()
+  const settings = useAppStore((s) => s.settings)
+  const providers = useAppStore((s) => s.providers)
+  const version = useAppStore((s) => s.memoryVersion)
+  const toast = useAppStore((s) => s.toast)
+  const usable = useMemo(() => providers.filter((p) => p.kind === 'openai'), [providers])
+  const [model, setModel] = useState(settings.memoryEmbedModel)
+  const [status, setStatus] = useState<{ enabled: boolean; indexed: number; total: number; error: string } | null>(null)
+  useEffect(() => setModel(settings.memoryEmbedModel), [settings.memoryEmbedModel])
+  useEffect(() => {
+    void call('memory:vectorStatus').then(setStatus)
+  }, [version, settings.memoryEmbedProviderId, settings.memoryEmbedModel])
+  const update = (patch: Partial<typeof settings>): void => {
+    call('settings:update', patch).catch((e) => toast('error', apiError(e)))
+  }
+  const local = usable.find((p) => p.id === settings.memoryEmbedProviderId)
+  return (
+    <div className="card mb-5 p-4">
+      <div className="text-[13px] font-semibold text-zinc-100">{t('settings:memory.semantic.title')}</div>
+      <div className="mt-0.5 text-[12px] leading-relaxed text-zinc-400">{t('settings:memory.semantic.desc')}</div>
+      <div className="mt-3 flex flex-wrap items-center gap-2">
+        <select
+          data-testid="memory-embed-provider"
+          className="input h-7 w-56 text-[12px]"
+          value={settings.memoryEmbedProviderId}
+          onChange={(e) => update({ memoryEmbedProviderId: e.target.value })}
+        >
+          <option value="">{t('settings:memory.semantic.off')}</option>
+          {usable.map((p) => (
+            <option key={p.id} value={p.id}>
+              {p.label}
+            </option>
+          ))}
+        </select>
+        <input
+          className="input h-7 w-64 text-[12px]"
+          disabled={!settings.memoryEmbedProviderId}
+          value={model}
+          onChange={(e) => setModel(e.target.value)}
+          onBlur={() => model.trim() !== settings.memoryEmbedModel && update({ memoryEmbedModel: model.trim() })}
+          onKeyDown={(e) => e.key === 'Enter' && (e.target as HTMLInputElement).blur()}
+          placeholder={t('settings:memory.semantic.modelHint')}
+        />
+      </div>
+      {!usable.length && <div className="mt-2 text-[11.5px] text-zinc-500">{t('settings:memory.semantic.noProvider')}</div>}
+      {local && <div className="mt-2 text-[11.5px] text-zinc-500">{t(isLocalUrl(local.baseUrl) ? 'settings:memory.semantic.stays' : 'settings:memory.semantic.leaves')}</div>}
+      {status?.enabled && (
+        <div className={cn('mt-2 text-[11.5px]', status.error ? 'text-amber-300' : 'text-emerald-400')}>
+          {status.error ? t('settings:memory.semantic.error', { error: status.error }) : t('settings:memory.semantic.status', { indexed: status.indexed, total: status.total })}
+        </div>
+      )}
+    </div>
+  )
+}
+
 const KINDS: MemoryKind[] = ['fact', 'decision', 'context', 'preference', 'summary']
 const KIND_CLS: Record<MemoryKind, string> = {
   fact: 'text-sky-300 bg-sky-500/10',
@@ -468,6 +525,7 @@ function MemorySection() {
           </div>
         }
       />
+      <SemanticCard />
       <div className="card mb-5 p-4">
         <label className="label">{projectScoped ? t('settings:memory.addToProject', { name: project?.name ?? t('settings:memory.projectFallback') }) : t('settings:memory.addToOrg')}</label>
         <textarea className="textarea" rows={2} value={content} onChange={(e) => setContent(e.target.value)} placeholder={t('settings:memory.placeholder')} />

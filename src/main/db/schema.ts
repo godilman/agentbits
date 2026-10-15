@@ -609,6 +609,17 @@ const MIGRATIONS: { version: number; sql: string }[] = [
       ALTER TABLE tasks ADD COLUMN race_result TEXT CHECK (race_result IN ('won','lost'));
       CREATE INDEX IF NOT EXISTS idx_tasks_race ON tasks(race_of);
     `
+  },
+  {
+    version: 15,
+    sql: `
+      -- Semantic memory (optional): one embedding per memory, for the model it was made with (another model = re-embed).
+      CREATE TABLE IF NOT EXISTS memory_vectors (
+        memory_id TEXT PRIMARY KEY REFERENCES memories(id) ON DELETE CASCADE,
+        model TEXT NOT NULL,
+        vec BLOB NOT NULL
+      );
+    `
   }
 ]
 

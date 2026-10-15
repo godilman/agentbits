@@ -736,7 +736,7 @@ class Orchestrator {
         ? await this.prepareWorktree(project, task, { runId, agentId: agent.id, taskId: task.id, projectId: pid })
         : null
     const ws = wt?.dir ?? this.workspace(project)
-    const memories = memoryEngine.recall({ agentId: agent.id, taskId: task.id, projectId: pid, query: `${task.title} ${task.description}` })
+    const memories = await memoryEngine.recall({ agentId: agent.id, taskId: task.id, projectId: pid, query: `${task.title} ${task.description}` })
     let system = workerSystem(agent, perms, memoryEngine.format(memories), ws) + '\n\n' + this.projectContext(project)
     if (wt) {
       system +=
@@ -1749,7 +1749,7 @@ class Orchestrator {
       const members = projectMembers(projectId)
       const isLeadHere = projectLead(projectId)?.id === agent.id
       const history = messagesRepo.list(channel, 24, projectId).slice(0, -1)
-      const memories = memoryEngine.recall({ agentId: agent.id, projectId, query: content, limit: 6 })
+      const memories = await memoryEngine.recall({ agentId: agent.id, projectId, query: content, limit: 6 })
       const team = members.some((m) => m.id === agent.id) ? members : [agent, ...members]
       let system =
         (isLeadHere

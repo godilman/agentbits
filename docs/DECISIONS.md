@@ -520,3 +520,17 @@ Durum değerleri: *Kabul edildi*, *Önerildi*, *Yerini aldı*, *Geri alındı*.
 - **Elenen:** Python / sistem Tesseract'ı (kurulum gerektirir), bulut OCR (veri dışarı çıkar), `@napi-rs/canvas` ile sayfa çizimi
   (native), görselleri yalnızca görsel destekli modele bırakmak (Codex / yerel modeller / Demo okuyamaz).
 
+## ADR-027 — Anlamsal hafıza: sağlayıcının embedding uç noktası, isteğe bağlı (2026-10-15)
+
+- **Bağlam:** Hafıza yalnızca FTS5 ile bulunuyordu; aynı şeyi başka kelimelerle anlatan kayıt ("giriş hatası" / "oturum
+  açılamıyor") kaçıyordu. Kural: native modül ADR ister ve Build Tools gerektirmemeli (ADR-002); paket zaten büyük (ADR-026).
+- **Karar:** Kullanıcının seçtiği OpenAI uyumlu sağlayıcının `/embeddings` uç noktası (OpenAI, Gemini, Ollama, LM Studio;
+  Faz 4'teki `providers.base_url`). **Varsayılan kapalı**; açılmadıkça davranış değişmez. Vektörler SQLite'ta BLOB
+  (`memory_vectors`, v15), arama kaba kuvvet kosinüs (on binlerce kayda kadar yeterli). Geri çağırma kelime ve anlamın
+  büyüğünü alır; uç nokta yanıt vermezse yalnızca kelimeler.
+- **Bedel:** Bulut sağlayıcıda hafıza metni o sağlayıcıya gider (zaten istemlerle gidiyor) ve küçük bir embedding maliyeti
+  olur; Anthropic ve CLI sağlayıcılarının embedding'i yok — onları kullanan Ollama / LM Studio ya da OpenAI eklemeli. Eşik
+  sabit (`semanticRelevance`: 0,25–0,75 kosinüs); çok farklı ölçekli bir model ayar isteyebilir.
+- **Elenen:** `sqlite-vec` (native, her platform için ikili; bu ölçekte kaba kuvvet yeterli), pakete gömülü çok dilli yerel
+  model (~120 MB, paket iki katına yakın büyür), küçük İngilizce model (~25 MB, Türkçede zayıf).
+

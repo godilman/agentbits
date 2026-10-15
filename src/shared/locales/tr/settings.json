@@ -107,7 +107,18 @@
     "onlyAgent": "Yalnızca {{name}}",
     "search": "Hafızada ara…",
     "shared": "ortak",
-    "empty": "Kayıt bulunamadı"
+    "empty": "Kayıt bulunamadı",
+    "semantic": {
+      "title": "Anlamsal hafıza",
+      "desc": "Kapalıyken ajanlar hafızayı kelime eşleşmesiyle hatırlar. Açıkken anlamıyla da bulur (\"giriş hatası\" → \"oturum açılamıyor\"). OpenAI uyumlu bir sağlayıcının embedding uç noktasını kullanır: OpenAI ya da hiçbir şeyin bilgisayardan çıkmadığı yerel Ollama / LM Studio.",
+      "off": "Kapalı (yalnız kelimeler)",
+      "modelHint": "Embedding modeli, ör. text-embedding-3-small ya da nomic-embed-text",
+      "noProvider": "Önce Sağlayıcılar'dan bir OpenAI API sağlayıcısı (OpenAI, Gemini, Ollama ya da LM Studio) ekle.",
+      "stays": "Yerel sunucu: hafıza metni bu bilgisayardan çıkmaz.",
+      "leaves": "Hafıza metni embedding için bu sağlayıcıya gönderilir (ona giden her istem gibi).",
+      "status": "{{total}} hafızanın {{indexed}} tanesi anlamıyla dizinlendi.",
+      "error": "Embedding başarısız, şimdilik yalnız kelimeler: {{error}}"
+    }
   },
   "general": {
     "title": "Genel",

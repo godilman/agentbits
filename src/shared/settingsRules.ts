@@ -62,7 +62,9 @@ export const DEFAULT_SETTINGS: AppSettings = {
   cliEnvPassthrough: [],
   filesQuotaMb: 5120,
   shareWithTwins: true,
-  raceMode: false
+  raceMode: false,
+  memoryEmbedProviderId: '',
+  memoryEmbedModel: ''
 }
 
 /** Upper bounds of the number settings (0 = no limit / keep forever). */
@@ -106,6 +108,8 @@ export function validateSettingsPatch(patch: unknown): Partial<AppSettings> {
         break
       case 'workspaceRoot':
       case 'language':
+      case 'memoryEmbedProviderId':
+      case 'memoryEmbedModel':
         if (typeof v !== 'string' || v.length > 1000) throw new SettingsError('invalid', k)
         out[k] = v
         break

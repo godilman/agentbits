@@ -608,6 +608,11 @@ kullanımıyla Markdown rapor (`# Günlük Rapor — <proje> · <tarih>`) üreti
   3. Skor: `relevance * 0.6 + importance * 0.3 + recency * 0.1`; `relevance = -bm25 / max(-bm25)`,
      `recency = exp(-yaşGün / 14)`.
   4. İlk `limit` kayıt döner; `access_count` ve `last_accessed_at` güncellenir.
+  5. **Anlamsal hafıza açıksa** (`settings.memoryEmbedProviderId` + `memoryEmbedModel`, ADR-027): `recall` async'tir;
+     `core/embeddings.ts` → `queryVector` (8 sn) sorguyu gömer, `semanticHits` aynı kapsamdaki vektörleri tarar (kaba kuvvet
+     kosinüs, ilk 40) ve adaylara ekler; `relevance = max(bm25 oranı, semanticRelevance(kosinüs))` (`shared/vectors.ts`).
+     Vektörler `memory_vectors`'ta `sağlayıcıId|model` etiketiyle; `remember()` ve ayar değişikliği `scheduleIndex()` ile
+     eksikleri 32'lik partilerle gömer (hata = durur, `memory:vectorStatus` gösterir, sonraki yazımda yeniden dener).
 - `format()` → `## Relevant memory (from previous work — treat as ground truth unless contradicted)` bölümü.
 - `search(query, limit, projectId?)` (Ayarlar → Hafıza araması) yalnızca bm25 sıralar; `projectId`:
   `undefined` = hepsi, `null` = yalnızca organizasyon geneli, id = o proje + organizasyon geneli. `remember()` içeriği 4000 karakterde keser.
