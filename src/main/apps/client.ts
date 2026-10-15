@@ -369,6 +369,20 @@ export async function callAppTool(serverId: string, tool: string, args: Record<s
   }
 }
 
+/** Resources and prompts (MCP): reads, through the same live client as the tools. */
+export async function appRequest<T>(serverId: string, fn: (client: Live['client']) => Promise<T>): Promise<T> {
+  const l = await clientFor(serverId)
+  l.lastUsed = Date.now()
+  try {
+    return await fn(l.client)
+  } catch (e) {
+    if (/closed|not connected|EPIPE|ECONNRESET/i.test(String((e as Error).message))) await closeApp(serverId)
+    throw normalizeError(e)
+  } finally {
+    l.lastUsed = Date.now()
+  }
+}
+
 /** Last lines the server wrote to stderr, with the app's secrets removed (shown to the user, never to agents). */
 export function stderrTail(serverId: string): string {
   return redactApp(serverId, (live.get(serverId)?.stderr.join('') ?? '').trim().slice(-600))
