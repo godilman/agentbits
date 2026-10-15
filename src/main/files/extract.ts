@@ -29,7 +29,7 @@ export interface ExtractText {
 const keyT: ExtractT = (key, opts) => (opts ? `${key} ${Object.values(opts).join(' ')}` : key)
 export const DEFAULT_TEXT: ExtractText = { t: keyT, locale: 'en-US' }
 
-export type ExtractKind = 'pdf' | 'docx' | 'xlsx' | 'pptx' | 'csv' | 'text' | 'markdown' | 'json' | 'image' | 'other'
+export type ExtractKind = 'pdf' | 'docx' | 'xlsx' | 'pptx' | 'rtf' | 'csv' | 'text' | 'markdown' | 'json' | 'image' | 'other'
 export type ExtractStatus = 'ready' | 'partial' | 'unsupported' | 'failed'
 
 export interface ExtractLimits {
@@ -107,6 +107,7 @@ export function detectKind(name: string, bytes: Uint8Array): { kind: ExtractKind
   if (ext === 'docx' && isZip) return { kind: 'docx', mime: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' }
   if ((ext === 'xlsx' || ext === 'xlsm') && isZip) return { kind: 'xlsx', mime: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' }
   if (ext === 'pptx' && isZip) return { kind: 'pptx', mime: 'application/vnd.openxmlformats-officedocument.presentationml.presentation' }
+  if (bytes.length > 5 && String.fromCharCode(...bytes.subarray(0, 5)) === '{\\rtf') return { kind: 'rtf', mime: 'application/rtf' }
   const img = imageInfo(bytes)
   if (img) return { kind: 'image', mime: img.mime }
   if (IMAGE_MIME[ext]) return { kind: 'other', mime: IMAGE_MIME[ext] } // extension says image, bytes do not
@@ -688,6 +689,114 @@ function readPptx(bytes: Uint8Array, limits: ExtractLimits, cx: Cx): Partial_ {
   return { sections, pages: slides.length, warnings: [] }
 }
 
+/**
+ * Rich Text Format → plain text. Groups are tracked on a stack; font / colour / style tables, pictures, objects, headers
+ * and every `\*` destination are skipped; `\'hh` bytes decode with the document's code page (`\ansicpg`, e.g. 1254
+ * Turkish), `\uN` is a Unicode character followed by `\ucN` fallback characters that are skipped.
+ */
+const RTF_SKIP = new Set(['fonttbl', 'colortbl', 'stylesheet', 'info', 'pict', 'object', 'header', 'headerl', 'headerr', 'headerf', 'footer', 'footerl', 'footerr', 'footerf', 'fldinst', 'listtable', 'listoverridetable', 'rsidtbl', 'xmlnstbl', 'generator', 'themedata', 'colorschememapping', 'datastore', 'latentstyles', 'pgdsctbl', 'filetbl', 'revtbl', 'bkmkstart', 'bkmkend', 'nonshppict', 'shppict'])
+const RTF_CHARS: Record<string, string> = { par: '\n', line: '\n', sect: '\n\n', page: '\n\n', row: '\n', cell: ' | ', tab: '\t', emdash: '—', endash: '–', bullet: '•', lquote: '‘', rquote: '’', ldblquote: '“', rdblquote: '”', emspace: ' ', enspace: ' ', qmspace: ' ' }
+
+export function rtfToText(src: string): string {
+  let codepage = 'windows-1252'
+  const out: string[] = []
+  let bytes: number[] = []
+  const flush = (): void => {
+    if (!bytes.length) return
+    try {
+      out.push(new TextDecoder(codepage).decode(new Uint8Array(bytes)))
+    } catch {
+      out.push(new TextDecoder('windows-1252').decode(new Uint8Array(bytes)))
+    }
+    bytes = []
+  }
+  const stack: { skip: boolean; uc: number }[] = []
+  let state = { skip: false, uc: 1 }
+  let pendingSkip = 0 // fallback characters still to drop after a \uN
+  const emit = (s: string): void => {
+    if (state.skip) return
+    flush()
+    out.push(s)
+  }
+  let i = 0
+  while (i < src.length) {
+    const c = src[i]
+    if (c === '{') {
+      stack.push(state)
+      state = { ...state }
+      i++
+      // {\* ...} — an ignorable destination
+      if (src.startsWith('\\*', i)) state.skip = true
+      continue
+    }
+    if (c === '}') {
+      flush()
+      state = stack.pop() ?? { skip: false, uc: 1 }
+      pendingSkip = 0
+      i++
+      continue
+    }
+    if (c === '\\') {
+      const next = src[i + 1]
+      if (next === "'") {
+        const hex = src.slice(i + 2, i + 4)
+        i += 4
+        if (pendingSkip > 0) {
+          pendingSkip--
+          continue
+        }
+        if (!state.skip && /^[0-9a-f]{2}$/i.test(hex)) bytes.push(parseInt(hex, 16))
+        continue
+      }
+      if (next === '{' || next === '}' || next === '\\') {
+        i += 2
+        if (pendingSkip > 0) pendingSkip--
+        else emit(next)
+        continue
+      }
+      if (next === '~') (emit(' '), (i += 2))
+      else if (next === '_') (emit('-'), (i += 2))
+      else if (next === '-' || next === '*' || next === ':' || next === '|') i += 2
+      else if (next === '\n' || next === '\r') (emit('\n'), (i += 2))
+      else {
+        const m = /^([a-z]{1,32})(-?\d{1,10})? ?/i.exec(src.slice(i + 1, i + 46))
+        if (!m) {
+          i++
+          continue
+        }
+        i += 1 + m[0].length
+        const word = m[1]
+        const arg = m[2] !== undefined ? Number(m[2]) : null
+        if (RTF_SKIP.has(word)) state.skip = true
+        else if (word === 'ansicpg' && arg) codepage = `windows-${arg}`
+        else if (word === 'uc' && arg !== null) state.uc = arg
+        else if (word === 'u' && arg !== null) {
+          emit(String.fromCodePoint(arg < 0 ? arg + 65536 : arg))
+          pendingSkip = state.uc
+        } else if (RTF_CHARS[word]) emit(RTF_CHARS[word])
+      }
+      continue
+    }
+    if (c === '\r' || c === '\n') {
+      i++
+      continue
+    }
+    if (pendingSkip > 0) {
+      pendingSkip--
+      i++
+      continue
+    }
+    emit(c)
+    i++
+  }
+  flush()
+  return out
+    .join('')
+    .replace(/[ \t]+\n/g, '\n')
+    .replace(/\n{3,}/g, '\n\n')
+    .trim()
+}
+
 function readCsv(text: string, ext: string, limits: ExtractLimits, { t, locale }: Cx): Partial_ {
   const res = Papa.parse<string[]>(text, {
     delimiter: ext === 'tsv' ? '\t' : '',
@@ -827,7 +936,10 @@ export async function extractFile(
     else if (kind === 'docx') r = readDocx(bytes, limits, cx)
     else if (kind === 'xlsx') r = readXlsx(bytes, limits, cx)
     else if (kind === 'pptx') r = readPptx(bytes, limits, cx)
-    else {
+    else if (kind === 'rtf') {
+      const text = rtfToText(new TextDecoder('latin1').decode(bytes))
+      r = { sections: [{ label: t('main:files.extract.text'), text: text.slice(0, limits.maxChars) }], warnings: text.length > limits.maxChars ? [t('main:files.extract.truncated', { max: limits.maxChars.toLocaleString(cx.locale) })] : [] }
+    } else {
       const { text: raw, encoding } = decodeText(bytes)
       const text = raw.length > limits.maxChars ? raw.slice(0, limits.maxChars) : raw
       r =
