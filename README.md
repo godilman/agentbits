@@ -107,8 +107,8 @@ scenario needs.
   folder. Use a git branch, because agents really change files.)*
 
 **Research & analysis**
-- Competitor and market research: collect, compare and summarize. *(Web access requires Claude Code CLI or Codex
-  CLI with the network permission. API agents can't browse.)*
+- Competitor and market research: collect, compare and summarize. *(Needs the web permission: Claude Code and Codex
+  agents browse with the network permission, API agents read pages as text.)*
 - Summarize and compare documents you attach (reports, PDFs, spreadsheets). *(Any real provider.)*
 
 **Data & reporting**

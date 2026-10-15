@@ -108,8 +108,8 @@ senaryonun neye ihtiyaç duyduğunu söyler.
   Ajanlar dosyaları gerçekten değiştirdiği için bir git dalı kullan.)*
 
 **Araştırma ve analiz**
-- Rakip ve pazar araştırması: bilgiyi topla, karşılaştır, özetle. *(Web erişimi için ağ izni olan Claude Code CLI ya
-  da Codex CLI gerekir. API ajanları web'de gezinemez.)*
+- Rakip ve pazar araştırması: bilgiyi topla, karşılaştır, özetle. *(Web izni gerekir: Claude Code ve Codex ajanları ağ
+  izniyle gezinir, API ajanları sayfaları metin olarak okur.)*
 - Eklediğin belgeleri (raporlar, PDF'ler, tablolar) özetleme ve karşılaştırma. *(Herhangi bir gerçek sağlayıcı.)*
 
 **Veri ve raporlama**
