@@ -131,6 +131,10 @@ export const claudeCliAdapter: ProviderAdapter = {
               toolUses++
               const detail = block.input?.file_path ?? block.input?.command ?? block.input?.sql ?? block.input?.pattern ?? block.input?.url ?? block.input?.connection ?? ''
               ctx.onLog('tool', `${block.name} ${String(detail).slice(0, 240)}`, { toolUseId: block.id })
+              if (/^(Edit|MultiEdit|Write|NotebookEdit)$/.test(block.name)) {
+                const written = block.input?.file_path ?? block.input?.notebook_path
+                if (typeof written === 'string') ctx.onFileWritten?.(written)
+              }
               ctx.onProgress(Math.min(90, 10 + toolUses * 6))
             }
           }

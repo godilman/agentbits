@@ -385,7 +385,10 @@ async function taskWork(ctx: RunContext): Promise<string> {
     } else {
       const target = action === 'Grep' ? '"TODO|FIXME"' : action === 'WebSearch' ? JSON.stringify(title.slice(0, 60)) : file
       ctx.onLog('tool', `${action} ${target}`)
-      if (action === 'Edit' || action === 'Write') touched.push(file)
+      if (action === 'Edit' || action === 'Write') {
+        touched.push(file)
+        ctx.onFileWritten?.(file)
+      }
     }
     ctx.onProgress(Math.round(((i + 1) / steps) * 92))
   }

@@ -5,6 +5,8 @@ import { allTranslations, currentLanguage, t } from '../i18n'
 import type { Agent, AgentInstruction, FileRecord, InstructionInput, LogLevel, Project, Provider, Task, UsageDelta, UsageMode } from '@shared/types'
 import { resolveAfter, type LeadMessage } from '@shared/leadComms'
 import { isTwin } from '@shared/org'
+import { describeTeam, teamState } from './team'
+import { isAbsolute, relative } from 'path'
 import {
   agentsRepo,
   decisionsRepo,
@@ -74,6 +76,8 @@ interface ActiveRun {
   limitHit: string | null
   /** Aborted only when the run is stopped for good (not by a redirect): cuts off its database / SSH calls. */
   halt: AbortController
+  /** File conflicts already reported ("<other run>:<path>"). */
+  warned: Set<string>
   /** Instructions waiting to interrupt the current segment. */
   redirects: { id: string; text: string }[]
   /** Claude Code conversation id and the cost already counted for it. */
@@ -570,6 +574,7 @@ class Orchestrator {
       stopped: false,
       limitHit: null,
       halt: new AbortController(),
+      warned: new Set(),
       redirects: [],
       sessionId: null,
       sessionCost: 0,
@@ -579,6 +584,7 @@ class Orchestrator {
     this.active.set(runId, ar)
     this.setStatus(agent.id, 'working', task.key)
     emit({ type: 'runs:changed' })
+    teamState.start({ runId, agentId: agent.id, agentName: agent.name, projectId: task.projectId, taskKey: task.key, title: task.title })
     // Wall-clock limit of the run (includes pauses and time spent on instructions).
     const maxMinutes = settingsRepo.get().runMaxMinutes
     const timeLimit = maxMinutes > 0 ? setTimeout(() => this.limitStop(ar, t('orchestrator:limits.time', { minutes: maxMinutes })), maxMinutes * 60_000) : null
@@ -590,6 +596,13 @@ class Orchestrator {
     const ws = this.workspace(project)
     const memories = memoryEngine.recall({ agentId: agent.id, taskId: task.id, projectId: pid, query: `${task.title} ${task.description}` })
     let system = workerSystem(agent, perms, memoryEngine.format(memories), ws) + '\n\n' + this.projectContext(project)
+    const team = describeTeam(pid, runId)
+    if (team) {
+      system +=
+        '\n\n## Team right now (other members of this project working in parallel)\n' +
+        team +
+        '\nAvoid changing files a teammate is working on; if you must, keep the change small and say so in your report. The team_status tool shows the live state.'
+    }
     let prompt = workerPrompt(task, messagesRepo.list(`task:${task.id}`, 20, pid), this.names()) + this.previousSteps(task)
     const logCtx = { runId, agentId: agent.id, taskId: task.id, projectId: pid }
 
@@ -787,6 +800,17 @@ class Orchestrator {
               this.recordUsage(agent, provider, model, 'task', logCtx, d)
               this.checkUsageLimits(ar)
             },
+            onFileWritten: (path) => {
+              const rel = isAbsolute(path) && ws ? relative(ws, path) : path
+              const shown = rel && !rel.startsWith('..') && !isAbsolute(rel) ? rel : path
+              for (const other of teamState.touch(runId, shown)) {
+                if (ar.warned.has(`${other.runId}:${shown}`)) continue
+                ar.warned.add(`${other.runId}:${shown}`)
+                const note = t('orchestrator:chat.fileConflict', { path: shown, other: other.agentName, key: other.taskKey })
+                this.log({ ...logCtx, level: 'warn', message: note })
+                this.post(`task:${task.id}`, 'system', null, note, pid)
+              }
+            },
             onSession: (id) => {
               if (ar.sessionId !== id) ar.sessionCost = 0
               ar.sessionId = id
@@ -960,6 +984,7 @@ class Orchestrator {
         }
       }
     } finally {
+      teamState.end(runId)
       if (timeLimit) clearTimeout(timeLimit)
       mcp?.dispose()
       disposeImages?.()

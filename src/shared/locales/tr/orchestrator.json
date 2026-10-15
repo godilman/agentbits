@@ -109,7 +109,8 @@
     "leadNotesSent_other": "🎯 {{count}} göreve not eklendi: {{keys}}.",
     "leadNotesUnknown": "⚠️ Bu projede böyle bir görev yok, not iletilmedi: {{keys}}",
     "limitStopped": "⏱ {{agent}} · {{key}}: {{reason}}",
-    "handedToTwin": "↔ {{key}}, {{from}} meşgul olduğu için aynı rol ve yeteneklerdeki {{to}} ajanına devredildi"
+    "handedToTwin": "↔ {{key}}, {{from}} meşgul olduğu için aynı rol ve yeteneklerdeki {{to}} ajanına devredildi",
+    "fileConflict": "⚠️ {{path}} şu anda {{other}} ({{key}}) tarafından da değiştiriliyor; değişiklikleri birbirine karşı kontrol edin."
   },
   "errors": {
     "noFolder": "“{{project}}” için klasör seçilmedi. CLI ajanları dosyalara dokunabildiği için proje ayarlarından bir klasör seçin.",

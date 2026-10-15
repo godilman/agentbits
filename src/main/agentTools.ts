@@ -5,6 +5,7 @@ import { FILE_READ_TOOLS, FILE_SAVE_TOOL, FILE_TOOL_NAMES, runFileTool } from '.
 import { readableFiles } from './files/service'
 import { SKILL_TOOLS, SKILL_TOOL_NAMES, runSkillTool, skillsForAgent } from './skills/service'
 import { appToolsFor, isAppTool, runAppTool } from './apps/service'
+import { TEAM_TOOL, runTeamTool } from './core/team'
 
 /**
  * Every tool an agent may call, decided per agent and run: connection tools only
@@ -18,10 +19,13 @@ export function agentTools(ctx: AgentCtx): ToolSpec[] {
   if (ctx.mode !== 'chat' && ctx.projectId) out.push(FILE_SAVE_TOOL)
   if (skillsForAgent(ctx.agentId).length) out.push(...SKILL_TOOLS)
   out.push(...appToolsFor(ctx.agentId))
+  // Parallel work: who else is working in the project and on which files (task runs only).
+  if (ctx.mode !== 'chat' && ctx.projectId && ctx.runId) out.push(TEAM_TOOL)
   return out
 }
 
 export async function runAgentTool(ctx: AgentCtx, name: string, args: Record<string, unknown>): Promise<ToolOutput> {
+  if (name === TEAM_TOOL.name) return runTeamTool(ctx)
   if (SKILL_TOOL_NAMES.has(name)) return runSkillTool(ctx, name, args)
   if (isAppTool(name)) return runAppTool(ctx, name, args)
   if (FILE_TOOL_NAMES.has(name)) {
