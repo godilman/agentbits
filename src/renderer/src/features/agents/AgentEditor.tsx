@@ -28,6 +28,7 @@ import { cn, STATUS_META } from '@/lib/format'
 import { useAppStore } from '@/store/useAppStore'
 import { HAIRS, PERMISSIONS, SHIRTS, SKINS, randomLook } from './constants'
 import { AgentUnits } from './AgentUnits'
+import { ShareCard } from '@/features/org/Share'
 import { Field, Section, Swatches, TagInput } from './parts'
 
 type TextKey = 'name' | 'role' | 'jobDescription' | 'persona'
@@ -249,6 +250,7 @@ export function AgentEditor({ agent }: { agent: Agent }) {
         <PermissionsCard agent={agent} onSave={savePerms} />
 
         <DuplicateCard agent={agent} />
+        <ShareCard target={{ type: 'agent', id: agent.id }} />
         <DangerZone agent={agent} />
       </div>
     </div>

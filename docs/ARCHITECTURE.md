@@ -256,6 +256,13 @@ Organizasyon ve proje metotları (kurallar `src/main/ipc.ts`'de zorlanır):
   çıkarılırsa birimin lideri temizlenir).
 - `templates:list()` → `TeamTemplate[]` (önizleme ağacı, ajan/birim sayıları);
   `templates:instantiate(templateId, { parentId?, name? })` → `{ unitId, agentIds }`.
+- `share:export({type: 'unit'|'agent', id})` → kaydetme penceresi, `.agentbits` (JSON) yazar, yol ya da null;
+  `share:preview({type:'file'} | {type:'url', url})` → main dosya seçtirir ya da GitHub'dan indirir (`skills/source.ts` →
+  `githubFetch`, 25 MB), `parseSharePackage` (`shared/share.ts`, güvenilmeyen girdi: sınırlar, ref'ler, tek kök, döngü yok,
+  güvenli skill yolları) → `SharePreview` (+ `findSuspicious`, sağlayıcı eşlemesi); paket `staged`'de (en çok 5) bekler;
+  `share:import(stagingId, parentId)` → tek işlemde ajanlar (`uniqueName`, `grantedPermissions`: istenen ∧ "Onay iste" zorunlu,
+  `allowedPaths` boş), birimler (üst önce; `organization` → `company`), skill'ler (aynı ad varsa kurulu olan atanır,
+  çalıştırılabilirler atılır, `source.type = 'package'`). `core/share.ts`.
 - `projects:save(input: ProjectInput, id?)` — boş ad reddedilir; `id` verilmiş ama proje yoksa "Proje bulunamadı;
   silinmiş olabilir"; `rootPath` **değişiyorsa** `assertUsableFolder()` ile doğrulanır ve normalize edilir
   (var olmalı, klasör olmalı, uygulamanın kendi klasörü olmamalı, başka projede kullanılmamalı — Türkçe hatalar;

@@ -24,7 +24,8 @@
     "folder": "Folder",
     "markdown": ".md file",
     "created": "Written in Agentbits",
-    "label": "Source"
+    "label": "Source",
+    "package": "Shared package"
   },
   "detail": {
     "enabled": "In use",

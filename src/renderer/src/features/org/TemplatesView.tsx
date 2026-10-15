@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { LayoutTemplate, Recycle, Star, Wand2 } from 'lucide-react'
+import { FileUp, LayoutTemplate, Recycle, Star, Wand2 } from 'lucide-react'
 import { Trans, useTranslation } from 'react-i18next'
 import type { TeamTemplate, TemplateNodePreview } from '@shared/types'
 import { Empty, Modal } from '@/components/common/ui'
@@ -7,12 +7,14 @@ import { apiError, call } from '@/lib/api'
 import { useAppStore } from '@/store/useAppStore'
 import { Field } from '@/features/agents/parts'
 import { flattenTree, indentLabel, KIND_META, rootUnit } from './meta'
+import { ImportModal } from './Share'
 
 export function TemplatesView() {
   const { t } = useTranslation()
   const templates = useAppStore((s) => s.templates)
   const showOrg = useAppStore((s) => s.showOrg)
   const [using, setUsing] = useState<TeamTemplate | null>(null)
+  const [importing, setImporting] = useState(false)
 
   return (
     <div className="h-full overflow-y-auto">
@@ -24,6 +26,9 @@ export function TemplatesView() {
           </div>
           <button className="btn-ghost shrink-0" onClick={() => showOrg('teams')}>
             {t('org:templates.goToTeams')}
+          </button>
+          <button data-testid="share-import-open" className="btn-outline shrink-0" onClick={() => setImporting(true)}>
+            <FileUp size={13} /> {t('org:share.import.open')}
           </button>
         </div>
 
@@ -38,6 +43,7 @@ export function TemplatesView() {
         )}
       </div>
       <InstantiateModal template={using} onClose={() => setUsing(null)} />
+      <ImportModal open={importing} onClose={() => setImporting(false)} />
     </div>
   )
 }

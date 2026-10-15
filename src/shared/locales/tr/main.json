@@ -412,5 +412,20 @@
       "skill": "Agentbits'ten burada seçmediğin bir konumdan skill okuması istendi. Okunsun mu?",
       "sshKey": "Bu bağlantı her bağlanışta SSH anahtarını aşağıdaki dosyadan okuyacak. İzin verilsin mi?"
     }
+  },
+  "share": {
+    "dialogs": {
+      "export": "Paylaşılabilir paket olarak kaydet",
+      "import": "Agentbits paketi aç"
+    },
+    "errors": {
+      "unitNotFound": "Birim bulunamadı.",
+      "tooLarge": "Paket 25 MB'tan büyük.",
+      "badUrl": "Bir .agentbits dosyasının GitHub bağlantısını yapıştır (github.com/kullanici/depo/blob/…/ekip.agentbits).",
+      "invalid": "Bu geçerli bir Agentbits paketi değil (teknik ayrıntı: {{reason}}).",
+      "expired": "Önizlemenin süresi doldu; paketi yeniden aç.",
+      "notFound": "Bulunamadı. Depo özelse Organizasyon → Skill'ler altından bir GitHub token'ı ekle (içeriği okuma izni yeterli).",
+      "newer": "Bu paket daha yeni bir Agentbits ile yapılmış. Uygulamayı güncelleyip yeniden dene."
+    }
   }
 }

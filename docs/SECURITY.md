@@ -70,3 +70,7 @@ Durum: ✅ düzeltildi · 🟡 kısmen / azaltıldı · 📄 bilinçli sınır, 
 - OAuth girişini yalnızca güvendiğiniz sunuculara yapın: SDK düzeltmesi yeni bir etkileşimli girişte kötü niyetli bir
   sunucunun sizi kendi giriş sayfasına yönlendirmesini engellemez; açılan sayfanın adresini kontrol edin.
 - Paketler imzasızdır (sertifika tanımlanana kadar).
+- Paylaşım paketleri (`.agentbits`) güvenilmeyen girdidir: içe aktarma öncesi her şey gösterilir, ajanlar "Onay iste" açık ve ek
+  klasörsüz başlar, paket izin yükseltemez, çalıştırılabilir dosyalar alınmaz, kurulu skill'in üzerine yazılmaz
+  (`tests/share.test.ts`). İş tanımı ve kişilik ajanın talimatı olur: içe aktarmadan önce okuyun. Dışa aktarılan pakette
+  bağlantı ve uygulamaların adları bulunur.

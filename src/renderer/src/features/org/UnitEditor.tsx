@@ -11,6 +11,7 @@ import { useAppStore } from '@/store/useAppStore'
 import { NewAgentModal } from '@/features/agents/NewAgentModal'
 import { Field, SavedIndicator, Section, useSavedFlash } from '@/features/agents/parts'
 import { AddMembersModal } from './AddMembersModal'
+import { ShareCard } from './Share'
 import { CHILD_KINDS, childrenMap, flattenTree, indentLabel, KIND_META, projectsForUnit, UNIT_COLORS } from './meta'
 
 export function UnitEditor({ unit, autoFocusName, onCreateChild }: { unit: OrgUnit; autoFocusName?: boolean; onCreateChild: (parentId: string) => void }) {
@@ -210,6 +211,8 @@ export function UnitEditor({ unit, autoFocusName, onCreateChild }: { unit: OrgUn
         </Section>
 
         <ProjectsCard unit={unit} run={run} />
+
+        <ShareCard target={{ type: 'unit', id: unit.id }} />
 
         <DangerZone unit={unit} />
       </div>

@@ -1,6 +1,7 @@
 import type { FeedbackKind } from './support'
 import type { AppImportCandidate, AppServer, AppServerInput, AppTestResult, ToolPolicy } from './apps'
 import type { AgentSkill, Skill, SkillDetail, SkillPreview, SkillSourceInput, SkillTargetType } from './skills'
+import type { SharePreview } from './share'
 import type {
   Agent,
   ProviderKind,
@@ -111,6 +112,11 @@ export interface Api {
   'templates:list': () => TeamTemplate[]
   /** Creates the template's units and agents under `parentId` (default: organization root). */
   'templates:instantiate': (templateId: string, opts?: { parentId?: string | null; name?: string }) => { unitId: string; agentIds: string[] }
+  /** Saves a unit (with everything under it) or an agent as a .agentbits file; null = cancelled. */
+  'share:export': (target: { type: 'unit' | 'agent'; id: string }) => string | null
+  /** Reads a package from a file the user picks (null = cancelled) or a GitHub link, for the import preview. */
+  'share:preview': (source: { type: 'file' } | { type: 'url'; url: string }) => SharePreview | null
+  'share:import': (stagingId: string, parentId: string | null) => { unitId: string | null; agentIds: string[]; reusedSkills: string[] }
 
   // projects
   'projects:list': () => Project[]

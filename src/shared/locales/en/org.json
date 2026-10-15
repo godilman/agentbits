@@ -149,5 +149,48 @@
       "confirmWithSubs_other": "Delete {{name}} and {{count}} sub-units?",
       "deleted": "{{name}} deleted"
     }
+  },
+  "share": {
+    "export": {
+      "title": "Share",
+      "descUnit": "Save this unit with everything under it (sub-units, agents, titles, skills) as a .agentbits file to send to a friend. API keys, connection details, tasks and chat are never included; connections and apps appear by name only, as a setup note.",
+      "descAgent": "Save this agent (profile, job description, skills, suggested provider) as a .agentbits file to send to a friend. API keys, connection details, tasks and chat are never included; connections and apps appear by name only, as a setup note.",
+      "action": "Export",
+      "done": "Saved: {{path}}"
+    },
+    "import": {
+      "title": "Import a package",
+      "previewTitle": "Import · {{name}}",
+      "intro": "Open a .agentbits file someone shared with you, or paste a GitHub link to one. You'll see everything in it before anything is added.",
+      "pickFile": "Choose a .agentbits file…",
+      "urlLabel": "…or a GitHub link",
+      "open": "Import package",
+      "back": "Back",
+      "action": "Import",
+      "meta": "{{source}} · made with Agentbits {{version}} · {{date}}",
+      "trust": "Read the job descriptions and personas before importing: they become your agents' instructions. Imported agents always start with \"Ask for approval\" on, get no extra folders, and need their connections and apps set up by you.",
+      "units_one": "{{count}} unit",
+      "units_other": "{{count}} units",
+      "agents_one": "{{count}} agent",
+      "agents_other": "{{count}} agents",
+      "skills_one": "{{count}} skill",
+      "skills_other": "{{count}} skills",
+      "jobDescription": "Job description",
+      "persona": "Persona",
+      "tags": "Expertise: {{tags}}",
+      "provider": "Suggested provider: {{suggested}} → will use {{mine}}",
+      "providerDefault": "Uses your default provider",
+      "defaultProvider": "your default provider",
+      "needs": "Used these connections / apps (set up your own and grant access): {{names}}",
+      "suspicious": "Looks like an instruction to the model — check it",
+      "files_one": "{{count}} file",
+      "files_other": "{{count}} files",
+      "skillExists": "already installed — yours is kept",
+      "scripts": "contains scripts",
+      "parent": "Add under",
+      "done_one": "{{name}} imported · {{count}} agent",
+      "done_other": "{{name}} imported · {{count}} agents",
+      "reused": "These skills were already installed, so yours were kept: {{names}}"
+    }
   }
 }

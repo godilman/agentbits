@@ -149,5 +149,48 @@
       "confirmWithSubs_other": "{{name}} ve {{count}} alt birim silinsin mi?",
       "deleted": "{{name}} silindi"
     }
+  },
+  "share": {
+    "export": {
+      "title": "Paylaş",
+      "descUnit": "Bu birimi altındaki her şeyle (alt birimler, ajanlar, unvanlar, skill'ler) arkadaşına göndermek için .agentbits dosyası olarak kaydet. API anahtarları, bağlantı bilgileri, görevler ve sohbet asla eklenmez; bağlantı ve uygulamaların yalnızca adı kurulum notu olarak yer alır.",
+      "descAgent": "Bu ajanı (profil, iş tanımı, skill'ler, önerilen sağlayıcı) arkadaşına göndermek için .agentbits dosyası olarak kaydet. API anahtarları, bağlantı bilgileri, görevler ve sohbet asla eklenmez; bağlantı ve uygulamaların yalnızca adı kurulum notu olarak yer alır.",
+      "action": "Dışa aktar",
+      "done": "Kaydedildi: {{path}}"
+    },
+    "import": {
+      "title": "Paket içe aktar",
+      "previewTitle": "İçe aktar · {{name}}",
+      "intro": "Biriyle paylaştığın .agentbits dosyasını aç ya da bir dosyanın GitHub bağlantısını yapıştır. Hiçbir şey eklenmeden önce içindeki her şeyi göreceksin.",
+      "pickFile": ".agentbits dosyası seç…",
+      "urlLabel": "…ya da GitHub bağlantısı",
+      "open": "Paket içe aktar",
+      "back": "Geri",
+      "action": "İçe aktar",
+      "meta": "{{source}} · Agentbits {{version}} ile yapıldı · {{date}}",
+      "trust": "İçe aktarmadan önce iş tanımlarını ve kişilikleri oku: ajanlarının talimatı olacaklar. İçe aktarılan ajanlar her zaman \"Onay iste\" açık başlar, ek klasör izni almaz; bağlantılarını ve uygulamalarını senin kurman gerekir.",
+      "units_one": "{{count}} birim",
+      "units_other": "{{count}} birim",
+      "agents_one": "{{count}} ajan",
+      "agents_other": "{{count}} ajan",
+      "skills_one": "{{count}} skill",
+      "skills_other": "{{count}} skill",
+      "jobDescription": "İş tanımı",
+      "persona": "Kişilik",
+      "tags": "Uzmanlık: {{tags}}",
+      "provider": "Önerilen sağlayıcı: {{suggested}} → kullanılacak: {{mine}}",
+      "providerDefault": "Varsayılan sağlayıcını kullanır",
+      "defaultProvider": "varsayılan sağlayıcın",
+      "needs": "Şu bağlantı / uygulamaları kullanıyordu (kendininkini kurup erişim ver): {{names}}",
+      "suspicious": "Modele verilmiş bir talimata benziyor — kontrol et",
+      "files_one": "{{count}} dosya",
+      "files_other": "{{count}} dosya",
+      "skillExists": "zaten kurulu — seninki korunur",
+      "scripts": "betik içeriyor",
+      "parent": "Şunun altına ekle",
+      "done_one": "{{name}} içe aktarıldı · {{count}} ajan",
+      "done_other": "{{name}} içe aktarıldı · {{count}} ajan",
+      "reused": "Bu skill'ler zaten kuruluydu, seninkiler korundu: {{names}}"
+    }
   }
 }

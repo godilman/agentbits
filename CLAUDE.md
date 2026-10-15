@@ -73,7 +73,7 @@ Demo sağlayıcı iş türüne göre simülasyon (`shared/demoKind.ts`), paket s
   biten işleri ve notları görür, göreve not bırakır; ajanlar birbirleriyle doğrudan konuşmaz) · Faz 3 SECURITY.md'deki 🟡/⏳
   maddeler ✅ (#02 OS yalıtımı ve #24 imza kodla kapanmaz, belgede) · Faz 4 ✅ OpenAI uyumlu uç nokta (Gemini, Ollama, LM Studio) + Codex'e Agentbits araçları · Faz 5 ✅ ajanların web
   sayfası okuması (`web_fetch`), özel rapor, özel GitHub skill, MCP kaynakları/istemleri · Faz 6 ✅ RTF/.doc/.xls/.ppt + OCR · Faz 7 vektör hafıza +
-  aynı klasörde çakışma yönetimi (worktree ile ✅) · **yarış modu ✅** (Ayarlar → Genel, varsayılan kapalı; ARCHITECTURE §6.7a). + **paylaşım** (birim / takım / ajan dışa-içe aktarma, bağlantıyla kurulum; galeri sonra). Sahip: hepsi bitince
+  aynı klasörde çakışma yönetimi (worktree ile ✅) · **yarış modu ✅** (Ayarlar → Genel, varsayılan kapalı; ARCHITECTURE §6.7a). + **paylaşım ✅** (birim / takım / ajan `.agentbits` dışa-içe aktarma, GitHub bağlantısıyla kurulum; galeri ⏳ ayrıca konuşulacak). Sahip: hepsi bitince
   tek seferde yayın (v0.2.0); v0.1.1 taslağı yayımlanmadı, yerine geçecek.
 - `docs/screenshots/tr/` ekran görüntüleri eski İngilizce sekme adlarını gösteriyor (Demo + boş veri klasörüyle yeniden çekilmeli).
 - `docs/SECURITY.md`'deki 🟡 / ⏳ maddeler (ör. büyük veride UI sayfalama) ve `docs/FEATURES.md` "Bilinen sorunlar".

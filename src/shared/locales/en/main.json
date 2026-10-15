@@ -412,5 +412,20 @@
       "skill": "Agentbits was asked to read a skill from a location you didn’t pick here. Read it?",
       "sshKey": "This connection will read its SSH key from the file below whenever it connects. Allow?"
     }
+  },
+  "share": {
+    "dialogs": {
+      "export": "Save as a shareable package",
+      "import": "Open an Agentbits package"
+    },
+    "errors": {
+      "unitNotFound": "Unit not found.",
+      "tooLarge": "The package is larger than 25 MB.",
+      "badUrl": "Paste a GitHub link to a .agentbits file (github.com/owner/repo/blob/…/team.agentbits).",
+      "invalid": "This isn't a valid Agentbits package (technical detail: {{reason}}).",
+      "expired": "The preview has expired; open the package again.",
+      "notFound": "Not found. If the repository is private, add a GitHub token under Organization → Skills (read access to contents is enough).",
+      "newer": "This package was made with a newer Agentbits. Update the app, then try again."
+    }
   }
 }

@@ -24,7 +24,8 @@
     "folder": "Klasör",
     "markdown": ".md dosyası",
     "created": "Agentbits'te yazıldı",
-    "label": "Kaynak"
+    "label": "Kaynak",
+    "package": "Paylaşım paketi"
   },
   "detail": {
     "enabled": "Kullanımda",

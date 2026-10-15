@@ -1,5 +1,5 @@
 import { app, BrowserWindow, dialog, ipcMain, shell } from 'electron'
-import { copyFileSync, existsSync, mkdirSync } from 'fs'
+import { copyFileSync, existsSync, mkdirSync, writeFileSync } from 'fs'
 import { dirname, join } from 'path'
 import type { Api, ApiMethod } from '@shared/ipc'
 import { getDbPath } from './db'
@@ -26,6 +26,8 @@ import { checkBaseUrl } from '@shared/endpoints'
 import { hasGithubToken, setGithubToken } from './skills/githubToken'
 import { argsMatch } from '@shared/ipcSchema'
 import { instantiateTemplate, listTemplates } from './core/templates'
+import { buildPackage, importPackage, previewPackage } from './core/share'
+import { SHARE_EXT } from '@shared/share'
 import { assertUsableFolder, folderStatus, inspectFolder } from './core/folders'
 import {
   clearOrgMemory,
@@ -508,6 +510,36 @@ const handlers: Handlers = {
     return u
   },
   'templates:list': () => listTemplates(),
+  'share:export': async (target) => {
+    if ((target.type !== 'unit' && target.type !== 'agent') || typeof target.id !== 'string') throw new Error('bad target')
+    const pkg = buildPackage(target, app.getVersion())
+    const win = focusedDialogWindow()
+    const opts = {
+      title: t('main:share.dialogs.export'),
+      defaultPath: join(app.getPath('downloads'), `${safeFileName(pkg.title)}.${SHARE_EXT}`),
+      filters: [{ name: 'Agentbits', extensions: [SHARE_EXT] }]
+    }
+    const res = win ? await dialog.showSaveDialog(win, opts) : await dialog.showSaveDialog(opts)
+    if (res.canceled || !res.filePath) return null
+    writeFileSync(res.filePath, JSON.stringify(pkg, null, 1))
+    return res.filePath
+  },
+  'share:preview': async (source) => {
+    if (source.type === 'url') {
+      if (typeof source.url !== 'string') throw new Error('bad url')
+      return previewPackage({ type: 'url', url: source.url })
+    }
+    const win = focusedDialogWindow()
+    const opts = { title: t('main:share.dialogs.import'), properties: ['openFile' as const], filters: [{ name: 'Agentbits', extensions: [SHARE_EXT, 'json'] }] }
+    const res = win ? await dialog.showOpenDialog(win, opts) : await dialog.showOpenDialog(opts)
+    if (res.canceled || !res.filePaths[0]) return null
+    return previewPackage({ type: 'file', path: res.filePaths[0] })
+  },
+  'share:import': (stagingId, parentId) => {
+    const r = importPackage(stagingId, parentId)
+    for (const type of ['agents:changed', 'permissions:changed', 'units:changed', 'projects:changed', 'skills:changed'] as const) emit({ type })
+    return r
+  },
   'templates:instantiate': (templateId, opts) => {
     const r = instantiateTemplate(templateId, opts)
     emit({ type: 'units:changed' })

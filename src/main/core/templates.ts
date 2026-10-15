@@ -246,7 +246,7 @@ export function listTemplates(): TeamTemplate[] {
 }
 
 /** Name not used by any agent yet ("Emre", then "Emre 2", …). */
-function uniqueName(base: string): string {
+export function uniqueName(base: string): string {
   const taken = new Set(agentsRepo.list().map((a) => a.name.toLocaleLowerCase('tr')))
   if (!taken.has(base.toLocaleLowerCase('tr'))) return base
   for (let i = 2; ; i++) {

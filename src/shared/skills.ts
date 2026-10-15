@@ -5,7 +5,7 @@
  * Pure helpers here are shared by main, renderer and the unit tests.
  */
 
-export type SkillSourceType = 'github' | 'zip' | 'folder' | 'markdown' | 'created'
+export type SkillSourceType = 'github' | 'zip' | 'folder' | 'markdown' | 'created' | 'package'
 
 export interface SkillSource {
   type: SkillSourceType

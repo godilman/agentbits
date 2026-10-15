@@ -161,7 +161,7 @@ async function download(url: string, maxBytes: number, headers: Record<string, s
  * Public download first; a 404 with a stored token goes through the GitHub API (private repositories). The token is only
  * ever sent to api.github.com.
  */
-async function githubFetch(publicUrl: string, apiPath: string, accept: string, maxBytes: number): Promise<Uint8Array> {
+export async function githubFetch(publicUrl: string, apiPath: string, accept: string, maxBytes: number): Promise<Uint8Array> {
   try {
     return await download(publicUrl, maxBytes)
   } catch (e) {
@@ -410,7 +410,7 @@ export async function updateSkillFromSource(id: string): Promise<Skill> {
   const skill = skillsRepo.get(id)
   if (!skill) throw new Error(t('main:skills.errors.notInstalled'))
   const src = skill.source
-  if (src.type === 'created' || !src.location) throw new Error(t('main:skills.errors.noSource'))
+  if (src.type === 'created' || src.type === 'package' || !src.location) throw new Error(t('main:skills.errors.noSource'))
   const input: SkillSourceInput =
     src.type === 'github'
       ? { type: 'github', url: `${src.location}/tree/${src.ref ?? 'HEAD'}/${src.subpath ?? ''}`.replace(/\/+$/, '') }

@@ -4,6 +4,22 @@
 > `## YYYY-MM-DD — kısa başlık`, ardından **Eklendi / Değişti / Düzeltildi / Kaldırıldı / Bilinen** maddeleri
 > ve ilgili dosyalar.
 
+## 2026-10-15 — Paylaşım: birim / takım / ajan dışa-içe aktarma
+
+### Eklendi
+- Birim (altındaki her şeyle) ya da ajan **`.agentbits`** dosyasına dışa aktarılır; dosyadan ya da GitHub bağlantısından
+  (özel depo: Skill'ler'deki GitHub token'ı) **önizlemeli** içe aktarılır. Ayrıntı: FEATURES §2, ARCHITECTURE §4.2, SECURITY.
+- IPC `share:export`, `share:preview`, `share:import`; `core/share.ts`, `shared/share.ts`, `features/org/Share.tsx`;
+  skill kaynak türü `package`.
+
+### Doğrulandı
+- `tests/share.test.ts` (doğrulayıcı: bozuk JSON, yeni sürüm, yinelenen / bilinmeyen ref, çoklu kök, döngü, `../` ve sürücü
+  harfli yollar, sınırlar; izin tavanı). Gerçek SQLite ile uçtan uca (paketlenmiş Electron'un better-sqlite3'ü, depoda değil):
+  dışa aktar → önizle → içe aktar; yol / sağlayıcı kimliği sızmıyor, çalıştırılabilir dosya ne çıkıyor ne giriyor, şüpheli
+  kişilik işaretleniyor, ad çakışması, sağlayıcı eşlemesi, onay zorunlu, alt birim / lider / unvan, kurulu skill korunuyor,
+  süresi dolan önizleme reddediliyor. GitHub yolu gerçek ağla: paket olmayan dosya, olmayan dosya, GitHub dışı adres.
+  Arayüz sahte köprüyle tarayıcıda (önizleme, Paylaş kartı, Yarış modu ayarı) ekran görüntüsüyle denetlendi.
+
 ## 2026-10-15 — Yarış modu
 
 ### Eklendi

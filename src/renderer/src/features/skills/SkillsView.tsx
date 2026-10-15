@@ -199,7 +199,7 @@ function SkillPanel({ skill, onDeleted }: { skill: Skill; onDeleted: () => void 
           <button className="btn-ghost h-7" onClick={() => setEditing(true)} disabled={!detail}>
             <Pencil size={12} /> {t('skills:detail.edit')}
           </button>
-          {src.type !== 'created' && (
+          {src.type !== 'created' && src.type !== 'package' && (
             <button className="btn-ghost h-7" onClick={() => setConfirm('update')} disabled={busy}>
               <RefreshCw size={12} className={cn(busy && 'animate-spin')} /> {t('skills:detail.update')}
             </button>
@@ -393,7 +393,7 @@ function EditSkillModal({ skill, content, onClose }: { skill: Skill; content: st
         </>
       }
     >
-      {skill.source.type !== 'created' && (
+      {skill.source.type !== 'created' && skill.source.type !== 'package' && (
         <div className="mb-3 rounded-md border border-amber-500/30 bg-amber-500/[0.06] px-3 py-2 text-[12px] text-amber-200">
           {t('skills:edit.warning', { source: t(`skills:source.${skill.source.type}` as I18nKey) })}
         </div>
