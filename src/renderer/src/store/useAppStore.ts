@@ -1,3 +1,4 @@
+import { DEFAULT_SETTINGS } from '@shared/settingsRules'
 import { create } from 'zustand'
 import type { Skill } from '@shared/skills'
 import type { AppServer } from '@shared/apps'
@@ -30,7 +31,7 @@ export type Tab = 'chat' | 'office' | 'team' | 'terminal' | 'tasks' | 'files' | 
 /** Top level: the organization page or one of the open project tabs. */
 export type View = 'org' | 'project'
 export type OrgTab = 'chart' | 'teams' | 'agents' | 'templates' | 'skills' | 'apps' | 'connections'
-export type SettingsSection = 'agents' | 'permissions' | 'providers' | 'memory' | 'data' | 'general'
+export type SettingsSection = 'agents' | 'permissions' | 'providers' | 'memory' | 'data' | 'limits' | 'general'
 
 export interface Toast {
   id: number
@@ -284,7 +285,7 @@ async function loadAll(): Promise<void> {
 
 export const useAppStore = create<State>((set, get) => ({
   ready: false,
-  settings: { onboarded: false, workspaceRoot: '', autopilot: true, reviewByLead: true, logRetentionDays: 30, startupProjects: 'ask', language: 'auto' },
+  settings: { ...DEFAULT_SETTINGS },
   providers: [],
   agents: [],
   permissions: [],

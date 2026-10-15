@@ -6,6 +6,7 @@
     "providers": "Providers",
     "memory": "Memory",
     "data": "Data management",
+    "limits": "Security and limits",
     "general": "General"
   },
   "agents": {
@@ -262,5 +263,41 @@
       "simulated": "simulation",
       "cliDefault": "CLI default"
     }
+  },
+  "limits": {
+    "title": "Security and limits",
+    "desc": "Limits on what a single task run may spend, how long records are kept, and what agent CLIs inherit from your computer.",
+    "none": "no limit",
+    "unit": {
+      "minutes": "min",
+      "tokens": "tokens"
+    },
+    "run": {
+      "title": "Per task run",
+      "minutes": "Time limit",
+      "minutesDesc": "Stops a run that takes longer (wall clock, pauses included). The task waits for you. Empty = no limit.",
+      "tokens": "Token limit",
+      "tokensDesc": "Stops a run once it has used this many tokens (input, cache and output). Empty = no limit.",
+      "cost": "Cost limit",
+      "costDesc": "Stops a run once its reported cost reaches this amount. Only Claude Code reports cost, once per turn. Empty = no limit."
+    },
+    "privacy": {
+      "title": "Records",
+      "audit": "Keep the audit log",
+      "auditDesc": "Connection and app calls older than this are deleted automatically.",
+      "redact": "Mask secrets in transcripts",
+      "redactDesc": "API keys, tokens, private keys and password=… values are masked before a transcript line is stored.",
+      "always": "Always on"
+    },
+    "env": {
+      "title": "Environment of agent CLIs",
+      "desc": "Claude Code and Codex start with only what they need (PATH, user folders, proxy, language and their own CLAUDE_ / ANTHROPIC_ or CODEX_ / OPENAI_ variables). Other variables of your computer, such as cloud keys or tokens, are not passed. Add names here that your setup needs, e.g. AWS_PROFILE for Claude Code on Amazon Bedrock.",
+      "placeholder": "AWS_PROFILE, AWS_REGION, CLAUDE_CODE_USE_BEDROCK",
+      "never": "SSH_AUTH_SOCK, NODE_OPTIONS and ELECTRON_RUN_AS_NODE are never passed (the SSH agent would let an agent use your SSH keys without a connection permission)."
+    }
+  },
+  "errors": {
+    "invalid": "This setting value is not valid.",
+    "envName": "“{{name}}” can’t be passed to agents."
   }
 }

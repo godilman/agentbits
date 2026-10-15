@@ -112,7 +112,8 @@
       "hostKeyNotPinned": "The server key isn't verified yet ({{got}}). Open the connection in Organization → Connections and click \"Test\" to check and pin it.",
       "productionNeedsTls": "A Production database must use an encrypted connection (TLS / SSL) unless it runs on this computer. Turn on \"SSL / encrypt\".",
       "tooManyRows": "The query returned more than {{max}} rows and was stopped; add a LIMIT / WHERE",
-      "noAnswer": "The server did not answer within {{seconds}} seconds"
+      "noAnswer": "The server did not answer within {{seconds}} seconds",
+      "cancelled": "Cancelled: the run was stopped, the connection was closed"
     },
     "audit": {
       "user": "User",

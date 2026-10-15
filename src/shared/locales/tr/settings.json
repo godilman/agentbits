@@ -6,6 +6,7 @@
     "providers": "Sağlayıcılar",
     "memory": "Hafıza",
     "data": "Veri yönetimi",
+    "limits": "Güvenlik ve sınırlar",
     "general": "Genel"
   },
   "agents": {
@@ -262,5 +263,41 @@
       "simulated": "simülasyon",
       "cliDefault": "CLI varsayılanı"
     }
+  },
+  "limits": {
+    "title": "Güvenlik ve sınırlar",
+    "desc": "Tek bir görev çalışmasının ne kadar harcayabileceği, kayıtların ne kadar saklanacağı ve ajan CLI'larının bilgisayarından neleri devralacağı.",
+    "none": "sınır yok",
+    "unit": {
+      "minutes": "dk",
+      "tokens": "token"
+    },
+    "run": {
+      "title": "Görev çalışması başına",
+      "minutes": "Süre sınırı",
+      "minutesDesc": "Daha uzun süren çalışmayı durdurur (duraklatmalar dahil gerçek süre). Görev seni bekler. Boş = sınır yok.",
+      "tokens": "Token sınırı",
+      "tokensDesc": "Çalışma bu kadar token kullanınca durdurulur (giriş, önbellek ve çıkış). Boş = sınır yok.",
+      "cost": "Maliyet sınırı",
+      "costDesc": "Çalışmanın bildirilen maliyeti bu tutara ulaşınca durdurulur. Maliyeti yalnızca Claude Code bildirir, her turda bir kez. Boş = sınır yok."
+    },
+    "privacy": {
+      "title": "Kayıtlar",
+      "audit": "Denetim kaydını sakla",
+      "auditDesc": "Bundan eski bağlantı ve uygulama çağrıları kendiliğinden silinir.",
+      "redact": "Transkriptlerde sırları maskele",
+      "redactDesc": "API anahtarları, token'lar, özel anahtarlar ve password=… değerleri transkript satırı kaydedilmeden önce maskelenir.",
+      "always": "Her zaman açık"
+    },
+    "env": {
+      "title": "Ajan CLI'larının ortamı",
+      "desc": "Claude Code ve Codex yalnızca ihtiyaç duyduklarıyla başlar (PATH, kullanıcı klasörleri, proxy, dil ve kendi CLAUDE_ / ANTHROPIC_ ya da CODEX_ / OPENAI_ değişkenleri). Bilgisayarındaki diğer değişkenler, örneğin bulut anahtarları ya da token'lar, aktarılmaz. Kurulumunun ihtiyaç duyduğu adları buraya ekle; örneğin Amazon Bedrock üzerinden Claude Code için AWS_PROFILE.",
+      "placeholder": "AWS_PROFILE, AWS_REGION, CLAUDE_CODE_USE_BEDROCK",
+      "never": "SSH_AUTH_SOCK, NODE_OPTIONS ve ELECTRON_RUN_AS_NODE hiçbir zaman aktarılmaz (SSH ajanı, bir ajanın bağlantı izni olmadan SSH anahtarlarını kullanmasını sağlardı)."
+    }
+  },
+  "errors": {
+    "invalid": "Bu ayar değeri geçerli değil.",
+    "envName": "“{{name}}” ajanlara aktarılamaz."
   }
 }

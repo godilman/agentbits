@@ -69,6 +69,10 @@ interface ActiveRun {
   waiters: (() => void)[]
   /** The user stopped the run (as opposed to a redirect). */
   stopped: boolean
+  /** Set when a run limit (time / tokens / cost, Settings → Security and limits) stopped the run: the reason. */
+  limitHit: string | null
+  /** Aborted only when the run is stopped for good (not by a redirect): cuts off its database / SSH calls. */
+  halt: AbortController
   /** Instructions waiting to interrupt the current segment. */
   redirects: { id: string; text: string }[]
   /** Claude Code conversation id and the cost already counted for it. */
@@ -543,6 +547,8 @@ class Orchestrator {
       paused: false,
       waiters: [],
       stopped: false,
+      limitHit: null,
+      halt: new AbortController(),
       redirects: [],
       sessionId: null,
       sessionCost: 0,
@@ -552,6 +558,9 @@ class Orchestrator {
     this.active.set(runId, ar)
     this.setStatus(agent.id, 'working', task.key)
     emit({ type: 'runs:changed' })
+    // Wall-clock limit of the run (includes pauses and time spent on instructions).
+    const maxMinutes = settingsRepo.get().runMaxMinutes
+    const timeLimit = maxMinutes > 0 ? setTimeout(() => this.limitStop(ar, t('orchestrator:limits.time', { minutes: maxMinutes })), maxMinutes * 60_000) : null
 
     const { provider, adapter, apiKey, model } = this.providerFor(agent)
     const perms = permissionsRepo.get(agent.id)
@@ -637,7 +646,8 @@ class Orchestrator {
       taskId: task.id,
       projectId: pid,
       mode: 'task',
-      log: (level, message) => this.log({ ...logCtx, level, message })
+      log: (level, message) => this.log({ ...logCtx, level, message }),
+      signal: ar.halt.signal
     }
     const connSection = connectionsPrompt(agent.id, toolsAvailable)
     if (connSection) system += '\n\n' + connSection
@@ -754,6 +764,7 @@ class Orchestrator {
               usageOut += d.output
               usageCost += d.costUsd
               this.recordUsage(agent, provider, model, 'task', logCtx, d)
+              this.checkUsageLimits(ar)
             },
             onSession: (id) => {
               if (ar.sessionId !== id) ar.sessionCost = 0
@@ -887,7 +898,7 @@ class Orchestrator {
         runsRepo.update(runId, {
           status: 'cancelled',
           endedAt: nowIso(),
-          error: t('orchestrator:runs.stoppedByUser'),
+          error: ar.limitHit ?? t('orchestrator:runs.stoppedByUser'),
           tokensIn: totals.input + totals.cacheRead + totals.cacheWrite,
           tokensOut: totals.output,
           costUsd: totals.costUsd
@@ -895,6 +906,11 @@ class Orchestrator {
         tasksRepo.update(task.id, { status: 'todo', progress: 0 })
         this.hold(task.id)
         this.log({ ...logCtx, level: 'status', message: t('orchestrator:log.runStoppedToTodo') })
+        if (ar.limitHit) {
+          this.log({ ...logCtx, level: 'warn', message: ar.limitHit })
+          this.post('general', 'system', null, t('orchestrator:chat.limitStopped', { agent: agent.name, key: task.key, reason: ar.limitHit }), pid)
+          this.post(`task:${task.id}`, 'system', null, ar.limitHit, pid)
+        }
         this.setStatus(agent.id, 'idle')
       } else {
         const msg = (e as Error).message || String(e)
@@ -923,6 +939,7 @@ class Orchestrator {
         }
       }
     } finally {
+      if (timeLimit) clearTimeout(timeLimit)
       mcp?.dispose()
       disposeImages?.()
       skillCopies?.dispose()
@@ -1193,6 +1210,22 @@ class Orchestrator {
     emit({ type: 'runs:changed' })
   }
 
+  /** Token / cost limits of one run, checked as usage arrives (Claude Code reports cost once per turn). */
+  private checkUsageLimits(ar: ActiveRun): void {
+    const { runMaxTokens, runMaxCostUsd } = settingsRepo.get()
+    if (ar.limitHit || (!runMaxTokens && !runMaxCostUsd)) return
+    const u = usageRepo.forRun(ar.runId)
+    const tokens = u.input + u.cacheRead + u.cacheWrite + u.output
+    if (runMaxTokens && tokens >= runMaxTokens) this.limitStop(ar, t('orchestrator:limits.tokens', { tokens: runMaxTokens }))
+    else if (runMaxCostUsd && u.costUsd >= runMaxCostUsd) this.limitStop(ar, t('orchestrator:limits.cost', { cost: runMaxCostUsd }))
+  }
+
+  private limitStop(ar: ActiveRun, reason: string): void {
+    if (ar.limitHit || !this.active.has(ar.runId)) return
+    ar.limitHit = reason
+    this.stopRun(ar.runId)
+  }
+
   stopRun(runId: string): void {
     const pending = this.approvals.get(runId)
     if (pending) return pending(false)
@@ -1200,6 +1233,7 @@ class Orchestrator {
     if (!ar) return
     ar.stopped = true
     rejectApprovalsForRun(runId)
+    ar.halt.abort()
     ar.controller.abort()
     ar.waiters.splice(0).forEach((w) => w())
   }

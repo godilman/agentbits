@@ -2,6 +2,7 @@ import { createHash } from 'crypto'
 import { readFileSync } from 'fs'
 import type { Connection, SchemaInfo, SchemaTable } from '@shared/types'
 import { t } from '../i18n'
+import { cancellable as runCancellable } from '@shared/cancel'
 
 /**
  * Database / SSH drivers. One short-lived connection per call (no pools): simple,
@@ -28,6 +29,8 @@ export interface QueryOptions {
   mode: QueryMode
   timeoutMs: number
   maxRows: number
+  /** Aborted when the run is stopped (by the user or a run limit): the connection is dropped at once. */
+  signal?: AbortSignal
 }
 
 export interface QueryResult {
@@ -94,6 +97,10 @@ class RowSink {
 }
 
 const tooManyRows = (): Error => new Error(t('main:connections.errors.tooManyRows', { max: HARD_ROW_LIMIT }))
+const cancelled = (): Error => new Error(t('main:connections.errors.cancelled'))
+
+const cancellable = <T>(signal: AbortSignal | undefined, fn: (onAbort: (drop: () => void) => void) => Promise<T>): Promise<T> =>
+  runCancellable(signal, fn, cancelled)
 
 /** Cleanup on a connection that may already be dropped must never hang the agent. */
 async function quietly(p: Promise<unknown> | undefined, ms = 3000): Promise<void> {
@@ -176,8 +183,15 @@ const postgres = {
       await client.end().catch(() => undefined)
     }
   },
-  async query(c: Connection, cred: Credentials, sql: string, o: QueryOptions): Promise<QueryResult> {
+  query(c: Connection, cred: Credentials, sql: string, o: QueryOptions): Promise<QueryResult> {
+    return cancellable(o.signal, (onAbort) => postgres.run(c, cred, sql, o, onAbort))
+  },
+  async run(c: Connection, cred: Credentials, sql: string, o: QueryOptions, onAbort: (drop: () => void) => void): Promise<QueryResult> {
     const client = await pgClient(c, cred)
+    onAbort(() => {
+      client.__dropped = true
+      client.connection?.stream?.destroy()
+    })
     const ms = Math.max(1000, Math.round(o.timeoutMs))
     try {
       if (o.mode === 'direct') {
@@ -246,10 +260,17 @@ const mysql = {
       await conn.end().catch(() => undefined)
     }
   },
-  async query(c: Connection, cred: Credentials, sql: string, o: QueryOptions): Promise<QueryResult> {
+  query(c: Connection, cred: Credentials, sql: string, o: QueryOptions): Promise<QueryResult> {
+    return cancellable(o.signal, (onAbort) => mysql.run(c, cred, sql, o, onAbort))
+  },
+  async run(c: Connection, cred: Credentials, sql: string, o: QueryOptions, onAbort: (drop: () => void) => void): Promise<QueryResult> {
     const conn = await myConn(c, cred, o.mode === 'direct')
     const ms = Math.max(1000, Math.round(o.timeoutMs))
     let dropped = false
+    onAbort(() => {
+      dropped = true
+      conn.connection.destroy()
+    })
     // Streamed through the underlying connection so a huge result never sits in memory.
     const run = (): Promise<QueryResult> =>
       new Promise((resolve, reject) => {
@@ -333,11 +354,21 @@ const mssql = {
       await pool.close().catch(() => undefined)
     }
   },
-  async query(c: Connection, cred: Credentials, text: string, o: QueryOptions): Promise<QueryResult> {
+  query(c: Connection, cred: Credentials, text: string, o: QueryOptions): Promise<QueryResult> {
+    return cancellable(o.signal, (onAbort) => mssql.run(c, cred, text, o, onAbort))
+  },
+  async run(c: Connection, cred: Credentials, text: string, o: QueryOptions, onAbort: (drop: () => void) => void): Promise<QueryResult> {
     const { pool, sql } = await msPool(c, cred, o.timeoutMs)
+    let current: any = null
+    // SQL Server supports a real cancel of the running request (attention signal).
+    onAbort(() => {
+      current?.cancel()
+      void quietly(pool.close())
+    })
     /** Streams a request's rows (the last result set wins), cancelling past the hard limit. */
     const stream = (req: any): Promise<QueryResult> =>
       new Promise((resolve, reject) => {
+        current = req
         const sink = new RowSink(o.maxRows, () => {
           req.cancel()
           reject(tooManyRows())
@@ -423,7 +454,7 @@ export async function sshExec(
   secret: string | null,
   command: string | null,
   /** `onNewHostKey`: only the user's "Test" may pin a key; without it an unpinned server is refused. */
-  opts: { timeoutMs: number; onNewHostKey?: (fp: string) => void }
+  opts: { timeoutMs: number; onNewHostKey?: (fp: string) => void; signal?: AbortSignal }
 ): Promise<SshResult & { banner?: string }> {
   const { Client } = await import('ssh2')
   const auth: Record<string, unknown> = {}
@@ -438,8 +469,10 @@ export async function sshExec(
   }
   if (c.sshAuth === 'agent' && !auth.agent) throw new Error(t('main:connections.errors.noSshAgent'))
 
-  return new Promise((resolve, reject) => {
+  return cancellable(opts.signal, (onAbort) => new Promise((resolve, reject) => {
     const client = new Client()
+    // Closing the session ends the remote command's channel (sshd sends it SIGHUP).
+    onAbort(() => client.end())
     let hostKeyError: string | null = null
     let settled = false
     const done = (fn: () => void): void => {
@@ -501,5 +534,5 @@ export async function sshExec(
         },
         ...auth
       } as any)
-  })
+  }))
 }

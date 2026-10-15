@@ -232,7 +232,7 @@ yukarıdaki ⏳ satırları ve "Bilinen sorunlar"dır.
 | Kesin inceleme kararı | ✅ | Yalnızca gerçek boolean `approved` onaylar; belirsiz yanıtta görev incelemede kalır (kullanıcı karar verir) — `src/shared/review.ts`, `tests/review.test.ts` |
 | Sohbet yanıtı / inceleme iptali; temizlik ve sıfırlamada işlerin gerçekten bitmesini bekleme | ✅ | `aux` kaydı, `settled()`; iptal edilen yanıt görev/karar oluşturmaz |
 | API isteklerinde süre sınırı | ✅ | İstek başına 10 dk, bağlantı testi 20 sn |
-| Toplam görev süresi / token / harcama tavanı | ⏳ | Yok; Claude Code'da `--max-budget-usd` henüz kullanılmıyor |
+| Görev çalışması başına süre / token / harcama tavanı | ✅ | 2026-10-15; Ayarlar → Güvenlik ve sınırlar. Aşılınca çalışma durur, görev bekletilir. Maliyeti yalnızca Claude Code bildirir; `--max-budget-usd` kullanılmıyor (tavan Agentbits'te zorlanır) |
 | Kimlik hatası tespiti → Türkçe mesaj + tüm ekibi duraklatma | ✅ | Mesaj etkilenen projenin sohbetine düşer; "Devam et" hata durumlarını sıfırlar |
 | Tümünü duraklat / devam et | ✅ | Yeniden açılışta da geçerli (`settings.orchestrator.paused`). CLI'da "duraklat" yalnızca çıktı okumayı bekletir |
 | Uygulama yeniden açılınca yarım işleri temizleme | ✅ | Çalışmalar `cancelled`, görevler `todo` **ve bekletilir** (kendiliğinden yeniden başlamaz; görev akışında not) |
@@ -308,6 +308,9 @@ yukarıdaki ⏳ satırları ve "Bilinen sorunlar"dır.
 | Proje modalından kısayol ("Hafızayı ve geçmişi temizle → Verileri yönet") | ✅ | `openSettings('data', projectId)` — ilgili proje açık gelir |
 | Organizasyon geneli hafızayı temizleme (kararları koruma seçeneği) | ✅ | `clearOrgMemory()` |
 | Log saklama süresi (7 / 30 / 90 / 365 gün / Süresiz), açılışta ve 6 saatte bir otomatik; "Şimdi uygula" | ✅ | `settings.logRetentionDays` (varsayılan 30), `startMaintenance()` / `pruneLogs()` |
+| Ayarlar → **Güvenlik ve sınırlar**: görev çalışması başına süre (varsayılan 120 dk) / token / maliyet tavanı, denetim kaydı saklama süresi (varsayılan 180 gün), ajan CLI'larına aktarılacak ek ortam değişkenleri | ✅ | 2026-10-15; `LimitsSection.tsx`, `shared/settingsRules.ts` (`agentEnv`, `validateSettingsPatch`, `DEFAULT_SETTINGS`), `tests/settings.test.ts` |
+| Transkriptlerde sır maskeleme (API anahtarı, token, özel anahtar, URL parolası, `password=…`) | ✅ | 2026-10-15; `shared/redact.ts`, `logsRepo.add`; kalıp tabanlı |
+| Durdurulan çalışmanın DB sorgusu / SSH komutu hemen kesilir | ✅ | 2026-10-15; `shared/cancel.ts`, `tests/cancel.test.ts` |
 | Yedek alma (`VACUUM INTO`), listeleme, silme, klasörü açma; son 10 yedek tutulur | ✅ | `<veri klasörü>/backups/` |
 | Yedekten geri yükleme (mevcut durum önce yedeklenir, uygulama yeniden başlar; eski yedekler açılışta migrate edilir) | ✅ | `restoreBackup()` |
 | Tehlikeli bölge: "Sadece çalışma verisini sil" / "Her şeyi sıfırla" — "SIFIRLA" yazarak onay, öncesinde otomatik yedek | ✅ | `factoryReset('work' \| 'all')` |
@@ -409,7 +412,7 @@ eklendi; bunlar CHANGELOG'da kayıtlı ve gözden geçirilmeli.
 33. SQL sınıflandırması sezgiseldir; bu yüzden ajan okumaları yalnızca SELECT yetkili DB girişiyle çalışır (salt-okunur giriş alanı zorunlu; boşsa ajan okuyamaz). Yazma / admin sorguları ana kullanıcıyla çalışır. PG/MySQL'de salt-okunur işlem yazmaları da engeller (`nextval()` reddedildi); SQL Server'da salt-okunur işlem yoktur.
 34. MySQL ve SQL Server sürücüleri yalnızca bağlantı hatası yolunda test edildi (sunucu yoktu); PostgreSQL PGlite'a (soket), SSH yerel bir ssh2 sunucusuna karşı test edildi.
 35. `ssh2`'nin opsiyonel native kripto eklentisi Build Tools olmayan Windows'ta `npm install` sırasında derleme uyarısı basabilir; saf JS'e düşer (işlevsel sorun yok).
-36. Denetim kaydının saklama süresi yok; yalnızca "Her şeyi sıfırla" siler. Codex CLI'da bağlantı araçları yok. İzin değişiklikleri sonraki çalışmada ya da araç çağrısında geçerli olur (çalışan prompt'u güncellenmez).
+36. Denetim kaydı varsayılan 180 gün saklanır (Ayarlar → Güvenlik ve sınırlar; 2026-10-15 öncesi süresizdi). Codex CLI'da bağlantı araçları yok. İzin değişiklikleri sonraki çalışmada ya da araç çağrısında geçerli olur (çalışan prompt'u güncellenmez).
 37. Dosyalar — OCR yok: metin katmanı olmayan taranmış PDF'ler "Kısmen okundu" olur (açık mesajla); görseller yalnızca görsel destekleyen sağlayıcılara gider (Demo'da görsel yok).
 38. Eski .doc / .xls / .ppt / .rtf okunmaz (yalnızca saklanır). DOCX üst/alt bilgi, dipnotlar ve belge içi görseller çıkarılmaz. XLSX'te önbellekli değeri olmayan formüller `=FORMÜL` olarak görünür. PDF'te yalnızca metin katmanı; düzen ve tablolar yaklaşık.
 39. Talimat benzeri satır tespiti sezgiseldir; içerik her durumda güvenilmeyen veri olarak işlenir.
@@ -423,6 +426,6 @@ eklendi; bunlar CHANGELOG'da kayıtlı ve gözden geçirilmeli.
 47. Codex'te uygulama köprüsü `-c mcp_servers.agentbits.*` ve `default_tools_approval_mode="approve"` ile verilir (belgelere göre); gerçek Codex CLI ile denenmedi. Claude Code'da da yalnızca sahte CLI ile test edildi.
 48. OAuth yalnızca SDK'nın demo yetkilendirme sunucusuyla test edildi; geri dönüş portu (33418) doluysa rastgele port ve yeni istemci kaydı kullanılır. İstemci kaydı ön tanımlı `client_id` isteyen sağlayıcılar desteklenmez.
 49. Skill'ler yalnızca herkese açık GitHub depolarından indirilebilir; betikler yalnızca ajanın terminal izniyle çalışabilir ve Agentbits tarafından denetlenmez.
-50. **Güvenlik incelemesi (2026-10-13)** — 27 bulgunun durumu, yapılanlar ve açık kalanlar: [SECURITY.md](SECURITY.md). Açık kalanların özeti: Claude Code terminal izni OS düzeyinde yalıtılmaz; CLI'a ortam değişkenleri olduğu gibi geçer; DB/SSH sürücülerine çalışma iptal sinyali taşınmaz (zaman aşımları var); harcama tavanı yok; dosya seçici / sürükle-bırak yolları main'de yetkilendirilmez; tam prompt'lar transkriptte saklanır; denetim kaydının saklama süresi yok; paketler imzasız; mağaza / büyük veri sınırları (tüm görevlerin yüklenmesi).
+50. **Güvenlik incelemesi (2026-10-13)** — 27 bulgunun durumu, yapılanlar ve açık kalanlar: [SECURITY.md](SECURITY.md). Açık kalanların özeti: Claude Code terminal izni OS düzeyinde yalıtılmaz; dosya seçici / sürükle-bırak yolları main'de yetkilendirilmez; tam prompt'lar (sırlar maskeli) transkriptte saklanır; paketler imzasız; mağaza / büyük veri sınırları (tüm görevlerin yüklenmesi).
 51. Testler için `AGENTBITS_ALLOW_PLAIN_SECRETS=1` gereklidir (CI / Linux kapsayıcılarında anahtar zinciri yok); gerçek kullanımda bu değişkeni ayarlamayın.
 52. `--restricted` (Claude Code 2.1.248+) ve Codex `sandbox_workspace_write.network_access` / `default_tools_approval_mode` belgelere göre kullanıldı, gerçek CLI'larla denenmedi. Claude Code'da bir sorun çıkarsa CLI'ı güncelleyin; eski sürümler `--setting-sources user` alır.

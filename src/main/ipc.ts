@@ -20,6 +20,7 @@ import {
   unitsRepo
 } from './db/repos'
 import { wouldCycle } from '@shared/org'
+import { SettingsError, validateSettingsPatch } from '@shared/settingsRules'
 import { instantiateTemplate, listTemplates } from './core/templates'
 import { assertUsableFolder, folderStatus, inspectFolder } from './core/folders'
 import {
@@ -95,7 +96,14 @@ type Handlers = { [M in ApiMethod]: (...args: Parameters<Api[M]>) => ReturnType<
 const handlers: Handlers = {
   /* settings */
   'settings:get': () => settingsRepo.get(),
-  'settings:update': (patch) => {
+  'settings:update': (raw) => {
+    let patch: ReturnType<typeof validateSettingsPatch>
+    try {
+      patch = validateSettingsPatch(raw)
+    } catch (e) {
+      if (e instanceof SettingsError) throw new Error(t(e.code === 'envName' ? 'settings:errors.envName' : 'settings:errors.invalid', { name: e.detail }))
+      throw e
+    }
     const before = settingsRepo.get().language
     const s = settingsRepo.update(patch)
     if (patch.language !== undefined && patch.language !== before) {

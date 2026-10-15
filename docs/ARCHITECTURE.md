@@ -606,6 +606,19 @@ yüzden **asla komut satırından değil stdin'den** gönderilir.
 
 ### 8.1 İzin matrisi → CLI bayrakları
 
+**Ortam (2026-10-15, güvenlik #03):** `spawnLines` üst süreçten **yalnızca** `inherit` alanını alır; adaptörler
+`agentEnv(process.env, 'claude' | 'codex', settings.cliEnvPassthrough)` (`shared/settingsRules.ts`) verir: PATH, kullanıcı
+klasörleri, proxy, dil, sertifika değişkenleri ve CLI'ın kendi önekleri (`CLAUDE_` / `ANTHROPIC_` ya da `CODEX_` / `OPENAI_`) +
+kullanıcının ek adları. `SSH_AUTH_SOCK`, `NODE_OPTIONS`, `ELECTRON_RUN_AS_NODE` hiçbir zaman geçmez (MCP köprüsü
+`ELECTRON_RUN_AS_NODE`'u kendi yapılandırmasında açıkça verir).
+
+**Çalışma sınırları (güvenlik #18):** `execute()` `runMaxMinutes` zamanlayıcısı kurar; her kullanım deltasında
+`checkUsageLimits()` `usageRepo.forRun` toplamını `runMaxTokens` / `runMaxCostUsd` ile karşılaştırır. Aşılınca `limitStop()` →
+`stopRun()` (kullanıcının durdurmasıyla aynı yol: görev `todo` + bekletilir), hata metni ve `#general` + görev akışı notu nedeni söyler.
+`stopRun()` ayrıca `ActiveRun.halt`'ı iptal eder: `AgentCtx.signal` üzerinden açık DB sorgusu / SSH komutu hemen kesilir
+(`shared/cancel.ts` → `cancellable`; PG/MySQL soket koparılır — açık transaction sunucuda geri alınır —, SQL Server `cancel()`,
+SSH oturumu kapanır). Yönlendirme (redirect) `halt`'ı tetiklemez.
+
 Claude Code komutu (`mode: 'task'`):
 
 ```
@@ -699,7 +712,9 @@ Ayarlar → **Veri yönetimi** (`features/settings/DataSection.tsx`) bu modülü
   `wal_checkpoint(TRUNCATE)` + `VACUUM` (`compact()`) ve tüm `*:changed` olayları (`emitAll()`;
   `clearOrgMemory` yalnızca `memory:changed`).
 - **Log saklama:** `startMaintenance()` açılışta ve **6 saatte bir** `settings.logRetentionDays > 0` ise
-  `pruneLogs(days)` uygular (500'den fazla satır silinirse `VACUUM`); `0` = süresiz. `data:pruneLogs` elle
+  `pruneLogs(days)`, `auditRetentionDays > 0` ise `pruneAudit(days)` uygular (toplam 500'den fazla satır silinirse `VACUUM`); `0` = süresiz.
+  Transkript satırları kaydedilmeden önce `logsRepo.add` içinde `redactSecrets` / `redactDeep` (`shared/redact.ts`) ile sır benzeri
+  metinler (API anahtarları, token'lar, özel anahtarlar, URL'deki parolalar, `password=…`) maskelenir. `data:pruneLogs` elle
   uygular ve `messages:changed` yayınlar.
 - **Yedek:** `createBackup(label = 'yedek')` → `VACUUM INTO '<veri klasörü>/backups/agentbits-<label>-<zaman>.db'`;
   en yeni 10 dosya tutulur. `deleteBackup` / `restoreBackup` adı `basename` ile doğrular (yol geçişi yok).

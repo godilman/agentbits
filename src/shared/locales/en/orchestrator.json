@@ -107,7 +107,8 @@
     "revisionLimit": "⏸ Sent back {{count}} times. The task waits for you now instead of running again — check the review notes and start it when ready.",
     "leadNotesSent_one": "🎯 Note added to {{keys}}.",
     "leadNotesSent_other": "🎯 Notes added to {{count}} tasks: {{keys}}.",
-    "leadNotesUnknown": "⚠️ No such task in this project, note not delivered: {{keys}}"
+    "leadNotesUnknown": "⚠️ No such task in this project, note not delivered: {{keys}}",
+    "limitStopped": "⏱ {{agent}} · {{key}}: {{reason}}"
   },
   "errors": {
     "noFolder": "No folder selected for “{{project}}”. CLI agents can touch files, so choose a folder in the project settings.",
@@ -215,5 +216,10 @@
     "step2": "In a separate PowerShell, check that the server responds with <code>curl.exe -I {{url}}</code>.",
     "step3": "An antivirus or firewall may be blocking Node.js's local connection.",
     "step4": "To try without the development server: <code>npm run build</code>, then <code>npm start</code>."
+  },
+  "limits": {
+    "time": "⏱ Time limit reached ({{minutes}} min): the run was stopped and the task waits for you.",
+    "tokens": "⏱ Token limit reached ({{tokens}}): the run was stopped and the task waits for you.",
+    "cost": "⏱ Cost limit reached ({{cost}} USD): the run was stopped and the task waits for you."
   }
 }

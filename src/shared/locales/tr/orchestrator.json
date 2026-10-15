@@ -107,7 +107,8 @@
     "revisionLimit": "⏸ {{count}} kez geri gönderildi. Görev artık yeniden çalışmak yerine seni bekliyor — inceleme notlarına bakıp hazır olduğunda başlat.",
     "leadNotesSent_one": "🎯 {{keys}} görevine not eklendi.",
     "leadNotesSent_other": "🎯 {{count}} göreve not eklendi: {{keys}}.",
-    "leadNotesUnknown": "⚠️ Bu projede böyle bir görev yok, not iletilmedi: {{keys}}"
+    "leadNotesUnknown": "⚠️ Bu projede böyle bir görev yok, not iletilmedi: {{keys}}",
+    "limitStopped": "⏱ {{agent}} · {{key}}: {{reason}}"
   },
   "errors": {
     "noFolder": "“{{project}}” için klasör seçilmedi. CLI ajanları dosyalara dokunabildiği için proje ayarlarından bir klasör seçin.",
@@ -215,5 +216,10 @@
     "step2": "Ayrı bir PowerShell'de <code>curl.exe -I {{url}}</code> ile sunucunun cevap verdiğini kontrol edin.",
     "step3": "Antivirüs/güvenlik duvarı Node.js'in yerel bağlantısını engelliyor olabilir.",
     "step4": "Geliştirme sunucusu olmadan denemek için: <code>npm run build</code> ardından <code>npm start</code>."
+  },
+  "limits": {
+    "time": "⏱ Süre sınırına ulaşıldı ({{minutes}} dk): çalışma durduruldu, görev seni bekliyor.",
+    "tokens": "⏱ Token sınırına ulaşıldı ({{tokens}}): çalışma durduruldu, görev seni bekliyor.",
+    "cost": "⏱ Maliyet sınırına ulaşıldı ({{cost}} USD): çalışma durduruldu, görev seni bekliyor."
   }
 }

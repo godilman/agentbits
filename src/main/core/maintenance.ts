@@ -176,16 +176,22 @@ export function pruneLogs(days: number, opts: { compact?: boolean } = {}): { del
   return { deleted }
 }
 
+/** Audit log entries (connection and app calls) older than `days` (security review #21: it had no retention). */
+export function pruneAudit(days: number): { deleted: number } {
+  if (days <= 0) return { deleted: 0 }
+  const cutoff = new Date(Date.now() - days * DAY).toISOString()
+  return { deleted: getDb().prepare('DELETE FROM audit_log WHERE at < ?').run(cutoff).changes }
+}
+
 let maintenanceTimer: NodeJS.Timeout | null = null
 
-/** Applies the log retention setting now and every 6 hours. */
+/** Applies the log and audit retention settings now and every 6 hours. */
 export function startMaintenance(): void {
   const apply = (): void => {
-    const days = settingsRepo.get().logRetentionDays
-    if (days > 0) {
-      const { deleted } = pruneLogs(days, { compact: false })
-      if (deleted > 500) compact()
-    }
+    const { logRetentionDays, auditRetentionDays } = settingsRepo.get()
+    const logs = logRetentionDays > 0 ? pruneLogs(logRetentionDays, { compact: false }).deleted : 0
+    const audit = pruneAudit(auditRetentionDays).deleted
+    if (logs + audit > 500) compact()
   }
   try {
     apply()

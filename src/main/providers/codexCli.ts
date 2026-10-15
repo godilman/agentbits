@@ -3,6 +3,8 @@ import { execFile } from 'child_process'
 import { spawnLines, which } from './cli'
 import type { ProviderAdapter, RunContext, RunResult } from './types'
 import { t } from '../i18n'
+import { agentEnv } from '@shared/settingsRules'
+import { settingsRepo } from '../db/repos'
 
 async function resolveBin(provider: Provider): Promise<string> {
   const bin = provider.cliPath || (await which('codex'))
@@ -71,6 +73,8 @@ export const codexCliAdapter: ProviderAdapter = {
       bin,
       args,
       cwd: ctx.cwd,
+      // Only what a CLI needs plus the user's extra names: no other secrets of the machine (security review #03).
+      inherit: agentEnv(process.env, 'codex', settingsRepo.get().cliEnvPassthrough),
       env,
       signal: ctx.signal,
       stdin: `${ctx.system}\n\n---\n\n${historyText(ctx.history)}${ctx.prompt}`,

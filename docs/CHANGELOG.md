@@ -4,6 +4,28 @@
 > `## YYYY-MM-DD — kısa başlık`, ardından **Eklendi / Değişti / Düzeltildi / Kaldırıldı / Bilinen** maddeleri
 > ve ilgili dosyalar.
 
+## 2026-10-15 — Güvenlik ve sınırlar (Faz 3, 1. kısım: #03, #08, #18, #21, #13'ün ayar kısmı)
+
+### Eklendi
+- **Ayarlar → Güvenlik ve sınırlar** (`features/settings/LimitsSection.tsx`): görev çalışması başına süre (varsayılan
+  **120 dk**), token ve maliyet tavanı; denetim kaydı saklama süresi (varsayılan 180 gün); ajan CLI'larına aktarılacak ek
+  ortam değişkeni adları; transkript maskelemesinin her zaman açık olduğu bilgisi.
+- **#03 CLI ortamı izin listesiyle:** `agentEnv()` (`shared/settingsRules.ts`) — PATH, kullanıcı klasörleri, proxy, dil,
+  sertifika değişkenleri, CLI'ın kendi önekleri + kullanıcının ek adları. Bulut anahtarları, token'lar, `SSH_AUTH_SOCK`
+  (SSH anahtarlarına bağlantı izinsiz erişim), `NODE_OPTIONS`, `ELECTRON_RUN_AS_NODE` geçmez. `spawnLines` artık
+  `process.env`'i kendisi almaz (`inherit` zorunlu alan).
+- **#18 çalışma tavanları:** süre zamanlayıcısı + her kullanım deltasında token / maliyet denetimi → `limitStop()` (görev
+  bekletilir, `#general` ve görev akışında neden). Aynı ajanın sohbet + görev eşzamanlılığı 📄 (sohbette dosya / kabuk aracı yok).
+- **#08 iptal:** `ActiveRun.halt` → `AgentCtx.signal` → `shared/cancel.ts` (`cancellable`): durdurulan çalışmanın DB sorgusu
+  ve SSH komutu hemen kesilir (PG/MySQL soket, SQL Server `cancel()`, SSH oturumu). `tests/cancel.test.ts`.
+- **#21:** `logsRepo.add` transkript satırını ve meta'sını (tam prompt dahil) `redactSecrets` / `redactDeep` ile maskeler
+  (`shared/redact.ts`, `tests/redact.test.ts`); `pruneAudit()` + `auditRetentionDays`.
+- **#13 (kısmen):** `settings:update` her anahtarı ve türü denetler (`validateSettingsPatch`; bilinmeyen anahtar, yanlış tür,
+  sınır dışı sayı → çevrilmiş hata). `tests/settings.test.ts`.
+
+### Değişti
+- `DEFAULT_SETTINGS` `shared/settingsRules.ts`'e taşındı; renderer store'u da onu kullanır (iki kopya ayrışıyordu).
+
 ## 2026-10-15 — Lider ↔ ekip iletişimi (Faz 2)
 
 Sahibin kararı: **yalnızca lider** ajanlarla konuşur (görev verir, biten işleri ve notları görür, göreve not bırakır);

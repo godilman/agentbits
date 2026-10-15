@@ -31,6 +31,8 @@ export interface SpawnLinesOptions {
   args: string[]
   cwd: string
   stdin?: string
+  /** What the CLI inherits from Agentbits' environment — filtered (`agentEnv`), never `process.env` as is. */
+  inherit: Record<string, string>
   env?: Record<string, string | undefined>
   signal: AbortSignal
   onLine: (line: string) => Promise<void> | void
@@ -50,10 +52,10 @@ export function spawnLines(o: SpawnLinesOptions): Promise<{ code: number | null;
           cwd: o.cwd,
           shell: true,
           windowsHide: true,
-          env: { ...process.env, ...o.env }
+          env: { ...o.inherit, ...o.env }
         })
       : // Own process group on Unix, so stopping kills the CLI's children too (not only the direct child).
-        spawn(o.bin, o.args, { cwd: o.cwd, windowsHide: true, env: { ...process.env, ...o.env }, detached: !isWin })
+        spawn(o.bin, o.args, { cwd: o.cwd, windowsHide: true, env: { ...o.inherit, ...o.env }, detached: !isWin })
 
     let stderr = ''
     const onAbort = (): void => {

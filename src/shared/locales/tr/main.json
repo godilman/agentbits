@@ -112,7 +112,8 @@
       "hostKeyNotPinned": "Sunucu anahtarı henüz doğrulanmadı ({{got}}). Bağlantıyı Organizasyon → Bağlantılar'da açıp \"Test\"e tıklayarak kontrol et ve sabitle.",
       "productionNeedsTls": "Production veritabanı bu bilgisayarda çalışmıyorsa şifreli bağlantı (TLS / SSL) kullanmalı. \"SSL / şifreleme\"yi aç.",
       "tooManyRows": "Sorgu {{max}} satırdan fazla döndürdüğü için durduruldu; LIMIT / WHERE ekle",
-      "noAnswer": "Sunucu {{seconds}} saniye içinde yanıt vermedi"
+      "noAnswer": "Sunucu {{seconds}} saniye içinde yanıt vermedi",
+      "cancelled": "İptal edildi: çalışma durduruldu, bağlantı kapatıldı"
     },
     "audit": {
       "user": "Kullanıcı",

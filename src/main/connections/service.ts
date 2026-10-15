@@ -22,6 +22,8 @@ export interface AgentCtx {
   mode?: 'task' | 'chat'
   /** Writes a line into the agent's terminal transcript. */
   log?: (level: 'tool' | 'debug' | 'info' | 'warn' | 'error', message: string) => void
+  /** Aborted when the run is stopped (user or run limit): database queries and SSH commands are cut off. */
+  signal?: AbortSignal
 }
 
 export interface ToolOutput {
@@ -374,7 +376,7 @@ export async function toolQuery(ctx: AgentCtx, ref: string, sql: string): Promis
   const t0 = Date.now()
   try {
     const r = await deadline(
-      dbDrivers[conn.kind as 'postgres'].query(conn, credentialsFor(conn, mode), detail, { mode, timeoutMs: QUERY_TIMEOUT, maxRows: MAX_ROWS }),
+      dbDrivers[conn.kind as 'postgres'].query(conn, credentialsFor(conn, mode), detail, { mode, timeoutMs: QUERY_TIMEOUT, maxRows: MAX_ROWS, signal: ctx.signal }),
       QUERY_TIMEOUT + 15_000
     )
     const ms = Date.now() - t0
@@ -425,7 +427,7 @@ export async function toolExec(ctx: AgentCtx, ref: string, command: string): Pro
   const t0 = Date.now()
   try {
     // Agents never trust a host key on first contact: the user pins it with "Test" (the fingerprint is shown there).
-    const r = await sshExec(conn, connectionsRepo.secrets(conn.id).secret, cmd, { timeoutMs: SSH_TIMEOUT })
+    const r = await sshExec(conn, connectionsRepo.secrets(conn.id).secret, cmd, { timeoutMs: SSH_TIMEOUT, signal: ctx.signal })
     const ms = Date.now() - t0
     const msg = t(r.timedOut ? 'main:connections.audit.exitCodeTimedOut' : 'main:connections.audit.exitCode', { code: r.code ?? '?' })
     auditAgent(ctx, conn, conn.name, 'exec', cmd, r.code === 0 ? 'ok' : 'error', msg, ms)

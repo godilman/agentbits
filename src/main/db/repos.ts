@@ -36,6 +36,8 @@ import type {
   TaskPage,
   TaskStatus
 } from '@shared/types'
+import { redactDeep, redactSecrets } from '@shared/redact'
+import { DEFAULT_SETTINGS } from '@shared/settingsRules'
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 type Row = Record<string, any>
@@ -44,15 +46,6 @@ const bool = (v: unknown): boolean => v === 1 || v === true
 
 /* ───────────────────────────── settings ───────────────────────────── */
 
-const DEFAULT_SETTINGS: AppSettings = {
-  onboarded: false,
-  workspaceRoot: '',
-  autopilot: true,
-  reviewByLead: true,
-  logRetentionDays: 30,
-  startupProjects: 'ask',
-  language: 'auto'
-}
 
 export const settingsRepo = {
   get(): AppSettings {
@@ -694,8 +687,9 @@ export const logsRepo = {
         entry.taskId ?? null,
         entry.projectId ?? null,
         entry.level,
-        entry.message,
-        entry.meta ? JSON.stringify(entry.meta) : null,
+        // Transcripts keep tool output and full prompts: secret-looking text is masked before it is stored.
+        redactSecrets(entry.message),
+        entry.meta ? JSON.stringify(redactDeep(entry.meta)) : null,
         now()
       )
     return mapLog(getDb().prepare('SELECT * FROM agent_logs WHERE id = ?').get(info.lastInsertRowid) as Row)

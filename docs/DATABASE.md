@@ -73,7 +73,8 @@ Anahtar/değer; değerler **JSON kodlu** metindir (`JSON.stringify`). Bilinmeyen
 | `key` | TEXT PK |
 | `value` | TEXT NOT NULL |
 
-Kullanılan anahtarlar (`AppSettings`, varsayılanlar `repos.ts` → `DEFAULT_SETTINGS`):
+Kullanılan anahtarlar (`AppSettings`, varsayılanlar `shared/settingsRules.ts` → `DEFAULT_SETTINGS`; `settings:update` her değeri
+`validateSettingsPatch` ile denetler — bilinmeyen anahtar ya da yanlış tür reddedilir):
 
 | Anahtar | Tip | Varsayılan | Anlam |
 |---|---|---|---|
@@ -86,6 +87,11 @@ Kullanılan anahtarlar (`AppSettings`, varsayılanlar `repos.ts` → `DEFAULT_SE
 | `orchestrator.held` | string[] (JSON) | `[]` | İç durum (`AppSettings`'te yok): otopilotun almayacağı görevler — reddedilen, durdurulan, iki kez hata veren, uygulama kapanırken yarıda kalan, 4 inceleme turunu dolduran. Elle başlatma / "Yapılacak"a taşıma kaldırır; fabrika sıfırlaması temizler |
 | `orchestrator.paused` | boolean | `false` | İç durum: "Tümünü duraklat" yeniden açılışta da geçerli |
 | `logRetentionDays` | number | `30` | Bu kadar günden eski `agent_logs` satırları açılışta ve 6 saatte bir silinir (`startMaintenance`); `0` = süresiz |
+| `auditRetentionDays` | number | `180` | Bu kadar günden eski `audit_log` satırları açılışta ve 6 saatte bir silinir (`pruneAudit`); `0` = süresiz (2026-10-15) |
+| `runMaxMinutes` | number | `120` | Bir görev çalışmasının en uzun süresi (duvar saati, duraklatma dahil); aşılınca çalışma durur, görev bekletilir. `0` = sınırsız |
+| `runMaxTokens` | number | `0` | Bir görev çalışmasının token tavanı (giriş + önbellek + çıkış, `token_usage`'dan); `0` = sınırsız |
+| `runMaxCostUsd` | number | `0` | Bir görev çalışmasının maliyet tavanı (yalnızca Claude Code bildirir); `0` = sınırsız |
+| `cliEnvPassthrough` | string[] | `[]` | Ajan CLI'larına ek olarak aktarılan ortam değişkeni adları (`agentEnv`); `SSH_AUTH_SOCK`, `NODE_OPTIONS`, `ELECTRON_RUN_AS_NODE` reddedilir |
 
 ### `providers`
 | Sütun | Tip | Not |

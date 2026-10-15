@@ -71,9 +71,10 @@ Demo sağlayıcı iş türüne göre simülasyon (`shared/demoKind.ts`), paket s
 - **2026-10-15 sahibin onayladığı yol haritası** (fazlar sırayla, her faz sonunda doğrulama + belgeler + commit/push):
   Faz 1 ✅ temizlik → v0.1.1 · Faz 2 ✅ lider ↔ ajan iletişimi (sahibin kararı: **yalnızca lider** ajanlarla konuşur — görev verir,
   biten işleri ve notları görür, göreve not bırakır; ajanlar birbirleriyle doğrudan konuşmaz) · Faz 3 SECURITY.md'deki 🟡/⏳
-  maddeler · Faz 4 OpenAI uyumlu uç nokta (Gemini, yerel modeller) + Codex bağlantı/dosya araçları · Faz 5 ajanların tarayıcı
+  maddeler (🚧: #03 #08 #18 #21 ✅; #13 IPC şeması + #27 kaldı) · Faz 4 OpenAI uyumlu uç nokta (Gemini, yerel modeller) + Codex bağlantı/dosya araçları · Faz 5 ajanların tarayıcı
   kullanması, özel rapor, özel GitHub skill, MCP kaynakları/istemleri · Faz 6 RTF/.doc/.xls + OCR · Faz 7 vektör hafıza +
-  aynı klasörde çakışma yönetimi. Hedef sürüm v0.2.0.
+  aynı klasörde çakışma yönetimi · ardından **yarış modu** (sahibin isteği: açılıp kapanabilen ayar, varsayılan kapalı; açıkken
+  aynı görev farklı sağlayıcılardaki iki ajana paralel verilir, lider sonuçları karşılaştırıp birini seçer). Hedef sürüm v0.2.0.
 - `docs/screenshots/tr/` ekran görüntüleri eski İngilizce sekme adlarını gösteriyor (Demo + boş veri klasörüyle yeniden çekilmeli).
 - `docs/SECURITY.md`'deki 🟡 / ⏳ maddeler (ör. büyük veride UI sayfalama) ve `docs/FEATURES.md` "Bilinen sorunlar".
 
@@ -143,6 +144,8 @@ Kurulum sorunları (Electron binary eksik, siyah pencere, execution policy, Clau
 | `src/shared/review.ts` | Lider inceleme kararını ayrıştırma (`parseReview`; yalnızca gerçek boolean onaylar) — `tests/review.test.ts` |
 | `src/shared/leadComms.ts` | Lider → ekip notları (```` ```message ```` → `parseLeadMessages`) ve rapor özeti (`reportExcerpt`); yalnızca lider ekiple konuşur — `tests/leadComms.test.ts` |
 | `src/shared/demoKind.ts` | Demo sağlayıcının iş türü tahmini (kod / araştırma / içerik / veri) — `tests/demo.test.ts` |
+| `src/shared/settingsRules.ts` | `DEFAULT_SETTINGS`, `validateSettingsPatch` (`settings:update` her değeri denetler), `agentEnv` (ajan CLI'larının devraldığı ortam: izin listesi) — `tests/settings.test.ts` |
+| `src/shared/redact.ts` / `src/shared/cancel.ts` | Transkriptte sır maskeleme (`logsRepo.add`) / durdurulan çalışmanın DB-SSH çağrısını kesme (`cancellable`) — `tests/redact.test.ts`, `tests/cancel.test.ts` |
 | `src/shared/org.ts` | Main ve renderer'ın ortak saf yardımcıları: `descendantIds`, `unitMemberIds`, `projectMemberIds`, `unitPath`, `wouldCycle` |
 | `src/main/index.ts` | Pencere, yaşam döngüsü (DB → dil → `ensureOrgDefaults` → `renameLegacyDefne` → IPC → orkestratör → bakım → pencere), dev sunucusu yeniden deneme |
 | `src/main/ipc.ts` | Tek `api` kanalı için handler tablosu (`Api`'ye göre tip kontrollü) + organizasyon/proje kuralları |

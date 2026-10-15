@@ -4,6 +4,8 @@ import { toolsFor } from '../core/permissions'
 import { spawnLines, which } from './cli'
 import { zeroUsage, type ProviderAdapter, type RunContext, type RunResult } from './types'
 import { t } from '../i18n'
+import { agentEnv } from '@shared/settingsRules'
+import { settingsRepo } from '../db/repos'
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
@@ -103,6 +105,8 @@ export const claudeCliAdapter: ProviderAdapter = {
       bin,
       args,
       cwd: ctx.cwd,
+      // Only what a CLI needs plus the user's extra names: no other secrets of the machine (security review #03).
+      inherit: agentEnv(process.env, 'claude', settingsRepo.get().cliEnvPassthrough),
       env,
       signal: ctx.signal,
       // On resume the conversation already has the system/task context; send only the new turn.

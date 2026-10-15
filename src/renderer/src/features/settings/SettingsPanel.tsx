@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Trans, useTranslation } from 'react-i18next'
-import { Brain, Cpu, Database, FolderOpen, Plus, Search, Shield, SlidersHorizontal, Trash2, Users, X, Zap } from 'lucide-react'
+import { Brain, Cpu, Database, FolderOpen, Gauge, Plus, Search, Shield, SlidersHorizontal, Trash2, Users, X, Zap } from 'lucide-react'
 import type { AccessLevel, Memory, MemoryKind } from '@shared/types'
 import { ENV_LABEL, KIND_LABEL, LEVEL_LABEL, LEVEL_ORDER } from '@shared/connections'
 import { LANGUAGES, languageName, resolveLanguage, type I18nKey } from '@shared/i18n'
@@ -14,6 +14,7 @@ import { useAppStore, type SettingsSection } from '@/store/useAppStore'
 import { KindIcon, ProviderForm } from './ProviderForm'
 import { ModelSelect } from './ModelSelect'
 import { DataSection } from './DataSection'
+import { LimitsSection } from './LimitsSection'
 import { Heading, Row } from './parts'
 
 const SECTIONS: { id: SettingsSection; labelKey: I18nKey; icon: React.ComponentType<{ size?: number }> }[] = [
@@ -22,6 +23,7 @@ const SECTIONS: { id: SettingsSection; labelKey: I18nKey; icon: React.ComponentT
   { id: 'providers', labelKey: 'settings:sections.providers', icon: Cpu },
   { id: 'memory', labelKey: 'settings:sections.memory', icon: Brain },
   { id: 'data', labelKey: 'settings:sections.data', icon: Database },
+  { id: 'limits', labelKey: 'settings:sections.limits', icon: Gauge },
   { id: 'general', labelKey: 'settings:sections.general', icon: SlidersHorizontal }
 ]
 
@@ -70,6 +72,7 @@ export function SettingsPanel() {
             {section === 'providers' && <ProvidersSection />}
             {section === 'memory' && <MemorySection />}
             {section === 'data' && <DataSection />}
+            {section === 'limits' && <LimitsSection />}
             {section === 'general' && <GeneralSection />}
           </div>
         </div>

@@ -334,6 +334,14 @@ export interface AppSettings {
   startupProjects: 'ask' | 'restore'
   /** Interface language code ('en', 'tr', …) or 'auto' = operating system language. */
   language: string
+  /** Audit log entries (connections, apps) older than this are pruned automatically (0 = keep forever). */
+  auditRetentionDays: number
+  /** Limits on one task run; reaching one stops the run and holds the task (0 = no limit). */
+  runMaxMinutes: number
+  runMaxTokens: number
+  runMaxCostUsd: number
+  /** Extra environment variable names an agent CLI may inherit (see `shared/settingsRules.ts` → `agentEnv`). */
+  cliEnvPassthrough: string[]
 }
 
 export interface TerminalSession {
