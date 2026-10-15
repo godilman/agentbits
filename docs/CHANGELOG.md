@@ -4,6 +4,16 @@
 > `## YYYY-MM-DD — kısa başlık`, ardından **Eklendi / Değişti / Düzeltildi / Kaldırıldı / Bilinen** maddeleri
 > ve ilgili dosyalar.
 
+## 2026-10-15 — Faz 5: ajanlar web sayfası okur, özel rapor, özel GitHub skill'leri, MCP kaynakları ve istemleri
+
+### Eklendi
+- **`browser` izni uygulanır:** `web_fetch` (tüm sağlayıcılar) — SSRF koruması (her adımda DNS, yalnızca genel adresler, IP
+  sabitleme, yönlendirme denetimi), 3 MB / 20 sn, metin türleri. `tests/web.test.ts`, `tests/webFetch.test.ts` (yerel sunucu).
+- **Özel rapor:** Raporlar → Özel; lider istenen konuda projenin verisinden yazar (`reports:generateCustom`); Demo aynı veriden özet.
+- **Özel GitHub depolarından skill:** anahtar zincirinde token; yalnızca herkese açık indirme bulunamazsa, yalnızca api.github.com'a.
+- **MCP kaynakları ve istemleri:** `apps_resources`, `apps_read_resource`, `apps_prompts`, `apps_get_prompt` (SDK ile bellek içi
+  sunucuda yanıt şekilleri doğrulandı).
+
 ## 2026-10-15 — Faz 4: Gemini ve yerel modeller (OpenAI uyumlu uç nokta), Codex'e Agentbits araçları
 
 ### Eklendi

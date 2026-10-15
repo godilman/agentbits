@@ -90,7 +90,7 @@ Lejant: ✅ tamam · 🟡 kısmi · 🚧 geliştiriliyor · ⏳ planlı · — y
 | Tasks — `tasks:list` cursor sayfalama | ✅ | Ajanlar ekledi; renderer tüm sayfaları gezer (`fetchAllTasks`) |
 | **Reports** — istatistik kartları, ajan performansı, görev raporları | ✅ | |
 | Reports — günlük rapor üretme | ✅ | `reports:generateDaily(projectId)` — proje bazlı |
-| Reports — özel (`custom`) rapor | ⏳ | Şemada var, üretimi yok |
+| Reports — özel (`custom`) rapor | ✅ | 2026-10-15: Raporlar → Özel: lider istenen konuda projenin verisinden (pano, görevler, kararlar, son raporlar) araçsız yazar (`reports:generateCustom`) |
 | **Decisions** — ADR listesi, filtre, oluştur/düzenle, kabul/ret/geçersiz kıl, sil | ✅ | Kabul → hafızaya önem 1.0 |
 | Decisions — ajanların ```` ```decision ```` önerileri | ✅ | `proposed` olarak eklenir, üst barda sayaç |
 | **Browser** — `<webview>`, adres çubuğu, geri/ileri/yenile, yer imleri, arama | ✅ | `persist:agentbits-browser` oturumu |
@@ -185,7 +185,7 @@ Lejant: ✅ tamam · 🟡 kısmi · 🚧 geliştiriliyor · ⏳ planlı · — y
 | Atama: ajana doğrudan ya da birime (alt birimler dahil; kök = herkes); ajan düzenleyicide "Skill'ler" bölümü (nereden geldiği) | ✅ | `skill_assignments` |
 | Ajanlar: prompt'ta `## Skills` (ad + açıklama), içerik `skill_read` ile (API, Claude Code, Demo); Codex çalışma kopyalarını okur; terminal izinli Claude Code betikli skill klasörünü alır | ✅ | `skills/service.ts` |
 | Düzenle (SKILL.md), kaynaktan güncelle, devre dışı bırak, sil (satır içi onay) | ✅ | Düzenlenen skill kaynaktan güncellenince düzenleme kaybolur (uyarılır) |
-| Özel (private) GitHub depoları | ⏳ | Token desteği yok |
+| Özel (private) GitHub depoları | ✅ | 2026-10-15: anahtar zincirinde şifreli GitHub token'ı; yalnızca herkese açık indirme bulunamazsa ve yalnızca api.github.com'a gider |
 
 ## 3f. Uygulamalar (MCP) — Organizasyon → Uygulamalar
 
@@ -202,7 +202,7 @@ Lejant: ✅ tamam · 🟡 kısmi · 🚧 geliştiriliyor · ⏳ planlı · — y
 | "Önce bana sor" araçları sol alttaki onay panelinde (argümanlarla; 10 dk sonra ret) + toast | ✅ | `waitForApproval` |
 | Denetim: her ajan çağrısı (`app:<araç>`, sonuç, süre) ve kullanıcı işlemleri; uygulamanın "Denetim kaydı" sekmesi | ✅ | `audit_log` |
 | Sağlayıcılar: Anthropic / OpenAI (yerel araç), Claude Code (MCP köprüsü), Codex (köprü `-c mcp_servers…`), Demo (adı geçen uygulamanın bir aracını dener) | ✅ | Codex ve Claude Code yalnızca sahte CLI'larla test edildi |
-| MCP kaynakları (resources), istemler (prompts), sampling, elicitation | ⏳ | Yalnızca araçlar |
+| MCP kaynakları (resources) ve istemler (prompts) | ✅ | 2026-10-15: `apps_resources`, `apps_read_resource`, `apps_prompts`, `apps_get_prompt` (okuma; izinli + açık uygulamalar; denetlenir). Sampling ve elicitation ⏳ |
 
 ## 3d. Yol haritası
 
@@ -274,7 +274,7 @@ yukarıdaki ⏳ satırları ve "Bilinen sorunlar"dır.
 | Terminal izni açıkken dosya / ağ kısıtlarının kabukla aşılabildiğini UI'da söyleme | ✅ | İzin açıklaması; OS düzeyinde yalıtım yok (bkz. Bilinen sorunlar #8, #31) |
 | Reddedilen araç çağrılarını uyarı olarak loglama | ✅ | `permission_denials` |
 | CLI sağlayıcılarında proje klasörü zorunluluğu | ✅ | Klasör proje başınadır (`project.rootPath`) |
-| `browser` izninin uygulanması | ⏳ | Ajanlar tarayıcıyı kullanamaz; izin açıklaması "henüz uygulanmıyor" der |
+| `browser` izninin uygulanması | ✅ | 2026-10-15: `web_fetch` (tüm sağlayıcılar): herkese açık sayfa metin olarak; SSRF koruması (her adımda DNS + yalnızca genel adres, IP sabitleme), 3 MB / 20 sn. JavaScript ile içerik üreten sayfalar zayıf döner |
 | İzinleri ajan ekranından yönetme | ✅ | Organizasyon → Ajanlar → İzinler (anında kaydedilir; Ayarlar → İzin Matrisi ile aynı `PERMISSIONS` listesi, senkron) |
 | Yeni ajanda yetki şablonu (Salt okuma / Geliştirici / Tam yetki) | ✅ | İzinler ajanla aynı transaction'da yazılır |
 | Bağlantı izinleri matrisi (ajan × bağlantı, varsayılan erişim yok) | ✅ | Ayarlar → İzin Matrisi → "Bağlantı izinleri"; bkz. §3b |
@@ -352,11 +352,11 @@ Kullanıcıya dürüstçe söylenmesi gerekenler (kodla doğrulandı, 2026-10-13
 | Bulut senkronizasyonu, çok kullanıcı, ekip hesabı, uzaktan erişim | — | Tek makine, tek kullanıcı; her şey yerel SQLite'ta (`%APPDATA%\Agentbits`) |
 | Uygulama içi hesap / giriş | — | Tek kullanıcılı masaüstü uygulaması; sahte giriş ekranı kaldırıldı (Bilinen sorunlar #1) |
 | Telemetri / analitik, Agentbits sunucusu | — | Ağ trafiği yalnızca seçilen sağlayıcılara, CLI'ların kendisine, tanımlı bağlantılara, eklenen uygulamalara (MCP), skill kurulurken GitHub'a, Browser sekmesine ve tıklanınca destek sayfasına (sistem tarayıcısında) |
-| Ajanların tarayıcı kullanması | ⏳ | Browser yalnızca kullanıcı için; `browser` izni uygulanmıyor |
+| Ajanların JavaScript çalıştıran tam tarayıcı kullanması | ⏳ | `web_fetch` sayfayı metin olarak okur (2026-10-15); tıklama / form / JS yok |
 | Codex CLI ile bağlantı / dosya araçları | ✅ | 2026-10-15: köprü üzerinden; ekler ayrıca prompt bütçesiyle ve `--image` ile |
 | Uygulama (MCP) sunucularını kurmak, Node.js / uv getirmek | — | Kullanıcı sunucunun komutunu ya da adresini verir; Agentbits yalnızca bağlanır |
-| MCP kaynakları / istemleri / sampling | ⏳ | Yalnızca araçlar (§3f) |
-| Özel GitHub depolarından skill | ⏳ | Yalnızca herkese açık depolar, .zip, klasör, .md (§3e) |
+| MCP sampling / elicitation | ⏳ | Kaynaklar ve istemler var (2026-10-15) |
+| Özel GitHub depolarından skill | ✅ | Token ile (2026-10-15) |
 | Zamanlanmış / tekrarlanan görev, son tarih | — | Görevler sohbetten, elle ya da talimatla oluşur; otopilot yalnızca sıradakini alır |
 | İşletim sistemi bildirimleri | — | Yalnızca uygulama içi toast'lar ve rozetler |
 | Git entegrasyonu (dal, commit, PR) | — | Agentbits git kullanmaz; terminal izinli bir ajan kendisi çalıştırabilir |
@@ -364,7 +364,7 @@ Kullanıcıya dürüstçe söylenmesi gerekenler (kodla doğrulandı, 2026-10-13
 | OCR, eski Office biçimleri (.doc/.xls/.ppt/.rtf) | ⏳ | §3c |
 | Ajanların dosya eklerini değiştirmesi / silmesi | — | Bilinçli: ajanlar yalnızca okur, `file_save` yalnızca yeni metin dosyası (ADR-021) |
 | Proje klasörlerinin yedeklenmesi | — | Yedek yalnızca veritabanıdır; proje klasörü ve dosyaları silinmez de |
-| Vektör (embedding) hafıza, özel (`custom`) rapor | ⏳ | §9, §3 |
+| Vektör (embedding) hafıza | ⏳ | §9 (özel rapor 2026-10-15'te eklendi) |
 | Doğrulanmış macOS paketi, Linux paketi, web / mobil sürüm | — | macOS yapılandırması var ama denenmedi; Linux yalnızca kaynaktan; yalnızca Electron masaüstü |
 
 ## Bilinen sorunlar / gözden geçirilmeli

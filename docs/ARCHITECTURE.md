@@ -1104,6 +1104,20 @@ asla doğrudan bağlanmaz — her çağrı Agentbits'in yetki / onay / denetim k
   demo yetkilendirme sunucusuyla uçtan uca; Claude Code ve Codex yalnızca sahte CLI'larla (gerçek Codex'te
   `-c mcp_servers…` geçersiz kılmaları belgelere göre yazıldı, denenmedi).
 
+## 9g. Ajan araçları — web, özel rapor, özel skill deposu, MCP kaynakları (Faz 5, 2026-10-15)
+- **`web_fetch`** (`src/main/web/`): `browser` izni olan ajana (`webToolFor`, çağrıda yeniden denetim). `fetchPage` bağımlılıkları
+  enjekte alır (`tool.ts` bağlar): `checkWebUrl` (http(s), kimlik bilgisi yok, olağan portlar, `.local` / `.internal` / localhost
+  yok), DNS `lookup({ all })` → **tüm** adresler `isPublicAddress` (IPv4 özel / loopback / link-local / CGNAT / multicast /
+  belgeleme; IPv6 ::1, fc00::/7, fe80::/10, eşlemeli / NAT64 / 6to4 içindeki IPv4); istek denetlenen IP'ye sabitlenir (`lookup`
+  geçersiz kılınır, SNI korunur); en fazla 5 yönlendirme, her biri baştan denetlenir; 3 MB, 20 sn; yalnızca metin türleri; HTML →
+  `shared/html.ts`. Çıktı 40 bin karakterlik sayfalarla, `<<<WEB PAGE … UNTRUSTED DATA>>>` zarfında.
+- **Özel rapor:** `orchestrator.generateCustomReport(projectId, request)` → lider, `chat` modunda ve araçsız, sistem prompt'undaki
+  "## Report data" (pano, açık / son biten görevler, kararlar, son rapor özetleri; bilgi, talimat değil) ile yazar; `kind: 'custom'`.
+- **Özel GitHub skill'leri:** `skills/githubToken.ts` (`settings` → `secrets.githubToken`, `safeStorage`); `source.ts` →
+  `githubFetch`: önce herkese açık adres, `NotFoundError` + token varsa `api.github.com` (`zipball`, `contents` + raw kabul).
+- **MCP kaynakları / istemleri:** `apps/service.ts` → `APP_READ_TOOLS` (`apps_resources`, `apps_read_resource`, `apps_prompts`,
+  `apps_get_prompt`), `appRequest` (`client.ts`); izinli + açık uygulamalar, denetim kaydı, sır arındırma, güvenilmeyen veri zarfı.
+
 ## 10. Renderer durumu
 
 ### 10.1 Kapı sırası (`App.tsx`)
