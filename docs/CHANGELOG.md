@@ -4,13 +4,13 @@
 > `## YYYY-MM-DD — kısa başlık`, ardından **Eklendi / Değişti / Düzeltildi / Kaldırıldı / Bilinen** maddeleri
 > ve ilgili dosyalar.
 
-## 2026-10-16 — v0.3.0 sürüm hazırlığı
+## 2026-10-15 — v0.3.0 sürüm hazırlığı
 
 ### Değişti
 - Sürüm **0.3.0**. README (EN + TR): "Bana ihtiyaç var", kabul kriterleri, "Ne değişti?". DEVELOPMENT §9.3: her sürümde site
   sürüm notları sayfası (agentbits.app/releases) ve indirme verisi güncellenir.
 
-## 2026-10-16 — "Bana ihtiyaç var", takılma nedenleri, kabul kriterleri, "Ne değişti?"
+## 2026-10-15 — "Bana ihtiyaç var", takılma nedenleri, kabul kriterleri, "Ne değişti?"
 
 ### Eklendi
 - **Bana ihtiyaç var** (üst bar, sayı rozetli): onay bekleyen bağlantı / uygulama işlemleri, başlamak için onay bekleyen
@@ -34,7 +34,7 @@
 - `tests/review.test.ts` (kriter listesi, eksik / sayısı tutmayan / boolean olmayan kontrol), `tests/worktree.test.ts`
   ("Ne değişti?" kopyadan ve birleştirme commit'inden). Arayüz sahte köprüyle tarayıcıda ekran görüntüsüyle denetlendi.
 
-## 2026-10-16 — Dış inceleme bulguları: iş kaybı, yalıtım, kuyruk, karar hafızası, akış hataları
+## 2026-10-15 — Dış inceleme bulguları: iş kaybı, yalıtım, kuyruk, karar hafızası, akış hataları
 
 ### Düzeltildi
 - **Commit başarısız olursa ajanın işi silinebiliyordu** (worktree modu): commit hatası artık görevi incelemeye göndermez,

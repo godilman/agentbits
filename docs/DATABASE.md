@@ -59,7 +59,7 @@ const MIGRATIONS: { version: number; sql: string }[] = [ { version: 1, sql: `...
 | 11 | 2026-10-15 | `tasks.depends_on TEXT NOT NULL DEFAULT '[]'` (bitmesi beklenen görev id'leri; zamanlayıcı `json_each` ile denetler, silinen bağımlılık engellemez). v10→v11 yükseltmesi SQLite ile denendi |
 | 12 | 2026-10-15 | `projects.isolation TEXT NOT NULL DEFAULT 'shared'` CHECK `shared, worktree` (görev başına git worktree, ADR-025) |
 | 13 | 2026-10-15 | `providers.base_url TEXT NOT NULL DEFAULT ''` — OpenAI sağlayıcısının OpenAI uyumlu uç noktası ('' = OpenAI); `kind` CHECK'i değişmediği için tablo yeniden kurulmadı |
-| 16 | 2026-10-16 | Kabul kriterleri: `tasks.acceptance TEXT NOT NULL DEFAULT ''` (satır başına bir kriter), `tasks.acceptance_check TEXT` (liderin son kontrolü, JSON `[{text, met, note}]`) |
+| 16 | 2026-10-15 | Kabul kriterleri: `tasks.acceptance TEXT NOT NULL DEFAULT ''` (satır başına bir kriter), `tasks.acceptance_check TEXT` (liderin son kontrolü, JSON `[{text, met, note}]`) |
 | 15 | 2026-10-15 | Anlamsal hafıza: `memory_vectors (memory_id PK → memories ON DELETE CASCADE, model TEXT, vec BLOB)` — normalize Float32 vektör, `model` = `sağlayıcıId\|model` (başka model = yeniden gömülür). Gerçek SQLite ile uçtan uca denendi (silmede vektör de gidiyor) |
 | 14 | 2026-10-15 | Yarış modu: `tasks.race_of TEXT` (rakip kopyanın asıl görevi), `tasks.race_result TEXT` CHECK `won, lost`, `idx_tasks_race (race_of)`. SQL bellekte SQLite ile denendi (CHECK geçersiz değeri reddediyor) |
 

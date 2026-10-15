@@ -243,9 +243,9 @@ yukarıdaki ⏳ satırları ve "Bilinen sorunlar"dır.
 | İş dağıtımı: lider aynı roldekilere dağıtır; boştaki ikiz meşgul ikizin sıradaki görevini devralır | ✅ | 2026-10-15; Ayarlar → Genel → "İkizler arasında iş paylaşımı" (varsayılan açık) |
 | Görev bağımlılıkları (`"after"`), sonraki adım önceki raporları görür, kartta "… bekleniyor" | ✅ | 2026-10-15; migration v11; elle başlatma serbest |
 | Yarış modu: aynı görev başka sağlayıcı/modeldeki ikinci üyeye de verilir, lider iki denemeyi karşılaştırıp birini tutar | ✅ | 2026-10-15; Ayarlar → Genel → "Yarış modu" (varsayılan kapalı, lider incelemesi gerekir, ~2 kat maliyet). Kartta 🏁 Yarış / Kazandı / Kaybetti. Klasörlü projede "Her görev kendi git çalışma kopyasında" açık olmalı; kaybedenin dalı silinir. Migration v14 |
-| "Bana ihtiyaç var" paneli + kartta somut takılma nedeni | ✅ | 2026-10-16; üst bar. Onaylar, birleşmemiş işler, kararı sana kalan incelemeler, bekletilenler (nedeniyle), hata veren ajanlar |
-| Kabul kriterleri (görev başına, liderin incelemesinde tek tek kontrol) | ✅ | 2026-10-16; migration v16. Karşılanmayan kriter = geri gönderme; kontrol eksikse karar kullanıcıya kalır |
-| "Ne değişti?" (dosyalar, +/− satır, fark) | ✅ | 2026-10-16; yalnız "Her görev kendi git çalışma kopyasında" açık projelerde (git'ten) |
+| "Bana ihtiyaç var" paneli + kartta somut takılma nedeni | ✅ | 2026-10-15; üst bar. Onaylar, birleşmemiş işler, kararı sana kalan incelemeler, bekletilenler (nedeniyle), hata veren ajanlar |
+| Kabul kriterleri (görev başına, liderin incelemesinde tek tek kontrol) | ✅ | 2026-10-15; migration v16. Karşılanmayan kriter = geri gönderme; kontrol eksikse karar kullanıcıya kalır |
+| "Ne değişti?" (dosyalar, +/− satır, fark) | ✅ | 2026-10-15; yalnız "Her görev kendi git çalışma kopyasında" açık projelerde (git'ten) |
 | Ekip farkındalığı: "Team right now" + `team_status` aracı (kim, hangi görev, hangi dosyalar) | ✅ | 2026-10-15; `core/team.ts`. Dosya bilgisi Claude Code ve Demo'dan; Codex ve API sağlayıcıları dosya yazdığını bildirmez |
 
 ## 6. Sağlayıcılar
