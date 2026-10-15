@@ -15,13 +15,15 @@ export interface TeamRun {
   title: string
   /** Paths written by the run (as the provider reported them), newest last. */
   touched: string[]
+  /** The same paths normalised for comparison (slashes, Windows case). */
+  keys: string[]
 }
 
 const runs = new Map<string, TeamRun>()
 
 export const teamState = {
-  start(r: Omit<TeamRun, 'touched'>): void {
-    runs.set(r.runId, { ...r, touched: [] })
+  start(r: Omit<TeamRun, 'touched' | 'keys'>): void {
+    runs.set(r.runId, { ...r, touched: [], keys: [] })
   },
   end(runId: string): void {
     runs.delete(runId)
@@ -33,12 +35,13 @@ export const teamState = {
   touch(runId: string, path: string): TeamRun[] {
     const r = runs.get(runId)
     if (!r || !path) return []
-    const p = normalize(path)
-    if (!r.touched.includes(p)) {
-      r.touched.push(p)
-      if (r.touched.length > 200) r.touched.shift()
+    const k = normalize(path)
+    if (!r.keys.includes(k)) {
+      r.keys.push(k)
+      r.touched.push(path.trim().replace(/\\/g, '/').replace(/^\.\//, ''))
+      if (r.keys.length > 200) (r.keys.shift(), r.touched.shift())
     }
-    return [...runs.values()].filter((o) => o.runId !== runId && o.projectId === r.projectId && o.touched.includes(p))
+    return [...runs.values()].filter((o) => o.runId !== runId && o.projectId === r.projectId && o.keys.includes(k))
   },
   /** The other runs of a project (not `exceptRunId`). */
   others(projectId: string, exceptRunId: string | null): TeamRun[] {

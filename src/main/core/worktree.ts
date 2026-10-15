@@ -83,6 +83,16 @@ export async function commitAll(wtDir: string, message: string, author: { name: 
   return true
 }
 
+/**
+ * Merge commits need a committer: the user's git identity when configured, otherwise "Agentbits" (a machine without
+ * user.name / user.email would make every merge fail with "Committer identity unknown").
+ */
+async function identity(dir: string, env: GitEnv): Promise<string[]> {
+  const email = await git(dir, ['config', 'user.email'], env)
+  const name = await git(dir, ['config', 'user.name'], env)
+  return email.ok && email.out && name.ok && name.out ? [] : ['-c', 'user.name=Agentbits', '-c', 'user.email=agentbits@agents.agentbits.local']
+}
+
 /** Files with unresolved conflicts (merge markers) in a working tree. */
 export async function conflictedFiles(dir: string, env: GitEnv): Promise<string[]> {
   const r = await git(dir, ['diff', '--name-only', '--diff-filter=U'], env)
@@ -106,7 +116,7 @@ export async function mergeIntoRoot(root: string, branch: string, message: strin
   const dirty = await git(root, ['status', '--porcelain', '--untracked-files=no'], env)
   if (!dirty.ok) return { status: 'failed', error: dirty.err }
   if (dirty.out) return { status: 'dirty' }
-  const r = await git(root, ['merge', '--no-ff', '--no-verify', '--no-edit', '-m', message, branch], env)
+  const r = await git(root, [...(await identity(root, env)), 'merge', '--no-ff', '--no-verify', '--no-edit', '-m', message, branch], env)
   if (r.ok) return { status: 'merged' }
   const files = await conflictedFiles(root, env)
   await git(root, ['merge', '--abort'], env)
@@ -120,7 +130,7 @@ export async function mergeIntoRoot(root: string, branch: string, message: strin
 export async function bringRootIn(root: string, wtDir: string, env: GitEnv): Promise<string[]> {
   const head = await git(root, ['rev-parse', 'HEAD'], env)
   if (!head.ok) throw new Error(head.err)
-  const r = await git(wtDir, ['merge', '--no-ff', '--no-verify', '--no-edit', head.out], env)
+  const r = await git(wtDir, [...(await identity(wtDir, env)), 'merge', '--no-ff', '--no-verify', '--no-edit', head.out], env)
   if (r.ok) return []
   const files = await conflictedFiles(wtDir, env)
   if (!files.length) throw new Error(r.err || 'git merge failed')
