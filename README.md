@@ -163,7 +163,7 @@ sign in to the CLIs, and it does not offer signing in with a Claude subscription
 Download the latest version from [GitHub Releases](https://github.com/godilman/agentbits/releases/latest):
 
 - **Windows 10/11 (x64):** `Agentbits-Setup-<version>.exe` (main target)
-- **macOS:** `.dmg`, for Apple Silicon (`arm64`) or Intel (`x64`). Not tested on a real Mac yet.
+- **macOS:** `.dmg`, for Apple Silicon (`arm64`) or Intel (`x64`). Opens on a real Mac; not every feature tried there yet. The first launch shows Apple's "could not verify" warning (the packages aren't notarized): **System Settings → Privacy & Security → Open Anyway**.
 
 The installers are **not code-signed** yet: Windows SmartScreen will warn you ("More info" → "Run anyway").
 SHA-256 checksums are attached to each release as `SHA256SUMS-*.txt`.
@@ -173,7 +173,7 @@ SHA-256 checksums are attached to each release as `SHA256SUMS-*.txt`.
 **Requirements**
 - [Node.js](https://nodejs.org/) **22 or newer** (needed only to run or build from source)
 - Windows 10/11, macOS or Linux. The Windows installer is the main target. Running from source works on all three;
-  the macOS package has not been tested on a real Mac yet, and there is no Linux package.
+  the macOS package is not fully tested yet, and there is no Linux package.
 - Optional: Claude Code CLI or Codex CLI, or an Anthropic / OpenAI API key
 
 ```bash
@@ -275,7 +275,7 @@ details: [docs/FEATURES.md](docs/FEATURES.md).
 
 These items are already listed as planned in [docs/FEATURES.md](docs/FEATURES.md). There are no dates.
 
-- [ ] Code-signed installers and a macOS package tested on a real Mac
+- [ ] Code-signed installers and signed, notarized macOS packages
 - [ ] An online gallery for shared teams and agents
 - [ ] Agents driving a full browser (today: reading pages as text)
 - [ ] MCP sampling and elicitation (today: tools, resources and prompts)

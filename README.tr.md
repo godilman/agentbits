@@ -165,7 +165,7 @@ içermez, kurmaz ve onlarda oturum açmaz; uygulama içinde Claude aboneliğiyle
 Son sürümü [GitHub Releases](https://github.com/godilman/agentbits/releases/latest) sayfasından indirebilirsin:
 
 - **Windows 10/11 (x64):** `Agentbits-Setup-<sürüm>.exe` (ana hedef)
-- **macOS:** Apple Silicon (`arm64`) ya da Intel (`x64`) için `.dmg`. Henüz gerçek bir Mac'te denenmedi.
+- **macOS:** Apple Silicon (`arm64`) ya da Intel (`x64`) için `.dmg`. Gerçek bir Mac'te açıldı; her özellik orada henüz denenmedi. İlk açılışta Apple'ın "doğrulayamadı" uyarısı çıkar (paketler onaylı değil): **Sistem Ayarları → Gizlilik ve Güvenlik → Yine de Aç**.
 
 Kurulum dosyaları henüz **kod imzalı değil**: Windows SmartScreen uyarı verir ("Ek bilgi" → "Yine de çalıştır").
 SHA-256 özetleri her sürümde `SHA256SUMS-*.txt` dosyalarında.
@@ -175,7 +175,7 @@ SHA-256 özetleri her sürümde `SHA256SUMS-*.txt` dosyalarında.
 **Gereksinimler**
 - [Node.js](https://nodejs.org/) **22 ya da üstü** (yalnızca kaynaktan çalıştırmak ya da derlemek için)
 - Windows 10/11, macOS ya da Linux. Ana hedef Windows kurulum dosyası. Kaynaktan çalıştırma üçünde de çalışır; macOS
-  paketi henüz gerçek bir Mac'te denenmedi, Linux paketi yok.
+  paketi henüz tam denenmedi, Linux paketi yok.
 - İsteğe bağlı: Claude Code CLI ya da Codex CLI, veya bir Anthropic / OpenAI API anahtarı
 
 ```bash
@@ -282,7 +282,7 @@ proje klasörlerini kapsamaz; MySQL ve SQL Server sürücüleri PostgreSQL ve SS
 
 Bu maddeler [docs/FEATURES.md](docs/FEATURES.md)'de zaten planlı olarak geçiyor. Tarih verilmedi.
 
-- [ ] Kod imzalı kurulum dosyaları ve gerçek bir Mac'te denenmiş macOS paketi
+- [ ] Kod imzalı kurulum dosyaları ve imzalı, onaylı macOS paketleri
 - [ ] Paylaşılan takımlar ve ajanlar için çevrimiçi galeri
 - [ ] Ajanların tam tarayıcı kullanması (bugün: sayfaları metin olarak okuma)
 - [ ] MCP sampling ve elicitation (bugün: araçlar, kaynaklar ve istemler)
