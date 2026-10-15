@@ -41,9 +41,7 @@
   "task": {
     "defaultTitle": "Task",
     "logInstruction": "Taking the user's instruction into account: {{text}}",
-    "logAnalyzing": "Analyzing the task: {{title}}",
-    "testsPassed_one": "✓ {{count}} test passed",
-    "testsPassed_other": "✓ {{count}} tests passed"
+    "logAnalyzing": "Analyzing the task: {{title}}"
   },
   "report": {
     "summary": "Summary",
@@ -53,25 +51,19 @@
     "instruction": "User instruction",
     "instructionApplied": "The work was updated according to the instruction.",
     "done": "What was done",
-    "doneReviewed": "Reviewed the existing code and mapped the affected areas",
-    "doneChanged": "Applied the necessary changes",
-    "doneTested": "Ran the tests and they passed",
     "changedFiles": "Changed files",
     "reviewOnly": "(review only)",
     "notes": "Notes",
     "demoNote": "Simulated with the Demo provider. For real work, add Claude Code or an API key in Settings → Providers.",
     "skills": "Skills used",
-    "apps": "Apps used"
+    "apps": "Apps used",
+    "deliverables": "Deliverables"
   },
   "review": {
     "approved": {
       "r1": "Clean work, approved.",
       "r2": "Meets the acceptance criteria. 👍",
       "r3": "Looks good, ready to merge."
-    },
-    "rejected": {
-      "r1": "Tests for edge cases are missing, please add them.",
-      "r2": "The error messages aren't user-friendly, please take another look."
     }
   },
   "test": {
@@ -84,5 +76,43 @@
   "apps": {
     "used": "Used {{app}} → {{tool}}",
     "failed": "{{app}} → {{tool}} failed: {{error}}"
+  },
+  "kinds": {
+    "code": {
+      "done1": "Reviewed the existing code and mapped the affected areas",
+      "done2": "Applied the necessary changes",
+      "done3": "Ran the tests and they passed",
+      "final_one": "✓ {{count}} test passed",
+      "final_other": "✓ {{count}} tests passed",
+      "rejected1": "Tests for edge cases are missing, please add them.",
+      "rejected2": "The error messages aren't user-friendly, please take another look."
+    },
+    "research": {
+      "done1": "Collected and screened sources on the topic",
+      "done2": "Compared the findings side by side",
+      "done3": "Wrote a summary with the key takeaways and open questions",
+      "final_one": "✓ {{count}} source compared",
+      "final_other": "✓ {{count}} sources compared",
+      "rejected1": "Some claims have no source, please add references.",
+      "rejected2": "The comparison is missing a clear recommendation, please conclude."
+    },
+    "content": {
+      "done1": "Read the brief and identified the audience and tone",
+      "done2": "Wrote the draft and alternative headlines",
+      "done3": "Checked spelling, tone and length",
+      "final_one": "✓ Tone and spelling checked ({{count}} paragraph)",
+      "final_other": "✓ Tone and spelling checked ({{count}} paragraphs)",
+      "rejected1": "The tone doesn't fit the target audience, please make it warmer.",
+      "rejected2": "The call to action is missing, please add one."
+    },
+    "data": {
+      "done1": "Read the data and checked it for gaps",
+      "done2": "Calculated the requested metrics",
+      "done3": "Summarised the results in a table with notes",
+      "final_one": "✓ {{count}} row checked",
+      "final_other": "✓ {{count}} rows checked",
+      "rejected1": "The calculation method is not explained, please add it.",
+      "rejected2": "Outliers were not addressed, please check them."
+    }
   }
 }

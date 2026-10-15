@@ -1,4 +1,5 @@
 import type { Agent, ProviderTestResult } from '@shared/types'
+import { demoKind, type DemoKind } from '@shared/demoKind'
 import { agentsRepo } from '../db/repos'
 import { t } from '../i18n'
 import { sleep, type ProviderAdapter, type RunContext, type RunResult } from './types'
@@ -147,16 +148,26 @@ function chatReplyText(ctx: RunContext): string {
   )
 }
 
-const FILES = [
-  'src/components/LoginForm.tsx',
-  'src/api/tasks.ts',
-  'src/db/queries.ts',
-  'src/hooks/useValidation.ts',
-  'tests/e2e/kanban.spec.ts',
-  'electron-builder.yml',
-  'src/styles/theme.css',
-  'README.md'
-]
+/** What a simulated run of each kind of work touches. `final` is the closing tool call (code runs the tests). */
+const KIND_PLAN: Record<DemoKind, { files: string[]; verbs: string[]; final?: string }> = {
+  code: {
+    files: ['src/components/LoginForm.tsx', 'src/api/tasks.ts', 'src/db/queries.ts', 'src/hooks/useValidation.ts', 'tests/e2e/kanban.spec.ts', 'src/styles/theme.css', 'README.md'],
+    verbs: ['Read', 'Grep', 'Edit', 'Edit', 'Write'],
+    final: 'Bash npm test -- --run'
+  },
+  research: {
+    files: ['research/sources.md', 'research/notes.md', 'research/comparison.md', 'research/summary.md'],
+    verbs: ['WebSearch', 'WebSearch', 'Read', 'Write', 'Edit']
+  },
+  content: {
+    files: ['content/brief.md', 'content/draft.md', 'content/headlines.md', 'content/final.md'],
+    verbs: ['Read', 'Write', 'Edit', 'Edit']
+  },
+  data: {
+    files: ['data/input.csv', 'analysis/metrics.md', 'analysis/summary-table.md', 'analysis/report.md'],
+    verbs: ['Read', 'Read', 'Write', 'Edit']
+  }
+}
 
 // Keywords in the task text (Turkish + English).
 const NEEDS_DATA = /veritaban|database|\bdb\b|sql|sorgu|query|tablo|table|stok|stock|inventory|sipari|order|müşteri|musteri|customer|rapor|report|sunucu|server|ssh|disk|log|servis|service/i // i18n-ignore
@@ -325,6 +336,9 @@ async function taskWork(ctx: RunContext): Promise<string> {
     ? ctx.prompt.replace(/^## Direct instruction[^\n]*\n/, '').split('\n\nTake this into account')[0].trim()
     : null
   const title = (original.match(/## Task\s+\S+: (.*)/)?.[1] ?? t('demo:task.defaultTitle')).trim()
+  // Only the task itself (not its thread) and the agent's profile decide what kind of work this looks like.
+  const kind = demoKind(original.split('\n## Task thread')[0], `${ctx.agent.role} ${ctx.agent.skills.join(' ')}`)
+  const plan = KIND_PLAN[kind]
   const steps = instruction ? Math.round(rand(3, 5)) : Math.round(rand(6, 9))
   const touched: string[] = []
   // Simulated usage (clearly marked as estimated in the UI): the context is re-read on every step, mostly from cache.
@@ -340,14 +354,16 @@ async function taskWork(ctx: RunContext): Promise<string> {
     await ctx.checkpoint()
     await sleep(rand(1400, 3200), ctx.signal)
     ctx.onUsage?.({ input: Math.round(rand(40, 260)), output: Math.round(rand(60, 340)), cacheRead: ctxTokens, cacheWrite: 0, costUsd: 0 })
-    const file = pick(FILES)
-    const action = i < 2 ? 'Read' : i === steps - 1 ? 'Bash' : pick(['Read', 'Grep', 'Edit', 'Edit', 'Write'])
-    if (action === 'Bash') {
-      ctx.onLog('tool', `Bash npm test -- --run`)
+    const file = pick(plan.files)
+    const last = i === steps - 1
+    const action = last ? 'final' : i < 2 ? plan.verbs[0] : pick(plan.verbs)
+    if (action === 'final') {
+      if (plan.final) ctx.onLog('tool', plan.final)
       await sleep(900, ctx.signal)
-      ctx.onLog('output', t('demo:task.testsPassed', { count: Math.round(rand(8, 40)) }))
+      ctx.onLog('output', t(`demo:kinds.${kind}.final`, { count: Math.round(rand(8, 40)) }))
     } else {
-      ctx.onLog('tool', `${action} ${action === 'Grep' ? '"TODO|FIXME"' : file}`)
+      const target = action === 'Grep' ? '"TODO|FIXME"' : action === 'WebSearch' ? JSON.stringify(title.slice(0, 60)) : file
+      ctx.onLog('tool', `${action} ${target}`)
       if (action === 'Edit' || action === 'Write') touched.push(file)
     }
     ctx.onProgress(Math.round(((i + 1) / steps) * 92))
@@ -362,8 +378,8 @@ async function taskWork(ctx: RunContext): Promise<string> {
     (instruction
       ? `## ${t('demo:report.instruction')}\n> ${instruction.slice(0, 400)}\n\n${t('demo:report.instructionApplied')}\n\n`
       : '') +
-    `## ${t('demo:report.done')}\n- ${t('demo:report.doneReviewed')}\n- ${t('demo:report.doneChanged')}\n- ${t('demo:report.doneTested')}\n\n` +
-    `## ${t('demo:report.changedFiles')}\n${files.length ? files.map((f) => `- \`${f}\``).join('\n') : `- ${t('demo:report.reviewOnly')}`}\n\n` +
+    `## ${t('demo:report.done')}\n${(['done1', 'done2', 'done3'] as const).map((n) => `- ${t(`demo:kinds.${kind}.${n}`)}`).join('\n')}\n\n` +
+    `## ${t(kind === 'code' ? 'demo:report.changedFiles' : 'demo:report.deliverables')}\n${files.length ? files.map((f) => `- \`${f}\``).join('\n') : `- ${t('demo:report.reviewOnly')}`}\n\n` +
     `## ${t('demo:report.notes')}\n- ${t('demo:report.demoNote')}`
   await stream(ctx, summary)
   return summary
@@ -379,11 +395,12 @@ export const mockAdapter: ProviderAdapter = {
     } else if (ctx.mode === 'review') {
       await sleep(rand(1500, 3000), ctx.signal)
       const approved = Math.random() < 0.85
+      const kind = demoKind(ctx.prompt.split('\n## Work report by')[0])
       text = JSON.stringify({
         approved,
         note: approved
           ? pick([t('demo:review.approved.r1'), t('demo:review.approved.r2'), t('demo:review.approved.r3')])
-          : pick([t('demo:review.rejected.r1'), t('demo:review.rejected.r2')])
+          : pick([t(`demo:kinds.${kind}.rejected1`), t(`demo:kinds.${kind}.rejected2`)])
       })
     } else {
       text = await taskWork(ctx)

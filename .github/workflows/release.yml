@@ -1,4 +1,4 @@
-# Builds the Windows installer and the macOS DMG/ZIP (Apple Silicon + Intel).
+# Builds the Windows installer and the macOS DMGs (Apple Silicon + Intel).
 # Runs by hand only (Actions → "Build packages" → Run workflow). Entering a "release_tag" such as v0.2.0
 # also creates a draft GitHub release with the files attached (only the owner sees drafts; publishing it
 # creates the tag). There is deliberately no tag trigger: publishing a draft creates its tag, and a tag
@@ -25,8 +25,8 @@ jobs:
   windows:
     runs-on: windows-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
         with:
           node-version: 22
           cache: npm
@@ -49,23 +49,21 @@ jobs:
       - name: Checksums
         shell: pwsh
         run: |
-          $lines = Get-ChildItem release -File | Where-Object { $_.Extension -in '.exe', '.blockmap' -or $_.Name -eq 'latest.yml' } | ForEach-Object { "$((Get-FileHash $_.FullName -Algorithm SHA256).Hash.ToLower())  $($_.Name)" }
+          $lines = Get-ChildItem release -File -Filter *.exe | ForEach-Object { "$((Get-FileHash $_.FullName -Algorithm SHA256).Hash.ToLower())  $($_.Name)" }
           ("commit $env:GITHUB_SHA" + "`n" + ($lines -join "`n")) | Out-File -Encoding utf8 release/SHA256SUMS-windows.txt
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: agentbits-windows
           path: |
             release/*.exe
-            release/*.blockmap
-            release/latest.yml
             release/SHA256SUMS-windows.txt
           if-no-files-found: error
 
   macos:
     runs-on: macos-latest # Apple Silicon runner; the Intel build is packaged on it too
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
         with:
           node-version: 22
           cache: npm
@@ -97,15 +95,12 @@ jobs:
       - run: npm run dist:mac
       - name: Checksums
         run: |
-          cd release && { echo "commit $GITHUB_SHA"; shasum -a 256 *.dmg *.zip *.blockmap latest-mac.yml; } > SHA256SUMS-macos.txt
-      - uses: actions/upload-artifact@v4
+          cd release && { echo "commit $GITHUB_SHA"; shasum -a 256 *.dmg; } > SHA256SUMS-macos.txt
+      - uses: actions/upload-artifact@v7
         with:
           name: agentbits-macos
           path: |
             release/*.dmg
-            release/*.zip
-            release/*.blockmap
-            release/latest-mac.yml
             release/SHA256SUMS-macos.txt
           if-no-files-found: error
 
@@ -115,7 +110,7 @@ jobs:
     needs: [windows, macos]
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v8
         with:
           path: dist
           merge-multiple: true

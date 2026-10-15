@@ -21,10 +21,10 @@
     "connections": "Bağlantılar",
     "projectSettings": "Proje ayarları",
     "pickProject": "Proje seç",
-    "chat": "Chat",
-    "tasks": "Tasks",
+    "chat": "Sohbet",
+    "tasks": "Görevler",
     "agentTerminals": "Ajan terminalleri",
-    "office": "Office"
+    "office": "Ofis"
   },
   "steps": {
     "provider": {
@@ -45,7 +45,7 @@
     "lead": {
       "title": "Bir lider belirle",
       "why": "Lider sohbette seninle konuşan ajandır: isteğini görevlere böler, ajanlara atar ve biten işi inceler.",
-      "how": "<b>Organizasyon → Takımlar</b>'da takımın liderini seç ya da <b>proje ayarlarında</b> projeye özel lider ata. Lider yoksa sohbet çalışmaz; görevleri Tasks'tan kendin de oluşturabilirsin."
+      "how": "<b>Organizasyon → Takımlar</b>'da takımın liderini seç ya da <b>proje ayarlarında</b> projeye özel lider ata. Lider yoksa sohbet çalışmaz; görevleri Görevler'den kendin de oluşturabilirsin."
     },
     "perms": {
       "title": "İzinleri gözden geçir",
@@ -60,23 +60,23 @@
     "work": {
       "title": "Lidere ilk işi ver",
       "why": "İşi tarif edersin; lider görevlere böler ve ajanlara dağıtır. Dosya eklersen (PDF, Excel, Word, görsel…) görevlere de geçer.",
-      "how": "<b>Chat → #general</b>: ne istediğini, nerede ve ne zamana kadar olduğunu yaz; ataçla ya da sürükle-bırakla dosya ekle. Tek bir ajana doğrudan mesaj için sol listeden ajanı seç. Görevleri elle eklemek için <b>Tasks → Yeni görev</b>."
+      "how": "<b>Sohbet → #general</b>: ne istediğini, nerede ve ne zamana kadar olduğunu yaz; ataçla ya da sürükle-bırakla dosya ekle. Tek bir ajana doğrudan mesaj için sol listeden ajanı seç. Görevleri elle eklemek için <b>Görevler → Yeni görev</b>."
     },
     "watch": {
       "title": "İzle ve yönlendir",
       "why": "Ajanların ne yaptığını canlı görür, gerektiğinde araya girersin; biten işi lider inceler, sen de onaylar ya da geri gönderirsin.",
-      "how": "<b>Terminal → Ajan terminalleri</b>: her ajanın komutları, araç çağrıları ve çıktısı; alttaki kutudan <i>Yönlendir</i> (mevcut adımı keser) ya da <i>Sıraya al</i>. <b>Office</b> ekibi haritada gösterir, <b>Tasks</b> görevleri sürükle-bırakla yönetir, <b>Reports</b> rapor ve token kullanımını, <b>Decisions</b> alınan kararları tutar. Üstteki <b>Tümünü duraklat</b> her şeyi durdurur."
+      "how": "<b>Terminal → Ajan terminalleri</b>: her ajanın komutları, araç çağrıları ve çıktısı; alttaki kutudan <i>Yönlendir</i> (mevcut adımı keser) ya da <i>Sıraya al</i>. <b>Ofis</b> ekibi haritada gösterir, <b>Görevler</b> görevleri sürükle-bırakla yönetir, <b>Raporlar</b> rapor ve token kullanımını, <b>Kararlar</b> alınan kararları tutar. Üstteki <b>Tümünü duraklat</b> her şeyi durdurur."
     }
   },
   "places": {
     "sections": {
       "title": "Proje bölümleri (üst çubuk, Ctrl+1…9)",
       "chat": {
-        "name": "Chat",
+        "name": "Sohbet",
         "desc": "Lidere iş tarif et (#general), ajanlarla doğrudan konuş, görev akışlarını oku. Dosya ekleyebilirsin."
       },
       "office": {
-        "name": "Office",
+        "name": "Ofis",
         "desc": "Projenin ekibi pikselli ofiste: kim çalışıyor, kim molada, kim onay bekliyor."
       },
       "team": {
@@ -88,19 +88,19 @@
         "desc": "Ajan terminalleri (canlı akış + talimat kutusu) ve Kabuklar (proje klasöründe kendi terminalin)."
       },
       "tasks": {
-        "name": "Tasks",
+        "name": "Görevler",
         "desc": "Kanban panosu: Yapılacak → Devam eden → İncelemede → Bitti. Sürükleyerek başlat/durdur."
       },
       "reports": {
-        "name": "Reports",
+        "name": "Raporlar",
         "desc": "Görev raporları, günlük rapor ve token / maliyet kullanımı."
       },
       "decisions": {
-        "name": "Decisions",
+        "name": "Kararlar",
         "desc": "Ajanların ve liderin önerdiği kararlar; kabul edilenler hafızaya yazılır."
       },
       "browser": {
-        "name": "Browser",
+        "name": "Tarayıcı",
         "desc": "Uygulama içi tarayıcı (önizleme, belge okuma)."
       },
       "files": {

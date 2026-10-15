@@ -4,6 +4,39 @@
 > `## YYYY-MM-DD — kısa başlık`, ardından **Eklendi / Değişti / Düzeltildi / Kaldırıldı / Bilinen** maddeleri
 > ve ilgili dosyalar.
 
+## 2026-10-15 — v0.1.1: açık işlerin temizliği (Faz 1)
+
+### Değişti
+- **Türkçe arayüz:** sekme adları (Sohbet, Ofis, Görevler, Raporlar, Kararlar, Tarayıcı) ve Kanban sütunları (Yapılacak,
+  Devam eden, İncelemede, Bitti) Türkçe; Kılavuz, demo ve orkestratör metinlerindeki atıflar da (`locales/tr/layout.json`,
+  `common.json`, `guide.json`, `tasks.json`, `demo.json`, `orchestrator.json`, `agents.json`). Sahibin kararı. `README.tr.md` uyarlandı;
+  `docs/screenshots/tr/` görüntüleri henüz eski adları gösteriyor.
+- **Demo sağlayıcı iş türüne göre simüle eder** (`src/shared/demoKind.ts`, `providers/mock.ts`): görev metni (eşitlikte ajanın
+  rolü/yetenekleri) kod / araştırma / içerik / veri türünü seçer; adımlar, dosyalar, son adım (test yalnızca kodda), rapor
+  maddeleri ("Teslim edilenler") ve inceleme notları türe uyar. Pazarlama görevi artık `src/*.tsx` düzenlemiyor.
+  `tests/demo.test.ts` (`test:unit`'e eklendi). `demo.json`: `kinds.*`, `report.deliverables`; eski `report.done*`,
+  `task.testsPassed`, `review.rejected` anahtarları `kinds.code.*`'a taşındı.
+- **Paketleme sadeleşti** (`electron-builder.config.js`, `release.yml`): yalnızca kurulum dosyaları — Windows exe + macOS
+  arm64/x64 DMG + `SHA256SUMS-*.txt`. `publish: null` (silinirse electron-builder `repository`'den GitHub'ı türetip
+  `latest.yml` yazıyor — kaynakta doğrulandı), `nsis.differentialPackage: false`, `dmg.writeUpdateInfo: false`, Mac `zip` hedefi kaldırıldı.
+- **GitHub Actions Node 24:** `actions/checkout@v7`, `setup-node@v7`, `upload-artifact@v7`, `download-artifact@v8` (sürümler ve
+  kırıcı değişiklikler resmi sürüm notlarından kontrol edildi; kullanılan girdiler etkilenmiyor). "Node.js 20 deprecated" uyarısı biter.
+- `tasksRepo.list`: biçimi bozuk cursor ve geçersiz `limit` SQL'e ulaşmaz (ajanın eklediği cursor sayfalaması gözden geçirildi ve tutuldu).
+- Sürüm **0.1.1**.
+
+### Kaldırıldı
+- `permissions.ts` → `isPathAllowed()` (hiç kullanılmıyordu; yol sınırı CLI'larda zorlanır, `file_save` diske yazmaz).
+
+### Düzeltildi (belgeler)
+- `ARCHITECTURE.md` Codex sandbox satırı: `terminal && network` → `danger-full-access` diyordu; kod bunu hiçbir zaman seçmez.
+- `FEATURES.md` Anthropic satırı "`require_approval` uygulanmaz" diyordu; 2026-10-13'ten beri tüm sağlayıcılarda uygulanır.
+- `FEATURES.md` / `ARCHITECTURE.md` / `DEVELOPMENT.md` §8: `v*` etiket tetikleyicisi yok; paket iş akışı yalnızca elle.
+- `DEVELOPMENT.md` test listesi güncel (review + demo testleri).
+
+### Gözden geçirildi (ajanların kendiliğinden eklediği işler, sahibin kararıyla tutuldu)
+- `tasks:list` cursor sayfalaması (yukarıdaki sıkılaştırmayla), `ProviderForm` API anahtarı doğrulaması (yalnızca yeni
+  sağlayıcı formunda; doğru), TA-3 Kanban test senaryoları, TA-5 kontrast düzeltmeleri (beyaz / `indigo-600` 6.29:1 doğrulandı).
+
 ## 2026-10-14 — v0.1.0 yayımlandı, devir notu
 
 ### Değişti

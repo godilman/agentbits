@@ -11,7 +11,7 @@
     "unassigned": "atanmadı",
     "plan_one": "Tamamdır, işi {{count}} parçaya böldüm ve ekibe dağıttım:",
     "plan_other": "Tamamdır, işi {{count}} parçaya böldüm ve ekibe dağıttım:",
-    "planFooter": "İlerlemeyi Tasks sekmesinden ve ofisten canlı takip edebilirsin. Biten işleri ben inceleyeceğim."
+    "planFooter": "İlerlemeyi Görevler sekmesinden ve ofisten canlı takip edebilirsin. Biten işleri ben inceleyeceğim."
   },
   "connections": {
     "none": "Erişebildiğim bir bağlantı yok.",
@@ -41,9 +41,7 @@
   "task": {
     "defaultTitle": "Görev",
     "logInstruction": "Kullanıcı talimatı dikkate alınıyor: {{text}}",
-    "logAnalyzing": "Görev analiz ediliyor: {{title}}",
-    "testsPassed_one": "✓ {{count}} test geçti",
-    "testsPassed_other": "✓ {{count}} test geçti"
+    "logAnalyzing": "Görev analiz ediliyor: {{title}}"
   },
   "report": {
     "summary": "Özet",
@@ -53,25 +51,19 @@
     "instruction": "Kullanıcı talimatı",
     "instructionApplied": "Talimat doğrultusunda çalışma güncellendi.",
     "done": "Yapılanlar",
-    "doneReviewed": "Mevcut kod incelendi ve etki alanı çıkarıldı",
-    "doneChanged": "Gerekli değişiklikler uygulandı",
-    "doneTested": "Testler çalıştırıldı ve geçti",
     "changedFiles": "Değişen dosyalar",
     "reviewOnly": "(yalnızca inceleme)",
     "notes": "Notlar",
     "demoNote": "Demo sağlayıcısı ile simüle edildi. Gerçek çalışma için Ayarlar → Sağlayıcılar'dan Claude Code veya bir API anahtarı ekleyin.",
     "skills": "Kullanılan skill'ler",
-    "apps": "Kullanılan uygulamalar"
+    "apps": "Kullanılan uygulamalar",
+    "deliverables": "Teslim edilenler"
   },
   "review": {
     "approved": {
       "r1": "Temiz iş, onaylandı.",
       "r2": "Kabul kriterlerini karşılıyor. 👍",
       "r3": "İyi görünüyor, birleştirilebilir."
-    },
-    "rejected": {
-      "r1": "Kenar durumları için test eksik, lütfen ekle.",
-      "r2": "Hata mesajları kullanıcı dostu değil, tekrar bak."
     }
   },
   "test": {
@@ -84,5 +76,43 @@
   "apps": {
     "used": "{{app}} kullanıldı → {{tool}}",
     "failed": "{{app}} → {{tool}} başarısız: {{error}}"
+  },
+  "kinds": {
+    "code": {
+      "done1": "Mevcut kod incelendi ve etki alanı çıkarıldı",
+      "done2": "Gerekli değişiklikler uygulandı",
+      "done3": "Testler çalıştırıldı ve geçti",
+      "final_one": "✓ {{count}} test geçti",
+      "final_other": "✓ {{count}} test geçti",
+      "rejected1": "Kenar durumları için test eksik, lütfen ekle.",
+      "rejected2": "Hata mesajları kullanıcı dostu değil, tekrar bak."
+    },
+    "research": {
+      "done1": "Konuyla ilgili kaynaklar toplandı ve elendi",
+      "done2": "Bulgular yan yana karşılaştırıldı",
+      "done3": "Önemli çıkarımlar ve açık sorularla bir özet yazıldı",
+      "final_one": "✓ {{count}} kaynak karşılaştırıldı",
+      "final_other": "✓ {{count}} kaynak karşılaştırıldı",
+      "rejected1": "Bazı iddiaların kaynağı yok, lütfen kaynak ekle.",
+      "rejected2": "Karşılaştırmada net bir öneri yok, lütfen bir sonuca bağla."
+    },
+    "content": {
+      "done1": "Brif okundu; hedef kitle ve ton belirlendi",
+      "done2": "Taslak ve alternatif başlıklar yazıldı",
+      "done3": "Yazım, ton ve uzunluk kontrol edildi",
+      "final_one": "✓ Ton ve yazım kontrol edildi ({{count}} paragraf)",
+      "final_other": "✓ Ton ve yazım kontrol edildi ({{count}} paragraf)",
+      "rejected1": "Ton hedef kitleye uymuyor, biraz daha sıcak olsun.",
+      "rejected2": "Harekete geçirici çağrı eksik, lütfen ekle."
+    },
+    "data": {
+      "done1": "Veri okundu ve eksikler kontrol edildi",
+      "done2": "İstenen metrikler hesaplandı",
+      "done3": "Sonuçlar notlarla birlikte tabloya döküldü",
+      "final_one": "✓ {{count}} satır kontrol edildi",
+      "final_other": "✓ {{count}} satır kontrol edildi",
+      "rejected1": "Hesaplama yöntemi açıklanmamış, lütfen ekle.",
+      "rejected2": "Aykırı değerlere bakılmamış, lütfen kontrol et."
+    }
   }
 }

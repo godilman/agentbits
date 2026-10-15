@@ -23,11 +23,11 @@ npm run dev          # electron-vite dev: main/preload yeniden derlenir, rendere
 |---|---|
 | `npm run dev` | Geliştirme modu (HMR). Main süreç logları bu terminalde görünür |
 | CI | `.github/workflows/ci.yml`: her push / PR'da Windows + Ubuntu'da `npm ci`, typecheck, `test:unit`, build, `npm audit --omit=dev --audit-level=critical`. `release.yml` paketlerle birlikte `SHA256SUMS-*.txt` (commit + karma) yükler |
-| `npm run test:unit` | İki test dosyası, `node --experimental-strip-types` ile (framework yok; Node 22.6+): `tests/connections.classify.test.ts` (SQL/SSH sınıflandırma) ve `tests/files.extract.test.ts` (tür tespiti, kodlamalar, CSV, parçalama, DOCX, XLSX tarih/formül, zip bombası, elle yazılmış ve bozuk PDF, talimat sezgiseli). Ayrıca `tests/skills.test.ts` (SKILL.md ön bilgisi, GitHub adresleri), `tests/apps.test.ts` (MCP yapılandırma JSON'u, araç adları, varsayılan politikalar) ve `tests/i18n.test.ts` (çeviri anahtarları, sabit Türkçe metin). Sınıflandırmaya, `files/extract.ts`'e, `shared/skills.ts`'e ya da `shared/apps.ts`'e dokunduysanız zorunlu |
+| `npm run test:unit` | Test dosyaları, `node --experimental-strip-types` ile (framework yok; Node 22.6+): `tests/connections.classify.test.ts` (SQL/SSH sınıflandırma) ve `tests/files.extract.test.ts` (tür tespiti, kodlamalar, CSV, parçalama, DOCX, XLSX tarih/formül, zip bombası, elle yazılmış ve bozuk PDF, talimat sezgiseli). Ayrıca `tests/skills.test.ts` (SKILL.md ön bilgisi, GitHub adresleri), `tests/apps.test.ts` (MCP yapılandırma JSON'u, araç adları, varsayılan politikalar), `tests/review.test.ts` (inceleme kararı), `tests/demo.test.ts` (Demo sağlayıcının iş türü tahmini) ve `tests/i18n.test.ts` (çeviri anahtarları, sabit Türkçe metin). Sınıflandırmaya, `files/extract.ts`'e, `shared/skills.ts`'e ya da `shared/apps.ts`'e dokunduysanız zorunlu |
 | `npm run typecheck` | `tsc --noEmit` — önce `tsconfig.node.json` (main/preload/shared), sonra `tsconfig.web.json` (renderer/shared) |
 | `npm run build` | `out/main`, `out/preload`, `out/renderer` üretim derlemesi |
 | `npm start` | `electron-vite preview` — derlenmiş uygulamayı çalıştırır |
-| `npm run dist` / `dist:win` / `dist:mac` | `build` + `electron-builder` → `release/`. Windows: NSIS kurulum `Agentbits-Setup-<sürüm>.exe` (x64). macOS: `Agentbits-<sürüm>-arm64.dmg` / `-x64.dmg` + `.zip` (yalnızca bir Mac'te ya da GitHub Actions'ta derlenir). Hepsi `--publish never`. İmza ve noterlik ortam değişkenleriyle açılır → §8 "Dağıtım paketleri". `asarUnpack`: `better-sqlite3`, `@lydell/node-pty*`, `out/main/mcp-connections.js`, `out/main/files-worker.js`, `out/main/chunks/**` (worker ve MCP sunucusu asar dışından yüklenir; Linux unpacked paketle doğrulandı) |
+| `npm run dist` / `dist:win` / `dist:mac` | `build` + `electron-builder` → `release/`. Windows: NSIS kurulum `Agentbits-Setup-<sürüm>.exe` (x64). macOS: `Agentbits-<sürüm>-arm64.dmg` / `-x64.dmg` (yalnızca bir Mac'te ya da GitHub Actions'ta derlenir). Hepsi `--publish never`. İmza ve noterlik ortam değişkenleriyle açılır → §8 "Dağıtım paketleri". `asarUnpack`: `better-sqlite3`, `@lydell/node-pty*`, `out/main/mcp-connections.js`, `out/main/files-worker.js`, `out/main/chunks/**` (worker ve MCP sunucusu asar dışından yüklenir; Linux unpacked paketle doğrulandı) |
 
 Her değişiklikten sonra **`npm run typecheck` ve `npm run build`** hatasız geçmelidir. Tek otomatik test `npm run test:unit`'tir
 (bağlantı sınıflandırması + dosya çıkarma); lint ve UI/entegrasyon testi yoktur.
@@ -277,7 +277,7 @@ seçicilerinde yeni dizi/nesne üretimi arayın (bkz. §5).
 
 **Nerede derlenir:** Windows paketi Windows'ta (`npm run dist:win`). macOS paketi **yalnızca macOS'ta** derlenebilir
 (DMG, imza ve noterlik Apple araçları ister); Mac yoksa `.github/workflows/release.yml` GitHub Actions'ta ikisini de derler:
-Actions → "Build packages" → *Run workflow*, ya da `v0.2.0` gibi bir etiket gönderilince (taslak GitHub Release oluşur).
+Actions → "Build packages" → *Run workflow* (`release_tag` verilirse taslak GitHub Release oluşur; etiket tetikleyicisi yok).
 Sürüm numarası `package.json` → `version`.
 
 **Lisans dosyaları:** paket `LICENSE`'ı (`resources/LICENSE.txt`, kurulum sihirbazında da gösterilir) ve
@@ -316,8 +316,9 @@ kaldırmada korunur (`deleteAppDataOnUninstall: false`); şema açılışta migr
 (`installer.nsh` kaldırıldı); tüm ayarlar `electron-builder.config.js` → `nsis`'tedir.
 
 **Bilinen:** macOS paketi bu depoda henüz bir Mac'te / CI'da derlenip denenmedi; ilk derlemeden sonra açılış, terminal
-(node-pty), SQLite ve dosya çıkarma (worker) kontrol edilmeli. Otomatik güncelleme yok (`publish` yalnızca ileride
-`electron-updater` eklenirse kullanılır).
+(node-pty), SQLite ve dosya çıkarma (worker) kontrol edilmeli. Otomatik güncelleme yok: `publish: null`, `nsis.differentialPackage: false`, `dmg.writeUpdateInfo: false` → yalnızca
+kurulum dosyaları üretilir (`latest*.yml` / `.blockmap` yok). `publish` kaldırılırsa electron-builder `package.json` →
+`repository`'den GitHub yapılandırmasını kendisi türetip `latest.yml` yazar; bu yüzden açıkça `null`'dır.
 
 
 ## 9. GitHub deposu, günlük iş akışı ve sürüm yayınlama

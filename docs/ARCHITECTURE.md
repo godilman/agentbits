@@ -29,7 +29,7 @@ agentbits/
 ├─ electron-builder.config.js / LICENSE                     # paketleme (appId app.agentbits.desktop)
 ├─ build-resources/           # icon.svg (logo kaynağı), icon.png (512), icon.ico (16–256), icon.icns (macOS),
 │                             # entitlements.mac.plist (özel NSIS betiği yok)
-├─ .github/workflows/release.yml  # Windows + macOS paketleri (elle ya da v* etiketiyle; etikette taslak Release)
+├─ .github/workflows/release.yml  # Windows + macOS paketleri (yalnızca elle; `release_tag` verilirse taslak Release)
 ├─ docs/                      # PROJECT, ARCHITECTURE, DATABASE, FEATURES, DEVELOPMENT, CHANGELOG, DECISIONS,
 │                             # TEST_SCENARIOS_KANBAN, RELEASE_TEMPLATE
 ├─ tests/                    # npm run test:unit: connections.classify.test.ts (SQL/SSH), files.extract.test.ts (dosya çıkarma),
@@ -73,7 +73,7 @@ agentbits/
    │  │  ├─ maintenance.ts    # Veri yönetimi: dataUsage, clearProject, clearOrgMemory, pruneLogs, start/stopMaintenance,
    │  │  │                    # createBackup/listBackups/deleteBackup/restoreBackup, openDataFolder, factoryReset
    │  │  ├─ memory.ts         # memoryEngine (recall / search / remember / format)
-   │  │  ├─ permissions.ts    # toolsFor, describePermissions, isPathAllowed (şu an kullanılmıyor)
+   │  │  ├─ permissions.ts    # toolsFor, describePermissions
    │  │  └─ prompts.ts        # workerSystem/Prompt, leadSystem/Prompt, reviewSystem/Prompt, parse*
    │  ├─ providers/
    │  │  ├─ types.ts          # RunContext, RunResult, ProviderAdapter, AbortedError, sleep, readSse
@@ -635,8 +635,8 @@ claude -p --output-format stream-json --verbose
   `tool_use` → `tool` logu (`file_path`/`command`/`pattern`) ve ilerleme `10 + 6 × araç` (en fazla %90);
   `result` → nihai metin, `total_cost_usd`, token (cache dahil), `permission_denials` → her biri
   "İzin reddedildi (izin matrisi / çalışma alanı dışı)" **uyarı logu**; `is_error` → hata.
-- Codex sandbox: `mode !== 'task' || !fsWrite` → `read-only`; `terminal && network` → `danger-full-access`;
-  aksi halde `workspace-write`.
+- Codex sandbox: `mode !== 'task' || !fsWrite` → `read-only`; aksi halde `workspace-write` (ağ izni varsa
+  `-c sandbox_workspace_write.network_access=true`). **`danger-full-access` hiçbir zaman seçilmez** (`codexCli.ts`).
 - Her ajan, prompt'unda izinlerini "ALLOWED/DENIED" listesi olarak görür (`describePermissions`), ama asıl
   zorlama CLI bayraklarıdır. API sağlayıcıları araç kullanmadığı için izinler onlarda yalnızca bilgi amaçlıdır.
 

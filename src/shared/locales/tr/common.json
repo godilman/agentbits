@@ -83,7 +83,7 @@
     "organization": "Organizasyon",
     "projectSettings": "Proje ayarları",
     "noFolder": "klasör yok",
-    "tokensTitle": "Bu oturumda tüm ajanlar: {{session}} token\nTüm zamanlar: {{total}} token\nAyrıntı: Reports → Token kullanımı",
+    "tokensTitle": "Bu oturumda tüm ajanlar: {{session}} token\nTüm zamanlar: {{total}} token\nAyrıntı: Raporlar → Token kullanımı",
     "tokens": "oturum {{session}} · toplam {{total}} token",
     "memories_one": "SQLite · {{count}} hafıza",
     "memories_other": "SQLite · {{count}} hafıza"
@@ -102,10 +102,10 @@
     "urgent": "Acil"
   },
   "taskColumns": {
-    "todo": "To do",
-    "in_progress": "In progress",
-    "in_review": "In review",
-    "done": "Done"
+    "todo": "Yapılacak",
+    "in_progress": "Devam eden",
+    "in_review": "İncelemede",
+    "done": "Bitti"
   },
   "feedback": {
     "button": "Geri bildirim",

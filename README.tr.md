@@ -46,7 +46,7 @@ Hepsi tek pencerede, verilerin de kendi bilgisayarında kalır.
   isteği panoda görevlere çevirir.
 - **Canlı pikselli ofis.** Ajanlar çalışırken masalarında oturur, kahve molası verir, onay ya da hata rozetleri
   gösterir. Ne yaptığını görmek için bir ajana tıklaman yeter.
-- **Kanban panosu (Tasks).** To do → In progress → In review → Done. Sürükle-bırak, görev başına akış, log ve
+- **Kanban panosu (Görevler).** Yapılacak → Devam eden → İncelemede → Bitti. Sürükle-bırak, görev başına akış, log ve
   çalışmalar.
 - **Ajan terminalleri.** Her ajanın kalıcı bir dökümü olur: kendisine ne sorulduğu, hangi araçları kullandığı, kaç
   token harcadığı. Buradan ajanı yönlendirebilir, talimatı sıraya koyabilir ya da yeni görev verebilirsin. Gerçek
@@ -144,7 +144,7 @@ içermez, kurmaz ve onlarda oturum açmaz; uygulama içinde Claude aboneliğiyle
 Son sürümü [GitHub Releases](https://github.com/godilman/agentbits/releases/latest) sayfasından indirebilirsin:
 
 - **Windows 10/11 (x64):** `Agentbits-Setup-<sürüm>.exe` (ana hedef)
-- **macOS:** Apple Silicon (`arm64`) ya da Intel (`x64`) için `.dmg` veya `.zip`. Henüz gerçek bir Mac'te denenmedi.
+- **macOS:** Apple Silicon (`arm64`) ya da Intel (`x64`) için `.dmg`. Henüz gerçek bir Mac'te denenmedi.
 
 Kurulum dosyaları henüz **kod imzalı değil**: Windows SmartScreen uyarı verir ("Ek bilgi" → "Yine de çalıştır").
 SHA-256 özetleri her sürümde `SHA256SUMS-*.txt` dosyalarında.
@@ -171,7 +171,7 @@ npm run dev     # geliştirme modunda başlatır
 | `npm run test:unit` | Birim testleri: SQL/SSH sınıflandırma (güvenlik regresyon örnekleri dahil), dosya çıkarma, skill'ler, MCP yapılandırması, inceleme kararı, çeviriler |
 | `npm run build` / `npm start` | `out/` klasörüne üretim derlemesi / derlenmiş uygulamayı çalıştırma |
 | `npm run dist:win` | Windows kurulum dosyası → `release/Agentbits-Setup-<sürüm>.exe` (x64, NSIS) |
-| `npm run dist:mac` | macOS DMG/ZIP (Apple Silicon + Intel); yalnızca macOS'ta ya da GitHub Actions'ta çalışır |
+| `npm run dist:mac` | macOS DMG (Apple Silicon + Intel); yalnızca macOS'ta ya da GitHub Actions'ta çalışır |
 
 Normal verilerine dokunmadan denemek için ayrı bir klasör göster:
 
@@ -204,7 +204,7 @@ seçici · `Ctrl+,` Ayarlar · `F1` Kılavuz.
 |---|---|
 | Masaüstü kabuğu | Electron 44 (main + preload + renderer, `sandbox: true`, tipli IPC) |
 | Arayüz | React 19, TypeScript 5.9 (strict), Tailwind CSS 3, Zustand, lucide-react |
-| Derleme ve paketleme | electron-vite / Vite 7, electron-builder (Windows NSIS, macOS DMG/ZIP) |
+| Derleme ve paketleme | electron-vite / Vite 7, electron-builder (Windows NSIS, macOS DMG) |
 | Veritabanı | better-sqlite3 ile SQLite (WAL, FTS5 hafıza araması, sürümlü migration'lar) |
 | Ofis | Kodla çizilen sprite'larla saf HTML5 canvas (görsel dosyası yok) |
 | Terminaller | xterm.js + node-pty (gerçek PTY, yoksa pipe) |
@@ -223,7 +223,7 @@ Kodlama ajanları [CLAUDE.md](CLAUDE.md) / [AGENTS.md](AGENTS.md) ile başlar.
   bir SQLite veritabanında saklanır: Windows'ta `%APPDATA%\Agentbits`, macOS'ta
   `~/Library/Application Support/Agentbits`, Linux'ta `~/.config/Agentbits`. Agentbits sunucusu, hesap ya da
   telemetri yoktur. Ağ trafiği yalnızca senin ayarladığın sağlayıcılara, bağlantılara ve uygulamalara, skill
-  kurarken GitHub'a ve yerleşik Browser sekmesinde açtığın sitelere gider.
+  kurarken GitHub'a ve yerleşik Tarayıcı sekmesinde açtığın sitelere gider.
 - **Sırlar ana süreçte kalır.** API anahtarları, parolalar ve token'lar işletim sisteminin anahtar zinciriyle
   şifrelenir (Windows DPAPI, macOS Keychain, Linux Secret Service). Arayüze, prompt'lara, terminallere ve loglara asla
   gönderilmez. Anahtar zinciri yoksa Agentbits sır saklamayı reddeder.

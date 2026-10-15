@@ -144,7 +144,7 @@ sign in to the CLIs, and it does not offer signing in with a Claude subscription
 Download the latest version from [GitHub Releases](https://github.com/godilman/agentbits/releases/latest):
 
 - **Windows 10/11 (x64):** `Agentbits-Setup-<version>.exe` (main target)
-- **macOS:** `.dmg` or `.zip`, for Apple Silicon (`arm64`) or Intel (`x64`). Not tested on a real Mac yet.
+- **macOS:** `.dmg`, for Apple Silicon (`arm64`) or Intel (`x64`). Not tested on a real Mac yet.
 
 The installers are **not code-signed** yet: Windows SmartScreen will warn you ("More info" → "Run anyway").
 SHA-256 checksums are attached to each release as `SHA256SUMS-*.txt`.
@@ -171,7 +171,7 @@ npm run dev     # start in development mode
 | `npm run test:unit` | Unit tests: SQL/SSH classification (including security regression cases), file extraction, skills, MCP config, review parsing, translations |
 | `npm run build` / `npm start` | Production build into `out/` / run the built app |
 | `npm run dist:win` | Windows installer → `release/Agentbits-Setup-<version>.exe` (x64, NSIS) |
-| `npm run dist:mac` | macOS DMG/ZIP (Apple Silicon + Intel); runs only on macOS or in GitHub Actions |
+| `npm run dist:mac` | macOS DMG (Apple Silicon + Intel); runs only on macOS or in GitHub Actions |
 
 To try Agentbits without touching your normal data, point it at a separate folder:
 
@@ -203,7 +203,7 @@ picker · `Ctrl+,` Settings · `F1` Guide.
 |---|---|
 | Desktop shell | Electron 44 (main + preload + renderer, `sandbox: true`, typed IPC) |
 | UI | React 19, TypeScript 5.9 (strict), Tailwind CSS 3, Zustand, lucide-react |
-| Build & packaging | electron-vite / Vite 7, electron-builder (Windows NSIS, macOS DMG/ZIP) |
+| Build & packaging | electron-vite / Vite 7, electron-builder (Windows NSIS, macOS DMG) |
 | Database | SQLite via better-sqlite3 (WAL, FTS5 memory search, versioned migrations) |
 | Office | Plain HTML5 canvas with sprites drawn in code (no image assets) |
 | Terminals | xterm.js + node-pty (real PTY, pipe fallback) |

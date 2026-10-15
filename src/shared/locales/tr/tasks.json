@@ -2,8 +2,8 @@
   "board": {
     "title": "Görev Panosu",
     "titleWithProject": "Görev Panosu · {{project}}",
-    "subtitle_one": "{{count}} görev · sürükleyip bırakarak taşı; “In progress”e bırakmak işi başlatır",
-    "subtitle_other": "{{count}} görev · sürükleyip bırakarak taşı; “In progress”e bırakmak işi başlatır",
+    "subtitle_one": "{{count}} görev · sürükleyip bırakarak taşı; “Devam eden”e bırakmak işi başlatır",
+    "subtitle_other": "{{count}} görev · sürükleyip bırakarak taşı; “Devam eden”e bırakmak işi başlatır",
     "searchPlaceholder": "Ara (başlık, TA-12)…",
     "all": "Hepsi",
     "newTask": "Yeni görev",

@@ -1,4 +1,6 @@
-// electron-builder configuration (Windows NSIS installer + macOS DMG/ZIP).
+// electron-builder configuration (Windows NSIS installer + macOS DMG).
+// Only the installers are produced: no auto-update files (latest*.yml, .blockmap) and no macOS ZIP — the app has no
+// updater, and releases are downloaded by hand from GitHub.
 // .js so signing can be switched on from environment variables (local machine or CI secrets):
 //
 //   Windows  WIN_CERT_SUBJECT            certificate subject in the Windows cert store (signtool)
@@ -61,14 +63,12 @@ module.exports = {
     shortcutName: 'Agentbits',
     runAfterFinish: true,
     deleteAppDataOnUninstall: false,
-    license: 'LICENSE'
+    license: 'LICENSE',
+    differentialPackage: false // no .blockmap
   },
   mac: {
     // Separate Apple Silicon and Intel builds (native modules are per architecture).
-    target: [
-      { target: 'dmg', arch: ['arm64', 'x64'] },
-      { target: 'zip', arch: ['arm64', 'x64'] }
-    ],
+    target: [{ target: 'dmg', arch: ['arm64', 'x64'] }],
     icon: 'build-resources/icon.icns',
     category: 'public.app-category.developer-tools',
     artifactName: 'Agentbits-${version}-${arch}.${ext}',
@@ -82,13 +82,11 @@ module.exports = {
     notarize: macCert && macNotarize
   },
   dmg: {
-    title: 'Agentbits ${version}'
+    title: 'Agentbits ${version}',
+    writeUpdateInfo: false // no .blockmap
   },
-  publish: {
-    provider: 'github',
-    owner: 'godilman',
-    repo: 'agentbits',
-    releaseType: 'release'
-  },
+  // Explicitly null: when unset, electron-builder derives a GitHub config from package.json "repository" and still
+  // writes latest.yml / app-update.yml.
+  publish: null,
   npmRebuild: false
 }

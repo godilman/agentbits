@@ -30,14 +30,14 @@
   },
   "topBar": {
     "tabs": {
-      "chat": "Chat",
-      "office": "Office",
+      "chat": "Sohbet",
+      "office": "Ofis",
       "team": "Ekip",
       "terminal": "Terminal",
-      "tasks": "Tasks",
-      "reports": "Reports",
-      "decisions": "Decisions",
-      "browser": "Browser",
+      "tasks": "Görevler",
+      "reports": "Raporlar",
+      "decisions": "Kararlar",
+      "browser": "Tarayıcı",
       "files": "Dosyalar"
     },
     "tabTitle": "{{label}} (Ctrl+{{key}})",

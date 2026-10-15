@@ -25,7 +25,7 @@ hissinde, koyu temalı, ajanların ne yaptığını canlı gösteren güvenli bi
 Durum: **MVP (v0.1.0)** — organizasyon, projeler ve tüm proje bölümleri çalışıyor; özellik durumu →
 [docs/FEATURES.md](docs/FEATURES.md). Depo herkese açık, v0.1.0 GitHub Releases'te yayımlandı (2026-10-14).
 
-## Güncel durum ve devir notu (son güncelleme: 2026-10-14)
+## Güncel durum ve devir notu (son güncelleme: 2026-10-15)
 
 > Önceki oturumların bağlamı burada özetlenir; yeni bir oturuma başlayan ajan bunu okuyarak devam edebilmelidir.
 > Ayrıntılar: [docs/CHANGELOG.md](docs/CHANGELOG.md) (en üstteki kayıtlar), [docs/SECURITY.md](docs/SECURITY.md),
@@ -50,7 +50,11 @@ Durum: **MVP (v0.1.0)** — organizasyon, projeler ve tüm proje bölümleri ça
 - Depo herkese açık. Destek: Buy Me a Coffee (`godilman`, tamamen gönüllü); uygulamadaki geri bildirim e-postası
   `src/shared/support.ts`.
 
-**Son oturumda yapılanlar (2026-10-13 / 14)**
+**Son oturumda yapılanlar (2026-10-15, Faz 1 → v0.1.1)** — ayrıntı CHANGELOG: Türkçe sekme/Kanban adları (sahibin kararı),
+Demo sağlayıcı iş türüne göre simülasyon (`shared/demoKind.ts`), paket sadeleştirme (yalnızca exe + dmg + SHA256SUMS,
+`publish: null`), Actions Node 24 sürümleri, belge çelişkileri, `isPathAllowed` kaldırıldı, ajanların eklediği işler gözden geçirildi.
+
+**Önceki oturum (2026-10-13 / 14)**
 1. **Güvenlik incelemesi, 1. tur** (bağımsız rapor, 27 bulgu) → durum tablosu `docs/SECURITY.md`, ADR-024.
 2. **Güvenlik incelemesi, 2. tur:** `sed`'de her betik denetlenir; tırnaklı SQL fonksiyon adları yakalanır; iç içe JSON'daki
    `approved` kararı geçersiz; ajan okumaları **salt-okunur DB kullanıcısı zorunlu**; temizlik beklemesi (`settled`) süre
@@ -64,12 +68,13 @@ Durum: **MVP (v0.1.0)** — organizasyon, projeler ve tüm proje bölümleri ça
 - Sahip: GitHub e-posta gizliliği ayarı; isteğe bağlı ayrı destek e-postası; eski yerel `release\` exe'si kullanılmamalı
   (DEVELOPMENT §9.4).
 - macOS paketi gerçek bir Mac'te denenmedi; kod imzalama yok (Windows SmartScreen / macOS Gatekeeper uyarır).
-- GitHub Actions "Node.js 20 deprecated" uyarısı: `actions/checkout`, `setup-node`, `upload-artifact`, `download-artifact`
-  Node 24 destekleyen sürümlere yükseltilmeli (sürüm numaralarını resmi sayfalardan doğrulayın).
-- Türkçe arayüzde sekme adları (Chat, Office, Tasks, Reports, Decisions, Browser) İngilizce; bilinçli olup olmadığı sahibe
-  sorulmadı.
-- Demo sağlayıcısı (`providers/mock.ts`) pazarlama/araştırma görevlerinde de kod dosyası düzenlemeleri taklit ediyor;
-  görev türüne uygun simülasyon README görüntülerini de iyileştirir.
+- **2026-10-15 sahibin onayladığı yol haritası** (fazlar sırayla, her faz sonunda doğrulama + belgeler + commit/push):
+  Faz 1 ✅ temizlik → v0.1.1 · Faz 2 lider ↔ ajan iletişimi (sahibin kararı: **yalnızca lider** ajanlarla konuşur — görev verir,
+  biten işleri ve notları görür, göreve not bırakır; ajanlar birbirleriyle doğrudan konuşmaz) · Faz 3 SECURITY.md'deki 🟡/⏳
+  maddeler · Faz 4 OpenAI uyumlu uç nokta (Gemini, yerel modeller) + Codex bağlantı/dosya araçları · Faz 5 ajanların tarayıcı
+  kullanması, özel rapor, özel GitHub skill, MCP kaynakları/istemleri · Faz 6 RTF/.doc/.xls + OCR · Faz 7 vektör hafıza +
+  aynı klasörde çakışma yönetimi. Hedef sürüm v0.2.0.
+- `docs/screenshots/tr/` ekran görüntüleri eski İngilizce sekme adlarını gösteriyor (Demo + boş veri klasörüyle yeniden çekilmeli).
 - `docs/SECURITY.md`'deki 🟡 / ⏳ maddeler (ör. büyük veride UI sayfalama) ve `docs/FEATURES.md` "Bilinen sorunlar".
 
 **Önceki oturumlardan öğrenilenler**
@@ -111,7 +116,7 @@ npm run test:unit          # birim testleri: SQL/SSH sınıflandırma, dosya ç�
 npm run build              # out/ klasörüne üretim derlemesi (her değişiklikten sonra zorunlu)
 npm start                  # derlenmiş uygulamayı çalıştırır
 npm run dist:win           # Windows NSIS kurulum paketi → release/ (npm run dist aynı)
-npm run dist:mac           # macOS DMG/ZIP (arm64 + x64) — yalnızca macOS'ta; Mac yoksa GitHub Actions (.github/workflows/release.yml)
+npm run dist:mac           # macOS DMG (arm64 + x64) — yalnızca macOS'ta; Mac yoksa GitHub Actions (.github/workflows/release.yml)
 ```
 
 Güvenli deneme için ayrı veri klasörü + Demo sağlayıcı kullanın:
@@ -167,7 +172,7 @@ Kurulum sorunları (Electron binary eksik, siyah pencere, execution policy, Clau
 | `src/renderer/src/components/` | `layout/` (iki satırlı TopBar, Sidebar, StatusBar, Toasts), `common/` (`Logo`, `PixelAvatar`, `ui`, `ErrorBoundary`, `TokenUsage`), `onboarding/` (sağlayıcı + ilk projenin adı/klasörü) |
 | `src/renderer/src/features/` | `org/` (Organizasyon sayfası: Şema, Takımlar, Ajanlar, Şablonlar, Skill'ler, Uygulamalar, Bağlantılar), `skills/` (`SkillsView`, `AddSkillModal`, `AgentSkills`), `apps/` (`AppsView`, `AgentApps`), `connections/` (`ConnectionsView`, `AuditList`, `ApprovalsDock` = Production onayları), `agents/` (Organizasyon → Ajanlar), `project/` (ProjectLauncher = açılış proje seçici + ProjectHome, ProjectModal, Ekip bölümü), proje bölümleri `chat`, `office`, `terminal` (`AgentGrid` + `AgentPane` = ajan terminalleri, `TerminalView` = Kabuklar), `tasks`, `reports` (+ `UsagePanel`), `decisions`, `browser`, `files` (`FilesView`, `FilePreviewModal`, `TaskFiles`, `hooks.ts`, `parts.tsx`); `settings` (`SettingsPanel`, `DataSection` = Veri yönetimi, `parts.tsx`), `guide` (`GuideDrawer` = Kılavuz yan paneli: 8 adım otomatik işaretlenir, "Nerede ne var", Kısayollar; TopBar "Kılavuz" / `F1`) |
 | `src/renderer/src/index.css` | Tailwind + bileşen sınıfları (`btn-*`, `input`, `card`, `label`, `panel-title`…) |
-| `electron-builder.config.js`, `build-resources/` | Paketleme yapılandırması (JS; `extraResources`: `LICENSE` → `LICENSE.txt`, `THIRD_PARTY_NOTICES.md`; `appId` `app.agentbits.desktop`; Windows NSIS + macOS DMG/ZIP; imza/noterlik ortam değişkenleriyle açılır → `docs/DEVELOPMENT.md` §8); `build-resources/icon.svg` (logo kaynağı), `icon.png` (512 px, dev penceresi), `icon.ico` (16–256), `icon.icns` (macOS), `entitlements.mac.plist` (özel NSIS betiği yok; `installer.nsh` kaldırıldı) |
+| `electron-builder.config.js`, `build-resources/` | Paketleme yapılandırması (JS; `extraResources`: `LICENSE` → `LICENSE.txt`, `THIRD_PARTY_NOTICES.md`; `appId` `app.agentbits.desktop`; Windows NSIS + macOS DMG, `publish: null` → güncelleme dosyası / blockmap yok; imza/noterlik ortam değişkenleriyle açılır → `docs/DEVELOPMENT.md` §8); `build-resources/icon.svg` (logo kaynağı), `icon.png` (512 px, dev penceresi), `icon.ico` (16–256), `icon.icns` (macOS), `entitlements.mac.plist` (özel NSIS betiği yok; `installer.nsh` kaldırıldı) |
 | `.github/workflows/ci.yml`, `.github/workflows/release.yml` | GitHub Actions: `CI` her push/PR'da Windows + Ubuntu'da `npm ci` → typecheck → `test:unit` → build → `npm audit`; `Build packages` yalnızca elle (Actions → Run workflow) Windows + macOS paketlerini derler, `release_tag` verilirse taslak Release oluşturur (etiket tetikleyicisi bilinçli olarak yok) |
 | `docs/` | Proje belgeleri (bkz. aşağı) |
 | `out/`, `release/` | Derleme çıktıları (gitignore'da) — elle düzenlemeyin |

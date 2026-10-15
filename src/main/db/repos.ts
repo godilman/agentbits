@@ -384,7 +384,10 @@ function encodeCursor(t: Task): string {
 
 function decodeCursor(cursor: string): CursorPayload | null {
   try {
-    return JSON.parse(Buffer.from(cursor, 'base64url').toString('utf8')) as CursorPayload
+    const c = JSON.parse(Buffer.from(cursor, 'base64url').toString('utf8')) as Partial<CursorPayload> | null
+    // A malformed cursor must not reach SQL as `undefined` bindings.
+    if (!c || typeof c.status !== 'string' || !Number.isFinite(c.sortOrder) || !Number.isInteger(c.seq)) return null
+    return c as CursorPayload
   } catch {
     return null
   }
@@ -393,7 +396,7 @@ function decodeCursor(cursor: string): CursorPayload | null {
 export const tasksRepo = {
   list(opts: TaskListOpts = {}): TaskPage {
     const db = getDb()
-    const limit = Math.min(opts.limit ?? 50, 200)
+    const limit = Math.min(Math.max(1, Math.trunc(Number(opts.limit) || 50)), 200)
     const statusFilter = (opts.status ? ' AND status = ?' : '') + (opts.projectId ? ' AND project_id = ?' : '')
     const countSql = `SELECT COUNT(*) AS c FROM tasks WHERE 1=1${statusFilter}`
     const countVals: unknown[] = [...(opts.status ? [opts.status] : []), ...(opts.projectId ? [opts.projectId] : [])]
