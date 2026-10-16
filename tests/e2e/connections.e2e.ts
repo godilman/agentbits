@@ -1,7 +1,7 @@
 // Database connections end to end: transport rule, SSH tunnel, TLS name checks, friendly errors, audit.
 // Real SQLite, a real SSH server (ssh2), fake MySQL / PostgreSQL servers. Run: npm run test:e2e
 import assert from 'node:assert/strict'
-import { readFileSync } from 'node:fs'
+import { existsSync, mkdtempSync, readFileSync } from 'node:fs'
 import net from 'node:net'
 import { Duplex } from 'node:stream'
 import tls from 'node:tls'
@@ -11,8 +11,12 @@ import { getDb, openDb } from '../../src/main/db'
 import { openTunnel } from '../../src/main/connections/drivers'
 import { connectionsRepo } from '../../src/main/connections/repo'
 import { connectionsPrompt, testConnection, toolQuery } from '../../src/main/connections/service'
+import { extractFile } from '../../src/main/files/extract'
+import { ensureOrgDefaults } from '../../src/main/core/org'
+import { tmpdir } from 'node:os'
+import { join } from 'node:path'
 import { agentTools, runAgentTool } from '../../src/main/agentTools'
-import { agentsRepo } from '../../src/main/db/repos'
+import { agentsRepo, projectsRepo } from '../../src/main/db/repos'
 import { handlers } from '../../src/main/ipc'
 
 const TLS_DIR = process.env.E2E_TLS_DIR
@@ -26,13 +30,23 @@ const step = async (name: string, fn: () => Promise<void> | void): Promise<void>
   console.log(`  ✓ ${name}`)
 }
 
-// MySQL 5.6-like server without TLS (no CLIENT_SSL), answering SELECT VERSION().
+// MySQL 5.6-like server without TLS (no CLIENT_SSL), answering SELECT VERSION() (and `big_table`: many rows).
+const BIG_ROWS = 1500
+// ASCII: the fake server writes text cells without a character set (a real server handles Turkish; the unit test covers it).
+const LONG_CELL = 'x'.repeat(5000)
 let myConnects = 0
 const myPlain = mysql.createServer((conn: any) => {
   myConnects++
   conn.serverHandshake({ protocolVersion: 10, serverVersion: '5.6.33-fake', connectionId: 1, statusFlags: 2, characterSet: 8, capabilityFlags: 0xffffff & ~0x800 & ~0x8000000 })
-  conn.on('query', () => {
-    conn.writeColumns([{ catalog: 'def', schema: '', table: '', orgTable: '', name: 'v', orgName: 'v', characterSet: 33, columnLength: 64, columnType: 253, flags: 0, decimals: 0 }])
+  conn.on('query', (sql: string) => {
+    const col = (name: string, columnType = 253) => ({ catalog: 'def', schema: '', table: '', orgTable: '', name, orgName: name, characterSet: 33, columnLength: 65535, columnType, flags: 0, decimals: 0 })
+    if (/big_table/.test(sql)) {
+      // 1500 rows, one cell of 5000 characters: more than db_query returns, whole in an export.
+      conn.writeColumns([col('id', 3), col('ad_soyad'), col('genel_yorum')])
+      for (let i = 1; i <= BIG_ROWS; i++) conn.writeTextRow([String(i), `Kisi ${i}`, i === 7 ? LONG_CELL : `yorum ${i}, cok guzeldi`])
+      return conn.writeEof()
+    }
+    conn.writeColumns([col('v')])
     conn.writeTextRow(['5.6.33-fake'])
     conn.writeEof()
   })
@@ -249,6 +263,41 @@ async function main(): Promise<void> {
     assert.ok(!p.includes('127.0.0.1') && !p.includes('gizli açıklama') && !p.includes(String(myPort)), p)
     assert.equal(agentTools({ agentId: vega.id, mode: 'chat' }).some((x) => x.name === 'db_query'), false)
     assert.match((await toolQuery({ agentId: vega.id, mode: 'chat' }, 'maindb-tunnel', 'SELECT 1')).text, /^DENIED/)
+  })
+  await step('db_query returns up to 1000 rows; db_export writes every row (whole cells) to Excel, in Files and the CLI working folder', async () => {
+    ensureOrgDefaults()
+    const projectId = projectsRepo.list()[0].id
+    const atlas = agentsRepo.list().find((a) => a.name === 'Atlas')!
+    const exportDir = join(mkdtempSync(join(tmpdir(), 'ab-export-')), '.agentbits-exports')
+    const task = { agentId: atlas.id, mode: 'task' as const, projectId, exportDir }
+    const q = await toolQuery(task, 'maindb-tunnel', 'SELECT * FROM big_table')
+    assert.match(q.text, /1500 row\(s\), first 1000 shown \(db_export/)
+    assert.equal(q.text.split('\n').filter((l) => /^\d+\t/.test(l)).length, 1000)
+    assert.ok(q.text.includes(`${'x'.repeat(4000)}… [5000 chars]`), 'db_query still cuts long cells')
+    const e = await runAgentTool(task, 'db_export', { connection: 'maindb-tunnel', sql: 'SELECT * FROM big_table', name: 'yorumlar' })
+    assert.equal(e.isError, false, e.text)
+    assert.match(e.text, /Exported 1500 row\(s\) × 3 column\(s\) to yorumlar\.xlsx/)
+    assert.match(e.text, /\.agentbits-exports\/yorumlar\.xlsx/)
+    assert.ok(e.text.length < 2000, 'the rows do not come back to the model')
+    assert.equal(readFileSync(join(exportDir, '.gitignore'), 'utf8'), '*\n')
+    const read = await extractFile(new Uint8Array(readFileSync(join(exportDir, 'yorumlar.xlsx'))), 'yorumlar.xlsx')
+    const text = read.chunks.map((c) => c.text).join('\n')
+    assert.ok(text.includes('Kisi 1500') && text.includes('yorum 1500, cok guzeldi') && text.includes(LONG_CELL), 'every row, whole cells')
+    const row = getDb().prepare("SELECT * FROM files WHERE name = 'yorumlar.xlsx'").get() as { project_id: string; origin: string } | undefined
+    assert.equal(row?.project_id, projectId)
+    assert.equal(row?.origin, 'agent')
+    assert.ok(audit(tunneled.id).includes('1500'), 'audited')
+    // Only reads, only in a task, only with access.
+    assert.match((await runAgentTool(task, 'db_export', { connection: 'maindb-tunnel', sql: 'DELETE FROM big_table' })).text, /^DENIED: db_export only runs reads/)
+    const chat = { agentId: atlas.id, mode: 'chat' as const, projectId }
+    assert.equal(agentTools(chat).some((x) => x.name === 'db_export'), false)
+    assert.match((await runAgentTool(chat, 'db_export', { connection: 'maindb-tunnel', sql: 'SELECT 1' })).text, /only available while working on a task/)
+    const vega = agentsRepo.list().find((a) => a.name === 'Vega')!
+    assert.match((await runAgentTool({ ...task, agentId: vega.id }, 'db_export', { connection: 'maindb-tunnel', sql: 'SELECT * FROM big_table' })).text, /^DENIED/)
+    // API agents (no working folder): the file is only in Files.
+    const api = await runAgentTool({ agentId: atlas.id, mode: 'task', projectId }, 'db_export', { connection: 'maindb-tunnel', sql: 'SELECT * FROM big_table', format: 'csv', name: 'yorumlar' })
+    assert.match(api.text, /to yorumlar\.csv/)
+    assert.ok(!api.text.includes('.agentbits-exports') && !existsSync(join(exportDir, 'yorumlar.csv')))
   })
   await step('PostgreSQL without TLS, SSL on → the same hint; through SSH without TLS works', async () => {
     const pg1 = await save({ ...base, name: 'pg-direct', kind: 'postgres', host: '127.0.0.1', port: pgPlainPort, ssl: true })

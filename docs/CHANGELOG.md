@@ -4,6 +4,27 @@
 > `## YYYY-MM-DD — kısa başlık`, ardından **Eklendi / Değişti / Düzeltildi / Kaldırıldı / Bilinen** maddeleri
 > ve ilgili dosyalar.
 
+## 2026-10-16 — v0.5.5: veri modelden geçmez — db_export, db_query 1000 satır
+
+Tetik: sahip TA-22'de (642 satır yemek yorumu → Excel) dakikalarca bekledi. Döküm: 4 sorgu 40–79 ms, ama ajan 642 satırı 200'lük
+sayfalarla okuyup SpreadsheetML'i elle yazıyordu (on binlerce çıktı token'ı; kişisel veri de modelden geçiyordu). Sahibin kararı:
+veri modelin içinden geçmemeli; iş ya kodla ya kolay bir yolla yapılmalı; 200 satır az, 1000 makul.
+
+### Eklendi
+- **`db_export`:** görevde bir SELECT'in her satırını (≤ 100 000, hücreler tam) doğrudan xlsx / csv / json dosyasına yazar,
+  Dosyalar'a kaydeder; ajana yalnız özet döner. Claude Code / Codex ajanlarında kopyası çalışma klasöründe
+  `.agentbits-exports/` (içindeki `.gitignore` = `*`: commit / birleştirme dışı) — ajan sonrasını kendi koduyla işler.
+  Yalnız okuma, salt-okunur giriş, denetim; sohbette yok. `connections/export.ts` (fflate; yeni bağımlılık yok),
+  `toolExport`, `files/service.ts` `saveAgentFile` (file_save ile ortak).
+- **İstem kuralı:** büyük veri cevaba ya da elle dosyaya kopyalanmaz; satırlar db_export ile, dönüştürme kodla.
+
+### Değişti
+- `db_query`: 1000 satır (önce 200), modele giden metin 160 KB (önce 48 KB); aşılınca "db_export kullan" notu.
+
+### Test
+- `tests/connections.export.test.ts` (xlsx paketi, sayı / metin hücreleri, XML kaçışı, BOM'lu CSV, uygulamanın kendi okuyucusuyla
+  geri okuma), `connections.e2e.ts` +1 senaryo (1500 satır, 5000 karakterlik hücre, yazma reddi, sohbet reddi, izinsiz ajan, denetim).
+
 ## 2026-10-16 — v0.5.4: görev yaşam döngüsünde yedi düzeltme (dış inceleme)
 
 Tetik: başka bir ajanın incelemesi; yedi bulgunun yedisi de koda karşı doğrulandı. Her biri için `tests/e2e/orchestrator.e2e.ts`'te

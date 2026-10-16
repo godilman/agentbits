@@ -905,10 +905,21 @@ adına karşı doğrulanır (`tlsHost`: pg `host` / `servername`, tedious `serve
 - `write`: işlem içinde, commit. `admin`: doğrudan.
 - Sınırlar: ifade zaman aşımı 30 sn (PG `statement_timeout`, MySQL sorgu zaman aşımı, MSSQL `requestTimeout`) + istemci
   tarafında 45 sn mutlak süre (sunucu yanıt vermezse ajan yine hata alır); satırlar **akışla** okunur (PG `Query` olayları,
-  mysql2 çekirdek akışı, mssql `stream`): ilk 200 satır tutulur, gerisi yalnızca sayılır; 100 000 satırı aşan okuma bağlantı
-  düşürülerek durdurulur ("LIMIT / WHERE ekle"); hücre başına 4000 karakter; çıktı 48 KB. Düşürülen bağlantıda ROLLBACK /
+  mysql2 çekirdek akışı, mssql `stream`): ilk 1000 satır tutulur (v0.5.5; önce 200), gerisi yalnızca sayılır; 100 000 satırı aşan okuma bağlantı
+  düşürülerek durdurulur ("LIMIT / WHERE ekle"); hücre başına 4000 karakter; modele giden çıktı 160 KB (v0.5.5; önce 48 KB),
+  aşılınca "db_export kullan" notu. Düşürülen bağlantıda ROLLBACK /
   kapatma beklenmez (asılı kalmaz). SSH: 60 sn, 64 KB. Sürücülere çalışma iptal sinyali taşınmaz; durdurulan bir çalışmanın
   başlamış sorgusu bu sürelerle biter.
+
+**`db_export` (v0.5.5): veri modelden geçmez.** Görevde tek bir okuma (SELECT; `classifySql` → `read`, salt-okunur giriş
+şart, sohbette yok) çalışır; **her satır** (en çok 100 000, hücreler kırpılmadan: `QueryOptions.maxCell`) `connections/export.ts`
+ile xlsx (fflate ile en küçük OOXML: tek sayfa, kalın + dondurulmuş başlık, gerçek sayılar sayı hücresi, gerisi metin), csv
+(UTF-8 BOM) ya da json olur ve `files/service.ts` `saveAgentFile` ile Dosyalar'a kaydedilir (file_save ile aynı yol: çalışma
+başına sayı, kota, ajan + lider erişimi, run / görev bağı, denetim). CLI ajanlarında (`AgentCtx.exportDir`) bir kopya da çalışma
+kopyasında `.agentbits-exports/` altına yazılır; klasörün içindeki `*` `.gitignore`'u onu commit / birleştirme dışında tutar,
+klasör taraması nokta klasörlerini atlar. Ajana yalnız satır / sütun sayısı, sütun adları ve ilk 3 satır (120 karakter) döner.
+İstemler kuralı söyler: veri cevaba ya da elle dosyaya kopyalanmaz; dönüştürme gerekiyorsa önce dışa aktar, sonra kodla işle.
+ponytail: satırlar dosya yazılana dek bellekte (≤ 100 000); çok büyük dışa aktarmalar gerekirse dosyaya akışla yazılır.
 
 **Production onayı.** Production bağlantıda `read` dışındaki her işlem kullanıcıyı bekler: sol alttaki
 `ApprovalsDock` (geri sayım, "Onayla ve çalıştır" / "Reddet") + toast. 10 dk içinde yanıt yoksa reddedilir.

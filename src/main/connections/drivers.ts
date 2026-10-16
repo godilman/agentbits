@@ -30,6 +30,8 @@ export interface QueryOptions {
   mode: QueryMode
   timeoutMs: number
   maxRows: number
+  /** Longest text kept from one cell (default 4000, cut with a note); exports keep whole cells. */
+  maxCell?: number
   /** Aborted when the run is stopped (by the user or a run limit): the connection is dropped at once. */
   signal?: AbortSignal
 }
@@ -52,18 +54,18 @@ const MAX_CELL = 4000
  */
 const HARD_ROW_LIMIT = 100_000
 
-function cell(v: unknown): unknown {
+function cell(v: unknown, max = MAX_CELL): unknown {
   if (v === null || v === undefined) return null
   if (v instanceof Date) return v.toISOString()
   if (typeof v === 'bigint') return v.toString()
   if (Buffer.isBuffer(v)) return `<binary ${v.length} bytes>`
-  if (typeof v === 'string') return v.length > MAX_CELL ? `${v.slice(0, MAX_CELL)}… [${v.length} chars]` : v
+  if (typeof v === 'string') return v.length > max ? `${v.slice(0, max)}… [${v.length} chars]` : v
   if (typeof v === 'object') {
     try {
       const text = JSON.stringify(v)
-      return text.length > MAX_CELL ? `${text.slice(0, MAX_CELL)}… [${text.length} chars]` : JSON.parse(text)
+      return text.length > max ? `${text.slice(0, max)}… [${text.length} chars]` : JSON.parse(text)
     } catch {
-      return String(v).slice(0, MAX_CELL)
+      return String(v).slice(0, max)
     }
   }
   return v
@@ -75,10 +77,15 @@ class RowSink {
   rows: unknown[][] = []
   count = 0
   stopped = false
+  private max: number
+  private maxCell: number
   constructor(
-    private max: number,
+    limits: Pick<QueryOptions, 'maxRows' | 'maxCell'>,
     private over: () => void
-  ) {}
+  ) {
+    this.max = limits.maxRows
+    this.maxCell = limits.maxCell ?? MAX_CELL
+  }
   reset(columns: string[]): void {
     this.columns = columns
     this.rows = []
@@ -86,7 +93,7 @@ class RowSink {
   }
   add(row: unknown[]): void {
     this.count++
-    if (this.rows.length < this.max) this.rows.push(row.map(cell))
+    if (this.rows.length < this.max) this.rows.push(row.map((v) => cell(v, this.maxCell)))
     if (this.count > HARD_ROW_LIMIT && !this.stopped) {
       this.stopped = true
       this.over()
@@ -126,10 +133,10 @@ function buildSchema(rows: { schema: string; table: string; kind: string; column
 /* ───────────────────────────── PostgreSQL ───────────────────────────── */
 
 /** Runs one PostgreSQL query, streaming rows into a sink (the last result set wins for multi-statement text). */
-async function pgStream(client: any, text: string, maxRows: number): Promise<QueryResult> {
+async function pgStream(client: any, text: string, limits: Pick<QueryOptions, 'maxRows' | 'maxCell'>): Promise<QueryResult> {
   const { Query } = await import('pg')
   return new Promise((resolve, reject) => {
-    const sink = new RowSink(maxRows, () => {
+    const sink = new RowSink(limits, () => {
       client.__dropped = true
       client.connection?.stream?.destroy()
       reject(tooManyRows())
@@ -203,12 +210,12 @@ const postgres = {
     try {
       if (o.mode === 'direct') {
         await client.query(`SET statement_timeout = ${ms}`)
-        return await pgStream(client, sql, o.maxRows)
+        return await pgStream(client, sql, o)
       }
       await client.query(o.mode === 'readonly' ? 'BEGIN TRANSACTION READ ONLY' : 'BEGIN')
       try {
         await client.query(`SET LOCAL statement_timeout = ${ms}`)
-        const res = await pgStream(client, sql, o.maxRows)
+        const res = await pgStream(client, sql, o)
         await client.query(o.mode === 'readonly' ? 'ROLLBACK' : 'COMMIT')
         return res
       } catch (e) {
@@ -294,7 +301,7 @@ const mysql = {
     // Streamed through the underlying connection so a huge result never sits in memory.
     const run = (): Promise<QueryResult> =>
       new Promise((resolve, reject) => {
-        const sink = new RowSink(o.maxRows, () => {
+        const sink = new RowSink(o, () => {
           dropped = true
           conn.connection.destroy()
           reject(tooManyRows())
@@ -390,7 +397,7 @@ const mssql = {
     const stream = (req: any): Promise<QueryResult> =>
       new Promise((resolve, reject) => {
         current = req
-        const sink = new RowSink(o.maxRows, () => {
+        const sink = new RowSink(o, () => {
           req.cancel()
           reject(tooManyRows())
         })

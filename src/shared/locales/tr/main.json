@@ -138,6 +138,8 @@
       "rows_other": "{{count}} satır",
       "rowsFirst_one": "{{count}} satır (ilk {{max}})",
       "rowsFirst_other": "{{count}} satır (ilk {{max}})",
+      "exported_one": "{{count}} satır dışa aktarıldı → {{file}}",
+      "exported_other": "{{count}} satır dışa aktarıldı → {{file}}",
       "affected_one": "{{count}} satır etkilendi",
       "affected_other": "{{count}} satır etkilendi",
       "exitCode": "çıkış kodu {{code}}",
@@ -151,7 +153,8 @@
       "notApproved": "Kullanıcı Production işlemini onaylamadı (ya da süre doldu)",
       "changedWhileWaiting": "İstek onay beklerken bu bağlantıya erişim değişti; çalıştırılmadı",
       "readOnlyLoginRequired": "Ajanlar yalnızca salt-okunur bir veritabanı kullanıcısıyla okuyabilir; bu bağlantıda tanımlı değil. Kullanıcıdan Bağlantılar → bu bağlantı → Salt-okunur kullanıcı alanını doldurmasını iste.",
-      "chatReadOnly": "Sohbette ajanlar bağlantılardan yalnız okuyabilir (şema, SELECT). Veri değiştirme, DDL ve SSH komutları görevde çalışır."
+      "chatReadOnly": "Sohbette ajanlar bağlantılardan yalnız okuyabilir (şema, SELECT). Veri değiştirme, DDL ve SSH komutları görevde çalışır.",
+      "exportReadOnly": "db_export yalnız okuma çalıştırır (tek bir SELECT). Veri değiştirmek için görevde db_query kullanılır."
     },
     "log": {
       "awaitingApproval": "⏳ {{name}} (Production) için onayınız bekleniyor: {{detail}}",

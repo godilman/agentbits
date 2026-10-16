@@ -138,6 +138,8 @@
       "rows_other": "{{count}} rows",
       "rowsFirst_one": "{{count}} row (first {{max}})",
       "rowsFirst_other": "{{count}} rows (first {{max}})",
+      "exported_one": "{{count}} row exported → {{file}}",
+      "exported_other": "{{count}} rows exported → {{file}}",
       "affected_one": "{{count}} row affected",
       "affected_other": "{{count}} rows affected",
       "exitCode": "exit code {{code}}",
@@ -151,7 +153,8 @@
       "notApproved": "The user did not approve the Production operation (or it timed out)",
       "changedWhileWaiting": "Access to this connection changed while the request was waiting for approval; it was not run",
       "readOnlyLoginRequired": "Agents can only read through a read-only database user, and this connection has none. Ask the user to add one under Connections → this connection → Read-only user.",
-      "chatReadOnly": "In chat, agents can only read from connections (schema, SELECT). Changing data, DDL and SSH commands run in a task."
+      "chatReadOnly": "In chat, agents can only read from connections (schema, SELECT). Changing data, DDL and SSH commands run in a task.",
+      "exportReadOnly": "db_export only runs reads (one SELECT). To change data use db_query in a task."
     },
     "log": {
       "awaitingApproval": "⏳ Waiting for your approval for {{name}} (Production): {{detail}}",

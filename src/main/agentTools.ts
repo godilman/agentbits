@@ -10,12 +10,12 @@ import { WEB_TOOL, runWebTool, webToolFor } from './web/tool'
 
 /**
  * Every tool an agent may call, decided per agent and run: connection tools only
- * with at least one granted connection (in chat only the reading ones; db_query refuses writes there), file read tools only
+ * with at least one granted connection (in chat only the reading ones, without db_export; db_query refuses writes there), file read tools only
  * with at least one readable file, file_save only while working on a task, skill_read with at least one skill.
  */
 export function agentTools(ctx: AgentCtx): ToolSpec[] {
   const out: ToolSpec[] = []
-  if (connectionsFor(ctx.agentId).length) out.push(...(ctx.mode === 'chat' ? CONNECTION_TOOLS.filter((x) => x.name !== 'ssh_exec') : CONNECTION_TOOLS))
+  if (connectionsFor(ctx.agentId).length) out.push(...(ctx.mode === 'chat' ? CONNECTION_TOOLS.filter((x) => x.name !== 'ssh_exec' && x.name !== 'db_export') : CONNECTION_TOOLS))
   if (readableFiles(ctx.agentId, ctx.projectId, ctx.taskId).length) out.push(...FILE_READ_TOOLS)
   if (ctx.mode !== 'chat' && ctx.projectId) out.push(FILE_SAVE_TOOL)
   if (skillsForAgent(ctx.agentId).length) out.push(...SKILL_TOOLS)

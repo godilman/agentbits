@@ -22,9 +22,9 @@ yalnızca izin verilen **Bağlantılar** (SSH / PostgreSQL / MySQL / SQL Server)
 hissinde, koyu temalı, ajanların ne yaptığını canlı gösteren güvenli bir "yapay zeka şirketi ofisi".
 Ürün vizyonu → [docs/PROJECT.md](docs/PROJECT.md).
 
-Durum: **v0.5.4** (2026-10-16) — organizasyon, projeler ve tüm proje bölümleri çalışıyor; özellik durumu →
+Durum: **v0.5.5** (2026-10-16) — organizasyon, projeler ve tüm proje bölümleri çalışıyor; özellik durumu →
 [docs/FEATURES.md](docs/FEATURES.md). Depo herkese açık; yayımlanan sürümler v0.1.0 (2026-10-14), v0.2.0 (2026-10-15),
-v0.3.0 (2026-10-15), v0.4.0 (2026-10-15), v0.5.0 (2026-10-16), v0.5.1 (2026-10-16), v0.5.2 (2026-10-16), v0.5.3 (2026-10-16), v0.5.4 (2026-10-16). v0.1.1 taslağı yayımlanmadı; sahibin isteğiyle 2026-10-15'te silindi.
+v0.3.0 (2026-10-15), v0.4.0 (2026-10-15), v0.5.0 (2026-10-16), v0.5.1 (2026-10-16), v0.5.2 (2026-10-16), v0.5.3 (2026-10-16), v0.5.4 (2026-10-16), v0.5.5 (2026-10-16). v0.1.1 taslağı yayımlanmadı; sahibin isteğiyle 2026-10-15'te silindi.
 
 ## Güncel durum ve devir notu (son güncelleme: 2026-10-16)
 
@@ -96,6 +96,7 @@ Demo sağlayıcı iş türüne göre simülasyon (`shared/demoKind.ts`), paket s
   ezilmesi düzeltildi.
 - **2026-10-16 v0.5.4**: dış incelemenin 7 bulgusu (hazırlıkta durdurma, temizlikte eski kopya/dal, yarış bağımlılığı, hazırlık
   hatası, başlatma kuralları + "yine de başlat", Bitti'ye sürükleme, hafıza vektörü) + Codex sohbet istemi. `tests/e2e/orchestrator.e2e.ts`.
+- **2026-10-16 v0.5.5**: `db_export` (veri modelden geçmez; xlsx / csv / json, CLI'da `.agentbits-exports/` kopyası), `db_query` 1000 satır / 160 KB.
 - `docs/SECURITY.md`'deki 🟡 / ⏳ maddeler (ör. büyük veride UI sayfalama) ve `docs/FEATURES.md` "Bilinen sorunlar".
 
 **Önceki oturumlardan öğrenilenler**

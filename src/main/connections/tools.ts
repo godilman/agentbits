@@ -1,4 +1,4 @@
-import { toolExec, toolList, toolQuery, toolSchema, type AgentCtx, type ToolOutput } from './service'
+import { toolExec, toolExport, toolList, toolQuery, toolSchema, type AgentCtx, type ToolOutput } from './service'
 
 /**
  * Connection tools offered to agents. The same definitions are served to Claude
@@ -34,12 +34,30 @@ export const CONNECTION_TOOLS: ToolSpec[] = [
   {
     name: 'db_query',
     description:
-      'Run ONE SQL statement on a database connection. Prefer SELECT with LIMIT. Your access level decides what is allowed; production changes need the user’s approval. Returns at most 200 rows.',
+      'Run ONE SQL statement on a database connection. Prefer SELECT with LIMIT. Your access level decides what is allowed; production changes need the user’s approval. Returns at most 1000 rows (about 160 KB of text). To hand over data as a file or to get more rows, use db_export instead of paging and re-typing rows.',
     inputSchema: {
       type: 'object',
       properties: {
         connection: { type: 'string', description: 'Connection name, exactly as listed' },
         sql: { type: 'string', description: 'A single SQL statement' }
+      },
+      required: ['connection', 'sql'],
+      additionalProperties: false
+    }
+  },
+  {
+    name: 'db_export',
+    description:
+      'Run ONE read (SELECT) on a database connection and save EVERY row (up to 100 000, whole cells) as a file the user downloads from Files: xlsx (Excel, default), csv or json. ' +
+      'The rows go straight into the file, not to you: you get the row count, the columns and the first rows. CLI agents also get a copy in .agentbits-exports/ of their working folder to process with code. ' +
+      'Use it whenever the user wants data as a file, and instead of paging through db_query. Format dates and columns in the SQL (aliases become the column headers).',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        connection: { type: 'string', description: 'Connection name, exactly as listed' },
+        sql: { type: 'string', description: 'One SELECT statement' },
+        format: { type: 'string', enum: ['xlsx', 'csv', 'json'], description: 'File format (default xlsx)' },
+        name: { type: 'string', description: 'File name without extension, e.g. "meal-reviews-2026-09"' }
       },
       required: ['connection', 'sql'],
       additionalProperties: false
@@ -71,6 +89,8 @@ export async function runTool(ctx: AgentCtx, name: string, args: Record<string, 
         return await toolSchema(ctx, s('connection'), s('filter') || undefined)
       case 'db_query':
         return await toolQuery(ctx, s('connection'), s('sql'))
+      case 'db_export':
+        return await toolExport(ctx, s('connection'), s('sql'), s('format'), s('name'))
       case 'ssh_exec':
         return await toolExec(ctx, s('connection'), s('command'))
       default:

@@ -717,21 +717,33 @@ export function toolFileSave(ctx: AgentCtx, name: string, content: string): Tool
   if (!SAVE_EXT.has(ext)) return { text: `Only text formats can be saved: ${[...SAVE_EXT].join(', ')}`, isError: true }
   const bytes = new TextEncoder().encode(content ?? '')
   if (bytes.byteLength > MAX_SAVE_BYTES) return { text: `Content is too large (max ${MAX_SAVE_BYTES / 1048576} MB).`, isError: true }
+  const f = saveAgentFile(ctx, safe, bytes, 'text/plain', 'file_save')
+  if (typeof f === 'string') return { text: f, isError: true }
+  return { text: `Saved as ${safe} (ref ${fileRef(f.id)}). The user can open and download it from Files.`, isError: false }
+}
+
+/**
+ * Stores a file an agent produced in a task (file_save, db_export): counted per run, within the disk quota, readable by
+ * the agent and its project lead, linked to the run and task, audited. Returns the record or why it was refused.
+ */
+export function saveAgentFile(ctx: AgentCtx, safe: string, bytes: Uint8Array, mime: string, via: string): FileRecord | string {
+  if (!ctx.projectId) return 'No project.'
+  if (bytes.byteLength > MAX_FILE_BYTES) return `The file is too large (max ${MAX_FILE_BYTES / 1048576} MB).`
   const key = ctx.runId ?? `${ctx.agentId}:${ctx.taskId}`
   const n = savesPerRun.get(key) ?? 0
-  if (n >= MAX_SAVES_PER_RUN) return { text: `At most ${MAX_SAVES_PER_RUN} files per run.`, isError: true }
+  if (n >= MAX_SAVES_PER_RUN) return `At most ${MAX_SAVES_PER_RUN} files per run.`
   try {
     assertQuota(bytes.byteLength)
   } catch (e) {
-    return { text: `${(e as Error).message} (file_save)`, isError: true }
+    return `${(e as Error).message} (${via})`
   }
   savesPerRun.set(key, n + 1)
   const sha = storeBytes(bytes)
   const f = filesRepo.create({
     projectId: ctx.projectId,
     name: safe,
-    ext,
-    mime: 'text/plain',
+    ext: extOfName(safe),
+    mime,
     kind: kindFromName(safe),
     size: bytes.byteLength,
     sha256: sha,
@@ -751,7 +763,7 @@ export function toolFileSave(ctx: AgentCtx, name: string, content: string): Tool
   auditFile({ type: 'agent', id: ctx.agentId, name: agent?.name ?? '?' }, f, 'file:save', t('main:files.audit.saved', { size: kb }), 'ok', ctx)
   ctx.log?.('tool', t('main:files.log.saved', { name: safe, size: kb }))
   changed()
-  return { text: `Saved as ${safe} (ref ${fileRef(f.id)}). The user can open and download it from Files.`, isError: false }
+  return f
 }
 
 export function forgetRun(runId: string): void {
