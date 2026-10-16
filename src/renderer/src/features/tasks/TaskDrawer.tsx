@@ -16,6 +16,7 @@ import { DropOverlay } from '@/features/files/parts'
 import { TaskChanges } from './TaskChanges'
 import { RecalledTrace } from '@/features/memory/parts'
 import { TaskFiles } from '@/features/files/TaskFiles'
+import { useStartGuard } from './StartGuard'
 
 type Pane = 'thread' | 'logs' | 'runs'
 
@@ -40,6 +41,7 @@ export function TaskDrawer() {
   const [runs, setRuns] = useState<Run[]>([])
   const scrollRef = useRef<HTMLDivElement>(null)
   const detailsRef = useRef<HTMLDivElement>(null)
+  const [guardStart, startModal] = useStartGuard()
   const [width, widthHandle] = useResize('taskDrawer', 460, { min: 360, max: 1100, invert: true, className: 'absolute inset-y-0 left-0' })
   const [detailsMax, detailsHandle] = useResize('taskDrawerDetails', Math.round(window.innerHeight * 0.45), { min: 80, max: 2000, axis: 'y', measure: detailsRef })
   // Worktree mode: a done task whose branch still waits to be merged (e.g. uncommitted changes in the folder).
@@ -92,6 +94,7 @@ export function TaskDrawer() {
   return (
     <div className="absolute inset-y-0 right-0 z-30 flex max-w-[85%] flex-col border-l border-line bg-[#0e0e11] shadow-pop animate-slide-in" style={{ width }} {...drop.props}>
       {widthHandle}
+      {startModal}
       <DropOverlay show={drop.over} label={t('tasks:drawer.dropLabel', { key: task.key })} />
       <div className="flex items-center gap-2 border-b border-line px-4 py-2.5">
         <span className="font-mono text-[12px] text-zinc-400">{task.key}</span>
@@ -118,7 +121,7 @@ export function TaskDrawer() {
             </button>
           ) : (
             task.status !== 'done' && (
-              <button className="btn-outline h-6 text-[11.5px]" onClick={() => void call('tasks:start', task.id)}>
+              <button className="btn-outline h-6 text-[11.5px]" onClick={() => guardStart(task.id, task.key, (force) => void call('tasks:start', task.id, force))}>
                 <Play size={11} /> {t('tasks:drawer.startNow')}
               </button>
             )
@@ -151,7 +154,11 @@ export function TaskDrawer() {
           <select
             className="input h-7 w-44 text-[12px]"
             value={task.status}
-            onChange={(e) => void call('tasks:move', task.id, e.target.value as TaskStatus)}
+            onChange={(e) => {
+              const status = e.target.value as TaskStatus
+              if (status === 'in_progress') guardStart(task.id, task.key, (force) => void call('tasks:move', task.id, status, undefined, force))
+              else void call('tasks:move', task.id, status)
+            }}
           >
             {TASK_COLUMNS.map((c) => (
               <option key={c.id} value={c.id}>

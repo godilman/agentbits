@@ -226,19 +226,23 @@ export const handlers: Handlers = {
     emit({ type: 'tasks:changed' })
     return t
   },
-  'tasks:move': (id, status, sortOrder) => {
+  'tasks:move': async (id, status, sortOrder, force) => {
     const before = tasksRepo.get(id)
-    if (before?.status === 'in_progress' && status !== 'in_progress') orchestrator.stopTask(id)
+    // A running task is stopped first and its run allowed to end: its clean-up puts the task back in "To do", which
+    // must not overwrite the column the user chose (nor may a merge start while the agent still writes).
+    if (before?.status === 'in_progress' && status !== 'in_progress') await orchestrator.stopTaskAndWait(id)
     // Put back in the queue by the user (not a stop): autopilot may take it again.
     else if (status === 'todo' && before && before.status !== 'todo') orchestrator.release(id)
+    if (status === 'in_progress' && before?.status !== 'in_progress') {
+      // Started from the board: the same rules as "Start now" (the card stays where it was until the run starts).
+      void orchestrator.startTask(id, undefined, { force: force === true })
+      emit({ type: 'tasks:changed' })
+      return tasksRepo.get(id)!
+    }
     const t = tasksRepo.move(id, status, sortOrder)
     emit({ type: 'tasks:changed' })
     // Worktree mode: a task the user marks done gets its branch merged.
     if (status === 'done' && before?.status !== 'done') void orchestrator.finishTaskBranch(id)
-    if (status === 'in_progress' && before?.status !== 'in_progress') {
-      tasksRepo.update(id, { status: before?.status ?? 'todo' })
-      void orchestrator.startTask(id)
-    }
     return tasksRepo.get(id) ?? t
   },
   'tasks:merge': async (id) => {
@@ -254,9 +258,10 @@ export const handlers: Handlers = {
     tasksRepo.delete(id)
     emit({ type: 'tasks:changed' })
   },
-  'tasks:start': (id) => {
-    void orchestrator.startTask(id)
+  'tasks:start': (id, force) => {
+    void orchestrator.startTask(id, undefined, { force: force === true })
   },
+  'tasks:waitingFor': (id) => orchestrator.waitingFor(id),
 
   /* runs */
   'runs:list': (opts) => runsRepo.list(opts),

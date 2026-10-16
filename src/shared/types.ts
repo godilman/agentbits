@@ -101,7 +101,7 @@ export interface Task {
   updatedAt: string
   startedAt: string | null
   completedAt: string | null
-  /** Ids of tasks that must be done before this one starts (autopilot waits; the user can still start it). */
+  /** Ids of tasks that must be done before this one starts (autopilot waits; the user can start it after confirming). */
   dependsOn: string[]
   /** Race mode: the original task this one is a challenger copy of (null for an ordinary task). */
   raceOf: string | null

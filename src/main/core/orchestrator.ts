@@ -7,8 +7,8 @@ import { resolveAfter, type LeadMessage } from '@shared/leadComms'
 import { acceptanceList, judgeCriteria, parseRaceVerdict, pickRival } from '@shared/review'
 import { isTwin } from '@shared/org'
 import { describeTeam, teamState } from './team'
-import { dirname, isAbsolute, join, relative } from 'path'
-import { existsSync, rmSync } from 'fs'
+import { basename, dirname, isAbsolute, join, relative } from 'path'
+import { existsSync, readdirSync, rmSync } from 'fs'
 import { branchFor, bringRootIn, commitAll, ensureWorktree, git, isClean, isRepoRoot, mergeIntoRoot, removeWorktree, serialized, taskChanges, type GitEnv, type TaskChanges } from './worktree'
 import {
   agentsRepo,
@@ -234,6 +234,8 @@ class Orchestrator {
     if (settingsRepo.get().reviewByLead) {
       for (const t of tasksRepo.listAll().filter((x) => x.status === 'in_review')) this.queueReview(t.id)
     }
+    // Copies / branches left by tasks that are gone (also from older versions); task copies are made only after this.
+    this.swept = this.sweepWorktrees()
     this.interval = setInterval(() => this.tick(), TICK_MS)
   }
 
@@ -245,6 +247,8 @@ class Orchestrator {
     for (const resolve of [...this.approvals.values()]) resolve(false)
     this.approvals.clear()
     for (const r of this.active.values()) {
+      r.stopped = true
+      r.halt.abort()
       r.controller.abort()
       r.waiters.splice(0).forEach((w) => w())
     }
@@ -292,7 +296,10 @@ class Orchestrator {
   shutdown(): void {
     this.closing = true
     if (this.interval) clearInterval(this.interval)
-    for (const r of this.active.values()) r.controller.abort()
+    for (const r of this.active.values()) {
+      r.stopped = true
+      r.controller.abort()
+    }
     for (const c of this.aux.keys()) c.abort()
     for (const t of this.statusTimers.values()) clearTimeout(t)
   }
@@ -351,12 +358,17 @@ class Orchestrator {
   }
 
   /**
-   * What holds back dependent tasks: the unmerged done tasks, plus a race's losing attempt whose winner isn't merged yet
-   * (tasks keep depending on the original even when the challenger won).
+   * What holds back dependent tasks: the unmerged done tasks, plus a race's losing attempt whose winner isn't done and
+   * merged yet (tasks keep depending on the original even when the challenger won; a winner whose merge conflicted is
+   * back in "To do").
    */
   private mergeBlockers(): Set<string> {
     const out = this.unmergedDone()
-    for (const t of tasksRepo.listAll()) if (t.status === 'done' && t.raceResult === 'lost' && out.has(this.raceWinner(t).id)) out.add(t.id)
+    for (const t of tasksRepo.listAll()) {
+      if (t.status !== 'done' || t.raceResult !== 'lost') continue
+      const w = this.raceWinner(t)
+      if (w.id !== t.id && (w.status !== 'done' || out.has(w.id))) out.add(t.id)
+    }
     return out
   }
 
@@ -444,12 +456,58 @@ class Orchestrator {
     return join(dirname(getDbPath()), 'worktrees', projectId, taskKey.toLowerCase().replace(/[^a-z0-9._-]+/g, '-'))
   }
 
+  private swept: Promise<void> = Promise.resolve()
+
+  /**
+   * Removes task copies and `agentbits/*` branches whose task no longer exists — and those of the tasks `drop` picks,
+   * which are about to be deleted (clean-up, factory reset, a deleted project). Task keys are reused once the newest tasks
+   * are gone (TA-1 again after a reset): a new task must never start on, or merge, an old task's work.
+   */
+  async sweepWorktrees(drop: (task: Task) => boolean = () => false): Promise<void> {
+    const live = tasksRepo.listAll().filter((x) => !drop(x))
+    const branches = new Set(live.map((x) => branchFor(x.key)))
+    const env = this.gitEnv()
+    const base = join(dirname(getDbPath()), 'worktrees')
+    const roots = new Set<string>()
+    for (const p of projectsRepo.list()) {
+      if (!p.rootPath || !existsSync(p.rootPath)) continue
+      const root = p.rootPath
+      roots.add(root)
+      const dir = join(base, p.id)
+      if (!existsSync(dir)) continue
+      const keep = new Set(live.filter((x) => x.projectId === p.id).map((x) => basename(this.worktreeDir(p.id, x.key))))
+      for (const name of readdirSync(dir)) {
+        if (keep.has(name)) continue
+        const wt = join(dir, name)
+        try {
+          await serialized(root, () => removeWorktree(root, wt, null, env))
+          // Not a worktree of this repository (e.g. the project folder changed): only Agentbits' own folder goes.
+          if (existsSync(wt)) rmSync(wt, { recursive: true, force: true })
+        } catch {
+          /* best effort */
+        }
+      }
+    }
+    for (const root of roots) {
+      try {
+        if (!(await isRepoRoot(root, env))) continue
+        const r = await serialized(root, () => git(root, ['for-each-ref', '--format=%(refname:short)', 'refs/heads/agentbits/'], env))
+        for (const b of r.ok && r.out ? r.out.split('\n') : []) {
+          if (!branches.has(b)) await serialized(root, () => git(root, ['branch', '-D', b], env))
+        }
+      } catch {
+        /* best effort */
+      }
+    }
+  }
+
   private async prepareWorktree(
     project: Project | null,
     task: Task,
     ctx: { runId: string; agentId: string; taskId: string; projectId: string }
   ): Promise<{ dir: string; branch: string } | null> {
     if (!project?.rootPath || project.isolation !== 'worktree') return null
+    await this.swept
     const root = project.rootPath
     const env = this.gitEnv()
     try {
@@ -562,9 +620,11 @@ class Orchestrator {
     emit({ type: 'orchestrator:changed' })
   }
 
-  /** A deleted project's task copies go with it (`git worktree prune` makes the repository forget them). */
+  /** A deleted project's task copies and branches go with it (`git worktree prune` makes the repository forget them). */
   async discardProjectWorktrees(project: Project): Promise<void> {
     const dir = join(dirname(getDbPath()), 'worktrees', project.id)
+    // Reads the tasks before the project's rows go (the caller deletes them right after this starts).
+    await this.sweepWorktrees((x) => x.projectId === project.id)
     try {
       rmSync(dir, { recursive: true, force: true })
       if (project.rootPath && existsSync(project.rootPath)) await serialized(project.rootPath, () => git(project.rootPath, ['worktree', 'prune'], this.gitEnv()))
@@ -712,10 +772,30 @@ class Orchestrator {
 
   /* ───────────────────────── task runs ───────────────────────── */
 
-  async startTask(taskId: string, agentId?: string): Promise<void> {
+  /** Keys of the tasks this one depends on that aren't done (and merged, in worktree mode) yet. */
+  waitingFor(taskId: string): string[] {
+    const task = tasksRepo.get(taskId)
+    if (!task) return []
+    const blockers = this.mergeBlockers()
+    return task.dependsOn
+      .map((id) => tasksRepo.get(id))
+      .filter((d): d is Task => !!d && (d.status !== 'done' || blockers.has(d.id)))
+      .map((d) => d.key)
+  }
+
+  /**
+   * Starts a task: autopilot, "Start now" or a drag to "In progress". The same rules for every way in: the agent must be
+   * on, and a task waiting for others starts only with `force` (the user said "start anyway").
+   */
+  async startTask(taskId: string, agentId?: string, opts: { force?: boolean } = {}): Promise<void> {
     if (this.closing) return
     const task = tasksRepo.get(taskId)
     if (!task || task.status === 'in_progress') return
+    const waits = opts.force ? [] : this.waitingFor(task.id)
+    if (waits.length) {
+      emit({ type: 'toast', level: 'error', text: t('orchestrator:toast.waitingFor', { key: task.key, keys: waits.join(', ') }) })
+      return
+    }
     const agent =
       (agentId && agentsRepo.get(agentId)) ||
       (task.assigneeId && agentsRepo.get(task.assigneeId)) ||
@@ -724,6 +804,10 @@ class Orchestrator {
       )
     if (!agent) {
       emit({ type: 'toast', level: 'error', text: t('orchestrator:toast.noIdleAgent') })
+      return
+    }
+    if (!agent.enabled) {
+      emit({ type: 'toast', level: 'error', text: t('orchestrator:toast.agentDisabled', { name: agent.name }) })
       return
     }
     if (this.busy.has(agent.id)) {
@@ -764,13 +848,15 @@ class Orchestrator {
       this.approvals.delete(run.id)
       // Quitting: leave the run as it is; the next start marks it interrupted.
       if (this.closing) return
-      if (!ok) {
-        runsRepo.update(run.id, { status: 'cancelled', endedAt: nowIso(), error: t('orchestrator:runs.notApproved') })
+      // Turned off while the run waited: the yes was for an agent that may no longer work.
+      const disabled = ok && !agentsRepo.get(agent.id)?.enabled
+      if (!ok || disabled) {
+        runsRepo.update(run.id, { status: 'cancelled', endedAt: nowIso(), error: t(disabled ? 'orchestrator:runs.agentDisabled' : 'orchestrator:runs.notApproved') })
         tasksRepo.update(task.id, { status: 'todo', progress: 0 })
-        this.hold(task.id, t('orchestrator:held.notApproved'))
+        this.hold(task.id, t(disabled ? 'orchestrator:held.agentDisabled' : 'orchestrator:held.notApproved'))
         this.busy.delete(agent.id)
-        this.setStatus(agent.id, 'idle')
-        this.log({ level: 'warn', message: t('orchestrator:log.runNotApproved'), runId: run.id, agentId: agent.id, taskId: task.id, projectId: task.projectId })
+        this.setStatus(agent.id, disabled ? 'offline' : 'idle')
+        this.log({ level: 'warn', message: disabled ? t('orchestrator:runs.agentDisabled') : t('orchestrator:log.runNotApproved'), runId: run.id, agentId: agent.id, taskId: task.id, projectId: task.projectId })
         for (const q of instructionsRepo.queuedFor(run.id)) instructionsRepo.setStatus(q.id, 'cancelled', { note: t('orchestrator:log.runNotApproved') })
         emit({ type: 'tasks:changed' })
         emit({ type: 'runs:changed' })
@@ -813,166 +899,168 @@ class Orchestrator {
     const perms = permissionsRepo.get(agent.id)
     const project = getProject(task.projectId)
     const pid = task.projectId
-    // Worktree mode (CLI agents): the task works on its own branch in its own copy; never fails the run (falls back).
-    let isolationError: IsolationError | null = null
-    const wt =
-      provider.kind === 'claude-cli' || provider.kind === 'codex-cli'
-        ? await this.prepareWorktree(project, task, { runId, agentId: agent.id, taskId: task.id, projectId: pid }).catch((e: unknown) => {
-            if (!(e instanceof IsolationError)) throw e
-            isolationError = e
-            return null
-          })
-        : null
-    const ws = wt?.dir ?? this.workspace(project)
-    const memory = await memoryEngine.context({ agentId: agent.id, taskId: task.id, projectId: pid, query: `${task.title} ${task.description}` })
-    runsRepo.update(runId, { recalled: memory.recalled })
-    let system = workerSystem(agent, perms, memory.text, ws) + '\n\n' + this.projectContext(project)
-    if (wt) {
-      system +=
-        `\n\n## Your working copy\nYou work in your own git worktree of the project (branch ${wt.branch}), not in the project folder itself; ` +
-        'teammates work in their own copies at the same time. Agentbits commits your changes when this run ends and merges the branch ' +
-        'into the project when the task is approved. Do not switch branches, rebase, reset or push.'
-    }
-    const team = describeTeam(pid, runId)
-    if (team) {
-      system +=
-        '\n\n## Team right now (other members of this project working in parallel)\n' +
-        team +
-        '\nAvoid changing files a teammate is working on; if you must, keep the change small and say so in your report. The team_status tool shows the live state.'
-    }
-    let prompt = workerPrompt(task, messagesRepo.list(`task:${task.id}`, 20, pid), this.names()) + this.previousSteps(task)
     const logCtx = { runId, agentId: agent.id, taskId: task.id, projectId: pid }
-
-    // Instructions sent while the run waited for approval become part of the first prompt.
-    const early = instructionsRepo.queuedFor(runId)
-    if (early.length) {
-      prompt += '\n\n' + instructionTurn(early.map((q) => this.instructionWithFiles(q)))
-      for (const q of early) instructionsRepo.setStatus(q.id, 'applied', { note: t('orchestrator:notes.addedToFirstPrompt') })
-    }
-
-    // Attachments of the task: inlined while the budget lasts, otherwise read with file tools. Every provider has the
-    // Agentbits tools in a task: APIs by function calling, Claude Code and Codex through the per-run MCP server.
-    const toolsAvailable = true
-    const taskFiles = filesSection({
-      agentId: agent.id,
-      projectId: pid,
-      taskId: task.id,
-      focusIds: filesRepo.linkedTo('task', task.id),
-      toolsAvailable,
-      vision: visionFor(provider.kind),
-      nativePdf: provider.kind === 'anthropic',
-      heading: 'Files for this task'
-    })
-    if (taskFiles.text) prompt += '\n\n' + taskFiles.text
-    for (const f of taskFiles.given) filesRepo.link(f.id, 'run', runId, 'given')
-    if (toolsAvailable) {
-      system +=
-        '\n\n## Deliverable files\nTo hand over a document, report or table as a file, save it with the file_save tool (text formats); the user downloads it from Files.' +
-        (provider.kind === 'claude-cli' || provider.kind === 'codex-cli' ? ' Files you write into the project folder are listed for the user too.' : '')
-    }
-    const runStartedMs = Date.now()
-
-    // What the agent was asked, and by whom: visible in its terminal.
-    const lead = projectLead(pid)
-    const byUser = task.createdBy === 'user' || allTranslations('orchestrator:user').includes(task.createdBy)
-    const from = byUser ? 'user' : lead && task.createdBy === lead.name ? 'lead' : 'system'
-    this.log({ ...logCtx, level: 'status', message: t('orchestrator:log.taskStarted', { key: task.key, provider: `${provider.label}${model ? ' / ' + model : ''}` }) })
-    this.log({
-      ...logCtx,
-      level: 'prompt',
-      message:
-        `📨 ${from === 'user' ? t('orchestrator:user') : task.createdBy || t('orchestrator:system')} → ${agent.name}: ${task.key} · ${task.title}` +
-        (task.description.trim() ? `\n${task.description.trim()}` : ''),
-      meta: { from, by: task.createdBy, prompt, system }
-    })
-    if (taskFiles.given.length) {
-      this.log({ ...logCtx, level: 'info', message: t('orchestrator:log.filesGiven', { count: taskFiles.given.length, names: taskFiles.given.map((f) => f.name).join(', ') }) })
-    }
-    if (memory.recalled.length) this.log({ ...logCtx, level: 'debug', message: t('orchestrator:log.memoriesRecalled', { count: memory.recalled.length }) })
-    this.post(`task:${task.id}`, 'system', null, t('orchestrator:chat.taskStarted', { agent: agent.name }), pid)
-
     let lineBuf = ''
-    let chars = 0
-    let progress = 2
-    let lastProgressEmit = 0
-    const setProgress = (pct: number): void => {
-      if (pct <= progress) return
-      progress = Math.min(99, Math.round(pct))
-      const t = Date.now()
-      if (t - lastProgressEmit > 600) {
-        lastProgressEmit = t
-        tasksRepo.update(task.id, { progress })
-        emit({ type: 'tasks:changed' })
-      }
-    }
     const flush = (): void => {
       if (lineBuf.trim()) this.log({ ...logCtx, level: 'output', message: lineBuf })
       lineBuf = ''
     }
-
-    // Connections: only the ones this agent was granted are described, and they are used
-    // through Agentbits tools (MCP for Claude Code, function calling for APIs, real calls for the demo).
-    const connCtx: AgentCtx = {
-      agentId: agent.id,
-      runId,
-      taskId: task.id,
-      projectId: pid,
-      mode: 'task',
-      log: (level, message) => this.log({ ...logCtx, level, message }),
-      signal: ar.halt.signal
-    }
-    const connSection = connectionsPrompt(agent.id, toolsAvailable)
-    if (connSection) system += '\n\n' + connSection
-    // Skills: read with skill_read where tools exist; Codex reads per-run copies itself, and Claude Code agents
-    // allowed to run commands get the copy folder of skills that ship scripts.
-    const skillCopies =
-      provider.kind === 'codex-cli'
-        ? materializeSkills(agent.id, runId)
-        : provider.kind === 'claude-cli' && perms.terminal
-          ? materializeSkills(agent.id, runId, (sk) => sk.hasScripts)
-          : null
-    const skillSection = skillsPrompt(agent.id, {
-      mode: provider.kind === 'codex-cli' ? 'paths' : 'tool',
-      dirs: skillCopies?.dirs,
-      scriptDirs: provider.kind === 'claude-cli'
-    })
-    if (skillSection) system += '\n\n' + skillSection
-    // Apps (MCP): Codex gets the Agentbits MCP server only when the agent has apps to use.
-    const appSection = appsPrompt(agent.id, toolsAvailable)
-    if (appSection) system += '\n\n' + appSection
+    let skillCopies: ReturnType<typeof materializeSkills> | null = null
     let mcp: { configPath: string; server: { command: string; args: string[]; env: Record<string, string> }; dispose: () => void } | null = null
-    const toolOpts: {
-      tools?: ToolSpec[]
-      callTool?: (n: string, a: Record<string, unknown>) => ReturnType<typeof runAgentTool>
-      mcpConfigPath?: string
-      mcpServer?: { command: string; args: string[]; env: Record<string, string> }
-      attachments?: ReturnType<typeof nativeAttachments>
-      imagePaths?: string[]
-    } = {}
     let disposeImages: (() => void) | null = null
-    if (taskFiles.native.length) {
-      if (provider.kind === 'anthropic' || provider.kind === 'openai') toolOpts.attachments = nativeAttachments(taskFiles.native)
-      else if (provider.kind === 'codex-cli') {
-        const np = nativePaths(taskFiles.native, runId)
-        toolOpts.imagePaths = np.paths
-        disposeImages = np.dispose
-      }
-    }
-
-    // Next segment after a direct instruction: same conversation where possible.
-    const continueWith = (texts: string[]): { prompt: string; history?: ActiveRun['history']; resume?: string | null } => {
-      const turn = instructionTurn(texts)
-      if (provider.kind === 'claude-cli' && ar.sessionId) return { prompt: turn, resume: ar.sessionId }
-      if (provider.kind === 'claude-cli') {
-        // No conversation id yet (interrupted before start): restart with the instruction appended.
-        return { prompt: `${prompt}\n\n${turn}` }
-      }
-      if (!ar.history.length) ar.history.push({ role: 'user', content: prompt })
-      ar.history.push({ role: 'assistant', content: ar.partial.trim() || '(no output yet)' })
-      return { prompt: turn, history: [...ar.history] }
-    }
-
+    // Everything from here on is undone in `finally`: a preparation step that throws must not leave the run active.
     try {
+      // Worktree mode (CLI agents): the task works on its own branch in its own copy; never fails the run (falls back).
+      let isolationError: IsolationError | null = null
+      const wt =
+        provider.kind === 'claude-cli' || provider.kind === 'codex-cli'
+          ? await this.prepareWorktree(project, task, { runId, agentId: agent.id, taskId: task.id, projectId: pid }).catch((e: unknown) => {
+              if (!(e instanceof IsolationError)) throw e
+              isolationError = e
+              return null
+            })
+          : null
+      const ws = wt?.dir ?? this.workspace(project)
+      const memory = await memoryEngine.context({ agentId: agent.id, taskId: task.id, projectId: pid, query: `${task.title} ${task.description}` })
+      runsRepo.update(runId, { recalled: memory.recalled })
+      let system = workerSystem(agent, perms, memory.text, ws) + '\n\n' + this.projectContext(project)
+      if (wt) {
+        system +=
+          `\n\n## Your working copy\nYou work in your own git worktree of the project (branch ${wt.branch}), not in the project folder itself; ` +
+          'teammates work in their own copies at the same time. Agentbits commits your changes when this run ends and merges the branch ' +
+          'into the project when the task is approved. Do not switch branches, rebase, reset or push.'
+      }
+      const team = describeTeam(pid, runId)
+      if (team) {
+        system +=
+          '\n\n## Team right now (other members of this project working in parallel)\n' +
+          team +
+          '\nAvoid changing files a teammate is working on; if you must, keep the change small and say so in your report. The team_status tool shows the live state.'
+      }
+      let prompt = workerPrompt(task, messagesRepo.list(`task:${task.id}`, 20, pid), this.names()) + this.previousSteps(task)
+
+      // Instructions sent while the run waited for approval become part of the first prompt.
+      const early = instructionsRepo.queuedFor(runId)
+      if (early.length) {
+        prompt += '\n\n' + instructionTurn(early.map((q) => this.instructionWithFiles(q)))
+        for (const q of early) instructionsRepo.setStatus(q.id, 'applied', { note: t('orchestrator:notes.addedToFirstPrompt') })
+      }
+
+      // Attachments of the task: inlined while the budget lasts, otherwise read with file tools. Every provider has the
+      // Agentbits tools in a task: APIs by function calling, Claude Code and Codex through the per-run MCP server.
+      const toolsAvailable = true
+      const taskFiles = filesSection({
+        agentId: agent.id,
+        projectId: pid,
+        taskId: task.id,
+        focusIds: filesRepo.linkedTo('task', task.id),
+        toolsAvailable,
+        vision: visionFor(provider.kind),
+        nativePdf: provider.kind === 'anthropic',
+        heading: 'Files for this task'
+      })
+      if (taskFiles.text) prompt += '\n\n' + taskFiles.text
+      for (const f of taskFiles.given) filesRepo.link(f.id, 'run', runId, 'given')
+      if (toolsAvailable) {
+        system +=
+          '\n\n## Deliverable files\nTo hand over a document, report or table as a file, save it with the file_save tool (text formats); the user downloads it from Files.' +
+          (provider.kind === 'claude-cli' || provider.kind === 'codex-cli' ? ' Files you write into the project folder are listed for the user too.' : '')
+      }
+      const runStartedMs = Date.now()
+
+      // What the agent was asked, and by whom: visible in its terminal.
+      const lead = projectLead(pid)
+      const byUser = task.createdBy === 'user' || allTranslations('orchestrator:user').includes(task.createdBy)
+      const from = byUser ? 'user' : lead && task.createdBy === lead.name ? 'lead' : 'system'
+      this.log({ ...logCtx, level: 'status', message: t('orchestrator:log.taskStarted', { key: task.key, provider: `${provider.label}${model ? ' / ' + model : ''}` }) })
+      this.log({
+        ...logCtx,
+        level: 'prompt',
+        message:
+          `📨 ${from === 'user' ? t('orchestrator:user') : task.createdBy || t('orchestrator:system')} → ${agent.name}: ${task.key} · ${task.title}` +
+          (task.description.trim() ? `\n${task.description.trim()}` : ''),
+        meta: { from, by: task.createdBy, prompt, system }
+      })
+      if (taskFiles.given.length) {
+        this.log({ ...logCtx, level: 'info', message: t('orchestrator:log.filesGiven', { count: taskFiles.given.length, names: taskFiles.given.map((f) => f.name).join(', ') }) })
+      }
+      if (memory.recalled.length) this.log({ ...logCtx, level: 'debug', message: t('orchestrator:log.memoriesRecalled', { count: memory.recalled.length }) })
+      this.post(`task:${task.id}`, 'system', null, t('orchestrator:chat.taskStarted', { agent: agent.name }), pid)
+
+      let chars = 0
+      let progress = 2
+      let lastProgressEmit = 0
+      const setProgress = (pct: number): void => {
+        if (pct <= progress) return
+        progress = Math.min(99, Math.round(pct))
+        const t = Date.now()
+        if (t - lastProgressEmit > 600) {
+          lastProgressEmit = t
+          tasksRepo.update(task.id, { progress })
+          emit({ type: 'tasks:changed' })
+        }
+      }
+
+      // Connections: only the ones this agent was granted are described, and they are used
+      // through Agentbits tools (MCP for Claude Code, function calling for APIs, real calls for the demo).
+      const connCtx: AgentCtx = {
+        agentId: agent.id,
+        runId,
+        taskId: task.id,
+        projectId: pid,
+        mode: 'task',
+        log: (level, message) => this.log({ ...logCtx, level, message }),
+        signal: ar.halt.signal
+      }
+      const connSection = connectionsPrompt(agent.id, toolsAvailable)
+      if (connSection) system += '\n\n' + connSection
+      // Skills: read with skill_read where tools exist; Codex reads per-run copies itself, and Claude Code agents
+      // allowed to run commands get the copy folder of skills that ship scripts.
+      skillCopies =
+        provider.kind === 'codex-cli'
+          ? materializeSkills(agent.id, runId)
+          : provider.kind === 'claude-cli' && perms.terminal
+            ? materializeSkills(agent.id, runId, (sk) => sk.hasScripts)
+            : null
+      const skillSection = skillsPrompt(agent.id, {
+        mode: provider.kind === 'codex-cli' ? 'paths' : 'tool',
+        dirs: skillCopies?.dirs,
+        scriptDirs: provider.kind === 'claude-cli'
+      })
+      if (skillSection) system += '\n\n' + skillSection
+      // Apps (MCP): Codex gets the Agentbits MCP server only when the agent has apps to use.
+      const appSection = appsPrompt(agent.id, toolsAvailable)
+      if (appSection) system += '\n\n' + appSection
+      const toolOpts: {
+        tools?: ToolSpec[]
+        callTool?: (n: string, a: Record<string, unknown>) => ReturnType<typeof runAgentTool>
+        mcpConfigPath?: string
+        mcpServer?: { command: string; args: string[]; env: Record<string, string> }
+        attachments?: ReturnType<typeof nativeAttachments>
+        imagePaths?: string[]
+      } = {}
+      if (taskFiles.native.length) {
+        if (provider.kind === 'anthropic' || provider.kind === 'openai') toolOpts.attachments = nativeAttachments(taskFiles.native)
+        else if (provider.kind === 'codex-cli') {
+          const np = nativePaths(taskFiles.native, runId)
+          toolOpts.imagePaths = np.paths
+          disposeImages = np.dispose
+        }
+      }
+
+      // Next segment after a direct instruction: same conversation where possible.
+      const continueWith = (texts: string[]): { prompt: string; history?: ActiveRun['history']; resume?: string | null } => {
+        const turn = instructionTurn(texts)
+        if (provider.kind === 'claude-cli' && ar.sessionId) return { prompt: turn, resume: ar.sessionId }
+        if (provider.kind === 'claude-cli') {
+          // No conversation id yet (interrupted before start): restart with the instruction appended.
+          return { prompt: `${prompt}\n\n${turn}` }
+        }
+        if (!ar.history.length) ar.history.push({ role: 'user', content: prompt })
+        ar.history.push({ role: 'assistant', content: ar.partial.trim() || '(no output yet)' })
+        return { prompt: turn, history: [...ar.history] }
+      }
+
       // Worktree isolation is on but the copy could not be made: stop here instead of working in the shared folder.
       const isoErr = isolationError as IsolationError | null
       if (isoErr) throw isoErr
@@ -1000,6 +1088,8 @@ class Orchestrator {
           const extra = ar.redirects.splice(0)
           next = { ...next, prompt: next.prompt + '\n\n' + instructionTurn(extra.map((r) => r.text)) }
         }
+        // A stop during the preparation (worktree, memory, MCP) aborted the previous controller: the new one must not undo it.
+        if (ar.stopped) throw new AbortedError()
         ar.controller = new AbortController()
         ar.partial = ''
         // Recomputed per segment: an instruction may have shared new files meanwhile.
@@ -1707,6 +1797,15 @@ class Orchestrator {
     for (const run of runsRepo.list({ activeOnly: true, taskId })) this.stopRun(run.id)
   }
 
+  /** Stops the task's run and waits until it has really ended (its clean-up writes the task's status). */
+  async stopTaskAndWait(taskId: string, timeoutMs = 60_000): Promise<boolean> {
+    this.stopTask(taskId)
+    const busy = (): boolean => [...this.active.values()].some((r) => r.taskId === taskId)
+    const until = Date.now() + timeoutMs
+    while (busy() && Date.now() < until) await new Promise((r) => setTimeout(r, 50))
+    return !busy()
+  }
+
   /* ───────────────────────── review ───────────────────────── */
 
   queueReview(taskId: string): void {
@@ -1908,12 +2007,16 @@ class Orchestrator {
         this.projectContext(project)
       // Files of this message are inlined while the budget lasts; the rest is read with tools where available.
       const chatTools = provider.kind !== 'codex-cli' && provider.kind !== 'mock'
+      // Codex gets the Agentbits MCP server in chat only for its apps; that server carries every tool the agent may use
+      // in chat (files, read-only connections), so the prompt says so too.
+      const chatAppTools = appToolsFor(agent.id).length > 0
+      const codexChatApps = provider.kind === 'codex-cli' && chatAppTools
       const fileCtx: AgentCtx = { agentId: agent.id, projectId, mode: 'chat', signal: aux.signal, log: (level, message) => this.log({ agentId: agent.id, projectId, level, message }) }
       const msgFiles = filesSection({
         agentId: agent.id,
         projectId,
         focusIds: opts.fileIds ?? [],
-        toolsAvailable: chatTools,
+        toolsAvailable: chatTools || codexChatApps,
         vision: visionFor(provider.kind),
         nativePdf: provider.kind === 'anthropic',
         heading: opts.fileIds?.length ? 'Files attached to this message' : 'Files shared with you'
@@ -1921,12 +2024,10 @@ class Orchestrator {
       const chatSkillCopies = provider.kind === 'codex-cli' ? materializeSkills(agent.id, `chat-${opts.messageId ?? Date.now()}`) : null
       const chatSkills = skillsPrompt(agent.id, { mode: provider.kind === 'codex-cli' ? 'paths' : 'tool', dirs: chatSkillCopies?.dirs })
       if (chatSkills) system += '\n\n' + chatSkills
-      const chatAppTools = appToolsFor(agent.id).length > 0
-      const codexChatApps = provider.kind === 'codex-cli' && chatAppTools
       const chatApps = appsPrompt(agent.id, chatTools || provider.kind === 'claude-cli' || codexChatApps)
       if (chatApps) system += '\n\n' + chatApps
       // Connections in chat: read-only tools where the provider has tools (API function calling, Claude Code via MCP).
-      const chatConn = connectionsPrompt(agent.id, chatTools || provider.kind === 'claude-cli', true)
+      const chatConn = connectionsPrompt(agent.id, chatTools || provider.kind === 'claude-cli' || codexChatApps, true)
       if (chatConn) system += '\n\n' + chatConn
       const chatPrompt = leadPrompt(history, this.names(), content) + (msgFiles.text ? '\n\n' + msgFiles.text : '')
       const chatCtx = { agentId: agent.id, projectId }

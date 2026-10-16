@@ -11,7 +11,9 @@
   },
   "toast": {
     "noIdleAgent": "No idle agent in this project",
-    "agentBusy": "{{name}} is busy right now"
+    "agentBusy": "{{name}} is busy right now",
+    "agentDisabled": "{{name}} is turned off: turn the agent on or assign the task to someone else",
+    "waitingFor": "{{key}} waits for {{keys}} to finish first"
   },
   "status": {
     "awaitingApproval": "Awaiting approval · {{key}}",
@@ -28,6 +30,7 @@
   },
   "runs": {
     "notApproved": "Not approved",
+    "agentDisabled": "The agent was turned off before the run started",
     "stopped": "Run stopped",
     "stoppedByUser": "Stopped by the user"
   },
@@ -259,6 +262,7 @@
     "interrupted": "Interrupted when Agentbits closed",
     "stopped": "Stopped by you",
     "notApproved": "You didn't approve the run",
+    "agentDisabled": "Its agent was turned off before the run started",
     "failed": "Failed {{count}} times: {{error}}",
     "revisionLimit": "Sent back {{count}} times by the lead",
     "commitFailed": "The agent's changes could not be committed in its working copy (e.g. a git signing setting). They are kept there; fix git and start the task again."

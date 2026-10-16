@@ -143,9 +143,12 @@ export interface Api {
   'tasks:changes': (id: string) => { files: { path: string; added: number; removed: number }[]; diff: string; truncated: boolean } | null
   'tasks:create': (input: TaskInput) => Task
   'tasks:update': (id: string, patch: Partial<Pick<Task, 'title' | 'description' | 'priority' | 'assigneeId' | 'acceptance'>>) => Task
-  'tasks:move': (id: string, status: TaskStatus, sortOrder?: number) => Task
+  /** `force`: start even though tasks it depends on aren't done (the user confirmed). */
+  'tasks:move': (id: string, status: TaskStatus, sortOrder?: number, force?: boolean) => Task
   'tasks:delete': (id: string) => void
-  'tasks:start': (id: string) => void
+  'tasks:start': (id: string, force?: boolean) => void
+  /** Keys of the unfinished tasks this one waits for (asked before a manual start). */
+  'tasks:waitingFor': (id: string) => string[]
 
   // runs
   'runs:list': (opts?: { activeOnly?: boolean; taskId?: string; limit?: number }) => Run[]

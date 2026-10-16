@@ -10,11 +10,13 @@ import { cn, PRIORITY_META, TASK_COLUMNS, timeAgo } from '@/lib/format'
 import { useProjectScope } from '@/lib/org'
 import { agentById, useAppStore } from '@/store/useAppStore'
 import { TaskDrawer } from './TaskDrawer'
+import { useStartGuard } from './StartGuard'
 
 export function TasksView() {
   const { t } = useTranslation(['common', 'tasks'])
   const allTasks = useAppStore((s) => s.tasks)
   const { pid, project, team } = useProjectScope()
+  const [guardStart, startModal] = useStartGuard()
   const tasks = useMemo(() => allTasks.filter((x) => x.projectId === pid), [allTasks, pid])
   // Only the newest done tasks are loaded (store DONE_WINDOW); the rest load on request.
   const doneTotal = useAppStore((s) => (pid ? s.doneTotals[pid] ?? 0 : 0))
@@ -67,13 +69,18 @@ export function TasksView() {
     const sortOrder = before === undefined && after === undefined ? 1 : before === undefined ? after! - 1 : after === undefined ? before + 1 : (before + after) / 2
     const task = tasks.find((x) => x.id === id)
     if (!task) return
-    // optimistic
-    useAppStore.setState((st) => ({ tasks: st.tasks.map((x) => (x.id === id ? { ...x, status, sortOrder } : x)) }))
-    void call('tasks:move', id, status, sortOrder)
+    const move = (force?: boolean): void => {
+      // optimistic
+      useAppStore.setState((st) => ({ tasks: st.tasks.map((x) => (x.id === id ? { ...x, status, sortOrder } : x)) }))
+      void call('tasks:move', id, status, sortOrder, force)
+    }
+    if (status === 'in_progress' && task.status !== 'in_progress') guardStart(task.id, task.key, move)
+    else move()
   }
 
   return (
     <div className="flex h-full flex-col">
+      {startModal}
       <div className="flex items-center gap-3 border-b border-line px-5 py-3">
         <div>
           <h1 className="text-[15px] font-semibold text-zinc-100">{project ? t('tasks:board.titleWithProject', { project: project.name }) : t('tasks:board.title')}</h1>

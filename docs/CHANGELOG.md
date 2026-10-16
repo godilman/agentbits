@@ -4,6 +4,32 @@
 > `## YYYY-MM-DD — kısa başlık`, ardından **Eklendi / Değişti / Düzeltildi / Kaldırıldı / Bilinen** maddeleri
 > ve ilgili dosyalar.
 
+## 2026-10-16 — v0.5.4: görev yaşam döngüsünde yedi düzeltme (dış inceleme)
+
+Tetik: başka bir ajanın incelemesi; yedi bulgunun yedisi de koda karşı doğrulandı. Her biri için `tests/e2e/orchestrator.e2e.ts`'te
+bir senaryo var; düzeltmesiz kodda sekizi de düşüyor.
+
+### Düzeltildi
+- **Hazırlıkta durdurulan görev yine çalışıyordu:** durdurma eski sinyali kesiyordu ama döngü sağlayıcıdan hemen önce yeni bir
+  `AbortController` açıyordu. Artık `ar.stopped` sağlayıcı çağrılmadan önce bakılır; "tümünü sıfırla" ve kapanış da `stopped` koyar.
+- **Temizlikten sonra yeni görev eski işin üstünde başlıyordu:** görev numarası en yeni görevler silinince yeniden kullanılıyor
+  (sıfırlamadan sonra TA-1), eski `agentbits/ta-1` dalı ve çalışma kopyası "reused" oluyordu. `sweepWorktrees`: görevi kalmamış
+  kopyalar ve `agentbits/*` dallar silinir — açılışta (eski sürümlerden kalanlar dahil; kopyalar ancak bundan sonra açılır),
+  proje görev temizliğinde, fabrika ayarında ve proje silinince.
+- **Yarış kazananı çakışınca bağımlı görev erken başlıyordu:** kaybeden, kazanan "bitti + birleşti" olana dek bağımlılarını tutar.
+- **Hazırlık hatası çalışmayı "aktif" bırakıyordu:** `try` artık `active.set`'in hemen arkasında; hafıza, dosya, skill hazırlığında
+  atılan hata çalışmayı "başarısız" kapatır, ajan serbest kalır.
+- **Başlatma kuralları her yolda aynı:** kapalı ajana görev başlamaz; onay beklerken kapatılan ajanın çalışması onaydan sonra
+  iptal edilir. Bitmemiş görevi bekleyen görev elle başlatılırken (Şimdi başlat, panoda sürükleme, durum menüsü) **"Önceki adım
+  bitmedi — yine de başlatayım mı?"** sorulur (sahibin kararı); main de `force` olmadan başlatmaz. `tasks:waitingFor` IPC'si,
+  `StartGuard.tsx`.
+- **Çalışan görevi "Bitti"ye sürüklemek:** önce çalışmanın bitmesi beklenir (`stopTaskAndWait`), sonra kullanıcının seçtiği durum
+  yazılır ve birleştirme ondan sonra başlar; iptal temizliği artık kullanıcının kararını ezmez.
+- **Düzenlenen hafızaya eski vektör yazılıyordu:** vektör yalnız metin hâlâ aynıysa yazılır; değiştiyse bir sonraki turda yenisi
+  hesaplanır.
+- **Codex sohbeti:** uygulamaları için açılan MCP köprüsü dosya ve (salt okunur) bağlantı araçlarını da taşıyor; istem artık bunu
+  söylüyor (önce "araç yok" diyordu).
+
 ## 2026-10-16 — v0.5.3: boyutlandırılabilir paneller, görev panelinde akış görünmüyordu
 
 ### Eklendi

@@ -11,7 +11,9 @@
   },
   "toast": {
     "noIdleAgent": "Bu projede boşta ajan yok",
-    "agentBusy": "{{name}} şu an meşgul"
+    "agentBusy": "{{name}} şu an meşgul",
+    "agentDisabled": "{{name}} kapalı: ajanı aç ya da görevi başka birine ata",
+    "waitingFor": "{{key}} önce {{keys}} bitmesini bekliyor"
   },
   "status": {
     "awaitingApproval": "Onay bekliyor · {{key}}",
@@ -28,6 +30,7 @@
   },
   "runs": {
     "notApproved": "Onay verilmedi",
+    "agentDisabled": "Çalışma başlamadan ajan kapatıldı",
     "stopped": "Çalışma durduruldu",
     "stoppedByUser": "Kullanıcı durdurdu"
   },
@@ -259,6 +262,7 @@
     "interrupted": "Agentbits kapanırken yarıda kaldı",
     "stopped": "Sen durdurdun",
     "notApproved": "Çalışmayı onaylamadın",
+    "agentDisabled": "Çalışma başlamadan ajanı kapatıldı",
     "failed": "{{count}} kez hata verdi: {{error}}",
     "revisionLimit": "Lider {{count}} kez geri gönderdi",
     "commitFailed": "Ajanın değişiklikleri çalışma kopyasında commit edilemedi (ör. git imzalama ayarı). Değişiklikler orada duruyor; git'i düzeltip görevi yeniden başlat."

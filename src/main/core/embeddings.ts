@@ -73,8 +73,9 @@ async function indexPending(): Promise<void> {
         .all(c.tag, BATCH) as { id: string; content: string }[]
       if (!rows.length) break
       const vecs = await embed(c, rows.map((r) => r.content), 60_000)
-      const put = getDb().prepare('INSERT OR REPLACE INTO memory_vectors(memory_id, model, vec) SELECT ?, ?, ? WHERE EXISTS (SELECT 1 FROM memories WHERE id = ?)')
-      getDb().transaction(() => rows.forEach((r, i) => put.run(r.id, c.tag, Buffer.from(toBlob(vecs[i])), r.id)))()
+      // Only if the text is still the one embedded: an edit meanwhile dropped the vector and must not get the old one back.
+      const put = getDb().prepare('INSERT OR REPLACE INTO memory_vectors(memory_id, model, vec) SELECT ?, ?, ? WHERE EXISTS (SELECT 1 FROM memories WHERE id = ? AND content = ?)')
+      getDb().transaction(() => rows.forEach((r, i) => put.run(r.id, c.tag, Buffer.from(toBlob(vecs[i])), r.id, r.content)))()
       lastError = ''
     }
   } catch (e) {

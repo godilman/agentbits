@@ -116,6 +116,8 @@ export async function clearProject(
   if (want.has('tasks') || want.has('logs')) {
     await orchestrator.stopProject(projectId)
   }
+  // The task copies and branches go with the tasks: a new task reusing a freed key must not start on their work.
+  if (want.has('tasks')) await orchestrator.sweepWorktrees((x) => x.projectId === projectId)
 
   let deleted = 0
   const run = (sql: string, ...params: unknown[]): void => {
@@ -340,6 +342,8 @@ export async function factoryReset(mode: ResetMode): Promise<{ backup: BackupInf
   rejectAllApprovals()
   // Cancels task runs, chat replies and reviews and waits until they have really ended.
   await orchestrator.resetRuntime()
+  // Every task goes: so do their copies and branches (TA-1 again next, which must not reuse the old TA-1's work).
+  await orchestrator.sweepWorktrees(() => true)
 
   const db = getDb()
   const wipe = (tables: string[]): void => {

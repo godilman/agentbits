@@ -383,7 +383,10 @@ mesajların yazılacağı proje kanalını belirler. Bellek içi durum:
    olabilir; görev akışına "⏸ yarıda kaldı" notu düşer). Kullanıcı başlatana / sıraya geri koyana kadar otopilot almaz.
 3. Ajan durumları sıfırlanır (`enabled` ise `idle`, değilse `offline`).
 4. `reviewByLead` açıksa `in_review` görevler inceleme kuyruğuna eklenir.
-5. `setInterval(tick, 1500)`.
+5. `sweepWorktrees()` (arka planda; `prepareWorktree` onu bekler): görevi kalmamış çalışma kopyaları ve `agentbits/*` dallar
+   silinir. Görev numaraları en yeni görevler silinince yeniden kullanılır (sıfırlamadan sonra TA-1); yeni görev eski işin üstünde
+   başlamasın diye. Aynı süpürme proje görev temizliğinde, fabrika ayarında ve proje silinince de (silinecek görevler `drop` ile) çalışır.
+6. `setInterval(tick, 1500)`.
 
 ### 6.2 Zamanlama — `tick()`
 `globalPaused` değilse, `settings.onboarded && settings.autopilot` ise ve en az bir aktif proje varsa:
@@ -394,6 +397,9 @@ Yani ajana atanmış görevler tüm aktif projelerden, atanmamış görevler yal
 projelerden alınır (önce atanmış, sonra öncelik DESC, `sort_order` ASC). Arşivlenmiş projelerde otopilot çalışmaz.
 
 ### 6.3 Başlatma ve onay — `startTask(taskId, agentId?)`
+- **Her giriş yolunda aynı kurallar** (otopilot, Şimdi başlat, panoda sürükleme, durum menüsü):
+  bitmemiş (worktree modunda birleşmemiş) bağımlılığı olan görev `force` olmadan başlamaz (`waitingFor`; arayüz önce
+  "Önceki adım bitmedi — yine de başlatayım mı?" diye sorar, `tasks:waitingFor`). Kapalı (`!enabled`) ajana görev başlamaz.
 - Ajan seçimi: verilen ajan → görevin atananı → projenin boştaki ilk üyesi (organizasyon lideri ve proje
   lideri hariç). Yoksa "Bu projede boşta ajan yok" toast'u;
   ajan meşgulse "… şu an meşgul".
@@ -405,8 +411,12 @@ projelerden alınır (önce atanmış, sonra öncelik DESC, `sort_order` ASC). A
   **Bekletme (`blocked` / `orchestrator.held`):** ret, durdurma, iki kez hata, yarıda kalma ve 4 inceleme turu bekletir;
   `startTask` (elle başlat) ya da kullanıcının görevi başka sütundan "Yapılacak"a taşıması (`tasks:move` → `release`) kaldırır.
   Kalıcıdır (yeniden açılışta korunur); fabrika sıfırlaması temizler.
-  Onay bekleyen çalışmada "Durdur" da ret gibi davranır.
-- Sonra `execute()`.
+  Onay bekleyen çalışmada "Durdur" da ret gibi davranır. Onay verildiğinde ajan bu arada kapatıldıysa çalışma iptal edilir.
+- Sonra `execute()`. `active.set`'ten sonraki her şey (worktree, hafıza, dosya, skill, MCP hazırlığı dahil) tek `try / finally`
+  içinde: hazırlıkta atılan hata çalışmayı "başarısız" kapatır, `active` / `busy` temizlenir. Sağlayıcı her bölümden önce
+  `ar.stopped`'a bakar: hazırlık sırasında gelen "Durdur" yeni `AbortController` ile ezilmez.
+- Çalışan görev panoda başka sütuna taşınırsa `tasks:move` önce `stopTaskAndWait` ile çalışmanın gerçekten bitmesini bekler
+  (iptal temizliği görevi `todo` yazar), sonra kullanıcının seçtiği durumu yazar; birleştirme ondan sonra başlar.
 
 ### 6.4 Yürütme — `execute(runId, task, agent)`
 1. Ajan `working` (not: görev anahtarı). Sağlayıcı: ajanın `providerId`'si → varsayılan sağlayıcı →
@@ -572,6 +582,8 @@ yazar, kaybeden geri alınamaz) — görev akışına neden yazılır. `review()
 (`{"winner":"A"|"B","note"}`). Kazanan `done` + `race_result=won` + `finishTaskBranch`; kaybeden `done` + `lost` +
 `discardTaskBranch`. Karar belirsizse ikisi incelemede kalır. Eş bekletilirse (`hold`) bekleyen deneme tek başına incelenir.
 `previousSteps()` kaybeden bağımlılık yerine kazananın raporunu kullanır.
+Bağımlılar asıl göreve bağlı kalır; `mergeBlockers()` kaybedeni, kazanan **bitti ve birleşti** olana dek engel sayar (birleştirme
+çakışınca kazanan `todo`'ya döner, bağımlı görev o zaman da bekler).
 
 ### 6.7b Paralel çalışma (ADR-025, 2026-10-15)
 - **İkizler:** `isTwin` (`shared/org.ts`: aynı rol + aynı yetenek etiketleri). `tick()`'te boştaki ajanın kendi işi yoksa

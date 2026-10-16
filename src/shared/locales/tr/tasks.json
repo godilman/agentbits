@@ -46,6 +46,11 @@
     "auto": "Otomatik",
     "acceptance": "Kabul kriterleri"
   },
+  "startGuard": {
+    "title": "Önceki adım bitmedi",
+    "body": "{{key}}, sonucunu kullanacağı {{keys}} görevini bekliyor. Yine de başlatayım mı?",
+    "confirm": "Yine de başlat"
+  },
   "drawer": {
     "dropLabel": "{{key}} görevine ekle",
     "createdAgo": "· {{ago}} · {{by}}",

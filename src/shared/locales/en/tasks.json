@@ -46,6 +46,11 @@
     "auto": "Automatic",
     "acceptance": "Acceptance criteria"
   },
+  "startGuard": {
+    "title": "An earlier step isn't finished",
+    "body": "{{key}} waits for {{keys}}, whose result it was meant to build on. Start it anyway?",
+    "confirm": "Start anyway"
+  },
   "drawer": {
     "dropLabel": "Add to {{key}}",
     "createdAgo": "· {{ago}} · {{by}}",
