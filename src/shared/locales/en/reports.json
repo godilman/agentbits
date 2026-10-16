@@ -62,7 +62,8 @@
     "last14": "Last 14 days",
     "noRecordsRange": "No records in this range.",
     "dayTitle": "{{day}}\nInput {{input}}\nOutput {{output}}\nCache {{cache}}",
-    "note": "Values are as reported by the provider: Claude Code and the API providers report input/output/cache separately; Codex CLI only gives the total; the Demo provider's numbers are estimates. Cache reads are usually billed much cheaper than normal input."
+    "note": "Values are as reported by the provider: Claude Code and the API providers report input/output/cache separately; Codex CLI only gives the total; the Demo provider's numbers are estimates. Cache reads are usually billed much cheaper than normal input.",
+    "promptBuilder": "Prompt builder"
   },
   "custom": {
     "button": "Custom",

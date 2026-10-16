@@ -1,8 +1,9 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Coins } from 'lucide-react'
+import { Coins, Wand2 } from 'lucide-react'
 import type { UsageSummary, UsageTotals } from '@shared/types'
 import { USAGE_REPORTING_LABEL } from '@shared/steering'
+import { PROMPT_BUILDER_ID } from '@shared/promptBuilder'
 import { locale } from '@/i18n'
 import { PixelAvatar } from '@/components/common/PixelAvatar'
 import { UsageCells, usageTitle } from '@/components/common/TokenUsage'
@@ -99,12 +100,13 @@ export function UsagePanel({ projectId }: { projectId: string }) {
           <tbody className="divide-y divide-line">
             {rows.map((u) => {
               const a = agentById(agents, u.agentId)
+              const builder = u.agentId === PROMPT_BUILDER_ID
               return (
                 <tr key={u.agentId} className="hover:bg-white/[0.02]">
                   <td className="px-3 py-1.5">
                     <span className="flex items-center gap-2">
-                      <PixelAvatar agent={a} size={18} />
-                      <span className="text-zinc-200">{a?.name ?? t('reports:usage.deletedAgent')}</span>
+                      {builder ? <Wand2 size={16} className="text-indigo-300" /> : <PixelAvatar agent={a} size={18} />}
+                      <span className="text-zinc-200">{builder ? t('reports:usage.promptBuilder') : a?.name ?? t('reports:usage.deletedAgent')}</span>
                     </span>
                   </td>
                   <td className="px-2 py-1.5 text-right font-mono" title={usageTitle(t('reports:usage.columns.currentTask'), u.currentTask)}>

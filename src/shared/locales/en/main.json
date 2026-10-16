@@ -437,5 +437,14 @@
       "notFound": "Not found. If the repository is private, add a GitHub token under Organization → Skills (read access to contents is enough).",
       "newer": "This package was made with a newer Agentbits. Update the app, then try again."
     }
+  },
+  "promptBuilder": {
+    "empty": "Write what you want to do first.",
+    "tooLong": "The text is too long (at most {{max}} characters).",
+    "noProvider": "No AI provider is set up. Add one under Settings → Providers.",
+    "demo": "Demo is a simulation and can't write prompts. Choose a real provider here or under Settings → Providers (Claude Code, Anthropic API or OpenAI API).",
+    "codex": "{{provider}} can't be used here: Codex always has a shell, and this tool gives the model no tools. Choose Claude Code, Anthropic API or OpenAI API.",
+    "cancelled": "Cancelled.",
+    "emptyAnswer": "The provider returned an empty answer. Try again."
   }
 }

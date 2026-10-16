@@ -62,7 +62,8 @@
     "last14": "Son 14 gün",
     "noRecordsRange": "Bu aralıkta kayıt yok.",
     "dayTitle": "{{day}}\nGiriş {{input}}\nÇıkış {{output}}\nÖnbellek {{cache}}",
-    "note": "Değerler sağlayıcının bildirdiği ölçüdedir: Claude Code ve API sağlayıcıları giriş/çıkış/önbellek ayrımını bildirir; Codex CLI yalnızca toplamı verir; Demo sağlayıcının sayıları tahminidir. Önbellek okumaları genellikle normal girişten çok daha ucuza faturalanır."
+    "note": "Değerler sağlayıcının bildirdiği ölçüdedir: Claude Code ve API sağlayıcıları giriş/çıkış/önbellek ayrımını bildirir; Codex CLI yalnızca toplamı verir; Demo sağlayıcının sayıları tahminidir. Önbellek okumaları genellikle normal girişten çok daha ucuza faturalanır.",
+    "promptBuilder": "Prompt oluşturucu"
   },
   "custom": {
     "button": "Özel",

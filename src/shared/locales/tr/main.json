@@ -437,5 +437,14 @@
       "notFound": "Bulunamadı. Depo özelse Organizasyon → Skill'ler altından bir GitHub token'ı ekle (içeriği okuma izni yeterli).",
       "newer": "Bu paket daha yeni bir Agentbits ile yapılmış. Uygulamayı güncelleyip yeniden dene."
     }
+  },
+  "promptBuilder": {
+    "empty": "Önce ne yapmak istediğini yaz.",
+    "tooLong": "Metin çok uzun (en çok {{max}} karakter).",
+    "noProvider": "Kurulu bir AI sağlayıcısı yok. Ayarlar → Sağlayıcılar'dan bir tane ekle.",
+    "demo": "Demo bir simülasyon, prompt yazamaz. Burada ya da Ayarlar → Sağlayıcılar'da gerçek bir sağlayıcı seç (Claude Code, Anthropic API ya da OpenAI API).",
+    "codex": "{{provider}} burada kullanılamaz: Codex'in her zaman bir kabuğu var, bu araç ise modele hiçbir araç vermiyor. Claude Code, Anthropic API ya da OpenAI API seç.",
+    "cancelled": "İptal edildi.",
+    "emptyAnswer": "Sağlayıcı boş bir cevap döndürdü. Yeniden dene."
   }
 }

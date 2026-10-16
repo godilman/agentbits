@@ -1,4 +1,5 @@
 import type { UsageSummary } from '@shared/types'
+import { PROMPT_BUILDER_ID } from '@shared/promptBuilder'
 import { usageReportingFor } from '@shared/steering'
 import { agentsRepo, providersRepo } from '../db/repos'
 import { APP_SESSION_STARTED_AT, emptyTotals, usageRepo } from '../db/usage'
@@ -21,6 +22,9 @@ export function usageSummary(projectId?: string | null): UsageSummary {
       reporting: usageReportingFor(provider?.kind ?? 'mock')
     }
   })
+  // The prompt builder (top bar) is not an agent; its calls are counted under its own id, never per project.
+  const builder = by.get(PROMPT_BUILDER_ID)
+  if (builder) agents.push({ agentId: PROMPT_BUILDER_ID, allTime: builder.allTime, session: builder.session, currentTaskId: null, currentTask: null, reporting: 'full' })
   const totals = usageRepo.totals(projectId)
   return { sessionStartedAt: APP_SESSION_STARTED_AT, agents, allTime: totals.allTime, session: totals.session }
 }

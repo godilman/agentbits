@@ -124,5 +124,28 @@
     "heldNoReason": "Bekletiliyor",
     "agentError": "{{agent}} bir hatayla durdu",
     "memory": "Hatırlanacak bir şey"
+  },
+  "promptBuilder": {
+    "button": "Prompt oluşturucu",
+    "buttonTitle": "Prompt oluşturucu: ne istediğini bir yapay zekâ için açık bir prompta çevir",
+    "title": "Prompt oluşturucu",
+    "welcome1": "Ne yapmak istediğini yaz.",
+    "welcome2": "Son gönderdiğin mesajı, bir yapay zekâya verebileceğin açık ve anlaşılır bir prompta dönüştüreceğim. Sorularını burada cevaplamam; onlar için prompt hazırlarım.",
+    "inputLabel": "Ne yapmak istiyorsun?",
+    "placeholder": "Ör. Bir stok takip uygulaması istiyorum.",
+    "generate": "Prompt oluştur",
+    "generating": "Oluşturuluyor…",
+    "output": "Prompt",
+    "copy": "Kopyala",
+    "copied": "Kopyalandı",
+    "copyFailed": "Kopyalanamadı; metni seçip kopyala.",
+    "retry": "Yeniden dene",
+    "provider": "Sağlayıcı",
+    "defaultTag": "varsayılan",
+    "notUsable": "burada kullanılamaz",
+    "privacy": "Metnin seçilen AI sağlayıcısına gönderilir; Agentbits geçmişine kaydedilmez.",
+    "cliNote": "Claude Code kendi oturum dosyalarını bu bilgisayarda, Agentbits'in dışında tutar.",
+    "noProviders": "Henüz kurulu bir AI sağlayıcısı yok.",
+    "openProviders": "Ayarlar → Sağlayıcılar'ı aç"
   }
 }

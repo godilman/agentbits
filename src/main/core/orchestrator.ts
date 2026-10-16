@@ -140,7 +140,7 @@ const nowIso = (): string => new Date().toISOString()
 const AUTH_RE = /authentication_error|access token has expired|re-?authenticate|invalid api key|invalid x-api-key|incorrect api key|not logged in|please run \/login|\b401\b/i
 
 /** Turns provider failures into a short, actionable message in the UI language. */
-function explainError(raw: string, provider: Provider): { auth: boolean; text: string } {
+export function explainError(raw: string, provider: Provider): { auth: boolean; text: string } {
   if (AUTH_RE.test(raw)) {
     const hint =
       provider.kind === 'claude-cli'

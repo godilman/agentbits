@@ -7,6 +7,7 @@ import { applyLanguageSetting, t } from './i18n'
 import { settingsRepo } from './db/repos'
 import { registerIpc } from './ipc'
 import { orchestrator } from './core/orchestrator'
+import { cancelAllPrompts } from './core/promptBuilder'
 import { startMaintenance, stopMaintenance } from './core/maintenance'
 import { startFiles } from './files/service'
 import { stopBridge } from './connections/bridge'
@@ -177,6 +178,7 @@ app.on('before-quit', () => {
   stopBridge()
   void closeAllApps()
   orchestrator.shutdown()
+  cancelAllPrompts()
   terminals.killAll()
   closeDb()
 })

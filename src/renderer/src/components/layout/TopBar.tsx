@@ -36,6 +36,7 @@ import { useGuideSteps } from '@/features/guide/GuideDrawer'
 import { useOpenFolder } from '@/features/project/ProjectLauncher'
 import { NeedsYouButton } from '@/features/inbox/NeedsYou'
 import { Logo } from '@/components/common/Logo'
+import { PromptBuilderButton } from '@/features/promptBuilder/PromptBuilder'
 
 type TabDef = { id: Tab; readonly label: string; icon: ComponentType<{ size?: number; className?: string }>; key: string }
 /** `label` is a getter: it is translated on every read (current language). */
@@ -127,6 +128,7 @@ function ProjectStrip() {
       <div className="no-drag ml-auto flex shrink-0 items-center gap-1">
         <NeedsYouButton />
         <GuideButton />
+        <PromptBuilderButton />
         <MemoryButton />
         <button
           onClick={() => void call(paused ? 'orchestrator:resumeAll' : 'orchestrator:pauseAll')}

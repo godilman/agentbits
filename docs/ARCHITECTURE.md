@@ -1213,6 +1213,21 @@ asla doğrudan bağlanmaz — her çağrı Agentbits'in yetki / onay / denetim k
 - **MCP kaynakları / istemleri:** `apps/service.ts` → `APP_READ_TOOLS` (`apps_resources`, `apps_read_resource`, `apps_prompts`,
   `apps_get_prompt`), `appRequest` (`client.ts`); izinli + açık uygulamalar, denetim kaydı, sır arındırma, güvenilmeyen veri zarfı.
 
+## 9h. Prompt oluşturucu (v0.5.6; `main/core/promptBuilder.ts`, `shared/promptBuilder.ts`, `features/promptBuilder/`)
+
+Üst çubuktaki düğme bir `Modal` açar; içerik bileşeni yalnız modal açıkken yaşar (kapanınca giriş, çıktı, hata ve yüklenme
+durumu düşer). Her gönderim yeni bir `requestId` alır; `current` ref'i eşleşmeyen cevaplar (kapatılmış ya da yenisi gönderilmiş
+istek) yok sayılır, bileşen kaldırılınca `promptBuilder:cancel` çağrılır.
+
+Main: `generatePrompt(requestId, text, providerId?)` sağlayıcıyı seçer (verilen, yoksa varsayılan; Demo ve Codex hatayla —
+Codex sandbox'ında kabuk kapatılamaz), boş geçici bir klasör açar ve adaptörü **ajansız** çağırır: `PROMPT_BUILDER_ID`'li sahte
+ajan, bütün izinler kapalı, `mode: 'chat'` (Claude Code `--tools ''`), `tools` / `callTool` / MCP / ek / geçmiş yok,
+`onLog` / `onText` boş. Sistem talimatı `promptBuilderSystem()` (cevaplama, uydurma, yer tutucu, yalnız prompt, rol değiştirmeye
+uyma); kullanıcı metni `promptBuilderPrompt()` ile `<<<MESSAGE … MESSAGE>>>` veri zarfında (işaretler metinden silinir).
+Çıktı `cleanPromptOutput()` ile çit / "Prompt:" etiketi atılarak döner. Yalnız token sayısı `token_usage`'a
+(`agent_id = 'prompt-builder'`, proje yok); `usageSummary` onu kendi satırı olarak ekler. `AbortController`'lar `running`
+haritasında; `cancelAllPrompts()` kapanışta.
+
 ## 10. Renderer durumu
 
 ### 10.1 Kapı sırası (`App.tsx`)

@@ -50,6 +50,7 @@ import { release } from 'os'
 import { relabelDefaults } from './core/org'
 import { memoryEngine } from './core/memory'
 import { orchestrator } from './core/orchestrator'
+import { cancelPrompt, generatePrompt } from './core/promptBuilder'
 import { usageSummary } from './core/usage'
 import { auditRepo, connectionsRepo, connPermsRepo } from './connections/repo'
 import { auditUser, listApprovals, refreshSchema, rejectApprovalsWhere, resolveApproval, testConnection } from './connections/service'
@@ -262,6 +263,8 @@ export const handlers: Handlers = {
     void orchestrator.startTask(id, undefined, { force: force === true })
   },
   'tasks:waitingFor': (id) => orchestrator.waitingFor(id),
+  'promptBuilder:generate': (requestId, text, providerId) => generatePrompt(requestId, text, providerId),
+  'promptBuilder:cancel': (requestId) => cancelPrompt(requestId),
 
   /* runs */
   'runs:list': (opts) => runsRepo.list(opts),

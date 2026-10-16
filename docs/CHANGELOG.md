@@ -4,6 +4,24 @@
 > `## YYYY-MM-DD — kısa başlık`, ardından **Eklendi / Değişti / Düzeltildi / Kaldırıldı / Bilinen** maddeleri
 > ve ilgili dosyalar.
 
+## 2026-10-16 — v0.5.6: Prompt oluşturucu
+
+### Eklendi
+- **Prompt oluşturucu** (üst çubuk, Kılavuz ile Hafıza arasında, `Wand2`): son yazılan mesajı başka bir yapay zekâya
+  verilecek bir prompta çevirir; cevaplamaz, işi yapmaz, uydurmaz (eksikler `[hedef kitle]` gibi yer tutucu), rol değiştirme
+  girişimlerini talimat saymaz. `promptBuilder:generate(requestId, text, providerId?)` / `promptBuilder:cancel(requestId)`:
+  ajan yok, bütün izinler kapalı, araç / MCP / dosya / hafıza / geçmiş yok, CLI boş geçici klasörde. Sağlayıcı: varsayılan,
+  modalda seçilebilir (kaydedilmez); Codex (kabuk kapatılamıyor) ve Demo reddedilir. Hiçbir şey kaydedilmez; yalnız token
+  sayısı `token_usage`'a `agent_id = 'prompt-builder'` ile (Raporlar → Token kullanımı'nda kendi satırı). Modal kapanınca
+  istek iptal; istek kimliği eşleşmeyen geç cevap yok sayılır. Uygulama kapanırken süren istekler iptal.
+  `features/promptBuilder/PromptBuilder.tsx`, `main/core/promptBuilder.ts`, `shared/promptBuilder.ts`.
+
+### Test
+- `tests/promptBuilder.test.ts` (kurallar, veri zarfı, çıktı temizleme), `tests/e2e/promptBuilder.e2e.ts` (9 senaryo:
+  sağlayıcı yok / Demo / Codex, boş giriş, modele yalnız mesaj gidiyor, bağımsızlık, varsayılan sağlayıcı, iptal, hata ve
+  yeniden deneme, hiçbir tabloda / konsolda metin yok). Arayüz Playwright ile elle denendi (depoda UI testi yok).
+  **Gerçek bir modelle davranış (başkent sorusu, rol değiştirme) denenmedi.**
+
 ## 2026-10-16 — v0.5.5: veri modelden geçmez — db_export, db_query 1000 satır
 
 Tetik: sahip TA-22'de (642 satır yemek yorumu → Excel) dakikalarca bekledi. Döküm: 4 sorgu 40–79 ms, ama ajan 642 satırı 200'lük

@@ -149,6 +149,9 @@ export interface Api {
   'tasks:start': (id: string, force?: boolean) => void
   /** Keys of the unfinished tasks this one waits for (asked before a manual start). */
   'tasks:waitingFor': (id: string) => string[]
+  /** Prompt builder: one stateless model call on this message only (no tools, nothing stored but the token count). */
+  'promptBuilder:generate': (requestId: string, text: string, providerId?: string | null) => { prompt: string; provider: string; model: string }
+  'promptBuilder:cancel': (requestId: string) => void
 
   // runs
   'runs:list': (opts?: { activeOnly?: boolean; taskId?: string; limit?: number }) => Run[]

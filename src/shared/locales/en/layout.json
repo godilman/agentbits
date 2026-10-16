@@ -124,5 +124,28 @@
     "heldNoReason": "On hold",
     "agentError": "{{agent}} stopped with an error",
     "memory": "Something to remember"
+  },
+  "promptBuilder": {
+    "button": "Prompt builder",
+    "buttonTitle": "Prompt builder: turn what you want into a clear prompt for an AI",
+    "title": "Prompt builder",
+    "welcome1": "Write what you want to do.",
+    "welcome2": "I'll turn the message you send into a clear prompt you can give to an AI. I don't answer your questions here; I write prompts for them.",
+    "inputLabel": "What do you want to do?",
+    "placeholder": "E.g. I want a stock tracking app.",
+    "generate": "Build prompt",
+    "generating": "Building…",
+    "output": "Prompt",
+    "copy": "Copy",
+    "copied": "Copied",
+    "copyFailed": "Couldn't copy; select the text and copy it.",
+    "retry": "Try again",
+    "provider": "Provider",
+    "defaultTag": "default",
+    "notUsable": "not usable here",
+    "privacy": "Your text is sent to the selected AI provider; it isn't saved in Agentbits' history.",
+    "cliNote": "Claude Code keeps its own session files on this computer, outside Agentbits.",
+    "noProviders": "No AI provider is set up yet.",
+    "openProviders": "Open Settings → Providers"
   }
 }
