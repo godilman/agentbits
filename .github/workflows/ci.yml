@@ -27,6 +27,8 @@ jobs:
       - run: npm run typecheck
       # SQL / SSH classification (incl. the 2026-10-13 security review cases), file extraction, skills, MCP config, translations
       - run: npm run test:unit
+      # Connections end to end: real SQLite and SSH server, fake MySQL / PostgreSQL (TLS cases need openssl)
+      - run: npm run test:e2e
       - run: npm run build
       # Known critical advisories in runtime dependencies fail the check; review the full report by hand.
       - run: npm audit --omit=dev --audit-level=critical

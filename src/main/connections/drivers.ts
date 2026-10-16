@@ -1,6 +1,6 @@
 import { createHash } from 'crypto'
 import { readFileSync } from 'fs'
-import { createServer, isIP, type AddressInfo } from 'net'
+import { createConnection, createServer, isIP, type AddressInfo } from 'net'
 import type { Connection, SchemaInfo, SchemaTable } from '@shared/types'
 import { t } from '../i18n'
 import { cancellable as runCancellable } from '@shared/cancel'
@@ -237,15 +237,28 @@ const postgres = {
 
 /* ───────────────────────────── MySQL / MariaDB ───────────────────────────── */
 
-async function myConn(c: Connection, cred: Credentials, multi: boolean): Promise<any> {
+async function myConn(c: DriverConn, cred: Credentials, multi: boolean): Promise<any> {
   const mysql = await import('mysql2/promise')
+  const tlsHost = tlsHostOf(c)
   const conn = await mysql.createConnection({
-    host: c.host,
+    // mysql2 checks the certificate against `host`: through a tunnel that stays the real server, and the socket
+    // goes to the tunnel instead. `_host` is what Node checks an IP address against (servername is never an IP).
+    host: tlsHost ?? c.host,
     port: c.port,
+    ...(tlsHost
+      ? {
+          stream: () => {
+            const s = createConnection(c.port, c.host)
+            ;(s as unknown as { _host: string })._host = tlsHost
+            return s
+          }
+        }
+      : {}),
     user: cred.username,
     password: cred.password ?? undefined,
     database: c.database || undefined,
-    ssl: c.ssl ? { rejectUnauthorized: !c.trustServerCertificate } : undefined,
+    // verifyIdentity: without it mysql2 checks only the chain, not that the certificate belongs to this server.
+    ssl: c.ssl ? { rejectUnauthorized: !c.trustServerCertificate, verifyIdentity: !c.trustServerCertificate } : undefined,
     connectTimeout: CONNECT_TIMEOUT,
     multipleStatements: multi,
     rowsAsArray: true,

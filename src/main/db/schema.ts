@@ -670,6 +670,13 @@ const MIGRATIONS: { version: number; sql: string }[] = [
       ALTER TABLE connections ADD COLUMN via_ssh_id TEXT;
       ALTER TABLE connections ADD COLUMN allow_plaintext INTEGER NOT NULL DEFAULT 0;
     `
+  },
+  {
+    version: 19,
+    sql: `
+      -- The target (route|host:port) an unencrypted yes was given for; another target = no yes (v18 yeses are asked again).
+      ALTER TABLE connections ADD COLUMN plaintext_target TEXT;
+    `
   }
 ]
 

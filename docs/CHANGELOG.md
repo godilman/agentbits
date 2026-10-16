@@ -4,6 +4,30 @@
 > `## YYYY-MM-DD — kısa başlık`, ardından **Eklendi / Değişti / Düzeltildi / Kaldırıldı / Bilinen** maddeleri
 > ve ilgili dosyalar.
 
+## 2026-10-16 — v0.5.1: dış inceleme — tünelin son kısmı, onayın hedefe bağlanması, MySQL sertifika adı
+
+Başka bir ajanın incelemesi; üç bulgu da doğrulandı (yeni uçtan uca testler eski kodda düştü, yeniyle geçti).
+
+### Düzeltildi
+- **SSH tüneli başka makinedeki veritabanına onaysız gidiyordu.** Tünel yalnız SSH sunucusuna kadar şifreli; TLS kapalıyken
+  SSH sunucusundan veritabanına giden kısım açık gidiyordu. Kural (`transportCheck`) artık: host bağlanılan makinenin kendisi
+  (doğrudan: bu bilgisayar, tünelde: SSH sunucusu; `127.x` / `localhost` / `::1`) değilse TLS ya da onay. Editörde ayrı uyarı
+  ("SSH sunucusundan veritabanına giden kısım şifresiz gider").
+- **Şifresiz onay hedef değişince taşınıyordu** ve yeni denetim satırı yazılmıyordu. Onay artık onaylanan hedefe bağlı
+  (migration v19 `connections.plaintext_target` = yol|host:port): yol, host ya da port değişince düşer, editörde anahtar
+  kapanır, yeniden onay yeni denetim satırı yazar. v0.5.0'da verilen onaylar yeniden istenir.
+- **MySQL sertifikanın sunucuya ait olduğunu denetlemiyordu** (mysql2'de `verifyIdentity` yoktu; v0.5.0 öncesinden beri).
+  "Sertifikaya güven" kapalıyken artık açık; tünelde mysql2 `host` gerçek sunucu kalır, soket `stream` ile tünele gider (IP
+  adresinde Node'un denetlediği `_host` gerçek adres). **Davranış değişikliği:** sertifika adı uymayan ama SSL ile bağlanan
+  MySQL bağlantıları artık "Sertifikaya güven" ister.
+
+### Test
+- `npm run test:e2e` (yeni, CI'da): `scripts/e2e.mjs` + `tests/e2e/connections.e2e.ts` — gerçek SQLite + gerçek SSH sunucusu
+  + sahte MySQL (TLS'siz ve TLS'li) / PostgreSQL ile 21 senaryo; TLS sertifikası her koşuda `openssl` ile üretilir (yoksa
+  atlanır). Önceki geçici 13 senaryo depoya alındı. 10 ardışık koşuda kararlı (sahte TLS'li MySQL'de parça yarışı giderildi).
+- `tests/connections.transport.test.ts`: tünelde SSH sunucusu / başka makine, `plaintextTarget`.
+- SQL Server hâlâ uçtan uca denenmedi (sahte TDS sunucusu yok); yapılandırma koddan doğrulandı.
+
 ## 2026-10-16 — v0.5.0: SSH üzerinden veritabanı, TLS'siz Production için açık onay
 
 ### Eklendi

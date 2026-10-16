@@ -8,7 +8,7 @@ import type {
   ConnectionPermission,
   SchemaInfo
 } from '@shared/types'
-import { DEFAULT_PORT, DEFAULT_SSH_READ, LEVEL_ORDER } from '@shared/connections'
+import { DEFAULT_PORT, DEFAULT_SSH_READ, LEVEL_ORDER, plaintextTarget } from '@shared/connections'
 import { getDb } from '../db'
 import { decryptSecret, encryptSecret } from '../secrets'
 import { t } from '../i18n'
@@ -47,7 +47,8 @@ const mapConnection = (r: Row): Connection => ({
   ssl: !!r.ssl,
   trustServerCertificate: !!r.trust_server_cert,
   viaSshId: r.via_ssh_id ?? null,
-  allowPlaintext: !!r.allow_plaintext,
+  // The yes counts only for the target it was given for.
+  allowPlaintext: !!r.allow_plaintext && r.plaintext_target === plaintextTarget({ viaSshId: r.via_ssh_id ?? null, host: r.host ?? '', port: r.port }),
   readOnlyUsername: r.ro_username,
   sshRead: list(r.ssh_read),
   sshWrite: list(r.ssh_write),
@@ -136,6 +137,12 @@ export const connectionsRepo = {
       sets.push('updated_at = ?')
       vals.push(now())
       db.prepare(`UPDATE connections SET ${sets.join(', ')} WHERE id = ?`).run(...vals, cid)
+      // An unencrypted yes is tied to the target as saved now (route, host, port).
+      if (input.allowPlaintext !== undefined) {
+        const r = db.prepare('SELECT via_ssh_id, host, port FROM connections WHERE id = ?').get(cid) as Row
+        const target = input.allowPlaintext ? plaintextTarget({ viaSshId: r.via_ssh_id ?? null, host: r.host ?? '', port: r.port }) : null
+        db.prepare('UPDATE connections SET plaintext_target = ? WHERE id = ?').run(target, cid)
+      }
     })()
     return this.get(cid)!
   },

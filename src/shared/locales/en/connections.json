@@ -103,7 +103,8 @@
       "allowPlaintext": "This server is on my company network; connect unencrypted",
       "plaintextOn": "Unencrypted: the password and query results cross your network in clear. This is recorded in the audit log. SSH or TLS is safer when you can.",
       "plaintextPublic": "This address looks like a public internet address, not a private network one. Accept only if your company network uses it internally — otherwise the password and data would cross the internet in clear.",
-      "turnOff": "Turn off {{name}}"
+      "turnOff": "Turn off {{name}}",
+      "needsChoiceViaSsh": "Through SSH, the tunnel is encrypted only up to the SSH server. This database is on another machine, so from the SSH server to the database it travels unencrypted. Turn on SSL / TLS, use 127.0.0.1 if the database runs on the SSH server itself, or accept an unencrypted last hop."
     }
   },
   "access": {

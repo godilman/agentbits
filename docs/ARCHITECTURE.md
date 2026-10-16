@@ -863,9 +863,12 @@ okuma dışı her şey onay ister; gerçek güvence ayrı, kısıtlı bir uzak O
 Ajanın çağrısı sabitlenmemiş bir sunucuya bağlanmaz ("Sunucu anahtarı henüz doğrulanmadı … Test"e tıkla"); değişen anahtar
 her zaman reddedilir.
 
-**Production'da TLS, tünel ya da açık onay.** Bu bilgisayarda çalışmayan (`localhost`, `127.x`, `::1` dışı) bir Production
-veritabanı SSL/şifreleme kapalıyken ancak **SSH üzerinden** (`via_ssh_id`) ya da kullanıcının açık onayıyla
-(`allow_plaintext`, denetim günlüğünde) kaydedilir; kural (`transportCheck`, `src/shared/connectionRules.ts`) kayıtta ve
+**Production'da TLS ya da açık onay.** Bir Production veritabanı SSL/şifreleme kapalıyken ancak bağlanılan makineden hiç
+çıkmıyorsa (host `localhost`, `127.x`, `::1`: doğrudan bağlantıda bu bilgisayar, **SSH üzerinden** `via_ssh_id` bağlantıda SSH
+sunucusunun kendisi) ya da kullanıcının açık onayıyla kaydedilir. Tünel yalnız SSH sunucusuna kadar şifreli; başka
+makinedeki veritabanına giden son kısım TLS'siz açık gider, bu yüzden onun için de onay gerekir. Onay (`allow_plaintext`,
+denetim günlüğünde) **hedefe bağlıdır**: `plaintext_target` = yol|host:port; yol, host ya da port değişince onay düşer
+(editörde anahtar kapanır, kayıtta yeniden ve yeni denetim satırıyla); kural (`transportCheck`, `src/shared/connectionRules.ts`) kayıtta ve
 **her bağlanışta** (`withTransport`) uygulanır. Adres sınıfı tek başına karar veremez (şirket ağları içeride genel blok
 kullanabiliyor, ör. 192.1.x.x); editör yalnızca uyarının tonunu `isPrivateIp`'e göre seçer, denetim satırı adın çözüldüğü
 adresin genel görünüp görünmediğini yazar.
@@ -874,7 +877,9 @@ adresin genel görünüp görünmediğini yazar.
 kaydıyla bağlanır (aynı kimlik doğrulama ve host anahtarı kuralı, ortak `sshConfig`), `127.0.0.1:0`'da yerel bir port açar,
 her yerel soketi `forwardOut` ile hedefe bağlar; sürücü `{host: '127.0.0.1', port}` ile değişmeden çalışır, çağrı bitince
 tünel kapanır (çağrı başına tünel; sürücüler de çağrı başına bağlanıyor). Tünelde SSL açıksa sertifika yine gerçek sunucu
-adına karşı doğrulanır (`tlsHost`: pg `host` / `servername`, tedious `serverName`; mysql2 adı zaten denetlemiyor). SSH sunucusu yönlendirmeyi reddederse
+adına karşı doğrulanır (`tlsHost`: pg `host` / `servername`, tedious `serverName`; mysql2'de `host` gerçek ad kalır, soket
+`stream` ile tünele gider, IP için Node'un denetlediği `_host` gerçek adrese ayarlanır). MySQL'de "Sertifikaya güven" kapalıyken
+`verifyIdentity` açıktır (yoksa mysql2 yalnız zinciri denetler). SSH sunucusu yönlendirmeyi reddederse
 (`AllowTcpForwarding no`) o sebep gösterilir. SSH kaydı yalnız taşımadır: ajanın DB izni yeter, o sunucuda komut
 çalıştıramaz.
 

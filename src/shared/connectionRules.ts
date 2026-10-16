@@ -34,13 +34,18 @@ export function isPrivateIp(host: string): boolean {
 }
 
 /**
- * A Production database goes over TLS, through an SSH tunnel or stays on this computer; otherwise only with the
- * user's explicit yes (`allowPlaintext`, audited). Address classes can't decide this on their own: company networks
- * use public blocks internally (e.g. 192.1.x.x), so the editor only words its warning by `isPrivateIp`.
+ * A Production database goes over TLS, or never leaves the machine it is reached from: this computer, or — through
+ * an SSH tunnel — the SSH server itself (host 127.0.0.1 / localhost there). A tunnel to another machine is encrypted
+ * only up to the SSH server, so without TLS that last hop needs the yes too. Otherwise only with the user's explicit
+ * yes (`allowPlaintext`, audited, bound to its target: `plaintextTarget`). Address classes can't decide this on their
+ * own: company networks use public blocks internally (e.g. 192.1.x.x), so the editor only words its warning by `isPrivateIp`.
  */
-export function transportCheck(c: { kind: ConnectionKind; env: ConnectionEnv; host: string; ssl: boolean; viaSshId: string | null; allowPlaintext: boolean }): 'ok' | 'needsTls' {
-  return c.kind === 'ssh' || c.env !== 'production' || c.ssl || !!c.viaSshId || c.allowPlaintext || isLocalHost(c.host) ? 'ok' : 'needsTls'
+export function transportCheck(c: { kind: ConnectionKind; env: ConnectionEnv; host: string; ssl: boolean; allowPlaintext: boolean }): 'ok' | 'needsTls' {
+  return c.kind === 'ssh' || c.env !== 'production' || c.ssl || c.allowPlaintext || isLocalHost(c.host) ? 'ok' : 'needsTls'
 }
+
+/** What an unencrypted yes was given for: the route, host and port. Another target needs a new yes. */
+export const plaintextTarget = (c: { viaSshId: string | null; host: string; port: number }): string => `${c.viaSshId ?? ''}|${c.host.trim().toLowerCase()}:${c.port}`
 
 /**
  * Read-only commands an SSH connection allows by default (`*` = any arguments). Programs that can run other

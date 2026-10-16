@@ -22,9 +22,9 @@ yalnızca izin verilen **Bağlantılar** (SSH / PostgreSQL / MySQL / SQL Server)
 hissinde, koyu temalı, ajanların ne yaptığını canlı gösteren güvenli bir "yapay zeka şirketi ofisi".
 Ürün vizyonu → [docs/PROJECT.md](docs/PROJECT.md).
 
-Durum: **v0.5.0** (2026-10-16) — organizasyon, projeler ve tüm proje bölümleri çalışıyor; özellik durumu →
+Durum: **v0.5.1** (2026-10-16) — organizasyon, projeler ve tüm proje bölümleri çalışıyor; özellik durumu →
 [docs/FEATURES.md](docs/FEATURES.md). Depo herkese açık; yayımlanan sürümler v0.1.0 (2026-10-14), v0.2.0 (2026-10-15),
-v0.3.0 (2026-10-15), v0.4.0 (2026-10-15), v0.5.0 (2026-10-16). v0.1.1 taslağı yayımlanmadı; sahibin isteğiyle 2026-10-15'te silindi.
+v0.3.0 (2026-10-15), v0.4.0 (2026-10-15), v0.5.0 (2026-10-16), v0.5.1 (2026-10-16). v0.1.1 taslağı yayımlanmadı; sahibin isteğiyle 2026-10-15'te silindi.
 
 ## Güncel durum ve devir notu (son güncelleme: 2026-10-16)
 
@@ -87,6 +87,9 @@ Demo sağlayıcı iş türüne göre simülasyon (`shared/demoKind.ts`), paket s
   TLS desteklemeyen MySQL 5.6 sunucusuna hiçbir yoldan bağlanamaması. İstisna her adreste (şirket ağları 192.1.x.x gibi genel
   blok kullanıyor — RFC1918 kuralı bunu dışarıda bırakırdı), adres genel görünüyorsa kırmızı uyarı + denetim satırı.
   Tünelde TLS sertifikası gerçek sunucu adına karşı (pg / mssql). SQL Server uçtan uca denenmedi.
+- **2026-10-16 v0.5.1**: dış inceleme — tünel başka makineye onaysız gidiyordu (son kısım açık), şifresiz onay hedefe bağlı
+  değildi (v19 `plaintext_target`), MySQL sertifika adını denetlemiyordu (`verifyIdentity`; sahip onayladı, uymayan sertifika
+  artık "Sertifikaya güven" ister). Uçtan uca testler depoda: **`npm run test:e2e`** (CI'da).
 - `docs/SECURITY.md`'deki 🟡 / ⏳ maddeler (ör. büyük veride UI sayfalama) ve `docs/FEATURES.md` "Bilinen sorunlar".
 
 **Önceki oturumlardan öğrenilenler**

@@ -574,3 +574,9 @@ Durum değerleri: *Kabul edildi*, *Önerildi*, *Yerini aldı*, *Geri alındı*.
 - **Elenen:** Sunucuda TLS açtırmak (kullanıcının elinde değil), yalnız RFC1918 istisnası (gerçek ağı dışarıda bırakıyordu),
   Ayarlar'da iç ağ aralıkları tanımlamak (ilk kurulumda biri girmeli; sahibi iki kademeli uyarıyı seçti), ortamı
   Production'dan düşürmek (yazma onayı gibi korumaları da kaldırır).
+- **Düzeltme (2026-10-16, v0.5.1, dış inceleme):** (a) Tünel "her durumda şifreli" sayılmıştı; yalnız SSH sunucusuna kadar
+  şifreli. Kural artık yolu değil hedefi sorar: host bağlanılan makinenin kendisi değilse (doğrudan: bu bilgisayar, tünelde:
+  SSH sunucusu) TLS ya da onay gerekir. (b) Onay hedefe bağlandı (`plaintext_target`, v19): yol / host / port değişince düşer,
+  yenisi ayrı denetim satırı yazar. (c) MySQL'de `verifyIdentity` açıldı; tünelde mysql2 `host` gerçek ad kalır, soket
+  `stream` ile tünele gider. Bedel: sertifika adı uymayan ama bugüne kadar SSL ile bağlanan MySQL bağlantıları artık
+  "Sertifikaya güven" ister (sahibin onayı). (d) Uçtan uca testler depoda: `npm run test:e2e`, CI'da.

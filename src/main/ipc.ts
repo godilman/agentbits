@@ -54,7 +54,7 @@ import { usageSummary } from './core/usage'
 import { auditRepo, connectionsRepo, connPermsRepo } from './connections/repo'
 import { auditUser, listApprovals, refreshSchema, rejectApprovalsWhere, resolveApproval, testConnection } from './connections/service'
 import { isPrivateHost } from './connections/transport'
-import { DEFAULT_PORT, LEVEL_LABEL, LEVEL_ORDER, transportCheck } from '@shared/connections'
+import { DEFAULT_PORT, LEVEL_LABEL, LEVEL_ORDER, plaintextTarget, transportCheck } from '@shared/connections'
 import { instructionsRepo, usageRepo } from './db/usage'
 import { getAdapter } from './providers'
 import { which } from './providers/cli'
@@ -102,7 +102,7 @@ function feedbackMailUrl(kind: FeedbackKind, rating?: number): string {
 
 type Handlers = { [M in ApiMethod]: (...args: Parameters<Api[M]>) => ReturnType<Api[M]> | Promise<ReturnType<Api[M]>> }
 
-const handlers: Handlers = {
+export const handlers: Handlers = {
   /* settings */
   'settings:get': () => settingsRepo.get(),
   'settings:update': (raw) => {
@@ -290,17 +290,19 @@ const handlers: Handlers = {
       const ssh = connectionsRepo.get(viaSshId)
       if (kind === 'ssh' || !ssh || ssh.kind !== 'ssh') throw new Error(t('main:connections.errors.tunnelMissing'))
     }
+    const host = (input.host ?? before?.host ?? '').trim()
+    // An earlier unencrypted yes only holds for the same route, host and port.
+    const yesBefore = !!before?.allowPlaintext && plaintextTarget(before) === plaintextTarget({ viaSshId, host, port: input.port ?? before?.port ?? 0 })
     const transport = transportCheck({
       kind,
       env: input.env ?? before?.env ?? 'development',
-      host: input.host ?? before?.host ?? '',
+      host,
       ssl: input.ssl ?? before?.ssl ?? false,
-      viaSshId,
-      allowPlaintext: input.allowPlaintext ?? before?.allowPlaintext ?? false
+      allowPlaintext: input.allowPlaintext ?? yesBefore
     })
     if (transport === 'needsTls') throw new Error(t('main:connections.errors.productionNeedsTls'))
-    const plaintextAccepted = !!input.allowPlaintext && !before?.allowPlaintext
-    const looksPublic = plaintextAccepted && !(await isPrivateHost(input.host ?? before?.host ?? ''))
+    const plaintextAccepted = !!input.allowPlaintext && !yesBefore
+    const looksPublic = plaintextAccepted && !(await isPrivateHost(host))
     const changed = Object.keys(input).filter((k) => !['secret', 'readOnlySecret'].includes(k))
     if (id) rejectApprovalsWhere({ connectionId: id })
     const c = connectionsRepo.save({ ...input, port: input.port ?? (id ? undefined : DEFAULT_PORT[input.kind ?? 'postgres']) }, id)

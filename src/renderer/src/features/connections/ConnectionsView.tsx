@@ -307,7 +307,9 @@ function ConnectionEditor({
   const [test, setTest] = useState<ConnectionTestResult | null>(null)
   const [confirmDelete, setConfirmDelete] = useState(false)
   const db = isDb(kind)
-  const set = <K extends keyof Form>(k: K, v: Form[K]): void => setForm((f) => ({ ...f, [k]: v }))
+  // An unencrypted yes belongs to its target: changing the route, host or port asks for it again.
+  const set = <K extends keyof Form>(k: K, v: Form[K]): void =>
+    setForm((f) => ({ ...f, [k]: v, ...((k === 'host' || k === 'port' || k === 'viaSshId') && f[k] !== v ? { allowPlaintext: false } : {}) }))
   const initial = useMemo(() => JSON.stringify(toForm(conn, kind)), [conn, kind])
   const dirty = JSON.stringify({ ...form, secret: undefined, readOnlySecret: undefined }) !== initial || form.secret !== undefined || form.readOnlySecret !== undefined
 
@@ -620,8 +622,8 @@ function ConnectionEditor({
 }
 
 /** Production, no TLS, no tunnel, not on this computer, and the user said yes: data crosses the network in clear. */
-const plaintext = (c: Pick<Connection, 'kind' | 'env' | 'ssl' | 'viaSshId' | 'allowPlaintext' | 'host'>): boolean =>
-  isDb(c.kind) && c.env === 'production' && !c.ssl && !c.viaSshId && c.allowPlaintext && !isLocalHost(c.host)
+const plaintext = (c: Pick<Connection, 'kind' | 'env' | 'ssl' | 'allowPlaintext' | 'host'>): boolean =>
+  isDb(c.kind) && c.env === 'production' && !c.ssl && c.allowPlaintext && !isLocalHost(c.host)
 
 /** How a database is reached: directly or through an SSH connection; and what a production database without TLS needs. */
 function TransportFields({ form, set }: { form: Form; set: <K extends keyof Form>(k: K, v: Form[K]) => void }) {
@@ -629,7 +631,8 @@ function TransportFields({ form, set }: { form: Form; set: <K extends keyof Form
   const connections = useAppStore((s) => s.connections)
   const sshList = useMemo(() => connections.filter((c) => c.kind === 'ssh'), [connections])
   const via = form.viaSshId !== ''
-  const needsChoice = form.env === 'production' && !form.ssl && !via && !isLocalHost(form.host)
+  // Through SSH, host is as seen from the SSH server: 127.0.0.1 there is fully encrypted, another machine is not.
+  const needsChoice = form.env === 'production' && !form.ssl && !isLocalHost(form.host)
   // Literal addresses only: a name is resolved in main (the audit line says whether it looked public).
   const publicLooking = needsChoice && /^[\d.]+$|:/.test(form.host.trim()) && !isPrivateIp(form.host)
   return (
@@ -669,11 +672,11 @@ function TransportFields({ form, set }: { form: Form; set: <K extends keyof Form
         >
           <div className="flex items-start gap-2">
             <ShieldAlert size={13} className="mt-0.5 shrink-0" />
-            <span>{t(form.allowPlaintext ? 'connections:editor.transport.plaintextOn' : 'connections:editor.transport.needsChoice')}</span>
+            <span>{t(form.allowPlaintext ? 'connections:editor.transport.plaintextOn' : via ? 'connections:editor.transport.needsChoiceViaSsh' : 'connections:editor.transport.needsChoice')}</span>
           </div>
           {publicLooking && <div className="pl-5 font-medium text-rose-200">{t('connections:editor.transport.plaintextPublic')}</div>}
           <div className="flex flex-wrap items-center gap-3 pl-5">
-            {sshList.length > 0 && (
+            {!via && sshList.length > 0 && (
               <button className="btn-outline h-7" onClick={() => set('viaSshId', sshList[0].id)}>
                 {t('connections:editor.transport.useSsh')}
               </button>

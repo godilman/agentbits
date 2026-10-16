@@ -103,7 +103,8 @@
       "allowPlaintext": "Bu sunucu şirket ağımda, şifresiz bağlan",
       "plaintextOn": "Şifresiz: parola ve sorgu sonuçları ağında açık metin olarak gider. Bu onay denetim günlüğüne yazılır. Mümkünse SSH ya da TLS daha güvenli.",
       "plaintextPublic": "Bu adres iç ağ değil, genel internet adresi gibi görünüyor. Yalnız şirket ağın bu adresi içeride kullanıyorsa onayla; değilse parola ve veriler internette açık metin olarak gider.",
-      "turnOff": "{{name}} ayarını kapat"
+      "turnOff": "{{name}} ayarını kapat",
+      "needsChoiceViaSsh": "SSH üzerinden tünel yalnız SSH sunucusuna kadar şifreli. Bu veritabanı başka bir makinede, yani SSH sunucusundan veritabanına giden kısım şifresiz gider. SSL / TLS'i aç, veritabanı SSH sunucusunun kendisindeyse 127.0.0.1 yaz ya da bu son kısmın şifresiz gitmesini onayla."
     }
   },
   "access": {
