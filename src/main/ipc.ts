@@ -53,7 +53,8 @@ import { orchestrator } from './core/orchestrator'
 import { usageSummary } from './core/usage'
 import { auditRepo, connectionsRepo, connPermsRepo } from './connections/repo'
 import { auditUser, listApprovals, refreshSchema, rejectApprovalsWhere, resolveApproval, testConnection } from './connections/service'
-import { DEFAULT_PORT, LEVEL_LABEL, LEVEL_ORDER } from '@shared/connections'
+import { isPrivateHost } from './connections/transport'
+import { DEFAULT_PORT, LEVEL_LABEL, LEVEL_ORDER, transportCheck } from '@shared/connections'
 import { instructionsRepo, usageRepo } from './db/usage'
 import { getAdapter } from './providers'
 import { which } from './providers/cli'
@@ -281,14 +282,25 @@ const handlers: Handlers = {
       const same = connectionsRepo.findByName(input.name)
       if (same && same.id !== id) throw new Error(t('main:connections.errors.nameTaken', { name: input.name.trim() }))
     }
-    // Production databases go over TLS unless the server is on this computer (nothing crosses a network).
-    const kind = input.kind ?? before?.kind
-    const env = input.env ?? before?.env
-    const host = (input.host ?? before?.host ?? '').trim().toLowerCase()
-    const ssl = input.ssl ?? before?.ssl ?? false
-    if (kind && kind !== 'ssh' && env === 'production' && !ssl && !/^(localhost|127\.\d+\.\d+\.\d+|::1|\[::1\])$/.test(host)) {
-      throw new Error(t('main:connections.errors.productionNeedsTls'))
+    // Production databases go over TLS, an SSH tunnel, or stay on this computer; unencrypted only with the
+    // user's yes (audited). Checked again on every connect (service.ts withTransport).
+    const kind = input.kind ?? before?.kind ?? 'postgres'
+    const viaSshId = input.viaSshId !== undefined ? input.viaSshId || null : before?.viaSshId ?? null
+    if (viaSshId) {
+      const ssh = connectionsRepo.get(viaSshId)
+      if (kind === 'ssh' || !ssh || ssh.kind !== 'ssh') throw new Error(t('main:connections.errors.tunnelMissing'))
     }
+    const transport = transportCheck({
+      kind,
+      env: input.env ?? before?.env ?? 'development',
+      host: input.host ?? before?.host ?? '',
+      ssl: input.ssl ?? before?.ssl ?? false,
+      viaSshId,
+      allowPlaintext: input.allowPlaintext ?? before?.allowPlaintext ?? false
+    })
+    if (transport === 'needsTls') throw new Error(t('main:connections.errors.productionNeedsTls'))
+    const plaintextAccepted = !!input.allowPlaintext && !before?.allowPlaintext
+    const looksPublic = plaintextAccepted && !(await isPrivateHost(input.host ?? before?.host ?? ''))
     const changed = Object.keys(input).filter((k) => !['secret', 'readOnlySecret'].includes(k))
     if (id) rejectApprovalsWhere({ connectionId: id })
     const c = connectionsRepo.save({ ...input, port: input.port ?? (id ? undefined : DEFAULT_PORT[input.kind ?? 'postgres']) }, id)
@@ -299,7 +311,8 @@ const handlers: Handlers = {
       [
         changed.length ? t('main:connections.audit.fields', { list: changed.join(', ') }) : '',
         input.secret !== undefined ? t('main:connections.audit.secretChanged') : '',
-        input.readOnlySecret !== undefined ? t('main:connections.audit.readOnlySecretChanged') : ''
+        input.readOnlySecret !== undefined ? t('main:connections.audit.readOnlySecretChanged') : '',
+        plaintextAccepted ? t(looksPublic ? 'main:connections.audit.plaintextAcceptedPublic' : 'main:connections.audit.plaintextAccepted') : ''
       ]
         .filter(Boolean)
         .join(' · '),
@@ -311,6 +324,9 @@ const handlers: Handlers = {
   'connections:delete': (id) => {
     const c = connectionsRepo.get(id)
     if (!c) return
+    // A database behind this SSH server would otherwise silently go direct (or fail): name it instead.
+    const users = connectionsRepo.tunnelUsers(id)
+    if (users.length) throw new Error(t('main:connections.errors.tunnelInUse', { names: users.map((u) => u.name).join(', ') }))
     rejectApprovalsWhere({ connectionId: id })
     connectionsRepo.delete(id)
     auditUser(c, 'connection:delete', `${c.kind} ${c.host}`, 'ok')

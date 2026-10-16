@@ -72,7 +72,8 @@ own computer.
   and images to chats, tasks and instructions; scanned PDFs and images are read with offline OCR (English, Turkish). Agents can read only the files they are given, and always as untrusted data.
 - **Connections.** SSH servers and PostgreSQL, MySQL/MariaDB and SQL Server databases. Access is per agent and
   denied by default, Production changes need your approval, agent reads use a read-only database user, and every
-  call is written to an audit log.
+  call is written to an audit log. A database can be reached through one of your SSH connections: the app opens the
+  encrypted tunnel itself, so a server without TLS works too.
 - **Apps (MCP) and skills.** Connect MCP servers (local or remote, with OAuth sign-in, or import them from Claude
   Desktop) with per-tool "ask me first" rules. Install instruction packs (skills) from public GitHub repos, folders,
   .zip or .md files.

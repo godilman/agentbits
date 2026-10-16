@@ -4,6 +4,39 @@
 > `## YYYY-MM-DD — kısa başlık`, ardından **Eklendi / Değişti / Düzeltildi / Kaldırıldı / Bilinen** maddeleri
 > ve ilgili dosyalar.
 
+## 2026-10-16 — v0.5.0: SSH üzerinden veritabanı, TLS'siz Production için açık onay
+
+### Eklendi
+- **SSH üzerinden bağlanma** (ADR-029, migration v18 `connections.via_ssh_id`): DB bağlantısında "Bağlantı yolu: Doğrudan /
+  SSH üzerinden" + bir SSH kaydı. Uygulama her çağrıda şifreli tüneli kendisi açar (`openTunnel`, 127.0.0.1 rastgele port);
+  bütün DB çağrıları `withTransport`'tan geçer. DB "Test"i SSH anahtarını sabitleyebilir; ajan çağrısı sabitlenmemiş SSH
+  sunucusuna bağlanmaz. SSH sunucusu yönlendirmeyi reddederse sebebi yazılır. Tünel olarak kullanılan SSH kaydı silinemez.
+- **TLS'siz Production için açık onay** (`connections.allow_plaintext`): "Bu sunucu şirket ağımda, şifresiz bağlan".
+  Denetim günlüğüne yazılır (adres genel görünüyorsa bu da yazılır), listede "şifresiz" rozeti; adres iç ağ değilse
+  kırmızı ek uyarı.
+- Editörde TLS'siz Production için seçim kutusu (SSH üzerinden bağlan / şifresiz bağlan), test hatasında "SSL / TLS'i kapat".
+
+### Değişti
+- Production TLS kuralı tek fonksiyonda (`transportCheck`, `src/shared/connectionRules.ts`): kayıtta ve artık **her
+  bağlanışta** da uygulanır. `sshExec`'in kimlik doğrulama + host anahtarı bölümü `sshConfig` olarak ayrıldı (davranış aynı).
+
+### Düzeltildi
+- TLS desteklemeyen sunucuda "TLS yok" ham hatası (MySQL "Server does not support secure connection", PostgreSQL "The server
+  does not support SSL connections", SQL Server "did not negotiate encryption") yerine yönlendiren mesaj.
+- SSH tüneli + SSL birlikte: PostgreSQL ve SQL Server sertifikayı tünelin 127.0.0.1'ine karşı doğrulayıp reddediyordu;
+  artık gerçek sunucu adına karşı doğrular (`tlsHost`; pg `host` / `servername`, tedious `serverName`). MySQL sürücüsü
+  sertifika adını zaten denetlemiyor (önceden de böyle).
+- Kayıt reddedilince eski test sonucu ekranda kalıp yeni denemenin cevabı gibi görünüyordu; artık temizlenir.
+
+### Test
+- `tests/connections.transport.test.ts` (kural, iç ağ adresleri, DNS, hata eşleme; olumsuz: iç ağ adresi tek başına onay
+  değildir). Tünel uçtan uca (scratch): gerçek ssh2 sunucusu + TLS'siz sahte MySQL ile 8 senaryo — yönlendiren hata, kayıt
+  reddi / onay + denetim satırı, tünelden bağlanma + anahtar sabitleme, değişen anahtar reddi, yönlendirme reddi sebebi,
+  yerel portun kapanması, kullanımdaki SSH kaydını silme reddi, SSH olmayan tünel reddi; sahte PostgreSQL ile 5 senaryo daha
+  — TLS yok ipucu, tünelden TLS'siz, tünelden TLS (sertifika gerçek ada karşı; düzeltme geri alınınca "IP: 127.0.0.1 is not
+  in the cert's list" ile düşüyor), yanlış ad reddi, doğrudan TLS. SQL Server uçtan uca denenmedi (sahte TDS sunucusu yok):
+  yapılandırma ve hata eşleme koddan doğrulandı.
+
 ## 2026-10-15 — Test: SSH ile imzalanan makinede worktree testi
 
 ### Düzeltildi

@@ -112,7 +112,11 @@
       "noSshAgent": "SSH agent not found (SSH_AUTH_SOCK)",
       "hostKeyChanged": "The server key has changed (expected {{expected}}, got {{got}}). If the server really changed, reset the key in the connection settings.",
       "hostKeyNotPinned": "The server key isn't verified yet ({{got}}). Open the connection in Organization → Connections and click \"Test\" to check and pin it.",
-      "productionNeedsTls": "A Production database must use an encrypted connection (TLS / SSL) unless it runs on this computer. Turn on \"SSL / encrypt\".",
+      "productionNeedsTls": "A Production database must not cross the network unencrypted. Turn on \"SSL / TLS\", connect through SSH, or — if the server has no TLS and is on your company network — accept an unencrypted connection.",
+      "serverNoTls": "This server doesn't support encrypted connections. Turn off SSL / TLS and connect through SSH, or — on your private network — accept an unencrypted connection.",
+      "tunnelMissing": "The SSH connection chosen for the tunnel no longer exists. Pick another one or connect directly.",
+      "tunnelRefused": "The SSH server refused to forward the connection ({{message}}). Its sshd may have AllowTcpForwarding turned off.",
+      "tunnelInUse": "Used as the SSH tunnel of: {{names}}. Change those connections first.",
       "tooManyRows": "The query returned more than {{max}} rows and was stopped; add a LIMIT / WHERE",
       "noAnswer": "The server did not answer within {{seconds}} seconds",
       "cancelled": "Cancelled: the run was stopped, the connection was closed"
@@ -122,6 +126,7 @@
       "fields": "fields: {{list}}",
       "secretChanged": "password/key changed",
       "readOnlySecretChanged": "read-only password changed",
+      "plaintextAccepted": "unencrypted connection accepted (private network)",
       "awaitingApproval": "Waiting for user approval (Production)",
       "approved": "User approved",
       "connections_one": "{{count}} connection",
@@ -136,7 +141,8 @@
       "affected_one": "{{count}} row affected",
       "affected_other": "{{count}} rows affected",
       "exitCode": "exit code {{code}}",
-      "exitCodeTimedOut": "exit code {{code}} (timed out)"
+      "exitCodeTimedOut": "exit code {{code}} (timed out)",
+      "plaintextAcceptedPublic": "unencrypted connection accepted (address looks public)"
     },
     "denied": {
       "noAccess": "This connection doesn't exist or you have no access to it",

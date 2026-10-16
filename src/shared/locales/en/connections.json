@@ -10,7 +10,8 @@
     "auditAll": "Audit log (all)",
     "newConnection": "New connection",
     "selectTitle": "Select a connection",
-    "selectHint": "Manage the servers and databases agents can use in their work here. By default, no agent has access."
+    "selectHint": "Manage the servers and databases agents can use in their work here. By default, no agent has access.",
+    "plaintext": "unencrypted"
   },
   "detail": {
     "noHost": "no host",
@@ -89,6 +90,20 @@
       "read": "Read (Read only and above)",
       "write": "Write (Read / write and above)",
       "execute": "Execute (Execute and above)"
+    },
+    "transport": {
+      "path": "Route",
+      "direct": "Directly",
+      "viaSsh": "Through SSH",
+      "sshConnection": "SSH connection",
+      "viaSshHint": "Agentbits opens an encrypted SSH tunnel for every connection. Host / IP is as seen from the SSH server: 127.0.0.1 if the database runs on it.",
+      "noSsh": "To connect through SSH, add an SSH connection first (+ → SSH server).",
+      "needsChoice": "A Production database must not cross the network unencrypted. Turn on SSL / TLS, connect through SSH, or — if the server has no TLS and is on your company network — accept an unencrypted connection.",
+      "useSsh": "Connect through SSH",
+      "allowPlaintext": "This server is on my company network; connect unencrypted",
+      "plaintextOn": "Unencrypted: the password and query results cross your network in clear. This is recorded in the audit log. SSH or TLS is safer when you can.",
+      "plaintextPublic": "This address looks like a public internet address, not a private network one. Accept only if your company network uses it internally — otherwise the password and data would cross the internet in clear.",
+      "turnOff": "Turn off {{name}}"
     }
   },
   "access": {

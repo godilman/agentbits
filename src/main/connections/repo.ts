@@ -46,6 +46,8 @@ const mapConnection = (r: Row): Connection => ({
   keyPath: r.key_path,
   ssl: !!r.ssl,
   trustServerCertificate: !!r.trust_server_cert,
+  viaSshId: r.via_ssh_id ?? null,
+  allowPlaintext: !!r.allow_plaintext,
   readOnlyUsername: r.ro_username,
   sshRead: list(r.ssh_read),
   sshWrite: list(r.ssh_write),
@@ -101,6 +103,8 @@ export const connectionsRepo = {
       key_path: input.keyPath?.trim(),
       ssl: input.ssl === undefined ? undefined : input.ssl ? 1 : 0,
       trust_server_cert: input.trustServerCertificate === undefined ? undefined : input.trustServerCertificate ? 1 : 0,
+      via_ssh_id: input.viaSshId === undefined ? undefined : input.viaSshId || null,
+      allow_plaintext: input.allowPlaintext === undefined ? undefined : input.allowPlaintext ? 1 : 0,
       ro_username: input.readOnlyUsername?.trim(),
       ssh_read: cleanList(input.sshRead),
       ssh_write: cleanList(input.sshWrite),
@@ -137,6 +141,10 @@ export const connectionsRepo = {
   },
   delete(id: string): void {
     getDb().prepare('DELETE FROM connections WHERE id = ?').run(id)
+  },
+  /** Databases that reach their server through this SSH connection. */
+  tunnelUsers(sshId: string): Connection[] {
+    return (getDb().prepare('SELECT * FROM connections WHERE via_ssh_id = ? ORDER BY name COLLATE NOCASE').all(sshId) as Row[]).map(mapConnection)
   },
   setTestResult(id: string, ok: boolean, message: string): void {
     getDb()

@@ -10,7 +10,8 @@
     "auditAll": "Denetim kaydı (tümü)",
     "newConnection": "Yeni bağlantı",
     "selectTitle": "Bağlantı seç",
-    "selectHint": "Ajanların işlerinde kullanabileceği sunucu ve veritabanlarını buradan yönetirsin. Varsayılan olarak hiçbir ajan erişemez."
+    "selectHint": "Ajanların işlerinde kullanabileceği sunucu ve veritabanlarını buradan yönetirsin. Varsayılan olarak hiçbir ajan erişemez.",
+    "plaintext": "şifresiz"
   },
   "detail": {
     "noHost": "host yok",
@@ -89,6 +90,20 @@
       "read": "Okuma (Salt okuma ve üstü)",
       "write": "Yazma (Okuma / yazma ve üstü)",
       "execute": "Yürütme (Yürütme ve üstü)"
+    },
+    "transport": {
+      "path": "Bağlantı yolu",
+      "direct": "Doğrudan",
+      "viaSsh": "SSH üzerinden",
+      "sshConnection": "SSH bağlantısı",
+      "viaSshHint": "Agentbits her bağlantıda şifreli bir SSH tüneli açar. Host / IP, SSH sunucusundan bakıldığı gibi yazılır: veritabanı o sunucuda çalışıyorsa 127.0.0.1.",
+      "noSsh": "SSH üzerinden bağlanmak için önce bir SSH bağlantısı ekle (+ → SSH sunucusu).",
+      "needsChoice": "Production veritabanına ağ üzerinden şifresiz bağlanılmaz. SSL / TLS'i aç, SSH üzerinden bağlan ya da sunucu TLS desteklemiyor ve şirket ağındaysa şifresiz bağlantıyı onayla.",
+      "useSsh": "SSH üzerinden bağlan",
+      "allowPlaintext": "Bu sunucu şirket ağımda, şifresiz bağlan",
+      "plaintextOn": "Şifresiz: parola ve sorgu sonuçları ağında açık metin olarak gider. Bu onay denetim günlüğüne yazılır. Mümkünse SSH ya da TLS daha güvenli.",
+      "plaintextPublic": "Bu adres iç ağ değil, genel internet adresi gibi görünüyor. Yalnız şirket ağın bu adresi içeride kullanıyorsa onayla; değilse parola ve veriler internette açık metin olarak gider.",
+      "turnOff": "{{name}} ayarını kapat"
     }
   },
   "access": {

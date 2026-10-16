@@ -74,7 +74,8 @@ Hepsi tek pencerede, verilerin de kendi bilgisayarında kalır.
   Türkçe). Ajanlar yalnızca kendilerine verilen dosyaları okur ve içeriği her zaman güvenilmeyen veri olarak ele alır.
 - **Bağlantılar.** SSH sunucuları ve PostgreSQL, MySQL/MariaDB, SQL Server veritabanları. Erişim ajan başına verilir ve
   varsayılan olarak kapalıdır. Production değişiklikleri senin onayını bekler, ajan okumaları salt-okunur bir
-  veritabanı kullanıcısıyla yapılır, her çağrı denetim kaydına yazılır.
+  veritabanı kullanıcısıyla yapılır, her çağrı denetim kaydına yazılır. Bir veritabanına SSH bağlantılarından biri
+  üzerinden de bağlanabilirsin: şifreli tüneli uygulama kendisi açar, böylece TLS desteklemeyen sunucular da çalışır.
 - **Uygulamalar (MCP) ve skill'ler.** MCP sunucularını bağlayabilirsin: yerel ya da uzak, OAuth girişli ya da Claude
   Desktop'tan içe aktarılmış. Her araç için "önce bana sor" kuralı koyabilirsin. Talimat paketlerini (skill) herkese
   açık GitHub depolarından, klasörden, .zip ya da .md dosyasından kurabilirsin.

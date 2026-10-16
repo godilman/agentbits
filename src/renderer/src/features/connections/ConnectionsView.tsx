@@ -19,7 +19,7 @@ import {
 } from 'lucide-react'
 import { Trans, useTranslation } from 'react-i18next'
 import type { AccessLevel, Connection, ConnectionEnv, ConnectionInput, ConnectionKind, ConnectionTestResult, SchemaInfo, SshAuth } from '@shared/types'
-import { DEFAULT_PORT, DEFAULT_SSH_READ, ENV_LABEL, isDb, KIND_LABEL, LEVEL_HINT, LEVEL_LABEL, LEVEL_ORDER } from '@shared/connections'
+import { DEFAULT_PORT, DEFAULT_SSH_READ, ENV_LABEL, isDb, isLocalHost, isPrivateIp, KIND_LABEL, LEVEL_HINT, LEVEL_LABEL, LEVEL_ORDER } from '@shared/connections'
 import { locale } from '@/i18n'
 import { PixelAvatar } from '@/components/common/PixelAvatar'
 import { Empty, Segmented, Toggle } from '@/components/common/ui'
@@ -97,6 +97,7 @@ export function ConnectionsView() {
                 <div className="flex items-center gap-1.5">
                   <span className="truncate text-[12.5px] text-zinc-200">{c.name}</span>
                   <span className={cn('shrink-0 rounded px-1 text-[9.5px] font-medium', ENV_CLS[c.env])}>{ENV_LABEL[c.env]}</span>
+                  {plaintext(c) && <span className="shrink-0 rounded bg-amber-500/15 px-1 text-[9.5px] font-medium text-amber-300">{t('connections:list.plaintext')}</span>}
                 </div>
                 <div className="truncate font-mono text-[10.5px] text-zinc-500">
                   {c.host || '—'}
@@ -247,6 +248,9 @@ interface Form {
   database: string
   ssl: boolean
   trustServerCertificate: boolean
+  /** '' = directly */
+  viaSshId: string
+  allowPlaintext: boolean
   readOnlyUsername: string
   sshAuth: SshAuth
   keyPath: string
@@ -270,6 +274,8 @@ const toForm = (c: Connection | null, kind: ConnectionKind): Form => ({
   database: c?.database ?? '',
   ssl: c?.ssl ?? false,
   trustServerCertificate: c?.trustServerCertificate ?? false,
+  viaSshId: c?.viaSshId ?? '',
+  allowPlaintext: c?.allowPlaintext ?? false,
   readOnlyUsername: c?.readOnlyUsername ?? '',
   sshAuth: c?.sshAuth ?? 'key-file',
   keyPath: c?.keyPath ?? '',
@@ -320,6 +326,8 @@ function ConnectionEditor({
       database: form.database,
       ssl: form.ssl,
       trustServerCertificate: form.trustServerCertificate,
+      viaSshId: form.viaSshId || null,
+      allowPlaintext: form.allowPlaintext,
       readOnlyUsername: form.readOnlyUsername,
       sshAuth: form.sshAuth,
       keyPath: form.keyPath,
@@ -347,6 +355,8 @@ function ConnectionEditor({
       return c
     } catch (e) {
       setError(apiError(e))
+      // An old test result next to a refused save reads as the answer to this attempt.
+      setTest(null)
       return null
     } finally {
       setBusy(null)
@@ -447,6 +457,7 @@ function ConnectionEditor({
             </label>
           </div>
         )}
+        {db && <TransportFields form={form} set={set} />}
       </Section>
 
       <Section title={t('connections:editor.auth.title')} hint={t('connections:editor.auth.hint')}>
@@ -558,6 +569,11 @@ function ConnectionEditor({
           {test.ok ? <CheckCircle2 size={14} className="mt-0.5 shrink-0" /> : <XCircle size={14} className="mt-0.5 shrink-0" />}
           <div className="min-w-0">
             <div>{test.message}</div>
+            {test.hint === 'serverNoTls' && form.ssl && (
+              <button className="btn-outline mt-1.5 h-7" onClick={() => set('ssl', false)}>
+                {t('connections:editor.transport.turnOff', { name: kind === 'mssql' ? t('connections:editor.connection.encrypt') : t('connections:editor.connection.ssl') })}
+              </button>
+            )}
             <div className="mt-0.5 text-[11px] opacity-70">
               {test.latencyMs} ms{test.serverVersion ? ` · ${test.serverVersion}` : ''}
             </div>
@@ -600,6 +616,75 @@ function ConnectionEditor({
         </div>
       </div>
     </div>
+  )
+}
+
+/** Production, no TLS, no tunnel, not on this computer, and the user said yes: data crosses the network in clear. */
+const plaintext = (c: Pick<Connection, 'kind' | 'env' | 'ssl' | 'viaSshId' | 'allowPlaintext' | 'host'>): boolean =>
+  isDb(c.kind) && c.env === 'production' && !c.ssl && !c.viaSshId && c.allowPlaintext && !isLocalHost(c.host)
+
+/** How a database is reached: directly or through an SSH connection; and what a production database without TLS needs. */
+function TransportFields({ form, set }: { form: Form; set: <K extends keyof Form>(k: K, v: Form[K]) => void }) {
+  const { t } = useTranslation(['common', 'connections'])
+  const connections = useAppStore((s) => s.connections)
+  const sshList = useMemo(() => connections.filter((c) => c.kind === 'ssh'), [connections])
+  const via = form.viaSshId !== ''
+  const needsChoice = form.env === 'production' && !form.ssl && !via && !isLocalHost(form.host)
+  // Literal addresses only: a name is resolved in main (the audit line says whether it looked public).
+  const publicLooking = needsChoice && /^[\d.]+$|:/.test(form.host.trim()) && !isPrivateIp(form.host)
+  return (
+    <>
+      <div className="flex flex-wrap items-end gap-3">
+        <Field label={t('connections:editor.transport.path')}>
+          <Segmented<'direct' | 'ssh'>
+            value={via ? 'ssh' : 'direct'}
+            onChange={(v) => set('viaSshId', v === 'ssh' ? sshList[0]?.id ?? '' : '')}
+            options={[
+              { value: 'direct', label: t('connections:editor.transport.direct') },
+              { value: 'ssh', label: t('connections:editor.transport.viaSsh') }
+            ]}
+          />
+        </Field>
+        {via && (
+          <Field label={t('connections:editor.transport.sshConnection')}>
+            <select data-testid="via-ssh" className="input w-56" value={form.viaSshId} onChange={(e) => set('viaSshId', e.target.value)}>
+              {sshList.map((c) => (
+                <option key={c.id} value={c.id}>
+                  {c.name}
+                </option>
+              ))}
+            </select>
+          </Field>
+        )}
+      </div>
+      {via && <div className="text-[11.5px] text-zinc-400">{t('connections:editor.transport.viaSshHint')}</div>}
+      {sshList.length === 0 && <div className="text-[11.5px] text-zinc-500">{t('connections:editor.transport.noSsh')}</div>}
+      {needsChoice && (
+        <div
+          data-testid="transport-choice"
+          className={cn(
+            'space-y-2 rounded-md border px-3 py-2.5 text-[12px]',
+            form.allowPlaintext && !publicLooking ? 'border-amber-500/35 bg-amber-500/[0.07] text-amber-100' : 'border-rose-500/30 bg-rose-500/[0.06] text-rose-100'
+          )}
+        >
+          <div className="flex items-start gap-2">
+            <ShieldAlert size={13} className="mt-0.5 shrink-0" />
+            <span>{t(form.allowPlaintext ? 'connections:editor.transport.plaintextOn' : 'connections:editor.transport.needsChoice')}</span>
+          </div>
+          {publicLooking && <div className="pl-5 font-medium text-rose-200">{t('connections:editor.transport.plaintextPublic')}</div>}
+          <div className="flex flex-wrap items-center gap-3 pl-5">
+            {sshList.length > 0 && (
+              <button className="btn-outline h-7" onClick={() => set('viaSshId', sshList[0].id)}>
+                {t('connections:editor.transport.useSsh')}
+              </button>
+            )}
+            <label className="flex items-center gap-2 text-[12px]">
+              <Toggle size="sm" checked={form.allowPlaintext} onChange={(v) => set('allowPlaintext', v)} /> {t('connections:editor.transport.allowPlaintext')}
+            </label>
+          </div>
+        </div>
+      )}
+    </>
   )
 }
 

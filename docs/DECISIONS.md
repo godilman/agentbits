@@ -553,3 +553,24 @@ Durum değerleri: *Kabul edildi*, *Önerildi*, *Yerini aldı*, *Geri alındı*.
 - **Elenen:** Her sohbet / görev sonunda ayrı "çıkarım" çağrısı (çağrı başına 1–3 bin token), serbest metin bağ türleri
   (çorbaya döner), graf kütüphanesi (d3 / sigma: bağımlılık, bu ölçekte gereksiz), kişi başına profil (şimdilik tek
   kullanıcı), proje bazlı tercihler (sahibi organizasyon geneli istedi).
+
+## ADR-029 — TLS'siz Production veritabanı: uygulama içi SSH tüneli + açık onay (2026-10-16)
+
+- **Bağlam:** Kural (#20) uzak Production veritabanını TLS'siz kaydetmiyordu. Gerçek bir sunucu (MySQL 5.6, Ubuntu 14.04)
+  TLS'i hiç desteklemiyor: SSL açıkken "Server does not support secure connection", kapalıyken kayıt reddi — kullanıcı
+  hiçbir yoldan bağlanamıyordu. Elle SSH tüneli (`ssh -L`) çalışıyor ama son kullanıcıdan beklenemez. Sahibin seçimi:
+  SSH tüneli + istisna + yönlendiren mesaj; istisna her adreste, iki kademeli uyarıyla.
+- **Karar:** (1) DB bağlantısı bir SSH kaydı üzerinden gidebilir (`via_ssh_id`, v18); tünel uygulamada, çağrı başına,
+  `127.0.0.1:0`'da; host anahtarı kuralı aynen. (2) `allow_plaintext` (v18): kullanıcı açıkça onaylarsa şifresiz
+  Production bağlantısı; denetim günlüğüne yazılır, listede rozet. (3) Kural tek saf fonksiyon (`transportCheck`), kayıtta
+  ve her bağlanışta. (4) Sürücünün "TLS yok" hatası tanınır, editör "SSL / TLS'i kapat" ve seçim kutusunu gösterir.
+- **Neden adres sınıfına bakılmıyor:** Plan "yalnız RFC1918" idi; test gerçek sunucunun adresinin (192.1.15.x) genel blok
+  olduğunu yakaladı — şirket ağları bunu içeride kullanabiliyor, bilgisayar da sunucuya ağ geçidi üzerinden gidiyordu (aynı
+  alt ağ değil). Bu yüzden onay her adreste geçerli; adres iç ağ değilse uyarı kırmızı ve açık ("genel internet adresi gibi
+  görünüyor"), denetim satırı da bunu yazar.
+- **Bedel:** Şifresiz onayda parola ve veriler ağda açık gider (kullanıcının bilinçli seçimi). Tünel her çağrıda yeni SSH
+  oturumu açar (gecikme); yavaşlarsa tünel havuzu. SQL Server'ın "şifreleme yok" hatası tanınmıyor (tedious net bir hata
+  vermiyor; SQL Server TLS'i zaten destekler).
+- **Elenen:** Sunucuda TLS açtırmak (kullanıcının elinde değil), yalnız RFC1918 istisnası (gerçek ağı dışarıda bırakıyordu),
+  Ayarlar'da iç ağ aralıkları tanımlamak (ilk kurulumda biri girmeli; sahibi iki kademeli uyarıyı seçti), ortamı
+  Production'dan düşürmek (yazma onayı gibi korumaları da kaldırır).

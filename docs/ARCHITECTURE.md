@@ -863,8 +863,20 @@ okuma dışı her şey onay ister; gerçek güvence ayrı, kısıtlı bir uzak O
 Ajanın çağrısı sabitlenmemiş bir sunucuya bağlanmaz ("Sunucu anahtarı henüz doğrulanmadı … Test"e tıkla"); değişen anahtar
 her zaman reddedilir.
 
-**Production'da TLS.** Bu bilgisayarda çalışmayan (`localhost`, `127.x`, `::1` dışı) bir Production veritabanı SSL/şifreleme
-kapalıyken kaydedilemez.
+**Production'da TLS, tünel ya da açık onay.** Bu bilgisayarda çalışmayan (`localhost`, `127.x`, `::1` dışı) bir Production
+veritabanı SSL/şifreleme kapalıyken ancak **SSH üzerinden** (`via_ssh_id`) ya da kullanıcının açık onayıyla
+(`allow_plaintext`, denetim günlüğünde) kaydedilir; kural (`transportCheck`, `src/shared/connectionRules.ts`) kayıtta ve
+**her bağlanışta** (`withTransport`) uygulanır. Adres sınıfı tek başına karar veremez (şirket ağları içeride genel blok
+kullanabiliyor, ör. 192.1.x.x); editör yalnızca uyarının tonunu `isPrivateIp`'e göre seçer, denetim satırı adın çözüldüğü
+adresin genel görünüp görünmediğini yazar.
+
+**SSH tüneli.** Bütün veritabanı çağrıları `withTransport(conn, fn)`'den geçer: `via_ssh_id` doluysa `openTunnel` SSH
+kaydıyla bağlanır (aynı kimlik doğrulama ve host anahtarı kuralı, ortak `sshConfig`), `127.0.0.1:0`'da yerel bir port açar,
+her yerel soketi `forwardOut` ile hedefe bağlar; sürücü `{host: '127.0.0.1', port}` ile değişmeden çalışır, çağrı bitince
+tünel kapanır (çağrı başına tünel; sürücüler de çağrı başına bağlanıyor). Tünelde SSL açıksa sertifika yine gerçek sunucu
+adına karşı doğrulanır (`tlsHost`: pg `host` / `servername`, tedious `serverName`; mysql2 adı zaten denetlemiyor). SSH sunucusu yönlendirmeyi reddederse
+(`AllowTcpForwarding no`) o sebep gösterilir. SSH kaydı yalnız taşımadır: ajanın DB izni yeter, o sunucuda komut
+çalıştıramaz.
 
 **Veritabanı düzeyinde zorlama.** Çağrı başına kısa ömürlü tek bağlantı (havuz yok).
 - `read`: PostgreSQL `BEGIN TRANSACTION READ ONLY`, MySQL `START TRANSACTION READ ONLY`, **her zaman geri alınır**;

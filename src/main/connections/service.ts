@@ -4,8 +4,10 @@ import { atLeast, classifyCommand, classifySql, isDb, KIND_LABEL, ENV_LABEL, lev
 import { agentsRepo, tasksRepo } from '../db/repos'
 import { emit } from '../events'
 import { t } from '../i18n'
-import { dbDrivers, sshExec, type Credentials, type QueryMode } from './drivers'
+import { dbDrivers, openTunnel, sshExec, type Credentials, type DriverConn, type QueryMode } from './drivers'
 import { auditRepo, connectionsRepo, connPermsRepo } from './repo'
+import { transportCheck } from '@shared/connections'
+import { isNoTlsError } from './transport'
 
 /**
  * Connection access for agents and the user. Every agent operation goes through
@@ -99,6 +101,28 @@ export function auditUser(conn: Connection | null, action: string, detail: strin
 }
 
 const errText = (e: unknown): string => (e instanceof Error ? e.message : String(e))
+
+/**
+ * Every database call goes through here: the transport rule is checked on each connect, and a database
+ * behind an SSH connection gets a tunnel for the duration of the call (host/port point at the tunnel).
+ * `pinSshKey`: only the user's "Test" may pin the SSH server's key, as with an SSH connection's own Test.
+ */
+async function withTransport<T>(conn: Connection, fn: (c: Connection) => Promise<T>, pinSshKey = false): Promise<T> {
+  if (transportCheck(conn) === 'needsTls') throw new Error(t('main:connections.errors.productionNeedsTls'))
+  if (!conn.viaSshId) return fn(conn)
+  const ssh = connectionsRepo.get(conn.viaSshId)
+  if (!ssh || ssh.kind !== 'ssh') throw new Error(t('main:connections.errors.tunnelMissing'))
+  const tunnel = await openTunnel(ssh, connectionsRepo.secrets(ssh.id).secret, conn.host, conn.port, {
+    onNewHostKey: pinSshKey ? (fp) => connectionsRepo.pinHostKey(ssh.id, fp) : undefined
+  })
+  try {
+    return await fn({ ...conn, host: '127.0.0.1', port: tunnel.port, tlsHost: conn.host } as DriverConn)
+  } catch (e) {
+    throw tunnel.error() ?? e
+  } finally {
+    tunnel.close()
+  }
+}
 
 /** The server-side timeouts can't help when the server stops answering: the agent gets an error after `ms` anyway. */
 function deadline<T>(p: Promise<T>, ms: number): Promise<T> {
@@ -327,7 +351,7 @@ export async function toolSchema(ctx: AgentCtx, ref: string, filter?: string): P
   const t0 = Date.now()
   try {
     if (!schema || Date.now() - Date.parse(schema.fetchedAt) > 86_400_000) {
-      schema = await deadline(dbDrivers[conn.kind as 'postgres'].schema(conn, credentialsFor(conn, 'readonly')), 45_000)
+      schema = await deadline(withTransport(conn, (c) => dbDrivers[conn.kind as 'postgres'].schema(c, credentialsFor(conn, 'readonly'))), 45_000)
       connectionsRepo.setSchema(conn.id, schema)
       emit({ type: 'connections:changed' })
     }
@@ -376,7 +400,7 @@ export async function toolQuery(ctx: AgentCtx, ref: string, sql: string): Promis
   const t0 = Date.now()
   try {
     const r = await deadline(
-      dbDrivers[conn.kind as 'postgres'].query(conn, credentialsFor(conn, mode), detail, { mode, timeoutMs: QUERY_TIMEOUT, maxRows: MAX_ROWS, signal: ctx.signal }),
+      withTransport(conn, (c) => dbDrivers[conn.kind as 'postgres'].query(c, credentialsFor(conn, mode), detail, { mode, timeoutMs: QUERY_TIMEOUT, maxRows: MAX_ROWS, signal: ctx.signal })),
       QUERY_TIMEOUT + 15_000
     )
     const ms = Date.now() - t0
@@ -461,16 +485,23 @@ export async function testConnection(id: string): Promise<ConnectionTestResult> 
       const pinned = connectionsRepo.get(id)?.hostKey
       result = { ok: true, message: pinned ? t('main:connections.test.sshOkKey', { key: pinned }) : t('main:connections.test.sshOk'), latencyMs: Date.now() - t0 }
     } else {
-      const v = await dbDrivers[conn.kind].version(conn, credentialsFor(conn, 'write'))
-      let ro = false
-      if (conn.readOnlyUsername) {
-        await dbDrivers[conn.kind].version(conn, credentialsFor(conn, 'readonly'))
-        ro = true
-      }
+      const kind = conn.kind
+      const ro = !!conn.readOnlyUsername
+      const v = await withTransport(
+        conn,
+        async (c) => {
+          const version = await dbDrivers[kind].version(c, credentialsFor(conn, 'write'))
+          if (ro) await dbDrivers[kind].version(c, credentialsFor(conn, 'readonly'))
+          return version
+        },
+        true
+      )
       result = { ok: true, message: t(ro ? 'main:connections.test.okReadOnly' : 'main:connections.test.ok'), latencyMs: Date.now() - t0, serverVersion: v.slice(0, 160) }
     }
   } catch (e) {
-    result = { ok: false, message: redact(errText(e), conn), latencyMs: Date.now() - t0 }
+    const noTls = isNoTlsError(e)
+    const msg = redact(errText(e), conn)
+    result = { ok: false, message: noTls ? `${t('main:connections.errors.serverNoTls')} (${msg})` : msg, latencyMs: Date.now() - t0, ...(noTls ? { hint: 'serverNoTls' as const } : {}) }
   }
   connectionsRepo.setTestResult(id, result.ok, result.message)
   auditUser(conn, 'test', `${conn.host}:${conn.port}`, result.ok ? 'ok' : 'error', result.message, result.latencyMs)
@@ -484,7 +515,7 @@ export async function refreshSchema(id: string): Promise<SchemaInfo> {
   if (!isDb(conn.kind)) throw new Error(t('main:connections.errors.schemaDbOnly'))
   const t0 = Date.now()
   try {
-    const schema = await dbDrivers[conn.kind as 'postgres'].schema(conn, credentialsFor(conn, 'readonly'))
+    const schema = await withTransport(conn, (c) => dbDrivers[conn.kind as 'postgres'].schema(c, credentialsFor(conn, 'readonly')))
     connectionsRepo.setSchema(id, schema)
     auditUser(conn, 'schema', '', 'ok', t('main:connections.audit.tables', { count: schema.tables.length }), Date.now() - t0)
     emit({ type: 'connections:changed' })

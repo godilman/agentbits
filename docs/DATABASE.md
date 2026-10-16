@@ -32,7 +32,7 @@ const MIGRATIONS: { version: number; sql: string }[] = [ { version: 1, sql: `...
 
 - `migrate(db)` önce `schema_migrations` tablosunu oluşturur, `MAX(version)`'dan büyük her migration'ı
   **kendi transaction'ında** çalıştırıp sürümünü kaydeder.
-- **Yalnızca ekleyin.** Uygulanmış bir migration'ı (bugün: v1–v17) asla düzenlemeyin, silmeyin, yeniden
+- **Yalnızca ekleyin.** Uygulanmış bir migration'ı (bugün: v1–v18) asla düzenlemeyin, silmeyin, yeniden
   numaralandırmayın — kullanıcı makinelerindeki DB'ler onu zaten çalıştırdı ve değişiklik oraya ulaşmaz.
 - Yeni değişiklik = dizinin sonuna `{ version: N+1, sql: ... }`. SQLite'ta tipik olarak
   `ALTER TABLE x ADD COLUMN y ... NOT NULL DEFAULT ...`; sütun silme/CHECK değiştirme için tabloyu yeniden
@@ -427,6 +427,8 @@ Ajanların kullanabileceği sunucular ve veritabanları — **organizasyon genel
 | `ssh_auth` | TEXT DEFAULT `'key-file'` | CHECK `key-file, key, password, agent` |
 | `key_path` | TEXT | SSH anahtar dosyası yolu (dosya içeriği DB'ye yazılmaz) |
 | `ssl`, `trust_server_cert` | INTEGER 0/1 | SSL / encrypt; sunucu sertifikasına güven |
+| `via_ssh_id` | TEXT | *(v18, FK yok)* Bu veritabanına tünel açan SSH bağlantısı; NULL = doğrudan. Kullanımdaki SSH kaydı silinemez |
+| `allow_plaintext` | INTEGER 0/1 DEFAULT 0 | *(v18)* Kullanıcı TLS'siz Production bağlantısını onayladı (denetim günlüğünde) |
 | `ro_username` | TEXT | Salt-okunur DB girişi; ajan okumaları yalnızca bununla bağlanır (boşsa ajan okuması reddedilir) |
 | `ssh_read`, `ssh_write`, `ssh_execute` | TEXT (JSON dizi) | Seviye başına SSH komut izin listeleri (`*` joker) |
 | `secret_enc`, `ro_secret_enc` | TEXT | `safeStorage` ile şifreli sır (parola / yapıştırılmış anahtar / passphrase; salt-okunur parola), **base64** metin. Renderer'a gitmez (`hasSecret` bayrakları) |

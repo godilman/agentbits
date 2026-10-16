@@ -22,11 +22,11 @@ yalnızca izin verilen **Bağlantılar** (SSH / PostgreSQL / MySQL / SQL Server)
 hissinde, koyu temalı, ajanların ne yaptığını canlı gösteren güvenli bir "yapay zeka şirketi ofisi".
 Ürün vizyonu → [docs/PROJECT.md](docs/PROJECT.md).
 
-Durum: **v0.4.0** (2026-10-15) — organizasyon, projeler ve tüm proje bölümleri çalışıyor; özellik durumu →
+Durum: **v0.5.0** (2026-10-16) — organizasyon, projeler ve tüm proje bölümleri çalışıyor; özellik durumu →
 [docs/FEATURES.md](docs/FEATURES.md). Depo herkese açık; yayımlanan sürümler v0.1.0 (2026-10-14), v0.2.0 (2026-10-15),
-v0.3.0 (2026-10-15), v0.4.0 (2026-10-15). v0.1.1 taslağı yayımlanmadı; sahibin isteğiyle 2026-10-15'te silindi.
+v0.3.0 (2026-10-15), v0.4.0 (2026-10-15), v0.5.0 (2026-10-16). v0.1.1 taslağı yayımlanmadı; sahibin isteğiyle 2026-10-15'te silindi.
 
-## Güncel durum ve devir notu (son güncelleme: 2026-10-15)
+## Güncel durum ve devir notu (son güncelleme: 2026-10-16)
 
 > Önceki oturumların bağlamı burada özetlenir; yeni bir oturuma başlayan ajan bunu okuyarak devam edebilmelidir.
 > Ayrıntılar: [docs/CHANGELOG.md](docs/CHANGELOG.md) (en üstteki kayıtlar), [docs/SECURITY.md](docs/SECURITY.md),
@@ -83,6 +83,10 @@ Demo sağlayıcı iş türüne göre simülasyon (`shared/demoKind.ts`), paket s
   tercihler organizasyon geneli, Organizasyon → Hafıza + üst bar kısayolu), yarışta bağımlılık / kabul kriteri açıkları,
   token / tur sınırında kesilen yanıt, uygulama menüsü arka planı. ⏳ Sahiple konuşulacak: paylaşım galerisi; ileride
   çoklu profil (sahip: "şimdi değil").
+- **2026-10-16 v0.5.0**: **SSH üzerinden veritabanı + TLS'siz Production için açık onay** (ADR-029, v18). Tetik: sahibin
+  TLS desteklemeyen MySQL 5.6 sunucusuna hiçbir yoldan bağlanamaması. İstisna her adreste (şirket ağları 192.1.x.x gibi genel
+  blok kullanıyor — RFC1918 kuralı bunu dışarıda bırakırdı), adres genel görünüyorsa kırmızı uyarı + denetim satırı.
+  Tünelde TLS sertifikası gerçek sunucu adına karşı (pg / mssql). SQL Server uçtan uca denenmedi.
 - `docs/SECURITY.md`'deki 🟡 / ⏳ maddeler (ör. büyük veride UI sayfalama) ve `docs/FEATURES.md` "Bilinen sorunlar".
 
 **Önceki oturumlardan öğrenilenler**

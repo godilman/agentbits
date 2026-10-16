@@ -622,6 +622,10 @@ export interface Connection {
   ssl: boolean
   /** SQL Server: accept a self-signed certificate. */
   trustServerCertificate: boolean
+  /** Databases: reach the server through this SSH connection (the app opens the tunnel); null = directly. */
+  viaSshId: string | null
+  /** Databases: the user accepted an unencrypted production connection (private network addresses only). */
+  allowPlaintext: boolean
   /** Optional read-only database login used for Read Only agents. */
   readOnlyUsername: string
   /** SSH command allow-lists per level (`*` = wildcard). */
@@ -662,6 +666,8 @@ export interface ConnectionTestResult {
   message: string
   latencyMs: number
   serverVersion?: string
+  /** The server can't do TLS: the editor offers the SSH tunnel or the private-network exception. */
+  hint?: 'serverNoTls'
 }
 
 export interface SchemaColumn {

@@ -1,5 +1,6 @@
 import { createHash } from 'crypto'
 import { readFileSync } from 'fs'
+import { createServer, isIP, type AddressInfo } from 'net'
 import type { Connection, SchemaInfo, SchemaTable } from '@shared/types'
 import { t } from '../i18n'
 import { cancellable as runCancellable } from '@shared/cancel'
@@ -156,7 +157,12 @@ async function pgStream(client: any, text: string, maxRows: number): Promise<Que
   })
 }
 
-async function pgClient(c: Connection, cred: Credentials): Promise<any> {
+/** Through an SSH tunnel `host` is 127.0.0.1; TLS must still check the certificate against the real server name. */
+export type DriverConn = Connection & { tlsHost?: string }
+const tlsHostOf = (c: DriverConn): string | null => (c.tlsHost && c.tlsHost !== c.host ? c.tlsHost : null)
+
+async function pgClient(c: DriverConn, cred: Credentials): Promise<any> {
+  const tlsHost = tlsHostOf(c)
   const { Client } = await import('pg')
   const client = new Client({
     host: c.host,
@@ -164,7 +170,8 @@ async function pgClient(c: Connection, cred: Credentials): Promise<any> {
     user: cred.username,
     password: cred.password ?? undefined,
     database: c.database || undefined,
-    ssl: c.ssl ? { rejectUnauthorized: !c.trustServerCertificate } : undefined,
+    // pg copies `ssl` into tls.connect: `host` is what the certificate is checked against, `servername` the SNI (never an IP).
+    ssl: c.ssl ? { rejectUnauthorized: !c.trustServerCertificate, ...(tlsHost ? { host: tlsHost, ...(isIP(tlsHost) ? {} : { servername: tlsHost }) } : {}) } : undefined,
     connectionTimeoutMillis: CONNECT_TIMEOUT,
     application_name: 'Agentbits'
   })
@@ -327,7 +334,7 @@ const mysql = {
 
 /* ───────────────────────────── SQL Server ───────────────────────────── */
 
-async function msPool(c: Connection, cred: Credentials, timeoutMs: number): Promise<any> {
+async function msPool(c: DriverConn, cred: Credentials, timeoutMs: number): Promise<any> {
   const sql = (await import('mssql')).default
   const pool = new sql.ConnectionPool({
     server: c.host,
@@ -338,7 +345,8 @@ async function msPool(c: Connection, cred: Credentials, timeoutMs: number): Prom
     connectionTimeout: CONNECT_TIMEOUT,
     requestTimeout: Math.max(1000, Math.round(timeoutMs)),
     pool: { max: 1, min: 0 },
-    options: { encrypt: c.ssl, trustServerCertificate: c.trustServerCertificate, appName: 'Agentbits' }
+    // tedious checks the certificate against `serverName` when given (the real server, not the tunnel's 127.0.0.1).
+    options: { encrypt: c.ssl, trustServerCertificate: c.trustServerCertificate, appName: 'Agentbits', ...(tlsHostOf(c) ? { serverName: tlsHostOf(c)! } : {}) }
   })
   await pool.connect()
   return { pool, sql }
@@ -449,14 +457,8 @@ function sshAgentPath(): string | undefined {
  * Runs one command over SSH. The host key is pinned on first contact (`onNewHostKey`)
  * and must match afterwards, so a swapped server is refused instead of trusted.
  */
-export async function sshExec(
-  c: Connection,
-  secret: string | null,
-  command: string | null,
-  /** `onNewHostKey`: only the user's "Test" may pin a key; without it an unpinned server is refused. */
-  opts: { timeoutMs: number; onNewHostKey?: (fp: string) => void; signal?: AbortSignal }
-): Promise<SshResult & { banner?: string }> {
-  const { Client } = await import('ssh2')
+/** ssh2 connect options: the login and the host key check (pinned on first contact only via `onNewHostKey`). */
+function sshConfig(c: Connection, secret: string | null, onNewHostKey: ((fp: string) => void) | undefined, onHostKeyError: (msg: string) => void): Record<string, unknown> {
   const auth: Record<string, unknown> = {}
   if (c.sshAuth === 'password') auth.password = secret ?? ''
   else if (c.sshAuth === 'agent') auth.agent = sshAgentPath()
@@ -468,12 +470,48 @@ export async function sshExec(
     if (secret) auth.passphrase = secret
   }
   if (c.sshAuth === 'agent' && !auth.agent) throw new Error(t('main:connections.errors.noSshAgent'))
+  return {
+    host: c.host,
+    port: c.port,
+    username: c.username,
+    readyTimeout: CONNECT_TIMEOUT,
+    hostVerifier: (key: Buffer) => {
+      const fp = fingerprint(key)
+      if (!c.hostKey) {
+        if (!onNewHostKey) {
+          onHostKeyError(t('main:connections.errors.hostKeyNotPinned', { got: fp }))
+          return false
+        }
+        onNewHostKey(fp)
+        return true
+      }
+      if (c.hostKey === fp) return true
+      onHostKeyError(t('main:connections.errors.hostKeyChanged', { expected: c.hostKey, got: fp }))
+      return false
+    },
+    ...auth
+  }
+}
+
+/**
+ * Runs one command over SSH. The host key is pinned on first contact (`onNewHostKey`)
+ * and must match afterwards, so a swapped server is refused instead of trusted.
+ */
+export async function sshExec(
+  c: Connection,
+  secret: string | null,
+  command: string | null,
+  /** `onNewHostKey`: only the user's "Test" may pin a key; without it an unpinned server is refused. */
+  opts: { timeoutMs: number; onNewHostKey?: (fp: string) => void; signal?: AbortSignal }
+): Promise<SshResult & { banner?: string }> {
+  const { Client } = await import('ssh2')
+  let hostKeyError: string | null = null
+  const config = sshConfig(c, secret, opts.onNewHostKey, (m) => (hostKeyError = m))
 
   return cancellable(opts.signal, (onAbort) => new Promise((resolve, reject) => {
     const client = new Client()
     // Closing the session ends the remote command's channel (sshd sends it SIGHUP).
     onAbort(() => client.end())
-    let hostKeyError: string | null = null
     let settled = false
     const done = (fn: () => void): void => {
       if (settled) return
@@ -513,26 +551,64 @@ export async function sshExec(
         })
       })
       .on('error', (e) => done(() => reject(hostKeyError ? new Error(hostKeyError) : e)))
-      .connect({
-        host: c.host,
-        port: c.port,
-        username: c.username,
-        readyTimeout: CONNECT_TIMEOUT,
-        hostVerifier: (key: Buffer) => {
-          const fp = fingerprint(key)
-          if (!c.hostKey) {
-            if (!opts.onNewHostKey) {
-              hostKeyError = t('main:connections.errors.hostKeyNotPinned', { got: fp })
-              return false
-            }
-            opts.onNewHostKey(fp)
-            return true
-          }
-          if (c.hostKey === fp) return true
-          hostKeyError = t('main:connections.errors.hostKeyChanged', { expected: c.hostKey, got: fp })
-          return false
-        },
-        ...auth
-      } as any)
+      .connect(config as any)
   }))
+}
+
+export interface Tunnel {
+  /** Local port on 127.0.0.1 that leads to the database server. */
+  port: number
+  /** Why the SSH server refused to forward (e.g. AllowTcpForwarding no), if it did. */
+  error(): Error | null
+  close(): void
+}
+
+/**
+ * Opens an SSH tunnel to `dstHost:dstPort` (as seen from the SSH server) behind a random local port, so
+ * every database driver connects to it unchanged. Same host key rule as `sshExec`.
+ * ponytail: one tunnel per database call (the drivers open a connection per call too); pool it if it gets slow.
+ */
+export async function openTunnel(ssh: Connection, secret: string | null, dstHost: string, dstPort: number, opts: { onNewHostKey?: (fp: string) => void } = {}): Promise<Tunnel> {
+  const { Client } = await import('ssh2')
+  let hostKeyError: string | null = null
+  let forwardError: Error | null = null
+  const config = sshConfig(ssh, secret, opts.onNewHostKey, (m) => (hostKeyError = m))
+  const client = new Client()
+  await new Promise<void>((resolve, reject) => {
+    client.once('ready', () => resolve())
+    client.once('error', (e) => reject(hostKeyError ? new Error(hostKeyError) : e))
+    client.connect(config as any)
+  })
+  // Later errors (dropped link) end up in the driver as a closed socket; unhandled they would crash main.
+  client.on('error', () => undefined)
+  const server = createServer((sock) => {
+    sock.on('error', () => undefined)
+    client.forwardOut('127.0.0.1', 0, dstHost, dstPort, (err, stream) => {
+      if (err) {
+        forwardError = new Error(t('main:connections.errors.tunnelRefused', { message: err.message }))
+        return sock.destroy()
+      }
+      stream.on('error', () => undefined)
+      sock.pipe(stream).pipe(sock)
+      stream.on('close', () => sock.destroy())
+      sock.on('close', () => stream.close())
+    })
+  })
+  try {
+    await new Promise<void>((resolve, reject) => {
+      server.once('error', reject)
+      server.listen(0, '127.0.0.1', () => resolve())
+    })
+  } catch (e) {
+    client.end()
+    throw e
+  }
+  return {
+    port: (server.address() as AddressInfo).port,
+    error: () => forwardError,
+    close: () => {
+      server.close()
+      client.end()
+    }
+  }
 }

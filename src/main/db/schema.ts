@@ -661,6 +661,15 @@ const MIGRATIONS: { version: number; sql: string }[] = [
       -- Memories that went into a run's prompt (JSON snapshot), for "What did this task know?".
       ALTER TABLE runs ADD COLUMN recalled TEXT;
     `
+  },
+  {
+    version: 18,
+    sql: `
+      -- A database reached through an SSH connection (the app opens the tunnel), and the user's yes to a
+      -- production database without TLS (audited; see ADR-029).
+      ALTER TABLE connections ADD COLUMN via_ssh_id TEXT;
+      ALTER TABLE connections ADD COLUMN allow_plaintext INTEGER NOT NULL DEFAULT 0;
+    `
   }
 ]
 
