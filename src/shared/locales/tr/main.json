@@ -150,7 +150,8 @@
       "commandNeeds": "Bu komut “{{needs}}” yetkisi ister; senin yetkin “{{have}}”",
       "notApproved": "Kullanıcı Production işlemini onaylamadı (ya da süre doldu)",
       "changedWhileWaiting": "İstek onay beklerken bu bağlantıya erişim değişti; çalıştırılmadı",
-      "readOnlyLoginRequired": "Ajanlar yalnızca salt-okunur bir veritabanı kullanıcısıyla okuyabilir; bu bağlantıda tanımlı değil. Kullanıcıdan Bağlantılar → bu bağlantı → Salt-okunur kullanıcı alanını doldurmasını iste."
+      "readOnlyLoginRequired": "Ajanlar yalnızca salt-okunur bir veritabanı kullanıcısıyla okuyabilir; bu bağlantıda tanımlı değil. Kullanıcıdan Bağlantılar → bu bağlantı → Salt-okunur kullanıcı alanını doldurmasını iste.",
+      "chatReadOnly": "Sohbette ajanlar bağlantılardan yalnız okuyabilir (şema, SELECT). Veri değiştirme, DDL ve SSH komutları görevde çalışır."
     },
     "log": {
       "awaitingApproval": "⏳ {{name}} (Production) için onayınız bekleniyor: {{detail}}",

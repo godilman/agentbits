@@ -4,6 +4,22 @@
 > `## YYYY-MM-DD — kısa başlık`, ardından **Eklendi / Değişti / Düzeltildi / Kaldırıldı / Bilinen** maddeleri
 > ve ilgili dosyalar.
 
+## 2026-10-16 — v0.5.2: ajanlar bağlantılarını sohbette de bilir
+
+Tetik: sahip sohbette Atlas'a "maindb'den user tablosunun son 2 satırını çek" dedi; Atlas "bağlantı tanımı yok" dedi (ajanın
+erişimi yoktu ve bağlantılar sohbette hiç yoktu). Sahibin kararları: sohbette yalnız okuma; erişimsiz ajan yalnız adı bilsin.
+
+### Eklendi
+- **Sohbette bağlantılar:** erişimi olan ajan sohbette `connections_list`, `db_schema`, `db_query` kullanır; `db_query` yalnız
+  okuma (SELECT…, salt-okunur kullanıcıyla, denetim kaydında). Yazma / DDL `chatReadOnly` ile reddedilir, `ssh_exec`
+  sohbette yok — ajan bunları görev olarak önerir. Claude Code (MCP) ve API sağlayıcılarında; Codex ve Demo'da sohbette araç yok.
+- **Erişimi olmayan bağlantılar adıyla anılır:** görev ve sohbet isteminde yalnız ad + tür ve izin verme yolu (Organizasyon →
+  Bağlantılar → bağlantı → Ajan erişimi); açıklama, host, notlar gitmez.
+
+### Test
+- `npm run test:e2e` 23 senaryo: sohbette SELECT çalışır, DELETE reddedilir, `ssh_exec` reddedilir, sohbet araç listesinde
+  `ssh_exec` yok; erişimsiz ajan istemde adı görür, host / açıklama / port görmez, sorgusu reddedilir.
+
 ## 2026-10-16 — v0.5.1: dış inceleme — tünelin son kısmı, onayın hedefe bağlanması, MySQL sertifika adı
 
 Başka bir ajanın incelemesi; üç bulgu da doğrulandı (yeni uçtan uca testler eski kodda düştü, yeniyle geçti).

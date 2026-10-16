@@ -1908,7 +1908,7 @@ class Orchestrator {
         this.projectContext(project)
       // Files of this message are inlined while the budget lasts; the rest is read with tools where available.
       const chatTools = provider.kind !== 'codex-cli' && provider.kind !== 'mock'
-      const fileCtx: AgentCtx = { agentId: agent.id, projectId, mode: 'chat', log: (level, message) => this.log({ agentId: agent.id, projectId, level, message }) }
+      const fileCtx: AgentCtx = { agentId: agent.id, projectId, mode: 'chat', signal: aux.signal, log: (level, message) => this.log({ agentId: agent.id, projectId, level, message }) }
       const msgFiles = filesSection({
         agentId: agent.id,
         projectId,
@@ -1925,6 +1925,9 @@ class Orchestrator {
       const codexChatApps = provider.kind === 'codex-cli' && chatAppTools
       const chatApps = appsPrompt(agent.id, chatTools || provider.kind === 'claude-cli' || codexChatApps)
       if (chatApps) system += '\n\n' + chatApps
+      // Connections in chat: read-only tools where the provider has tools (API function calling, Claude Code via MCP).
+      const chatConn = connectionsPrompt(agent.id, chatTools || provider.kind === 'claude-cli', true)
+      if (chatConn) system += '\n\n' + chatConn
       const chatPrompt = leadPrompt(history, this.names(), content) + (msgFiles.text ? '\n\n' + msgFiles.text : '')
       const chatCtx = { agentId: agent.id, projectId }
       let chatMcp: { configPath: string; server: { command: string; args: string[]; env: Record<string, string> }; dispose: () => void } | null = null
@@ -1937,7 +1940,7 @@ class Orchestrator {
         imagePaths?: string[]
       } = {}
       let disposeChatImages: (() => void) | null = null
-      if ((provider.kind === 'claude-cli' && (readableFilesOf(agent.id, projectId).length || skillsForAgent(agent.id).length || chatAppTools)) || codexChatApps) {
+      if ((provider.kind === 'claude-cli' && (readableFilesOf(agent.id, projectId).length || skillsForAgent(agent.id).length || chatAppTools || connectionsFor(agent.id).length)) || codexChatApps) {
         chatMcp = await prepareMcp(fileCtx, `chat-${opts.messageId ?? Date.now()}`)
         chatTools_.mcpConfigPath = chatMcp.configPath
         chatTools_.mcpServer = chatMcp.server

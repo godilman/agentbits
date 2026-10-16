@@ -930,9 +930,14 @@ Demo ── aynı yol (gerçek çağrılar) ────────────
                          → transkript satırları 🔌 / 🖥 / ⛔ / ↳ → "untrusted content" etiketli sonuç ◄┘
 ```
 
-- **Keşif:** `connectionsPrompt()` çalışanın sistem prompt'una yalnızca **izin verilen** bağlantıları ekler (ad, tür,
-  ortam, seviye, açıklama, amaç, notlar, veritabanı); izinsizler hiç anılmaz. Değişiklikler sonraki çalışmada ya da
-  araç çağrısında geçerli olur.
+- **Keşif:** `connectionsPrompt()` sistem prompt'una **izin verilen** bağlantıları ayrıntısıyla ekler (ad, tür, ortam,
+  seviye, açıklama, amaç, notlar, veritabanı). İzinsizler (v0.5.2'den) **yalnız adı ve türüyle** anılır, nasıl izin
+  verileceğiyle birlikte ("Organizasyon → Bağlantılar → bağlantı → Ajan erişimi"); açıklama, host, notlar gitmez. Hem görev
+  hem **sohbet** istemine girer. Değişiklikler sonraki çalışmada ya da araç çağrısında geçerli olur.
+- **Sohbette yalnız okuma** (v0.5.2): sohbette `agentTools` bağlantı araçlarından `ssh_exec`'i çıkarır, `runAgentTool` onu
+  reddeder; `toolQuery` sohbette okuma dışı her ifadeyi (`classifySql().needs !== 'read'`) `denied.chatReadOnly` ile reddeder
+  (denetim kaydında). Okumalar görevdeki gibi salt-okunur kullanıcıyla. Claude Code sohbette erişimi varsa MCP köprüsünü
+  alır; API sağlayıcıları yerel araç döngüsünü; Codex ve Demo sohbette bağlantı aracı almaz (istem "görev olarak öner" der).
 - **Araçlar** (`tools.ts`): `connections_list`, `db_schema(connection, filter?)`, `db_query(connection, sql)`,
   `ssh_exec(connection, command)` — yalnızca main'de `runTool` → `service.ts` ile çalışır. Faz 3'ten beri aynı köprü/MCP
   sunucusu dosya araçlarını da taşır; araç seti `src/main/agentTools.ts` → `agentTools(ctx)` ile moda ve izinlere göre

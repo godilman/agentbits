@@ -10,7 +10,9 @@ import { Server as SshServer, utils } from 'ssh2'
 import { getDb, openDb } from '../../src/main/db'
 import { openTunnel } from '../../src/main/connections/drivers'
 import { connectionsRepo } from '../../src/main/connections/repo'
-import { testConnection } from '../../src/main/connections/service'
+import { connectionsPrompt, testConnection, toolQuery } from '../../src/main/connections/service'
+import { agentTools, runAgentTool } from '../../src/main/agentTools'
+import { agentsRepo } from '../../src/main/db/repos'
 import { handlers } from '../../src/main/ipc'
 
 const TLS_DIR = process.env.E2E_TLS_DIR
@@ -222,6 +224,31 @@ async function main(): Promise<void> {
   await step('an SSH connection used as a tunnel can’t be deleted; a tunnel must be an SSH connection', async () => {
     assert.throws(() => (handlers['connections:delete'] as any)(bastion.id), /SSH tüneli olarak kullanıyor/)
     await assert.rejects(save({ viaSshId: direct.id }, tunneled.id), /artık yok/)
+  })
+  await step('chat: an agent with access reads (SELECT) but can’t change data or run SSH', async () => {
+    await save({ readOnlyUsername: 'ro', readOnlySecret: 'y', description: 'ERP veritabanı (gizli açıklama)' }, tunneled.id)
+    const atlas = agentsRepo.save({ name: 'Atlas', role: 'Lead' } as never)
+    ;(handlers['connections:setPermission'] as any)(tunneled.id, atlas.id, 'write')
+    const chat = { agentId: atlas.id, mode: 'chat' as const }
+    const names = agentTools(chat).map((x) => x.name)
+    assert.ok(names.includes('db_query') && names.includes('db_schema') && !names.includes('ssh_exec'), names.join(','))
+    const read = await toolQuery(chat, 'maindb-tunnel', 'SELECT * FROM user ORDER BY id DESC LIMIT 2')
+    assert.equal(read.isError, false, read.text)
+    const write = await toolQuery(chat, 'maindb-tunnel', 'DELETE FROM user')
+    assert.match(write.text, /^DENIED: In chat, agents can only read/)
+    assert.match((await runAgentTool(chat, 'ssh_exec', { connection: 'maindb-ssh', command: 'uptime' })).text, /only available while working on a task/)
+    assert.match(connectionsPrompt(atlas.id, true, true), /SELECT only/)
+    // in a task the same agent may write (Production → it would wait for approval; not exercised here)
+    assert.ok(agentTools({ agentId: atlas.id, mode: 'task' }).some((x) => x.name === 'ssh_exec'))
+  })
+  await step('an agent without access knows only the names: no host, description or notes', async () => {
+    const vega = agentsRepo.save({ name: 'Vega', role: 'Dev' } as never)
+    const p = connectionsPrompt(vega.id, true, true)
+    assert.match(p, /\*\*maindb-tunnel\*\* \(MySQL \/ MariaDB\)/)
+    assert.match(p, /Agent access/)
+    assert.ok(!p.includes('127.0.0.1') && !p.includes('gizli açıklama') && !p.includes(String(myPort)), p)
+    assert.equal(agentTools({ agentId: vega.id, mode: 'chat' }).some((x) => x.name === 'db_query'), false)
+    assert.match((await toolQuery({ agentId: vega.id, mode: 'chat' }, 'maindb-tunnel', 'SELECT 1')).text, /^DENIED/)
   })
   await step('PostgreSQL without TLS, SSL on → the same hint; through SSH without TLS works', async () => {
     const pg1 = await save({ ...base, name: 'pg-direct', kind: 'postgres', host: '127.0.0.1', port: pgPlainPort, ssl: true })
