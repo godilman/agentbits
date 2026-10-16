@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next'
 import type { Agent, Message, Project, Run, Task } from '@shared/types'
 import { PixelAvatar } from '@/components/common/PixelAvatar'
 import { ProgressBar } from '@/components/common/ui'
+import { useResize } from '@/components/common/Resize'
 import { call } from '@/lib/api'
 import { clock, cn, duration, STATUS_META } from '@/lib/format'
 import { isReviewNote, isTypingNote, useProjectScope } from '@/lib/org'
@@ -11,23 +12,33 @@ import { agentById, useAppStore } from '@/store/useAppStore'
 
 export function Sidebar() {
   const view = useAppStore((s) => s.view)
+  const runningRef = useRef<HTMLElement>(null)
+  const teamRef = useRef<HTMLElement>(null)
+  const [width, widthHandle] = useResize('sidebar', 300, { min: 220, max: 560 })
+  const [runningMax, runningHandle] = useResize('sidebarRunning', Math.round(window.innerHeight * 0.4), { min: 80, max: 2000, axis: 'y', measure: runningRef })
+  const [teamMax, teamHandle] = useResize('sidebarTeam', 400, { min: 48, max: 2000, axis: 'y', measure: teamRef })
   // The org page has no project context: only the cross-project running work is shown there.
   return (
-    <aside className="flex w-[300px] shrink-0 flex-col border-r border-line bg-[#0c0c0e]">
-      <RunningWork fill={view === 'org'} />
-      {view === 'project' && (
-        <>
-          <TeamStrip />
-          <LiveFeed />
-        </>
-      )}
-    </aside>
+    <>
+      <aside className="flex shrink-0 flex-col border-r border-line bg-[#0c0c0e]" style={{ width }}>
+        <RunningWork fill={view === 'org'} sectionRef={runningRef} maxHeight={runningMax} />
+        {view === 'project' && (
+          <>
+            {runningHandle}
+            <TeamStrip sectionRef={teamRef} maxHeight={teamMax} />
+            {teamHandle}
+            <LiveFeed />
+          </>
+        )}
+      </aside>
+      {widthHandle}
+    </>
   )
 }
 
 /* ───────────────────────────── running work ───────────────────────────── */
 
-function RunningWork({ fill = false }: { fill?: boolean }) {
+function RunningWork({ fill = false, sectionRef, maxHeight }: { fill?: boolean; sectionRef: React.RefObject<HTMLElement | null>; maxHeight: number }) {
   const { t } = useTranslation()
   const allRuns = useAppStore((s) => s.activeRuns)
   const agents = useAppStore((s) => s.agents)
@@ -55,7 +66,7 @@ function RunningWork({ fill = false }: { fill?: boolean }) {
   const total = runs.length + side.length
 
   return (
-    <section className={cn('flex flex-col', fill ? 'min-h-0 flex-1' : 'max-h-[46%] min-h-[120px] border-b border-line')}>
+    <section ref={sectionRef} className={cn('flex flex-col', fill ? 'min-h-0 flex-1' : 'min-h-[80px] border-b border-line')} style={fill ? undefined : { maxHeight }}>
       <div className="flex items-center justify-between px-3 pb-2 pt-3">
         <div className="flex items-center gap-2">
           <span className="panel-title">{t('layout:sidebar.runningWork')}</span>
@@ -208,13 +219,13 @@ function Cap({ children }: { children: React.ReactNode }) {
 
 /* ───────────────────────────── team strip ───────────────────────────── */
 
-function TeamStrip() {
+function TeamStrip({ sectionRef, maxHeight }: { sectionRef: React.RefObject<HTMLElement | null>; maxHeight: number }) {
   const { t } = useTranslation()
   const { team: agents } = useProjectScope()
   const selectAgent = useAppStore((s) => s.selectAgent)
   const setTab = useAppStore((s) => s.setTab)
   return (
-    <section className="border-b border-line px-3 py-2.5">
+    <section ref={sectionRef} className="min-h-[48px] overflow-y-auto border-b border-line px-3 py-2.5" style={{ maxHeight }}>
       <div className="mb-2 flex items-center justify-between">
         <button className="panel-title hover:text-zinc-200" onClick={() => setTab('team')} title={t('layout:sidebar.teamTitle')}>
           {t('layout:sidebar.team')}
@@ -285,7 +296,7 @@ function LiveFeed() {
   }
 
   return (
-    <section className="flex min-h-0 flex-1 flex-col">
+    <section className="flex min-h-[160px] flex-1 flex-col">
       <div className="flex items-center justify-between px-3 pb-1.5 pt-3">
         <span className="panel-title">{t('layout:sidebar.liveChat')}</span>
         <button

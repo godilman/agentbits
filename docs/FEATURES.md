@@ -224,6 +224,7 @@ yukarıdaki ⏳ satırları ve "Bilinen sorunlar"dır.
 | Onay kartı (Onayla / Reddet, istenen yetkiler) | ✅ | |
 | Ekip şeridi (avatar + durum noktası → ofiste seç) | ✅ | Aktif projenin ekibi |
 | Live chat akışı + lidere hızlı mesaj | ✅ | Aktif projenin sohbeti ve lideri |
+| Boyutlandırılabilir paneller (sürükle · ok tuşları · çift tık = varsayılan, boyut hatırlanır) | ✅ | `components/common/Resize.tsx` `useResize`; sol panel genişliği + iç bölmeleri (çalışan işler / ekip / canlı sohbet), görev çekmecesi genişliği + üst bilgi / akış bölmesi, Ajanlar · Uygulamalar · Sohbet kanal listesi genişliği. Boyut `localStorage`'da (yalnız bu cihaz) |
 
 ## 5. Orkestrasyon
 

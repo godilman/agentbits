@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react'
 import { Plus, Search, Star, Users } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
+import { useResize } from '@/components/common/Resize'
 import { PixelAvatar } from '@/components/common/PixelAvatar'
 import { Empty } from '@/components/common/ui'
 import { locale } from '@/i18n'
@@ -14,6 +15,7 @@ const norm = (s: string): string => s.toLocaleLowerCase(locale())
 
 export function AgentsView() {
   const { t } = useTranslation()
+  const [listWidth, listHandle] = useResize('agentsList', 300, { min: 220, max: 600 })
   const agents = useAppStore((s) => s.agents)
   const selectedId = useAppStore((s) => s.selectedAgentId)
   const selectAgent = useAppStore((s) => s.selectAgent)
@@ -32,7 +34,7 @@ export function AgentsView() {
 
   return (
     <div className="flex h-full">
-      <aside className="flex w-[300px] shrink-0 flex-col border-r border-line bg-[#0c0c0e]">
+      <aside style={{ width: listWidth }} className="flex shrink-0 flex-col border-r border-line bg-[#0c0c0e]">
         <div className="space-y-3 border-b border-line p-4">
           <div className="flex items-baseline justify-between">
             <div>
@@ -83,6 +85,7 @@ export function AgentsView() {
           </span>
         </div>
       </aside>
+      {listHandle}
 
       <div className="min-w-0 flex-1 overflow-y-auto">
         {agent ? (

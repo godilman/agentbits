@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { AlertTriangle, Blocks, ChevronDown, ClipboardPaste, Globe, LogIn, LogOut, Plus, RefreshCw, Terminal, Trash2, X } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
+import { useResize } from '@/components/common/Resize'
 import type { I18nKey } from '@shared/i18n'
 import { defaultPolicy, policyOf, type AppImportCandidate, type AppServer, type AppServerInput, type AppTransport, type ToolPolicy } from '@shared/apps'
 import { Empty, Modal, Segmented, Toggle } from '@/components/common/ui'
@@ -13,6 +14,7 @@ import { AuditList } from '@/features/connections/AuditList'
 /** Organization → Apps: MCP servers the user connects, their tools' policies and which agents may use them. */
 export function AppsView() {
   const { t } = useTranslation()
+  const [listWidth, listHandle] = useResize('appsList', 340, { min: 240, max: 640 })
   const apps = useAppStore((s) => s.apps)
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const [creating, setCreating] = useState<AppTransport | null>(null)
@@ -31,7 +33,7 @@ export function AppsView() {
 
   return (
     <div className="flex h-full min-h-0" data-testid="apps-view">
-      <aside className="flex w-[340px] shrink-0 flex-col border-r border-line">
+      <aside style={{ width: listWidth }} className="flex shrink-0 flex-col border-r border-line">
         <div className="space-y-3 border-b border-line p-4">
           <div className="flex items-center gap-2">
             <Blocks size={15} className="text-indigo-300" />
@@ -66,6 +68,7 @@ export function AppsView() {
           ))}
         </div>
       </aside>
+      {listHandle}
       <main className="min-w-0 flex-1 overflow-y-auto">
         {apps.length === 0 ? (
           <Empty icon={<Blocks size={18} />} title={t('apps:empty.title')} hint={t('apps:empty.hint')} action={addMenu} />

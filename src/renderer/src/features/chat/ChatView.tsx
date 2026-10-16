@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { Brain, Hash, Send, Sparkles } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
+import { useResize } from '@/components/common/Resize'
 import type { I18nKey } from '@shared/i18n'
 import type { FileKind, FileRecord, FileShare, Message, RecalledMemory } from '@shared/types'
 import { descendantIds } from '@shared/org'
@@ -23,6 +24,7 @@ const SUGGESTIONS: I18nKey[] = ['chat:suggestions.s1', 'chat:suggestions.s2', 'c
 
 export function ChatView() {
   const { t } = useTranslation()
+  const [channelsWidth, channelsHandle] = useResize('chatChannels', 220, { min: 160, max: 480 })
   const channel = useAppStore((s) => s.chatChannel)
   const setChannel = useAppStore((s) => s.setChatChannel)
   const channels = useAppStore((s) => s.channels)
@@ -90,7 +92,7 @@ export function ChatView() {
 
   return (
     <div className="flex h-full">
-      <nav className="flex w-[220px] shrink-0 flex-col gap-4 overflow-y-auto border-r border-line bg-[#0c0c0e] p-2 pt-3">
+      <nav style={{ width: channelsWidth }} className="flex shrink-0 flex-col gap-4 overflow-y-auto border-r border-line bg-[#0c0c0e] p-2 pt-3">
         <div>
           <div className="panel-title mb-1 px-2">{t('chat:channels')}</div>
           <ChannelButton active={channel === 'general'} onClick={() => setChannel('general')} icon={<Hash size={14} />} label="general" hint={lead ? t('chat:leadHint', { name: lead.name }) : undefined} />
@@ -124,6 +126,7 @@ export function ChatView() {
           </div>
         )}
       </nav>
+      {channelsHandle}
 
       <section className="relative flex min-w-0 flex-1 flex-col" {...drop.props}>
         <DropOverlay

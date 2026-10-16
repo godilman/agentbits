@@ -4,6 +4,7 @@
     "support": "Enjoying Agentbits? Buy me a coffee! ☕",
     "supportLabel": "Buy me a coffee"
   },
+  "resize": "Drag to resize · double-click to reset",
   "actions": {
     "save": "Save",
     "cancel": "Cancel",

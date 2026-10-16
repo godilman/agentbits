@@ -5,6 +5,7 @@ import type { ApiArgs } from '@shared/ipc'
 import type { AgentLog, Run, TaskStatus } from '@shared/types'
 import { PixelAvatar } from '@/components/common/PixelAvatar'
 import { ProgressBar, Segmented } from '@/components/common/ui'
+import { useResize } from '@/components/common/Resize'
 import { call } from '@/lib/api'
 import { ago, clock, cn, duration, PRIORITY_META, TASK_COLUMNS } from '@/lib/format'
 import { Markdown } from '@/lib/markdown'
@@ -38,6 +39,9 @@ export function TaskDrawer() {
   const [history, setHistory] = useState<AgentLog[]>([])
   const [runs, setRuns] = useState<Run[]>([])
   const scrollRef = useRef<HTMLDivElement>(null)
+  const detailsRef = useRef<HTMLDivElement>(null)
+  const [width, widthHandle] = useResize('taskDrawer', 460, { min: 360, max: 1100, invert: true, className: 'absolute inset-y-0 left-0' })
+  const [detailsMax, detailsHandle] = useResize('taskDrawerDetails', Math.round(window.innerHeight * 0.45), { min: 80, max: 2000, axis: 'y', measure: detailsRef })
   // Worktree mode: a done task whose branch still waits to be merged (e.g. uncommitted changes in the folder).
   const [mergePending, setMergePending] = useState(false)
   const [merging, setMerging] = useState(false)
@@ -86,7 +90,8 @@ export function TaskDrawer() {
   }
 
   return (
-    <div className="absolute inset-y-0 right-0 z-30 flex w-[460px] flex-col border-l border-line bg-[#0e0e11] shadow-pop animate-slide-in" {...drop.props}>
+    <div className="absolute inset-y-0 right-0 z-30 flex max-w-[85%] flex-col border-l border-line bg-[#0e0e11] shadow-pop animate-slide-in" style={{ width }} {...drop.props}>
+      {widthHandle}
       <DropOverlay show={drop.over} label={t('tasks:drawer.dropLabel', { key: task.key })} />
       <div className="flex items-center gap-2 border-b border-line px-4 py-2.5">
         <span className="font-mono text-[12px] text-zinc-400">{task.key}</span>
@@ -134,7 +139,7 @@ export function TaskDrawer() {
         </div>
       </div>
 
-      <div className="space-y-3 border-b border-line p-4">
+      <div ref={detailsRef} className="min-h-0 space-y-3 overflow-y-auto border-b border-line p-4" style={{ maxHeight: detailsMax }}>
         <input
           className="w-full bg-transparent text-[16px] font-semibold text-zinc-100 outline-none"
           value={title}
@@ -225,6 +230,7 @@ export function TaskDrawer() {
         <TaskChanges task={task} />
         <RecalledTrace items={runs.find((r) => r.recalled.length)?.recalled ?? []} title={t('org:memory.trace.task')} />
       </div>
+      {detailsHandle}
 
       <div className="flex items-center justify-between px-4 pb-1 pt-3">
         <Segmented<Pane>
@@ -238,7 +244,7 @@ export function TaskDrawer() {
         />
       </div>
 
-      <div ref={scrollRef} className="selectable min-h-0 flex-1 overflow-y-auto px-4 py-3">
+      <div ref={scrollRef} className="selectable min-h-[120px] flex-1 overflow-y-auto px-4 py-3">
         {pane === 'thread' &&
           (thread.length === 0 ? (
             <div className="text-[12px] text-zinc-400">{t('tasks:drawer.noMessages')}</div>

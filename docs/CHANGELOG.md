@@ -4,6 +4,19 @@
 > `## YYYY-MM-DD — kısa başlık`, ardından **Eklendi / Değişti / Düzeltildi / Kaldırıldı / Bilinen** maddeleri
 > ve ilgili dosyalar.
 
+## 2026-10-16 — v0.5.3: boyutlandırılabilir paneller, görev panelinde akış görünmüyordu
+
+### Eklendi
+- **Boyutlandırılabilir paneller:** kenarından sürükle (ya da odaklayıp ok tuşları), çift tık varsayılan boyuta döner; boyut
+  panel başına hatırlanır (`localStorage`). Sol panel genişliği ve iç bölmeleri (çalışan işler / ekip / canlı sohbet), görev
+  çekmecesi genişliği ve üst bilgi / akış bölmesi, Ajanlar · Uygulamalar · Sohbet kanal listesi genişliği. Akış ve canlı sohbet
+  en küçük boyutun altına ezilmez. `components/common/Resize.tsx` (`useResize`), `common:resize` (EN + TR).
+
+### Düzeltildi
+- **Görev paneli:** uzun açıklama / kabul kriterleri / inceleme notu olan görevde üst bilgiler paneli doldurup Akış / Loglar /
+  Çalışmalar alanını sıfıra yakın eziyordu, mesajlar kaydırılamıyordu. Üst bölüm artık kendi içinde kayar (varsayılan en fazla
+  pencerenin ~%45'i, sürüklenebilir); akış en az 120 px kalır. `src/renderer/src/features/tasks/TaskDrawer.tsx`
+
 ## 2026-10-16 — v0.5.2: ajanlar bağlantılarını sohbette de bilir
 
 Tetik: sahip sohbette Atlas'a "maindb'den user tablosunun son 2 satırını çek" dedi; Atlas "bağlantı tanımı yok" dedi (ajanın
