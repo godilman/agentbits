@@ -23,8 +23,8 @@
 ### Düzeltildi
 - TLS desteklemeyen sunucuda "TLS yok" ham hatası (MySQL "Server does not support secure connection", PostgreSQL "The server
   does not support SSL connections", SQL Server "did not negotiate encryption") yerine yönlendiren mesaj.
-- SSH tüneli + SSL birlikte: PostgreSQL ve SQL Server sertifikayı tünelin 127.0.0.1'ine karşı doğrulayıp reddediyordu;
-  artık gerçek sunucu adına karşı doğrular (`tlsHost`; pg `host` / `servername`, tedious `serverName`). MySQL sürücüsü
+- SSH tüneli + SSL birlikte (geliştirme sırasında, yayımlanmadan bulundu): PostgreSQL ve SQL Server sertifikayı tünelin
+  127.0.0.1'ine karşı doğrulayıp reddederdi; gerçek sunucu adına karşı doğrular (`tlsHost`; pg `host` / `servername`, tedious `serverName`). MySQL sürücüsü
   sertifika adını zaten denetlemiyor (önceden de böyle).
 - Kayıt reddedilince eski test sonucu ekranda kalıp yeni denemenin cevabı gibi görünüyordu; artık temizlenir.
 
