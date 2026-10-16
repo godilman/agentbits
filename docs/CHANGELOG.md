@@ -4,6 +4,21 @@
 > `## YYYY-MM-DD — kısa başlık`, ardından **Eklendi / Değişti / Düzeltildi / Kaldırıldı / Bilinen** maddeleri
 > ve ilgili dosyalar.
 
+## 2026-10-16 — v0.5.7: db_export her metin biçiminde, sessiz Excel'e düşme yok
+
+Tetik: sahip 642 satırı `.txt` olarak istedi, 15 dakika sürdü. Kök neden: `db_export` yalnız xlsx / csv / json yazıyordu ve
+**tanımadığı biçimde sessizce xlsx üretiyordu**; ajan bu yüzden eski yola (db_query + file_save ile elle yazma) döndü.
+
+### Düzeltildi
+- `db_export` artık `txt` / `tsv` (sekmeyle ayrılmış, başlık ilk satır, hücre içi sekme / satır sonu boşluk), `md` (Markdown
+  tablosu) ve `html` (tek tablolu sayfa) de yazar (`EXPORT_FORMATS`).
+- Desteklenmeyen biçim (ör. pdf) **hata** verir ve ne yapılacağını söyler: csv / json aktar, kodla dönüştür ya da en yakın
+  biçimi ver ve söyle; satırları asla elle yazma. Ad uzantısı (`yorumlar.txt`) biçimle birlikte temizlenir.
+- İstem kuralları: "hangi biçimde olursa olsun (file_save dahil) büyük veriyi elle yazma".
+
+### Test
+- `tests/connections.export.test.ts`: txt / tsv / md / html; connections e2e: 1500 satırlık `.txt` ve `pdf` reddi.
+
 ## 2026-10-16 — v0.5.6: Prompt oluşturucu
 
 ### Eklendi

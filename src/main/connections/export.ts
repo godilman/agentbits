@@ -4,7 +4,8 @@ import { strToU8, zipSync } from 'fflate'
  * Query results as a file (db_export): the rows go from the database straight to the file, never through the model.
  * No Electron imports — `tests/connections.export.test.ts` runs this under plain Node.
  */
-export type ExportFormat = 'xlsx' | 'csv' | 'json'
+export const EXPORT_FORMATS = ['xlsx', 'csv', 'json', 'txt', 'tsv', 'md', 'html'] as const
+export type ExportFormat = (typeof EXPORT_FORMATS)[number]
 
 const text = (v: unknown): string => (v === null || v === undefined ? '' : typeof v === 'object' ? JSON.stringify(v) : String(v))
 
@@ -15,6 +16,31 @@ export function toCsv(columns: string[], rows: unknown[][]): Uint8Array {
     return /[",\r\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s
   }
   return strToU8('\ufeff' + [columns, ...rows].map((r) => r.map(q).join(',')).join('\r\n') + '\r\n')
+}
+
+/** Tab-separated, header first (txt / tsv): one line per row, tabs and line breaks inside a cell become spaces. */
+export function toTsv(columns: string[], rows: unknown[][]): Uint8Array {
+  const c = (v: unknown): string => text(v).replace(/[\t\r\n]+/g, ' ')
+  return strToU8([columns, ...rows].map((r) => r.map(c).join('\t')).join('\r\n') + '\r\n')
+}
+
+/** A Markdown table (GitHub style): `|` escaped, line breaks as <br>. */
+export function toMarkdown(columns: string[], rows: unknown[][]): Uint8Array {
+  const c = (v: unknown): string => text(v).replace(/\\/g, '\\\\').replace(/\|/g, '\\|').replace(/\r?\n/g, '<br>')
+  const line = (r: unknown[]): string => `| ${r.map(c).join(' | ')} |`
+  return strToU8([line(columns), `| ${columns.map(() => '---').join(' | ')} |`, ...rows.map(line)].join('\n') + '\n')
+}
+
+/** A standalone HTML page with one table. */
+export function toHtml(columns: string[], rows: unknown[][], title = 'Data'): Uint8Array {
+  const e = (v: unknown): string => xml(text(v))
+  const head = `<tr>${columns.map((c) => `<th>${e(c)}</th>`).join('')}</tr>`
+  const body = rows.map((r) => `<tr>${r.map((v) => `<td>${e(v)}</td>`).join('')}</tr>`).join('\n')
+  return strToU8(
+    `<!doctype html>\n<html><head><meta charset="utf-8"><title>${e(title)}</title>` +
+      '<style>body{font:14px system-ui,sans-serif;margin:16px}table{border-collapse:collapse}th,td{border:1px solid #ccc;padding:4px 8px;text-align:left;vertical-align:top;white-space:pre-wrap}th{background:#f3f3f3}</style>' +
+      `</head><body><table>\n<thead>${head}</thead>\n<tbody>\n${body}\n</tbody></table></body></html>\n`
+  )
 }
 
 export function toJson(columns: string[], rows: unknown[][]): Uint8Array {
@@ -103,11 +129,29 @@ export function toXlsx(columns: string[], rows: unknown[][], sheetName = 'Data')
 }
 
 export function exportBytes(format: ExportFormat, columns: string[], rows: unknown[][], sheetName?: string): Uint8Array {
-  return format === 'csv' ? toCsv(columns, rows) : format === 'json' ? toJson(columns, rows) : toXlsx(columns, rows, sheetName)
+  switch (format) {
+    case 'csv':
+      return toCsv(columns, rows)
+    case 'json':
+      return toJson(columns, rows)
+    case 'txt':
+    case 'tsv':
+      return toTsv(columns, rows)
+    case 'md':
+      return toMarkdown(columns, rows)
+    case 'html':
+      return toHtml(columns, rows, sheetName)
+    default:
+      return toXlsx(columns, rows, sheetName)
+  }
 }
 
 export const EXPORT_MIME: Record<ExportFormat, string> = {
   xlsx: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
   csv: 'text/csv',
-  json: 'application/json'
+  json: 'application/json',
+  txt: 'text/plain',
+  tsv: 'text/tab-separated-values',
+  md: 'text/markdown',
+  html: 'text/html'
 }

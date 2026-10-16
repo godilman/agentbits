@@ -48,7 +48,7 @@ export const CONNECTION_TOOLS: ToolSpec[] = [
   {
     name: 'db_export',
     description:
-      'Run ONE read (SELECT) on a database connection and save EVERY row (up to 100 000, whole cells) as a file the user downloads from Files: xlsx (Excel, default), csv or json. ' +
+      'Run ONE read (SELECT) on a database connection and save EVERY row (up to 100 000, whole cells) as a file the user downloads from Files: xlsx (Excel, default), csv, json, txt / tsv (tab-separated), md (Markdown table) or html (table). ' +
       'The rows go straight into the file, not to you: you get the row count, the columns and the first rows. CLI agents also get a copy in .agentbits-exports/ of their working folder to process with code. ' +
       'Use it whenever the user wants data as a file, and instead of paging through db_query. Format dates and columns in the SQL (aliases become the column headers).',
     inputSchema: {
@@ -56,7 +56,7 @@ export const CONNECTION_TOOLS: ToolSpec[] = [
       properties: {
         connection: { type: 'string', description: 'Connection name, exactly as listed' },
         sql: { type: 'string', description: 'One SELECT statement' },
-        format: { type: 'string', enum: ['xlsx', 'csv', 'json'], description: 'File format (default xlsx)' },
+        format: { type: 'string', enum: ['xlsx', 'csv', 'json', 'txt', 'tsv', 'md', 'html'], description: 'File format (default xlsx). Any other format: export csv / json and convert it with code; never retype rows.' },
         name: { type: 'string', description: 'File name without extension, e.g. "meal-reviews-2026-09"' }
       },
       required: ['connection', 'sql'],

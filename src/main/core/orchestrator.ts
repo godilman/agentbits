@@ -964,7 +964,7 @@ class Orchestrator {
       if (toolsAvailable) {
         system +=
           '\n\n## Deliverable files\nTo hand over a document, report or table as a file, save it with the file_save tool (text formats); the user downloads it from Files. ' +
-          'Never re-type large data (many rows, whole files) into your reply or into a file by hand: it is slow and error-prone. Database rows go to a file with db_export; ' +
+          'Never re-type large data (many rows, whole files) into your reply or into a file by hand, in any format (file_save included): it is slow and error-prone. Database rows go to a file with db_export (xlsx, csv, json, txt, tsv, md, html); ' +
           'if you can run commands, write a small script that reads the data and produces the result instead.' +
           (provider.kind === 'claude-cli' || provider.kind === 'codex-cli' ? ' Files you write into the project folder are listed for the user too.' : '')
       }

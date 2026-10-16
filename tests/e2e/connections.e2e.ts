@@ -294,6 +294,17 @@ async function main(): Promise<void> {
     assert.match((await runAgentTool(chat, 'db_export', { connection: 'maindb-tunnel', sql: 'SELECT 1' })).text, /only available while working on a task/)
     const vega = agentsRepo.list().find((a) => a.name === 'Vega')!
     assert.match((await runAgentTool({ ...task, agentId: vega.id }, 'db_export', { connection: 'maindb-tunnel', sql: 'SELECT * FROM big_table' })).text, /^DENIED/)
+    // TXT (the format that was retyped by hand before): every row, one line each; an unknown format is refused, not swapped.
+    const txt = await runAgentTool(task, 'db_export', { connection: 'maindb-tunnel', sql: 'SELECT * FROM big_table', format: 'txt', name: 'yorumlar.txt' })
+    assert.match(txt.text, /Exported 1500 row\(s\) × 3 column\(s\) to yorumlar\.txt/)
+    const lines = readFileSync(join(exportDir, 'yorumlar.txt'), 'utf8').trimEnd().split('\r\n')
+    assert.equal(lines.length, 1501)
+    assert.equal(lines[0], 'id\tad_soyad\tgenel_yorum')
+    assert.equal(lines[1500], '1500\tKisi 1500\tyorum 1500, cok guzeldi')
+    assert.ok(lines[7].endsWith(LONG_CELL))
+    const pdf = await runAgentTool(task, 'db_export', { connection: 'maindb-tunnel', sql: 'SELECT * FROM big_table', format: 'pdf' })
+    assert.equal(pdf.isError, true)
+    assert.match(pdf.text, /Unsupported format "pdf"\. db_export writes: xlsx, csv, json, txt, tsv, md, html\. .*Never retype the rows/)
     // API agents (no working folder): the file is only in Files.
     const api = await runAgentTool({ agentId: atlas.id, mode: 'task', projectId }, 'db_export', { connection: 'maindb-tunnel', sql: 'SELECT * FROM big_table', format: 'csv', name: 'yorumlar' })
     assert.match(api.text, /to yorumlar\.csv/)

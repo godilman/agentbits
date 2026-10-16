@@ -914,7 +914,8 @@ adına karşı doğrulanır (`tlsHost`: pg `host` / `servername`, tedious `serve
 **`db_export` (v0.5.5): veri modelden geçmez.** Görevde tek bir okuma (SELECT; `classifySql` → `read`, salt-okunur giriş
 şart, sohbette yok) çalışır; **her satır** (en çok 100 000, hücreler kırpılmadan: `QueryOptions.maxCell`) `connections/export.ts`
 ile xlsx (fflate ile en küçük OOXML: tek sayfa, kalın + dondurulmuş başlık, gerçek sayılar sayı hücresi, gerisi metin), csv
-(UTF-8 BOM) ya da json olur ve `files/service.ts` `saveAgentFile` ile Dosyalar'a kaydedilir (file_save ile aynı yol: çalışma
+(UTF-8 BOM), json, txt / tsv (sekmeyle), md (Markdown tablosu) ya da html olur (v0.5.7; başka biçim hata verir, sessiz geri
+düşme yok) ve `files/service.ts` `saveAgentFile` ile Dosyalar'a kaydedilir (file_save ile aynı yol: çalışma
 başına sayı, kota, ajan + lider erişimi, run / görev bağı, denetim). CLI ajanlarında (`AgentCtx.exportDir`) bir kopya da çalışma
 kopyasında `.agentbits-exports/` altına yazılır; klasörün içindeki `*` `.gitignore`'u onu commit / birleştirme dışında tutar,
 klasör taraması nokta klasörlerini atlar. Ajana yalnız satır / sütun sayısı, sütun adları ve ilk 3 satır (120 karakter) döner.

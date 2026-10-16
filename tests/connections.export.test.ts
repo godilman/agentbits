@@ -2,7 +2,7 @@
 // Run: npm run test:unit   (Node 22+, no test framework needed)
 import assert from 'node:assert/strict'
 import { strFromU8, unzipSync } from 'fflate'
-import { toCsv, toJson, toXlsx } from '../src/main/connections/export.ts'
+import { EXPORT_FORMATS, exportBytes, toCsv, toHtml, toJson, toMarkdown, toTsv, toXlsx } from '../src/main/connections/export.ts'
 import { extractFile } from '../src/main/files/extract.ts'
 
 const columns = ['id', 'tarih', 'ad_soyad', 'genel_yorum', 'puan']
@@ -54,5 +54,26 @@ assert.ok(text.includes(long.trim()))
 // Many columns: AA, AB … after Z.
 const wide = toXlsx(Array.from({ length: 30 }, (_, i) => `c${i}`), [Array.from({ length: 30 }, (_, i) => i)])
 assert.ok(strFromU8(unzipSync(wide)['xl/worksheets/sheet1.xml']).includes('<c r="AD2"><v>29</v></c>'))
+
+// TXT / TSV: tab-separated, header first, one line per row (tabs / line breaks inside a cell become spaces).
+const tsv = strFromU8(toTsv(columns, rows)).split('\r\n')
+assert.equal(tsv[0], 'id\ttarih\tad_soyad\tgenel_yorum\tpuan')
+assert.equal(tsv[1], '1785\t2026-09-01\tMustafa Şarıkaya\tTuz <az>, "acı" & bol\t5')
+assert.equal(tsv[3], '1787\t2026-09-03\t00123\tsatır sonu\u0007kontrol\t4.5')
+assert.equal(tsv.length, 5, 'header + 3 rows + final line break')
+assert.deepEqual(exportBytes('txt', columns, rows), toTsv(columns, rows))
+
+// Markdown: a table, | escaped, line breaks as <br>.
+const md = strFromU8(toMarkdown(['a', 'b'], [['x|y', 'satır\nsonu'], [null, 3]])).split('\n')
+assert.deepEqual(md.slice(0, 4), ['| a | b |', '| --- | --- |', '| x\\|y | satır<br>sonu |', '|  | 3 |'])
+
+// HTML: escaped cells in one table.
+const html = strFromU8(toHtml(columns, rows, 'MainDB'))
+assert.ok(html.startsWith('<!doctype html>') && html.includes('<title>MainDB</title>'))
+assert.ok(html.includes('<td>Tuz &lt;az&gt;, &quot;acı&quot; &amp; bol</td>') && !html.includes('<az>'))
+assert.equal((html.match(/<tr>/g) ?? []).length, 4)
+
+// Every listed format produces bytes.
+for (const f of EXPORT_FORMATS) assert.ok(exportBytes(f, columns, rows).byteLength > 20, f)
 
 console.log('connections.export: ok')
