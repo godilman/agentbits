@@ -5,7 +5,8 @@ type Base = Pick<ReplyStreamEvent, 'replyId' | 'projectId' | 'channel' | 'agentI
 
 /**
  * A chat reply shown while it is written: `push` collects the provider's chunks and sends the visible text at most
- * every REPLY_STREAM_MS for this reply; `end` sends the last state once (later chunks and timers are dropped).
+ * every REPLY_STREAM_MS for this reply; `end` sends the last state once (later chunks and timers are dropped). A stop
+ * ends it at once (cancelled), without waiting for the provider to return.
  */
 export function startReplyStream(base: Base, signal: AbortSignal) {
   let raw = ''
@@ -23,7 +24,8 @@ export function startReplyStream(base: Base, signal: AbortSignal) {
     emit({ type: 'reply:stream', ...base, state: 'update', text: v.text, hiding: v.hiding })
   }
   emit({ type: 'reply:stream', ...base, state: 'start' })
-  return {
+  const onAbort = (): void => stream.end('cancelled')
+  const stream = {
     replyId: base.replyId,
     push(chunk: string): void {
       if (done || signal.aborted) return
@@ -33,6 +35,7 @@ export function startReplyStream(base: Base, signal: AbortSignal) {
     end(state: 'complete' | 'error' | 'cancelled', messageId?: string): void {
       if (done) return
       done = true
+      signal.removeEventListener('abort', onAbort)
       if (timer) clearTimeout(timer)
       timer = null
       emit({ type: 'reply:stream', ...base, state, ...(messageId ? { messageId } : {}) })
@@ -41,4 +44,7 @@ export function startReplyStream(base: Base, signal: AbortSignal) {
       return done
     }
   }
+  if (signal.aborted) stream.end('cancelled')
+  else signal.addEventListener('abort', onAbort)
+  return stream
 }

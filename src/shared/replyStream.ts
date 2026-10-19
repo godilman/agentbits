@@ -13,14 +13,47 @@ export const REPLY_STREAM_MS = 60
 
 const OPEN = new RegExp('```(' + HIDDEN_BLOCKS.join('|') + ')\\s*\\n', 'g')
 
-/** A tail that could still grow into a hidden block's opening fence (e.g. "``", "```ta", "```tasks  "). */
-function couldOpen(tail: string): boolean {
-  const m = /^(`{1,3})([a-z]*)(\s*)$/.exec(tail)
-  if (!m) return false
-  const [, ticks, name, space] = m
-  if (ticks.length < 3) return !name && !space
-  if (!name) return !space
-  return HIDDEN_BLOCKS.some((b) => (space ? b === name : b.startsWith(name)))
+/**
+ * The end of what may still become a hidden block's opening fence ("`", "``", "```ta", "```tasks" plus spaces before
+ * its line ends), anchored at the end of the text, so any amount of spacing is covered.
+ */
+const PARTIAL_OPEN = new RegExp(
+  '(?<!`)(?:`{1,2}|```(?:' +
+    [...new Set(HIDDEN_BLOCKS.flatMap((b) => [...b].map((_, i) => b.slice(0, i + 1))))].join('|') +
+    ')?|```(?:' +
+    HIDDEN_BLOCKS.join('|') +
+    ')[^\\S\\n]*)$'
+)
+
+/**
+ * Where a hidden block's body ends: the first ``` outside a JSON string, so a code sample inside a task's text never
+ * closes the block. -1 while it is not closed.
+ */
+export function blockEnd(text: string, from: number): number {
+  let inString = false
+  for (let i = from; i < text.length; i++) {
+    const c = text[i]
+    if (inString) {
+      if (c === '\\') i++
+      else if (c === '"') inString = false
+    } else if (c === '"') inString = true
+    else if (c === '`' && text.startsWith('```', i)) return i
+  }
+  return -1
+}
+
+/** The bodies of every complete `tag` block (what the tasks / decision / message / learn parsers read). */
+export function hiddenBlockBodies(text: string, tag: HiddenBlock): string[] {
+  const out: string[] = []
+  const re = new RegExp(OPEN.source, 'g')
+  for (let m = re.exec(text); m; m = re.exec(text)) {
+    const start = m.index + m[0].length
+    const end = blockEnd(text, start)
+    if (end < 0) break
+    if (m[1] === tag) out.push(text.slice(start, end))
+    re.lastIndex = end + 3
+  }
+  return out
 }
 
 /**
@@ -37,18 +70,14 @@ export function visibleReply(text: string, final: boolean): { text: string; hidi
     const m = OPEN.exec(text)
     if (!m) break
     out += text.slice(i, m.index)
-    const close = text.indexOf('```', m.index + m[0].length)
+    const close = blockEnd(text, m.index + m[0].length)
     if (close < 0) return { text: out.trim(), hiding: final ? null : (m[1] as HiddenBlock) }
     i = close + 3
   }
   let rest = text.slice(i)
   if (!final) {
-    for (let k = Math.max(0, rest.length - 40); k < rest.length; k++) {
-      if (rest[k] === '`' && (k === 0 || rest[k - 1] !== '`') && couldOpen(rest.slice(k))) {
-        rest = rest.slice(0, k)
-        break
-      }
-    }
+    const p = PARTIAL_OPEN.exec(rest)
+    if (p) rest = rest.slice(0, p.index)
   }
   return { text: (out + rest).trim(), hiding: null }
 }

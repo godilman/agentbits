@@ -185,6 +185,30 @@ async function main(): Promise<void> {
     assert.equal(stored(p1.id).length, msgs)
   })
 
+  await step('a stop closes the bubble at once, without waiting for a provider that ignores it', async () => {
+    const before = events.length
+    let returned = 0
+    behave = async (ctx) => {
+      ctx.onText('uzun bir yanıt ')
+      await new Promise((r) => setTimeout(r, 600)) // never looks at ctx.signal
+      ctx.onText('hâlâ yazıyor')
+      returned = Date.now()
+      return 'uzun bir yanıt hâlâ yazıyor'
+    }
+    await send('iptal: yavaş sağlayıcı')
+    await until(() => events.slice(before).some((e) => e.state === 'update'), 'first update')
+    const rid = events.slice(before)[0].replyId
+    const stoppedAt = Date.now()
+    const stopping = orchestrator.stopProject(p1.id)
+    await until(() => lastState(rid) === 'cancelled', 'cancelled', 300)
+    assert.equal(returned, 0, 'cancelled arrived while the provider was still running')
+    assert.ok(of(rid).at(-1)!.at - stoppedAt < 150, `cancelled ${of(rid).at(-1)!.at - stoppedAt} ms after the stop`)
+    await stopping
+    await wait(100)
+    assert.equal(of(rid).at(-1)!.state, 'cancelled', 'still the last word after the provider returned')
+    assert.ok(!of(rid).some((e) => /hâlâ/.test(e.text ?? '')))
+  })
+
   await step('replies of two projects at once carry their own project (the chat shows each where it belongs)', async () => {
     const before = events.length
     behave = async (ctx) => {

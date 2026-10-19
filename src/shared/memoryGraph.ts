@@ -1,4 +1,5 @@
 /** Graph memory helpers shared by main and tests (pure). `tests/memoryGraph.test.ts`. */
+import { hiddenBlockBodies } from './replyStream.ts'
 
 /** Short reference of a memory in prompts ("m:3fa9c1"), so an agent can say which one a new memory replaces. */
 export function memoryRef(id: string): string {
@@ -19,12 +20,10 @@ export interface LearnedItem {
  */
 export function parseLearn(text: string): LearnedItem[] {
   const out: LearnedItem[] = []
-  const re = /```learn\s*\n([\s\S]*?)```/g
-  let m: RegExpExecArray | null
-  while ((m = re.exec(text))) {
+  for (const body of hiddenBlockBodies(text, 'learn')) {
     let v: unknown
     try {
-      v = JSON.parse(m[1])
+      v = JSON.parse(body)
     } catch {
       continue
     }

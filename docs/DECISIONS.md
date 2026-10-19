@@ -615,5 +615,8 @@ Durum değerleri: *Kabul edildi*, *Önerildi*, *Yerini aldı*, *Geri alındı*.
   (`visibleReply`), akış ve son mesaj aynı kuralı kullanır.
 - **Claude Code:** token akışı `--include-partial-messages` ister; destek çalıştırmadan önce `--help`'ten okunur. Hata
   alınca yeniden başlatmak elendi: ilk deneme araç çalıştırmış olabilir, iş iki kez yapılırdı.
+- **Kapanış:** bloğun gövdesi JSON'dur; kapanış, JSON string'inin dışındaki ilk ``` (`blockEnd`). Görev açıklamasındaki kod
+  örneği bloğu kapatmaz. Ayrıştırıcılar ve ekran filtresi bu tek fonksiyonu kullanır (2026-10-19, dış inceleme).
+- **İptal:** akış iptal sinyalini doğrudan dinler; sağlayıcının dönmesi beklenmez.
 - **Bedel:** Uzun yanıtta her güncelleme tüm metni taşır ve Markdown baştan çizilir (~10 ms / 30 000 karakter); gerekirse fark
   gönderme. Claude Code araç kullanırken ara açıklamalar akar ama son mesaj yalnız son yanıttır (balon değişebilir).

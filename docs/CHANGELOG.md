@@ -4,6 +4,27 @@
 > `## YYYY-MM-DD — kısa başlık`, ardından **Eklendi / Değişti / Düzeltildi / Kaldırıldı / Bilinen** maddeleri
 > ve ilgili dosyalar.
 
+## 2026-10-19 — v0.7.1: Canlı yanıt: gizli blok kapanışı, anında iptal
+
+Dış inceleme (v0.7.0 sonrası), üçü de yayımlanmış kodla yeniden üretildi.
+
+### Düzeltildi
+- Gizli blok, içindeki ilk ``` ile "kapanıyordu": açıklamasında kod örneği olan bir görev JSON'un kalanını hem canlı balonda
+  hem kalıcı mesajda gösteriyordu, `parseTasks` de bloğu yarıda kesip görevleri sessizce kaybediyordu. Kapanış artık JSON
+  string'inin **dışındaki** ilk ``` (`blockEnd`); `tasks` / `decision` / `message` / `learn` ayrıştırıcıları da aynı
+  fonksiyonu kullanır (`hiddenBlockBodies`; `memoryGraph.ts`, `leadComms.ts`, `prompts.ts`). Aynı satırda kapanan blok da olur.
+- İptal edilen yanıtın balonu, sağlayıcı dönene kadar açık kalıyordu: akış iptal sinyalini dinler, zamanlayıcıyı temizleyip
+  `cancelled`'ı hemen gönderir.
+- Açılışın ardından 40'tan fazla boşluk gelince gizli bloğun başı görünüyordu (sabit 40 karakter penceresi): yarım açılış
+  artık metnin sonuna sabitlenmiş bir desenle her uzunlukta tutulur.
+- `tsconfig.web.json`: `allowImportingTsExtensions` (paylaşılan modüller birbirini `.ts` uzantısıyla içe aktarır; birim
+  testleri Node'da uzantısız içe aktarmayı çözemez).
+
+### Test
+- `tests/replyStream.test.ts`: kod örnekli görev (her bölme noktasında), kaçışlı tırnak, aynı satırda kapanış, başka bloğun
+  string'indeki fence, 0–200 boşluk, ayrıştırıcının görevi bütün okuması. e2e: iptali dinlemeyen sağlayıcıda `cancelled`
+  150 ms içinde (10. adım). İptal dinleyicisi kaldırılınca adım düşüyor.
+
 ## 2026-10-19 — v0.7.0: Canlı sohbet yanıtı
 
 Tetik: sahip, sohbette yanıtın tek seferde geldiğini, parça parça yazılmasını istedi. Sağlayıcılar metni zaten parça parça

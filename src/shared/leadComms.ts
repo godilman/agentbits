@@ -3,6 +3,7 @@
  * it sees finished work through report excerpts and leaves notes on tasks with a ```message block.
  * Team members never message each other — the orchestrator parses these blocks only from the lead's chat reply.
  */
+import { hiddenBlockBodies } from './replyStream.ts'
 
 export interface LeadMessage {
   /** Task key, e.g. "TA-12" (upper-cased). */
@@ -18,10 +19,10 @@ const KEY = /^[A-Za-z][A-Za-z0-9]{0,9}-\d{1,6}$/
 /** ```message blocks → valid notes (a task key and non-empty text); anything else is dropped. */
 export function parseLeadMessages(text: string): LeadMessage[] {
   const out: LeadMessage[] = []
-  for (const m of text.matchAll(/```message\s*\n([\s\S]*?)```/g)) {
+  for (const body of hiddenBlockBodies(text, 'message')) {
     let v: unknown
     try {
-      v = JSON.parse(m[1])
+      v = JSON.parse(body)
     } catch {
       continue
     }

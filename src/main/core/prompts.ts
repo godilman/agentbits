@@ -1,7 +1,7 @@
 import type { Agent, AgentPermissions, Message, Task } from '@shared/types'
 import { describePermissions } from './permissions'
 import { acceptanceList } from '@shared/review'
-import { visibleReply } from '@shared/replyStream'
+import { hiddenBlockBodies, visibleReply } from '@shared/replyStream'
 
 const PRIORITY = ['low', 'normal', 'high', 'urgent']
 
@@ -179,12 +179,9 @@ export interface PlannedDecision {
   rationale?: string
 }
 
-function blocks(text: string, tag: string): string[] {
-  const re = new RegExp('```' + tag + '\\s*\\n([\\s\\S]*?)```', 'g')
-  const out: string[] = []
-  let m: RegExpExecArray | null
-  while ((m = re.exec(text))) out.push(m[1])
-  return out
+/** Block bodies: closed by the first ``` outside a JSON string (the same rule as the chat bubble, `shared/replyStream.ts`). */
+function blocks(text: string, tag: 'tasks' | 'decision'): string[] {
+  return hiddenBlockBodies(text, tag)
 }
 
 export function parseTasks(text: string): PlannedTask[] {

@@ -1,6 +1,6 @@
 /** Live chat replies: hidden-block filter at every chunk boundary, and the stream state. Run: npm run test:unit */
 import assert from 'node:assert/strict'
-import { EMPTY_LIVE, applyReplyEvent, dropReplies, liveFor, visibleReply, type LiveReplies, type ReplyStreamEvent } from '../src/shared/replyStream.ts'
+import { EMPTY_LIVE, applyReplyEvent, dropReplies, hiddenBlockBodies, liveFor, visibleReply, type LiveReplies, type ReplyStreamEvent } from '../src/shared/replyStream.ts'
 
 // ── Filter ──────────────────────────────────────────────────────────────────────────────────────────────────────────
 const SECRET = 'GIZLI'
@@ -14,7 +14,11 @@ const samples = [
   // inline code and backticks that are not fences
   'Komut: `ls -la` ve ``çift`` tırnak.',
   // a code block named like the start of a hidden one
-  'Örnek:\n```ta-ble\nx\n```\nbitti'
+  'Örnek:\n```ta-ble\nx\n```\nbitti',
+  // a task whose description holds a code sample: its ``` are inside a JSON string and do not close the block
+  'Plan hazır.\n```tasks\n[{"title":"Kur","description":"Şunu çalıştır:\\n```bash\\nnpm ci\\n```\\n' + SECRET + '-5","acceptance":"a \\" ``` b ' + SECRET + '-6"}]\n```\nBaşlıyoruz.',
+  // closed on the same line as the JSON
+  'Tamam.\n```decision\n{"title":"' + SECRET + '-7"}```\nSon.'
 ]
 for (const full of samples) {
   const final = visibleReply(full, true).text
@@ -29,6 +33,20 @@ for (const full of samples) {
 assert.match(visibleReply(samples[1], true).text, /```js\nconst x = 1\n```/, 'a normal code block stays')
 assert.match(visibleReply(samples[4], true).text, /```ta-ble/, 'a code block that only starts like one stays')
 assert.equal(visibleReply(samples[2], true).text, 'Not alıyorum.', 'an unclosed hidden block is hidden in the final text too')
+assert.equal(visibleReply(samples[5], true).text, 'Plan hazır.\n\nBaşlıyoruz.', 'a code sample inside the JSON does not end the block')
+assert.equal(visibleReply(samples[6], true).text, 'Tamam.\n\nSon.')
+// The parsers read the same blocks: the task with a code sample arrives whole.
+const tasks = JSON.parse(hiddenBlockBodies(samples[5], 'tasks')[0])
+assert.equal(tasks[0].description, 'Şunu çalıştır:\n```bash\nnpm ci\n```\n' + SECRET + '-5')
+assert.equal(hiddenBlockBodies(samples[5], 'decision').length, 0)
+assert.deepEqual(JSON.parse(hiddenBlockBodies(samples[6], 'decision')[0]), { title: SECRET + '-7' })
+assert.deepEqual(hiddenBlockBodies('```tasks\n[{"title":"açık"', 'tasks'), [], 'an unclosed block is not parsed')
+assert.equal(hiddenBlockBodies('```learn\n[{"text":"```tasks\\n"}]\n```', 'tasks').length, 0, 'a fence inside another block’s string is not a block')
+// A fence followed by any amount of spacing (no fixed window).
+for (const n of [0, 1, 39, 40, 41, 45, 200]) {
+  assert.equal(visibleReply('A\n```tasks' + ' '.repeat(n), false).text, 'A', `${n} spaces`)
+  assert.equal(visibleReply('A\n```ta' + ' '.repeat(n), false).text, n ? 'A\n```ta' : 'A', `"ta" + ${n} spaces is not a block name`)
+}
 assert.equal(visibleReply('Tamam.\n```tas', false).text, 'Tamam.', '"```ta" + "sks": held back until clear')
 assert.equal(visibleReply('Tamam.\n```tasks\n[', false).hiding, 'tasks', 'the open block is named (shown as "preparing tasks")')
 assert.equal(visibleReply('Tamam.\n```js', false).text, 'Tamam.\n```js', 'not a hidden name: shown right away')
