@@ -44,7 +44,7 @@ Hepsi tek pencerede, verilerin de kendi bilgisayarında kalır.
   Ürün Geliştirme, Pazarlama & İçerik, E-ticaret Şirketi); istersen sıfırdan da kurabilirsin.
 - **Lideri olan projeler.** Her proje bir klasör ve orada çalışan takımlardan oluşur. Liderle sohbet edersin, o da
   isteği panoda görevlere çevirir. Ekiple yalnızca lider konuşur: iş verir, üyelerin bitirdiklerini görür, onlara not
-  bırakır.
+  bırakır. Yanıtlar yazılırken görünür.
 - **Paralel yazılımcılar.** Bir ajanı ikizlere çoğaltırsın; lider işi aralarında paylaştırır, görevler birbirini
   bekleyebilir, kimin hangi dosyada çalıştığını herkes görür. İstersen her görev kendi git çalışma kopyasında çalışır ve
   onaylanınca birleştirilir; ajanlar birbirinin üzerine yazmaz.

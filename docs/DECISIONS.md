@@ -603,3 +603,17 @@ Durum değerleri: *Kabul edildi*, *Önerildi*, *Yerini aldı*, *Geri alındı*.
 - **Elenen:** Agentbits veri klasörü (kullanıcının dosya kopyalaması zor; CLI ajanı klasörü doğrudan göremez), hafızayı DB'ye
   aktarmak (düz md'nin taşınabilirliği kaybolur), tüm dosyaları prompt'a koymak (bütçe), gömülü vektör araması (ADR-027 ayrı,
   isteğe bağlı; burada kelime araması yeterli başlangıç).
+
+## ADR-031 — Canlı sohbet yanıtı: kaydedilmeyen akış olayı, aynı gizli blok kuralı (2026-10-19)
+
+- **Bağlam:** Sohbet yanıtı yalnız bitince görünüyordu; sağlayıcılar metni parça parça veriyor ama `reply()` atıyordu.
+- **Karar:** Main `reply:stream` olayı yayar: yanıt başına `randomUUID` `replyId`, durumlar `start` / `update` / `complete` /
+  `error` / `cancelled`, her güncellemede görünen metnin tamamı (ilk sürüm için basit ve kayıpsız), yanıt başına en sık 60 ms.
+  Veritabanına hiçbir şey yazılmaz; kalıcı mesaj bugünkü gibi bitince kaydedilir ve `meta.replyId` taşır. Renderer balonu,
+  aynı `replyId`'li ya da `messageId`'li mesaj kanala gelene kadar gösterir (boşluk ve çift görünüm yok); biten yanıtların
+  kimlikleri (son 500) tutulur, geç gelen güncelleme balonu geri getiremez. Gizli blok kuralı tek fonksiyondur
+  (`visibleReply`), akış ve son mesaj aynı kuralı kullanır.
+- **Claude Code:** token akışı `--include-partial-messages` ister; destek çalıştırmadan önce `--help`'ten okunur. Hata
+  alınca yeniden başlatmak elendi: ilk deneme araç çalıştırmış olabilir, iş iki kez yapılırdı.
+- **Bedel:** Uzun yanıtta her güncelleme tüm metni taşır ve Markdown baştan çizilir (~10 ms / 30 000 karakter); gerekirse fark
+  gönderme. Claude Code araç kullanırken ara açıklamalar akar ama son mesaj yalnız son yanıttır (balon değişebilir).

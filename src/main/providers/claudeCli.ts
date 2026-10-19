@@ -30,6 +30,24 @@ function cliVersion(bin: string): Promise<number[] | null> {
   }
   return v
 }
+/**
+ * Does this CLI stream text as it is written (`--include-partial-messages`)? Read once from `claude --help`, before any
+ * run: a CLI without it keeps the per-message text, and nothing is ever started twice (a retry could repeat a tool).
+ */
+const partialSupport = new Map<string, Promise<boolean>>()
+function supportsPartial(bin: string): Promise<boolean> {
+  let v = partialSupport.get(bin)
+  if (!v) {
+    v = new Promise((resolve) =>
+      execFile(bin, ['--help'], { timeout: 15000, windowsHide: true, shell: /\.(cmd|bat)$/i.test(bin) }, (e, so) =>
+        resolve(!e && String(so ?? '').includes('--include-partial-messages'))
+      )
+    )
+    partialSupport.set(bin, v)
+  }
+  return v
+}
+
 const atLeastVersion = (v: number[] | null, want: number[]): boolean => {
   if (!v) return false
   for (let i = 0; i < 3; i++) if (v[i] !== want[i]) return v[i] > want[i]
@@ -71,6 +89,10 @@ export const claudeCliAdapter: ProviderAdapter = {
     if (autoApproved.length) args.push('--allowedTools', autoApproved.join(','))
     args.push('--permission-mode', ctx.permissions.fsWrite && ctx.mode === 'task' ? 'acceptEdits' : 'default')
     if (ctx.model) args.push('--model', ctx.model)
+    // Chat replies appear while they are written (tasks keep whole messages in the transcript).
+    const partial = ctx.mode === 'chat' && (await supportsPartial(bin))
+    if (partial) args.push('--include-partial-messages')
+    const textBlocks = new Set<number>()
     for (const p of ctx.permissions.allowedPaths) args.push('--add-dir', p)
     // A direct user instruction continues the same conversation (documented `--resume <id>`).
     const resuming = !!ctx.resumeSessionId
@@ -122,11 +144,17 @@ export const claudeCliAdapter: ProviderAdapter = {
           return
         }
         if (ev.session_id) setSession(ev.session_id)
-        if (ev.type === 'assistant') {
+        if (ev.type === 'stream_event') {
+          const se = ev.event ?? {}
+          if (se.type === 'message_start') textBlocks.clear()
+          else if (se.type === 'content_block_start' && se.content_block?.type === 'text') textBlocks.add(se.index)
+          else if (se.type === 'content_block_delta' && se.delta?.type === 'text_delta' && se.delta.text) ctx.onText(se.delta.text)
+          else if (se.type === 'content_block_stop' && textBlocks.has(se.index)) ctx.onText('\n')
+        } else if (ev.type === 'assistant') {
           const msg = ev.message ?? {}
           for (const block of msg.content ?? []) {
             if (block.type === 'text' && block.text) {
-              ctx.onText(block.text + '\n')
+              if (!partial) ctx.onText(block.text + '\n')
             } else if (block.type === 'tool_use') {
               toolUses++
               const detail = block.input?.file_path ?? block.input?.command ?? block.input?.sql ?? block.input?.pattern ?? block.input?.url ?? block.input?.connection ?? ''

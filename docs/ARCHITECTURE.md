@@ -211,7 +211,8 @@ agentbits/
 - **`AppEvent`** birliği: `agents:changed`, `permissions:changed`, `providers:changed`, `tasks:changed`,
   `runs:changed`, `decisions:changed`, `reports:changed`, `memory:changed`, `settings:changed`,
   `orchestrator:changed`, `units:changed`, `projects:changed`, `messages:changed`, `usage:changed` (main'de 500 ms kısıtlı), `instructions:changed`, `connections:changed`, `approvals:changed`, `audit:changed`, `files:changed` (yalnızca "yeniden çek" sinyali), ayrıca yük taşıyanlar `message:new`, `log:new`,
-  `terminal:data`, `terminal:exit`, `toast`.
+  `terminal:data`, `terminal:exit`, `toast`, `reply:stream` (canlı sohbet yanıtı: `replyId`, durum, görünen metin; kaydedilmez;
+  renderer'da global store'a değil `lib/replyStreams.ts`'e gider — ADR-031).
 
 ### 4.2 Mevcut metot grupları
 

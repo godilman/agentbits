@@ -45,7 +45,7 @@ own computer.
   Software Team, Research & Analysis, Product Development, Marketing & Content, E-commerce Company), or start from scratch.
 - **Projects with a lead.** Each project is a folder plus the teams that work on it. You chat with the lead, and it
   turns the request into tasks on the board. Only the lead talks to the team: it hands out work, sees what members
-  finished and leaves them notes.
+  finished and leaves them notes. Replies appear as they are written.
 - **Parallel developers.** Duplicate an agent into twins; the lead splits work between them, tasks can wait for each
   other, and everyone sees who is working on which files. Optionally each task works in its own git working copy and is
   merged when approved, so agents never overwrite each other.

@@ -22,9 +22,9 @@ yalnızca izin verilen **Bağlantılar** (SSH / PostgreSQL / MySQL / SQL Server)
 hissinde, koyu temalı, ajanların ne yaptığını canlı gösteren güvenli bir "yapay zeka şirketi ofisi".
 Ürün vizyonu → [docs/PROJECT.md](docs/PROJECT.md).
 
-Durum: **v0.6.0** (2026-10-19) — organizasyon, projeler ve tüm proje bölümleri çalışıyor; özellik durumu →
+Durum: **v0.7.0** (2026-10-19) — organizasyon, projeler ve tüm proje bölümleri çalışıyor; özellik durumu →
 [docs/FEATURES.md](docs/FEATURES.md). Depo herkese açık; yayımlanan sürümler v0.1.0 (2026-10-14), v0.2.0 (2026-10-15),
-v0.3.0 (2026-10-15), v0.4.0 (2026-10-15), v0.5.0 (2026-10-16), v0.5.1 (2026-10-16), v0.5.2 (2026-10-16), v0.5.3 (2026-10-16), v0.5.4 (2026-10-16), v0.5.5 (2026-10-16), v0.5.6 (2026-10-16), v0.5.7 (2026-10-16), v0.6.0 (2026-10-19). v0.1.1 taslağı yayımlanmadı; sahibin isteğiyle 2026-10-15'te silindi.
+v0.3.0 (2026-10-15), v0.4.0 (2026-10-15), v0.5.0 (2026-10-16), v0.5.1 (2026-10-16), v0.5.2 (2026-10-16), v0.5.3 (2026-10-16), v0.5.4 (2026-10-16), v0.5.5 (2026-10-16), v0.5.6 (2026-10-16), v0.5.7 (2026-10-16), v0.6.0 (2026-10-19), v0.7.0 (2026-10-19). v0.1.1 taslağı yayımlanmadı; sahibin isteğiyle 2026-10-15'te silindi.
 
 ## Güncel durum ve devir notu (son güncelleme: 2026-10-19)
 
@@ -106,6 +106,7 @@ Demo sağlayıcı iş türüne göre simülasyon (`shared/demoKind.ts`), paket s
   hafıza talimat değildir / izin genişletmez. Aynı gün dış incelemenin 5 bulgusu düzeltildi (büyük rehberin kırpılıp geri
   yazılması, `about` maskesi, Codex sohbet köprüsü, incelemede adı geçen dosyalar, 256 KB sonrası sayfalama). Kural: kırpılmış
   okuma (`readHead`) asla diske geri yazılmaz; not + rehber + öneri silme tek kuyruk adımında, hata = not ve rehber geri alınır. ⏳ Gerçek Claude Code / Codex ile denenmedi.
+- **2026-10-19 v0.7.0**: **canlı sohbet yanıtı** (`reply:stream`, ADR-031; sahibin 5 notuyla: replyId, açık durumlar, parça sınırında gizli blok filtresi = `stripBlocks` kuralı, Claude CLI bayrağı önceden, yanıt başına 60 ms) + Windows kurulumunun lisans sayfasında Türkçe karakter (BOM'lu kopya). ⏳ UI ve Claude Code token akışı gerçek uygulamada denenmedi.
 - `docs/SECURITY.md`'deki 🟡 / ⏳ maddeler (ör. büyük veride UI sayfalama) ve `docs/FEATURES.md` "Bilinen sorunlar".
 
 **Önceki oturumlardan öğrenilenler**
@@ -228,8 +229,8 @@ Kurulum sorunları (Electron binary eksik, siyah pencere, execution policy, Clau
    taşır; mesaj veya log **silen** kod `messages:changed` yayınlamalıdır (feed, loglar ve kanal önbelleği
    yeniden yüklenir). `usage:changed` (500 ms kısıtlı), `instructions:changed`, `connections:changed`, `approvals:changed`, `audit:changed`
    ve `files:changed` da vardır. Ajan terminalleri
-   `log:new`'i store'dan değil `lib/transcripts.ts` üzerinden ajan başına dinler — yüksek frekanslı akışları
-   global store'a koymayın.
+   `log:new`'i store'dan değil `lib/transcripts.ts` üzerinden ajan başına dinler; canlı sohbet yanıtı (`reply:stream`) da
+   `lib/replyStreams.ts`'tedir — yüksek frekanslı akışları global store'a koymayın.
 3. **Her yeni proje kayıtı `projectId` taşımalıdır.** Görev, çalışma (run), mesaj, karar, rapor, ajan
    transkripti (`agent_logs`), token kullanımı, talimat, dosya ve projeye ait hafıza `project_id` ile yazılır (`tasksRepo.create({ …, projectId })`,
    `messagesRepo.create(channel, type, sender, content, projectId)`, `runsRepo.create(…, projectId)`…).

@@ -10,6 +10,8 @@ import { call } from '@/lib/api'
 import { clock, cn, STATUS_META } from '@/lib/format'
 import { Markdown } from '@/lib/markdown'
 import { isTypingNote, useProjectScope } from '@/lib/org'
+import { useLiveReplies } from '@/lib/replyStreams'
+import type { LiveReply } from '@shared/replyStream'
 import { apiError } from '@/lib/api'
 import { agentById, channelKey, useAppStore } from '@/store/useAppStore'
 import { useAttachments, useFileDrop, useFileRecords } from '@/features/files/hooks'
@@ -59,11 +61,14 @@ export function ChatView() {
   }, [project, units])
   const target = channel === 'general' ? lead ?? undefined : channel.startsWith('agent:') ? agentById(agents, channel.slice(6)) : undefined
   const task = channel.startsWith('task:') ? tasks.find((t) => t.id === channel.slice(5)) : undefined
-  const typing = isTypingNote(target?.statusNote)
+  const live = useLiveReplies(pid ?? '', channel, messages)
+  // A reply being written shows itself; the dots are only for the wait before its first words.
+  const typing = isTypingNote(target?.statusNote) && !live.some((r) => r.agentId === target?.id && r.text)
+  const liveLength = live.reduce((n, r) => n + r.text.length, 0)
 
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight })
-  }, [messages.length, typing])
+  }, [messages.length, typing, liveLength])
 
   const taskThreads = useMemo(() => {
     const ids = new Set(feed.filter((m) => m.projectId === pid && m.channel.startsWith('task:')).map((m) => m.channel.slice(5)))
@@ -171,6 +176,9 @@ export function ChatView() {
             )}
             {messages.map((m, i) => (
               <MessageRow key={m.id} m={m} prev={messages[i - 1]} files={fileRecords} />
+            ))}
+            {live.map((r) => (
+              <LiveRow key={r.replyId} r={r} />
             ))}
             {typing && target && (
               <div className="flex items-center gap-2.5 pl-[42px] text-[12px] text-zinc-400">
@@ -303,6 +311,35 @@ function MessageRow({ m, prev, files }: { m: Message; prev?: Message; files: Map
         </div>
         {chips}
         {!isUser && <MessageMemory m={m} />}
+      </div>
+    </div>
+  )
+}
+
+/** A reply while it is written (not stored yet): replaced by the stored message when it arrives. */
+function LiveRow({ r }: { r: LiveReply }) {
+  const { t } = useTranslation()
+  const agents = useAppStore((s) => s.agents)
+  const a = agentById(agents, r.agentId)
+  if (!r.text && !r.hiding) return null
+  return (
+    <div data-testid="live-reply" className="group flex gap-3 animate-fade-in">
+      <div className="w-[30px] shrink-0">
+        <PixelAvatar agent={a} size={30} />
+      </div>
+      <div className="min-w-0 flex-1">
+        <div className="mb-0.5 flex items-baseline gap-2">
+          <span className="text-[13px] font-semibold" style={{ color: a?.color }}>
+            {a?.name ?? t('chat:agent')}
+          </span>
+          {a && <span className="text-[11px] text-zinc-400">{a.role}</span>}
+        </div>
+        {r.text && <Markdown text={r.text} />}
+        {r.hiding ? (
+          <div className="mt-1 text-[11.5px] italic text-zinc-400">{t(`chat:live.${r.hiding}`)}</div>
+        ) : (
+          !r.messageId && <span aria-hidden className="ml-0.5 inline-block h-3.5 w-1.5 animate-pulse bg-zinc-400 align-middle" />
+        )}
       </div>
     </div>
   )

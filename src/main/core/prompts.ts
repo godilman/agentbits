@@ -1,6 +1,7 @@
 import type { Agent, AgentPermissions, Message, Task } from '@shared/types'
 import { describePermissions } from './permissions'
 import { acceptanceList } from '@shared/review'
+import { visibleReply } from '@shared/replyStream'
 
 const PRIORITY = ['low', 'normal', 'high', 'urgent']
 
@@ -212,9 +213,9 @@ export function parseDecisions(text: string): PlannedDecision[] {
   return out
 }
 
-/** Removes machine blocks so chat bubbles stay readable. */
+/** Removes machine blocks so chat bubbles stay readable (the same rule as the live reply, `shared/replyStream.ts`). */
 export function stripBlocks(text: string): string {
-  return text.replace(/```(tasks|decision|message|learn)\s*\n[\s\S]*?```/g, '').trim()
+  return visibleReply(text, true).text
 }
 
 /** Chat only (graph memory): how an agent notes what it learned about the user from their message. */

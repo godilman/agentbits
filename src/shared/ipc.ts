@@ -1,3 +1,4 @@
+import type { ReplyStreamEvent } from './replyStream'
 import type { FeedbackKind } from './support'
 import type { AppImportCandidate, AppServer, AppServerInput, AppTestResult, ToolPolicy } from './apps'
 import type { AgentSkill, Skill, SkillDetail, SkillPreview, SkillSourceInput, SkillTargetType } from './skills'
@@ -343,6 +344,8 @@ export type AppEvent =
   /** Messages/logs were bulk-deleted: refetch feed, channels and logs. */
   | { type: 'messages:changed' }
   | { type: 'message:new'; message: Message }
+  /** A chat reply while it is written (not stored; the stored message follows as message:new, meta.replyId). */
+  | ({ type: 'reply:stream' } & ReplyStreamEvent)
   | { type: 'log:new'; log: AgentLog }
   | { type: 'terminal:data'; id: string; data: string }
   | { type: 'terminal:exit'; id: string; code: number | null }

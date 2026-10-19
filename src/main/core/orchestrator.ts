@@ -1,8 +1,9 @@
+import { randomUUID } from 'crypto'
 import { assertRunFolder } from './folders'
 import { app } from 'electron'
 import { intlLocale } from '@shared/i18n'
 import { allTranslations, currentLanguage, t } from '../i18n'
-import type { Agent, AgentInstruction, FileRecord, InstructionInput, LogLevel, Project, Provider, Task, UsageDelta, UsageMode } from '@shared/types'
+import type { Agent, AgentInstruction, FileRecord, InstructionInput, LogLevel, Message, Project, Provider, Task, UsageDelta, UsageMode } from '@shared/types'
 import { resolveAfter, type LeadMessage } from '@shared/leadComms'
 import { acceptanceList, judgeCriteria, parseRaceVerdict, pickRival } from '@shared/review'
 import { isTwin } from '@shared/org'
@@ -25,6 +26,7 @@ import {
   tasksRepo
 } from '../db/repos'
 import { emit } from '../events'
+import { startReplyStream } from './replyStream'
 import { instructionsRepo, usageRepo } from '../db/usage'
 import { prepareMcp } from '../connections/bridge'
 import { materializeSkills, skillNamesFor, skillsForAgent, skillsPrompt } from '../skills/service'
@@ -724,12 +726,13 @@ class Orchestrator {
     projectId: string | null,
     files: FileRecord[] = [],
     extra: Record<string, unknown> = {}
-  ): void {
+  ): Message {
     const all = { ...extra, ...(files.length ? { files: files.map((f) => ({ id: f.id, name: f.name, kind: f.kind, size: f.size })) } : {}) }
     const meta = Object.keys(all).length ? all : undefined
     const message = messagesRepo.create(channel, senderType, senderId, content, projectId, meta)
     for (const f of files) filesRepo.link(f.id, 'message', message.id, f.origin === 'user' ? 'attached' : 'generated')
     emit({ type: 'message:new', message })
+    return message
   }
 
   /** Text of a direct instruction plus the files attached to it (for the agent's next turn). */
@@ -1997,6 +2000,8 @@ class Orchestrator {
     if (wasIdle) this.setStatus(agent.id, 'working', t('orchestrator:status.typing'))
     const { provider, adapter, apiKey, model } = this.providerFor(agent)
     const aux = this.auxStart(projectId)
+    // The reply appears while it is written; each reply has its own id (two replies in one channel never mix).
+    const live = startReplyStream({ replyId: randomUUID(), projectId, channel, agentId: agent.id }, aux.signal)
     try {
       const project = getProject(projectId)
       const members = projectMembers(projectId)
@@ -2096,7 +2101,7 @@ class Orchestrator {
         system,
         prompt: chatPrompt,
         signal: aux.signal,
-        onText: () => undefined,
+        onText: (chunk) => live.push(chunk),
         onLog: () => undefined,
         onUsage: (d) => this.recordUsage(agent, provider, model, 'chat', chatCtx, d),
         onProgress: () => undefined,
@@ -2109,7 +2114,7 @@ class Orchestrator {
           chatSkillCopies?.dispose()
         })
       // Stopped / reset / project deleted meanwhile: the answer must not create tasks or decisions any more.
-      if (aux.signal.aborted) return
+      if (aux.signal.aborted) return live.end('cancelled')
       const answer = stripBlocks(result.text)
       if (answer) this.log({ ...chatCtx, level: 'output', message: answer.slice(0, 4000) })
       const planned = isLeadHere ? parseTasks(result.text) : []
@@ -2122,7 +2127,8 @@ class Orchestrator {
         ...(learned?.saved.length ? { learned: learned.saved.map((m) => ({ id: m.id, content: m.content })) } : {})
       }
       if (learned && (learned.suggested.length || learned.saved.length)) emit({ type: 'memory:changed' })
-      this.post(channel, 'agent', agent.id, stripBlocks(result.text) || t('orchestrator:chat.planFallback'), projectId, [], meta)
+      const stored = this.post(channel, 'agent', agent.id, stripBlocks(result.text) || t('orchestrator:chat.planFallback'), projectId, [], { ...meta, replyId: live.replyId })
+      live.end('complete', stored.id)
       const memberByName = (name: string): string | null => {
         const n = name.trim().toLocaleLowerCase('tr')
         return members.find((m) => m.name.toLocaleLowerCase('tr') === n)?.id ?? null
@@ -2194,10 +2200,12 @@ class Orchestrator {
         emit({ type: 'decisions:changed' })
       }
     } catch (e) {
+      live.end(aux.signal.aborted ? 'cancelled' : 'error')
       const { auth, text } = explainError((e as Error).message || String(e), provider)
       if (auth) this.authFailure(text, projectId)
       else this.post(channel, 'system', null, t('orchestrator:chat.replyFailed', { agent: agent.name, text }), projectId)
     } finally {
+      live.end(aux.signal.aborted ? 'cancelled' : 'error')
       aux.end()
       if (wasIdle && agentsRepo.get(agent.id)?.status === 'working' && !this.busy.has(agent.id)) this.setStatus(agent.id, 'idle')
     }

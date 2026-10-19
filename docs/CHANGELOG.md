@@ -4,13 +4,39 @@
 > `## YYYY-MM-DD — kısa başlık`, ardından **Eklendi / Değişti / Düzeltildi / Kaldırıldı / Bilinen** maddeleri
 > ve ilgili dosyalar.
 
-## 2026-10-19 — Kurulum: lisans sayfasında Türkçe karakterler
+## 2026-10-19 — v0.7.0: Canlı sohbet yanıtı
+
+Tetik: sahip, sohbette yanıtın tek seferde geldiğini, parça parça yazılmasını istedi. Sağlayıcılar metni zaten parça parça
+veriyordu; sohbet yanıtında `onText` boşa gidiyordu. ADR-031.
+
+### Eklendi
+- Sohbet yanıtı yazılırken görünür: `reply:stream` olayı (`replyId`, `start` / `update` / `complete` / `error` / `cancelled`,
+  görünen metnin tamamı), yanıt başına en sık 60 ms (`startReplyStream`, bitişte zamanlayıcı temizlenir, sonrası yok sayılır).
+  Kalıcı mesaj `meta.replyId` taşır; renderer (`lib/replyStreams.ts`, global store dışında) balonu mesaj gelene kadar gösterir.
+  "Yazıyor…" noktaları yalnız ilk kelimeye kadar.
+- Gizli blok filtresi `visibleReply` (`shared/replyStream.ts`): parça sınırında yarım fence bekletilir ("```ta" + "sks"),
+  açık gizli blok yerine "görevleri hazırlıyor…" vb. notu; `stripBlocks` aynı fonksiyonu kullanır.
+- Claude Code sohbetinde `--include-partial-messages` (destek `claude --help`'ten önceden okunur, ikili başına önbellek; yoksa
+  eski davranış, yeniden çalıştırma yok).
+
+### Değişti
+- Son mesajda **kapanmayan** gizli blok artık gizlenir (önce ham JSON görünüyordu).
+
+### Test
+- `tests/replyStream.test.ts`: örnek metinler her bölme noktasında (gizli içerik ve yarım fence yok, akış hep son metnin ön eki,
+  kod bloğu korunur, kapanmayan / ardışık bloklar), durum: aynı kanalda iki yanıt, geç güncelleme, ilk parçadan önce hata,
+  iptal + son parça, proje / kanal ayrımı, `ended` sınırı.
+- `tests/e2e/replyStream.e2e.ts` 9 adım: akış ve kalıcı mesaj eşleşmesi, 60 ms sınırı (400 parça → ≤3 güncelleme), parçalara
+  bölünmüş gizli bloklar, eşzamanlı iki yanıt, ilk parçadan önce hata, iptal sonrası geç parçalar, iki proje, sahte `claude`
+  ile bayraklı / bayraksız (tek çalıştırma). Sınır ve bitiş korumaları kaldırılınca testlerin düştüğü doğrulandı.
+
+## 2026-10-19 — v0.7.0: Kurulum: lisans sayfasında Türkçe karakterler
 
 ### Düzeltildi
 - Windows kurulumunun lisans sayfasında "Gökhan" → "GÃ¶khan" görünüyordu: NSIS metin dosyasını BOM yoksa ANSI okur;
   electron-builder BOM'u yalnız kendi bulduğu `license_*.txt` dosyalarına ekliyor (`nsisLicense.js`), açıkça verilen
   `nsis.license`'a eklemiyor. `electron-builder.config.js` derlemede `LICENSE`'ın UTF-8 BOM'lu kopyasını geçici klasöre
-  yazar ve NSIS'e onu verir; `LICENSE` değişmedi.
+  yazar ve NSIS'e onu verir; `LICENSE` değişmedi. Sahip deneme paketini (Actions, release'siz) kurup doğruladı.
 
 ## 2026-10-19 — v0.6.0: Proje hafızası klasörü (`.agentbits/memory/`)
 

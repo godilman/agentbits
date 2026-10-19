@@ -34,5 +34,11 @@
   "uploading": "Files are still uploading",
   "youBadge": "YOU",
   "you": "You",
-  "agent": "Agent"
+  "agent": "Agent",
+  "live": {
+    "tasks": "preparing tasks…",
+    "decision": "writing a decision…",
+    "message": "writing a note to the team…",
+    "learn": "noting what it learned…"
+  }
 }
