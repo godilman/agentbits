@@ -4,6 +4,14 @@
 > `## YYYY-MM-DD — kısa başlık`, ardından **Eklendi / Değişti / Düzeltildi / Kaldırıldı / Bilinen** maddeleri
 > ve ilgili dosyalar.
 
+## 2026-10-19 — Kurulum: lisans sayfasında Türkçe karakterler
+
+### Düzeltildi
+- Windows kurulumunun lisans sayfasında "Gökhan" → "GÃ¶khan" görünüyordu: NSIS metin dosyasını BOM yoksa ANSI okur;
+  electron-builder BOM'u yalnız kendi bulduğu `license_*.txt` dosyalarına ekliyor (`nsisLicense.js`), açıkça verilen
+  `nsis.license`'a eklemiyor. `electron-builder.config.js` derlemede `LICENSE`'ın UTF-8 BOM'lu kopyasını geçici klasöre
+  yazar ve NSIS'e onu verir; `LICENSE` değişmedi.
+
 ## 2026-10-19 — v0.6.0: Proje hafızası klasörü (`.agentbits/memory/`)
 
 Tetik: sahip bir projeyi (Claude Code'da uzun süre geliştirdiği) Agentbits ekibine devretmek istedi; Claude Code'daki

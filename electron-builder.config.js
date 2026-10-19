@@ -18,6 +18,13 @@ for (const k of ['CSC_LINK', 'CSC_KEY_PASSWORD', 'CSC_NAME', 'WIN_CERT_SUBJECT',
   if (process.env[k] !== undefined && process.env[k].trim() === '') delete process.env[k]
 }
 
+// The NSIS license page reads a text file as ANSI unless it starts with a byte order mark ("Gökhan" showed as
+// "GÃ¶khan"). LICENSE stays as it is (GitHub shows it); the installer gets a copy with a UTF-8 BOM.
+const fs = require('fs')
+const path = require('path')
+const nsisLicense = path.join(require('os').tmpdir(), 'agentbits-license-nsis.txt')
+fs.writeFileSync(nsisLicense, '\ufeff' + fs.readFileSync(path.join(__dirname, 'LICENSE'), 'utf8').replace(/^\ufeff/, ''))
+
 const certSubject = process.env.WIN_CERT_SUBJECT || null
 const macCert = !!(process.env.CSC_LINK || process.env.CSC_NAME)
 const macNotarize = !!(process.env.APPLE_API_KEY || process.env.APPLE_ID || process.env.APPLE_KEYCHAIN_PROFILE)
@@ -80,7 +87,7 @@ module.exports = {
     shortcutName: 'Agentbits',
     runAfterFinish: true,
     deleteAppDataOnUninstall: false,
-    license: 'LICENSE',
+    license: nsisLicense,
     differentialPackage: false // no .blockmap
   },
   mac: {
