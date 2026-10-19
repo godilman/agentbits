@@ -197,11 +197,24 @@ async function main(): Promise<void> {
     for (const e of events.slice(before).filter((x) => x.text)) assert.equal(e.projectId === p2.id, e.text === 'p2 cevabı')
   })
 
-  // Claude Code: a fake `claude` that answers --version / --help and prints stream-json.
+  // Claude Code: a fake `claude` that answers --version / --help and prints stream-json. Windows can't run a script by
+  // its #! line: there it is started through a .cmd shim, the way an npm-installed claude is.
+  const win = process.platform === 'win32'
   const dir = mkdtempSync(join(tmpdir(), 'ab-claude-'))
-  const fake = join(dir, 'claude')
+  const script = join(dir, 'claude.js')
+  const binary = (name: string): string => {
+    if (!win) {
+      const p = join(dir, name)
+      writeFileSync(p, readFileSync(script))
+      chmodSync(p, 0o755)
+      return p
+    }
+    const p = join(dir, `${name}.cmd`)
+    writeFileSync(p, '@node "%~dp0claude.js" %*\r\n')
+    return p
+  }
   writeFileSync(
-    fake,
+    script,
     `#!/usr/bin/env node
 const fs = require('fs'); const a = process.argv.slice(2); const d = ${JSON.stringify(dir)}
 if (a[0] === '--version') { console.log('2.1.300 (Claude Code)'); process.exit(0) }
@@ -222,7 +235,7 @@ process.stdin.resume(); process.stdin.on('end', async () => {
 })
 `
   )
-  chmodSync(fake, 0o755)
+  const fake = binary('claude')
   const runs = (): string[][] => {
     try {
       return readFileSync(join(dir, 'runs'), 'utf8').trim().split('\n').filter(Boolean).map((l) => JSON.parse(l))
@@ -247,9 +260,7 @@ process.stdin.resume(); process.stdin.on('end', async () => {
   await step('Claude Code with it (help says so, read before the run): token stream, hidden block never shown', async () => {
     writeFileSync(join(dir, 'partial'), '')
     // The answer of --help is cached per binary: a copy of the script is a new binary.
-    const fake2 = join(dir, 'claude2')
-    writeFileSync(fake2, readFileSync(fake))
-    chmodSync(fake2, 0o755)
+    const fake2 = binary('claude2')
     providersRepo.save({ cliPath: fake2 } as never, cli.id)
     const before = events.length
     await call('messages:send', cliChannel, 'tekrar', p2.id)
