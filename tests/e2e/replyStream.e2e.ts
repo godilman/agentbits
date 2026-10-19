@@ -251,7 +251,8 @@ process.stdin.resume(); process.stdin.on('end', async () => {
   if (a.includes('--include-partial-messages')) {
     out({ type: 'stream_event', event: { type: 'message_start' } })
     out({ type: 'stream_event', event: { type: 'content_block_start', index: 0, content_block: { type: 'text' } } })
-    for (const c of text.match(/[\\s\\S]{1,4}/g)) { out({ type: 'stream_event', event: { type: 'content_block_delta', index: 0, delta: { type: 'text_delta', text: c } } }); await new Promise((r) => setTimeout(r, 15)) }
+    // Chunks 100 ms apart: longer than one 60 ms window, so a slow CI machine still sees several updates.
+    for (const c of text.match(/[\\s\\S]{1,8}/g)) { out({ type: 'stream_event', event: { type: 'content_block_delta', index: 0, delta: { type: 'text_delta', text: c } } }); await new Promise((r) => setTimeout(r, 100)) }
     out({ type: 'stream_event', event: { type: 'content_block_stop', index: 0 } })
   }
   out({ type: 'assistant', message: { id: 'msg1', content: [{ type: 'text', text }], usage: { input_tokens: 1, output_tokens: 1 } } })
