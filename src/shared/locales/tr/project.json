@@ -55,6 +55,10 @@
     "worktree": {
       "title": "Her görev kendi git çalışma kopyasında",
       "desc": "Paralel çalışan yazılımcılar için: her görev ayrı bir kopyada kendi dalında (agentbits/ta-…) çalışır, ajanlar birbirinin işini ezmez. Klasör en az bir commit'i olan bir git deposu olmalı. Biten görev klasöre birleştirilir; çakışma çözülmesi için ajana geri döner. Yalnızca Claude Code ve Codex ajanları."
+    },
+    "projectMemory": {
+      "title": "Proje hafızası tut",
+      "desc": "Ajanlar proje klasöründeki .agentbits/memory içindeki notları okur ve oraya not ekler. Kendi .md dosyalarını da oraya kopyalayabilirsin; MEMORY.md onlara kısa bir rehberdir. Klasörün git'e girip girmeyeceğine sen karar verirsin."
     }
   },
   "launcher": {

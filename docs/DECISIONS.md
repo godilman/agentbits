@@ -580,3 +580,26 @@ Durum değerleri: *Kabul edildi*, *Önerildi*, *Yerini aldı*, *Geri alındı*.
   yenisi ayrı denetim satırı yazar. (c) MySQL'de `verifyIdentity` açıldı; tünelde mysql2 `host` gerçek ad kalır, soket
   `stream` ile tünele gider. Bedel: sertifika adı uymayan ama bugüne kadar SSL ile bağlanan MySQL bağlantıları artık
   "Sertifikaya güven" ister (sahibin onayı). (d) Uçtan uca testler depoda: `npm run test:e2e`, CI'da.
+
+## ADR-030 — Proje hafızası klasörü: proje klasöründe düz md, yalnız ekleme (2026-10-19)
+
+- **Bağlam:** Sahip bir projeyi Claude Code'dan Agentbits ekibine devretmek istiyor. Claude Code'daki bilgi (proje dışında,
+  WSL'deki md dosyaları) Agentbits'e geçmiyor; Agentbits'in SQLite hafızası prompt başına ~2800 karakter ve kelime eşleşmesiyle
+  seçiliyor — uzun bir projenin kuralları / tuzakları için yetersiz ve taşınamaz.
+- **Karar:** Proje klasöründe `.agentbits/memory/` (sahibin seçimi: proje içi). MEMORY.md kısa rehber + konu dosyaları;
+  rehber ve anılmayan dosyaların listesi her prompt'a, ayrıntı araçla (`read` / `search`). Ajanlar **yalnız ekler**; rehbere
+  yalnız otomatik satır. Proje başına aç / kapa (varsayılan açık); yazma ayarı ask (varsayılan) / auto / off — sohbetten
+  öğrenmeyle aynı üçlü. Öneri mevcut `memory_suggestions` akışını kullanır (`target_*` sütunları), böylece "Bana ihtiyaç var",
+  Hafıza sekmesi ve sohbet aynı satırı gösterir.
+- **Neden ekleme:** tam değiştirme kullanıcının elle yazdığı arşivi silebilirdi; ekleme hiçbir zaman var olanı ezmez, eski
+  öneri sonradan değişen dosyayı bozamaz. Gerekirse ileride yedekli ve sürüm denetimli değiştirme.
+- **Neden proje klasörü:** kullanıcı dosyaları doğrudan kopyalar, isterse git'le ekiple paylaşır; worktree'de çalışan
+  ajanlar da aynı hafızayı görür (servis hep ana klasörü kullanır). Bedel: yedek / geri yüklemeye girmez; CLI ajanları dosya
+  izniyle klasöre araç dışından da yazabilir (servis her yazmadan önce yeniden okur, kayıp yalnız dış yazıcıyla yarışta).
+- **İnceleme:** lider incelemesi araçsızdır; araç vermek bağlantı / dosya araçlarını da açardı. Bunun yerine görevin adını
+  verdiği hafıza dosyaları (lider planlarken anar) incelemeye metin olarak girer (12 000 karakter).
+- **Güvenlik:** Hafıza proje bilgisidir, kullanıcı talimatı değildir: dosyaya kopyalanan metin kuralları değiştiremez, izin
+  genişletemez (prompt'ta açık, içerik zarf içinde). Ad kalıbı, symlink reddi, boyut sınırları, sır maskeleme kodda.
+- **Elenen:** Agentbits veri klasörü (kullanıcının dosya kopyalaması zor; CLI ajanı klasörü doğrudan göremez), hafızayı DB'ye
+  aktarmak (düz md'nin taşınabilirliği kaybolur), tüm dosyaları prompt'a koymak (bütçe), gömülü vektör araması (ADR-027 ayrı,
+  isteğe bağlı; burada kelime araması yeterli başlangıç).

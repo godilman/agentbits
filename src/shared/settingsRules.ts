@@ -65,7 +65,8 @@ export const DEFAULT_SETTINGS: AppSettings = {
   raceMode: false,
   memoryEmbedProviderId: '',
   memoryEmbedModel: '',
-  memoryLearn: 'ask'
+  memoryLearn: 'ask',
+  projectMemoryWrite: 'ask'
 }
 
 /** Upper bounds of the number settings (0 = no limit / keep forever). */
@@ -119,6 +120,7 @@ export function validateSettingsPatch(patch: unknown): Partial<AppSettings> {
         out[k] = v
         break
       case 'memoryLearn':
+      case 'projectMemoryWrite':
         if (v !== 'ask' && v !== 'auto' && v !== 'off') throw new SettingsError('invalid', k)
         out[k] = v
         break

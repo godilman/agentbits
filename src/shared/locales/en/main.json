@@ -446,5 +446,27 @@
     "codex": "{{provider}} can't be used here: Codex always has a shell, and this tool gives the model no tools. Choose Claude Code, Anthropic API or OpenAI API.",
     "cancelled": "Cancelled.",
     "emptyAnswer": "The provider returned an empty answer. Try again."
+  },
+  "projectMemory": {
+    "log": {
+      "read": "Read project memory: {{file}}",
+      "search": "Searched project memory: “{{query}}” ({{count}} lines)",
+      "written": "Added a note to project memory: {{file}}",
+      "suggested": "Suggested a project memory note for {{file}} (waits for your yes)"
+    },
+    "errors": {
+      "link": "The project memory folder or file is a link; Agentbits only uses a real .agentbits/memory folder inside the project.",
+      "projectOff": "Project memory is turned off for this project.",
+      "writeOff": "Writing to project memory is turned off (Settings → Memory).",
+      "badName": "Use a lowercase file name ending in .md, without folders (e.g. deploy.md). MEMORY.md is kept by Agentbits.",
+      "badText": "The note must not be empty and at most {{max}} characters.",
+      "aboutRequired": "A new memory file needs “about”: one line saying what it is about and when to read it.",
+      "tooMany": "The project memory already has {{max}} files.",
+      "tooLarge": "The file would grow beyond {{kb}} KB; start a new file for this topic.",
+      "tooLargeToUse": "{{file}} is {{kb}} KB, larger than {{max}} KB: Agentbits doesn't read or change it partly. Split it into smaller files.",
+      "indexWrite": "Saving the note failed ({{message}}); it was taken back, nothing changed. Try again.",
+      "undoFailed": "Saving the note failed ({{message}}) and {{file}} couldn't be taken back: check the .agentbits/memory folder before trying again.",
+      "suggestionGone": "This suggestion was already handled."
+    }
   }
 }

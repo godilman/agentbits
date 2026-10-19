@@ -32,7 +32,7 @@ const MIGRATIONS: { version: number; sql: string }[] = [ { version: 1, sql: `...
 
 - `migrate(db)` önce `schema_migrations` tablosunu oluşturur, `MAX(version)`'dan büyük her migration'ı
   **kendi transaction'ında** çalıştırıp sürümünü kaydeder.
-- **Yalnızca ekleyin.** Uygulanmış bir migration'ı (bugün: v1–v19) asla düzenlemeyin, silmeyin, yeniden
+- **Yalnızca ekleyin.** Uygulanmış bir migration'ı (bugün: v1–v20) asla düzenlemeyin, silmeyin, yeniden
   numaralandırmayın — kullanıcı makinelerindeki DB'ler onu zaten çalıştırdı ve değişiklik oraya ulaşmaz.
 - Yeni değişiklik = dizinin sonuna `{ version: N+1, sql: ... }`. SQLite'ta tipik olarak
   `ALTER TABLE x ADD COLUMN y ... NOT NULL DEFAULT ...`; sütun silme/CHECK değiştirme için tabloyu yeniden
@@ -63,6 +63,7 @@ const MIGRATIONS: { version: number; sql: string }[] = [ { version: 1, sql: `...
 | 16 | 2026-10-15 | Kabul kriterleri: `tasks.acceptance TEXT NOT NULL DEFAULT ''` (satır başına bir kriter), `tasks.acceptance_check TEXT` (liderin son kontrolü, JSON `[{text, met, note}]`) |
 | 15 | 2026-10-15 | Anlamsal hafıza: `memory_vectors (memory_id PK → memories ON DELETE CASCADE, model TEXT, vec BLOB)` — normalize Float32 vektör, `model` = `sağlayıcıId\|model` (başka model = yeniden gömülür). Gerçek SQLite ile uçtan uca denendi (silmede vektör de gidiyor) |
 | 14 | 2026-10-15 | Yarış modu: `tasks.race_of TEXT` (rakip kopyanın asıl görevi), `tasks.race_result TEXT` CHECK `won, lost`, `idx_tasks_race (race_of)`. SQL bellekte SQLite ile denendi (CHECK geçersiz değeri reddediyor) |
+| 20 | 2026-10-19 | Proje hafızası klasörü (ADR-030): `projects.project_memory INTEGER NOT NULL DEFAULT 1`; `memory_suggestions.target_file`, `target_op` (`append`), `target_note` (TEXT) — proje hafızası dosyasına not önerisi. Gerçek SQLite ile uçtan uca denendi |
 
 ## 3. Tablolar
 
@@ -302,7 +303,7 @@ koşulundan türetilir (`memoryEngine.graph`).
 ### `memory_suggestions` *(v17)*
 Ajanın kullanıcının sohbet mesajından öğrendiği, onay bekleyen kayıtlar: `id`, `content`, `kind` CHECK `preference, fact`,
 `topics` (JSON), `replaces` (yerini alacağı hatıra), `project_id`, `channel`, `agent_id`, `created_at`. Kabul → organizasyon
-geneli hatıra (`source = 'learned'`), ret → silinir. Organizasyon hafızası temizlenince ve sıfırlamada silinir.
+geneli hatıra (`source = 'learned'`), ret → silinir. *(v20)* `target_file` dolu satır bir proje hafızası notudur: `target_op` (`append`), `target_note` (yeni dosyanın MEMORY.md satırı); kabul → dosyaya eklenir (`acceptProjectNote`, ayar ve dosya yeniden denetlenir). Organizasyon hafızası temizlenince ve sıfırlamada silinir.
 
 ### `memories_fts` (FTS5) ve trigger'lar
 ```sql
@@ -395,6 +396,7 @@ bir birim kendi alt birimine taşınamaz (`wouldCycle`, `src/shared/org.ts`).
 | `status` | TEXT DEFAULT `'active'` | CHECK `active, archived`; otopilot yalnızca `active` projelerde çalışır |
 | `is_default` | INTEGER 0/1 | Varsayılan proje (proje belirtilmeyen kayıtların düştüğü yer); `projectsRepo.defaultId()`, `projectsRepo.setDefault()`. Silinirse bayrak en son açılan diğer projeye geçer; tek kalan proje silinemez. Açılışta otomatik açılmaz (ADR-015) |
 | `sort_order` | REAL DEFAULT 0 | |
+| `project_memory` | INTEGER 0/1 DEFAULT 1 | *(v20)* Proje hafızası klasörü (`<root_path>/.agentbits/memory`) açık; kapalıysa ne araç ne prompt bölümü. Proje silinince klasöre dokunulmaz |
 | `last_opened_at` | TEXT | *(v4)* Projenin son açıldığı zaman; `projectsRepo.touch(ids)` / `projects:touch` (sekme açma, oturum geri yükleme) |
 | `created_at`, `updated_at` | TEXT | |
 

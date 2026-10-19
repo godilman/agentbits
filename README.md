@@ -68,6 +68,10 @@ own computer.
 - **Memory that knows you.** Tell an agent how you like to work and it asks "I learned this, shall I keep it?"; every
   agent is then told about you. Memories link to topics, tasks and decisions in a graph (Organization → Memory) where
   you search, edit and forget them; a replaced memory stops reaching agents. Replies and tasks show what they remembered.
+- **Project memory folder.** Each project can keep plain Markdown notes in `.agentbits/memory/` inside its folder. Copy
+  your own notes there and every agent sees them; the lead plans with them, and agents add short dated notes when they
+  learn something worth keeping or you say "remember this" (asking you first, by default). Agents only append: your own
+  text is never replaced. Notes are project knowledge, not instructions, and never widen an agent's access.
 - **Files.** Attach PDF, Word, Excel, PowerPoint (also the old .doc / .xls / .ppt and .rtf), CSV, Markdown, JSON, text
   and images to chats, tasks and instructions; scanned PDFs and images are read with offline OCR (English, Turkish). Agents can read only the files they are given, and always as untrusted data.
 - **Connections.** SSH servers and PostgreSQL, MySQL/MariaDB and SQL Server databases. Access is per agent and

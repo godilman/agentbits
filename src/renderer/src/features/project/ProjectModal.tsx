@@ -21,9 +21,10 @@ interface Form {
   leadAgentId: string | null
   archived: boolean
   worktree: boolean
+  projectMemory: boolean
 }
 
-const EMPTY: Form = { name: '', description: '', rootPath: '', color: PROJECT_COLORS[0], unitIds: [], leadAgentId: null, archived: false, worktree: false }
+const EMPTY: Form = { name: '', description: '', rootPath: '', color: PROJECT_COLORS[0], unitIds: [], leadAgentId: null, archived: false, worktree: false, projectMemory: true }
 
 /** Create / edit a project: name, folder, color, assigned units (teams), lead, archive & delete. */
 export function ProjectModal() {
@@ -71,7 +72,8 @@ export function ProjectModal() {
         unitIds: p.unitIds,
         leadAgentId: p.leadAgentId,
         archived: p.status === 'archived',
-        worktree: p.isolation === 'worktree'
+        worktree: p.isolation === 'worktree',
+        projectMemory: p.projectMemory
       })
     } else {
       const used = new Set(useAppStore.getState().projects.map((x) => x.color))
@@ -144,6 +146,7 @@ export function ProjectModal() {
       unitIds: form.unitIds,
       leadAgentId: leadValid,
       isolation: form.worktree ? 'worktree' : 'shared',
+      projectMemory: form.projectMemory,
       ...(editing ? { status: form.archived ? 'archived' : 'active' } : {})
     }
     try {
@@ -272,6 +275,13 @@ export function ProjectModal() {
               <div className="mt-0.5 text-[11.5px] text-zinc-400">{t('project:modal.worktree.desc')}</div>
             </div>
             <Toggle checked={form.worktree} onChange={(v) => set('worktree', v)} />
+          </div>
+          <div className="mt-2 flex items-start gap-3 rounded-md border border-line bg-surface-2/60 px-3 py-2.5">
+            <div className="min-w-0 flex-1">
+              <div className="text-[12.5px] text-zinc-200">{t('project:modal.projectMemory.title')}</div>
+              <div className="mt-0.5 text-[11.5px] text-zinc-400">{t('project:modal.projectMemory.desc')}</div>
+            </div>
+            <Toggle checked={form.projectMemory} onChange={(v) => set('projectMemory', v)} />
           </div>
         </div>
 

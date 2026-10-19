@@ -262,8 +262,8 @@ export interface Api {
   'memory:graph': (projectId?: string | null) => MemoryGraph
   /** What agents learned from chat and wait for the user's yes. */
   'memory:suggestions': () => MemorySuggestion[]
-  /** Save a suggestion (optionally with edited text); it replaces the memory it names. */
-  'memory:accept': (id: string, content?: string) => Memory
+  /** Save a suggestion (optionally with edited text); it replaces the memory it names. A project memory note is appended to its file (null). */
+  'memory:accept': (id: string, content?: string) => Memory | null
   'memory:dismiss': (id: string) => void
   /** Semantic memory: on, how many memories have a vector for the current model, last error ('' = none). */
   'memory:vectorStatus': () => { enabled: boolean; indexed: number; total: number; error: string }

@@ -211,7 +211,11 @@
       "keepReplace": "Keep, replace the old one",
       "drop": "Don't keep",
       "heading_one": "Waiting for your yes ({{count}})",
-      "heading_other": "Waiting for your yes ({{count}})"
+      "heading_other": "Waiting for your yes ({{count}})",
+      "noteTitle": "Note for the project memory, shall I add it?",
+      "noteWhere": "{{project}} · {{file}} · appended",
+      "noteNew": "New file — in MEMORY.md: “{{about}}”",
+      "noteKeep": "Add to the file"
     },
     "via": {
       "profile": "about you",
@@ -299,6 +303,16 @@
     "trace": {
       "chat": "What I remembered",
       "task": "What this task knew"
+    },
+    "projectNotes": {
+      "title": "Project memory notes",
+      "desc": "Agents add notes to the project memory folder (.agentbits/memory) when they learn something worth keeping or you ask them to remember it. They only append; your own text is never replaced. Turn the folder on or off per project in the project settings.",
+      "ask": "Ask me first",
+      "auto": "Decide yourself",
+      "off": "Read only",
+      "askHint": "Each note waits for your yes.",
+      "autoHint": "Notes are added right away.",
+      "offHint": "Agents read the folder but don't write to it."
     }
   }
 }

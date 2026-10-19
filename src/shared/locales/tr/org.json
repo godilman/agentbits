@@ -211,7 +211,11 @@
       "keepReplace": "Kaydet, eskisinin yerini alsın",
       "drop": "Kaydetme",
       "heading_one": "Onayını bekleyenler ({{count}})",
-      "heading_other": "Onayını bekleyenler ({{count}})"
+      "heading_other": "Onayını bekleyenler ({{count}})",
+      "noteTitle": "Proje hafızası için not, ekleyeyim mi?",
+      "noteWhere": "{{project}} · {{file}} · sonuna eklenecek",
+      "noteNew": "Yeni dosya — MEMORY.md'de: “{{about}}”",
+      "noteKeep": "Dosyaya ekle"
     },
     "via": {
       "profile": "seninle ilgili",
@@ -299,6 +303,16 @@
     "trace": {
       "chat": "Hatırladıklarım",
       "task": "Bu görev neyi biliyordu?"
+    },
+    "projectNotes": {
+      "title": "Proje hafızası notları",
+      "desc": "Ajanlar saklamaya değer bir şey öğrendiğinde ya da sen \"unutma\" dediğinde proje hafızası klasörüne (.agentbits/memory) not ekler. Yalnız eklerler; senin yazdığın metin hiçbir zaman değiştirilmez. Klasörü proje ayarlarından proje başına açıp kapatırsın.",
+      "ask": "Önce bana sor",
+      "auto": "Kendin karar ver",
+      "off": "Yalnız okuma",
+      "askHint": "Her not onayını bekler.",
+      "autoHint": "Notlar hemen eklenir.",
+      "offHint": "Ajanlar klasörü okur ama yazmaz."
     }
   }
 }

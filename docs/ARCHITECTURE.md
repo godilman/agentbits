@@ -647,6 +647,23 @@ kullanımıyla Markdown rapor (`# Günlük Rapor — <proje> · <tarih>`) üreti
   kullanıcı eklemesi (`memory:add`, `preference` 0.9, diğer 0.6) — Ayarlar → Hafıza'daki kapsam seçiciye göre
   organizasyon geneli ya da aktif proje.
 
+### 7.1 Proje hafızası klasörü (`src/main/projectMemory/service.ts`, ADR-030)
+- Yer: `<project.rootPath>/.agentbits/memory/` — her zaman ana klasör (worktree değil). `projects.project_memory` kapalıysa
+  hiçbir şey olmaz. Tek giriş noktası servis: `projectMemoryPrompt(projectId, {role, tools})`, `projectMemoryTools`,
+  `runProjectMemoryTool`, `appendProjectNote`, `acceptProjectNote`. Saf kısımlar `shared/projectMemory.ts`.
+- Prompt: `memorySection` → MEMORY.md (≤6000 karakter, kesilirse not) + rehberde anılmayan `*.md` dosyalarının adı ve ilk
+  başlığı. Ekleme noktaları: `runTask` (worker), `reply` (lider / çalışan sohbeti), `review` ve `raceReview` (araçsız:
+  `projectMemoryForReview` görevde adı geçen dosyaları 12 000 karaktere kadar metin olarak ekler).
+- Araçlar `agentTools()`'ta (görev + sohbet): read + search her zaman, write `projectMemoryWrite !== 'off'` iken. Claude Code
+  sohbeti proje hafızası açıksa MCP köprüsünü alır (`reply` içindeki koşul); Codex sohbeti de (`codexChatMcp`).
+- Okuma: `readWhole` (bütün dosya; sınırı aşarsa hata — yazma 256 KB, okuma / arama 2 MB) ve `readHead` (yalnız gösterim:
+  başlık, prompt'taki rehber; **asla geri yazılmaz**).
+- Yazma: yalnız ekleme (`withNote`: `## tarih · ajan`), yeni dosya `about` ister ve rehbere `withIndexLine` satırı alır;
+  `ask` → `memory_suggestions` (`target_*`), `memory:accept` → `acceptProjectNote` (yeniden denetim). Yazmalar
+  `serialized(rootPath)` ile klasör başına sırayla; dosya tmp + rename. Bir adımda: önerinin hâlâ var olduğu denetimi →
+  boyut denetimleri → not → rehber satırı → önerinin silinmesi; not sonrası adımlardan biri başarısızsa yazılan her şey (not, rehber) geri alınır.
+  Bağlantı (symlink) olan klasör / dosya reddedilir.
+
 ## 8. Sağlayıcı adaptörleri (`src/main/providers/`)
 
 Ortak arayüz (`types.ts`):

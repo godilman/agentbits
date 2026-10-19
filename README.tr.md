@@ -69,6 +69,10 @@ Hepsi tek pencerede, verilerin de kendi bilgisayarında kalır.
   sonra her ajana seninle ilgili bu bilgiler söylenir. Hatıralar bir grafta konulara, görevlere ve kararlara bağlanır
   (Organizasyon → Hafıza); orada arar, düzeltir, unutturursun. Yerini yenisi alan hatıra ajanlara artık gitmez. Yanıtlar
   ve görevler neyi hatırladıklarını gösterir.
+- **Proje hafızası klasörü.** Her proje, klasöründeki `.agentbits/memory/` içinde düz Markdown notlar tutabilir. Kendi
+  notlarını oraya kopyalarsın, her ajan görür; lider işi onlara göre böler, ajanlar saklamaya değer bir şey öğrendiğinde ya
+  da "unutma" dediğinde kısa, tarihli not ekler (varsayılan olarak önce sana sorar). Ajanlar yalnız ekler; senin yazdığın
+  metin hiç değişmez. Notlar proje bilgisidir, talimat değildir; hiçbir ajanın erişimini genişletmez.
 - **Dosyalar.** Sohbetlere, görevlere ve talimatlara PDF, Word, Excel, PowerPoint (eski .doc / .xls / .ppt ve .rtf de),
   CSV, Markdown, JSON, metin ve görsel ekleyebilirsin; taranmış PDF'ler ve görseller çevrimdışı OCR ile okunur (İngilizce,
   Türkçe). Ajanlar yalnızca kendilerine verilen dosyaları okur ve içeriği her zaman güvenilmeyen veri olarak ele alır.

@@ -7,6 +7,7 @@ import { SKILL_TOOLS, SKILL_TOOL_NAMES, runSkillTool, skillsForAgent } from './s
 import { APP_READ_TOOL_NAMES, appReadToolsFor, appToolsFor, isAppTool, runAppReadTool, runAppTool } from './apps/service'
 import { TEAM_TOOL, runTeamTool } from './core/team'
 import { WEB_TOOL, runWebTool, webToolFor } from './web/tool'
+import { PROJECT_MEMORY_TOOL_NAMES, projectMemoryTools, runProjectMemoryTool } from './projectMemory/service'
 
 /**
  * Every tool an agent may call, decided per agent and run: connection tools only
@@ -25,11 +26,14 @@ export function agentTools(ctx: AgentCtx): ToolSpec[] {
   out.push(...webToolFor(ctx.agentId))
   // Parallel work: who else is working in the project and on which files (task runs only).
   if (ctx.mode !== 'chat' && ctx.projectId && ctx.runId) out.push(TEAM_TOOL)
+  // The project's memory folder (task and chat: the user may say "remember this" in chat).
+  out.push(...projectMemoryTools(ctx.projectId))
   return out
 }
 
 export async function runAgentTool(ctx: AgentCtx, name: string, args: Record<string, unknown>): Promise<ToolOutput> {
   if (name === TEAM_TOOL.name) return runTeamTool(ctx)
+  if (PROJECT_MEMORY_TOOL_NAMES.has(name)) return runProjectMemoryTool(ctx, name, args)
   if (name === WEB_TOOL.name) return runWebTool(ctx, args)
   if (APP_READ_TOOL_NAMES.has(name)) return runAppReadTool(ctx, name, args)
   if (SKILL_TOOL_NAMES.has(name)) return runSkillTool(ctx, name, args)

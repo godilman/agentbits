@@ -850,6 +850,9 @@ const mapSuggestion = (r: Row): MemorySuggestion => ({
   projectId: r.project_id ?? null,
   channel: r.channel,
   agentId: r.agent_id ?? null,
+  targetFile: r.target_file ?? null,
+  targetOp: r.target_op === 'append' ? 'append' : null,
+  targetNote: r.target_note ?? null,
   createdAt: r.created_at
 })
 
@@ -867,11 +870,13 @@ export const suggestionsRepo = {
       .get(id) as Row | undefined
     return r ? mapSuggestion(r) : null
   },
-  add(s: Omit<MemorySuggestion, 'id' | 'createdAt' | 'replacesText'>): MemorySuggestion {
+  add(s: Omit<MemorySuggestion, 'id' | 'createdAt' | 'replacesText' | 'targetFile' | 'targetOp' | 'targetNote'> & Partial<Pick<MemorySuggestion, 'targetFile' | 'targetOp' | 'targetNote'>>): MemorySuggestion {
     const id = randomUUID()
     getDb()
-      .prepare('INSERT INTO memory_suggestions(id, content, kind, topics, replaces, project_id, channel, agent_id, created_at) VALUES (?,?,?,?,?,?,?,?,?)')
-      .run(id, s.content, s.kind, JSON.stringify(s.topics), s.replaces, s.projectId, s.channel, s.agentId, now())
+      .prepare(
+        'INSERT INTO memory_suggestions(id, content, kind, topics, replaces, project_id, channel, agent_id, target_file, target_op, target_note, created_at) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)'
+      )
+      .run(id, s.content, s.kind, JSON.stringify(s.topics), s.replaces, s.projectId, s.channel, s.agentId, s.targetFile ?? null, s.targetOp ?? null, s.targetNote ?? null, now())
     return this.get(id)!
   },
   delete(id: string): void {
@@ -1244,6 +1249,7 @@ const mapProject = (r: Row, links: { project_id: string; unit_id: string }[]): P
   sortOrder: r.sort_order,
   lastOpenedAt: r.last_opened_at ?? null,
   isolation: r.isolation === 'worktree' ? 'worktree' : 'shared',
+  projectMemory: r.project_memory === undefined ? true : bool(r.project_memory),
   createdAt: r.created_at,
   updatedAt: r.updated_at
 })
@@ -1292,7 +1298,8 @@ export const projectsRepo = {
           color: 'color',
           leadAgentId: 'lead_agent_id',
           status: 'status',
-          isolation: 'isolation'
+          isolation: 'isolation',
+          projectMemory: 'project_memory'
         }
         const sets: string[] = []
         const vals: unknown[] = []
@@ -1300,7 +1307,7 @@ export const projectsRepo = {
           const v = (input as any)[k]
           if (v === undefined) continue
           sets.push(`${col} = ?`)
-          vals.push(typeof v === 'string' && k === 'name' ? v.trim() : v)
+          vals.push(typeof v === 'string' && k === 'name' ? v.trim() : typeof v === 'boolean' ? (v ? 1 : 0) : v)
         }
         sets.push('updated_at = ?')
         vals.push(now())
@@ -1308,8 +1315,8 @@ export const projectsRepo = {
       } else {
         const order = (db.prepare('SELECT COALESCE(MAX(sort_order), 0) + 1 AS o FROM projects').get() as Row).o
         db.prepare(
-          `INSERT INTO projects(id, name, description, root_path, color, lead_agent_id, status, is_default, sort_order, isolation)
-           VALUES (?,?,?,?,?,?,?,?,?,?)`
+          `INSERT INTO projects(id, name, description, root_path, color, lead_agent_id, status, is_default, sort_order, isolation, project_memory)
+           VALUES (?,?,?,?,?,?,?,?,?,?,?)`
         ).run(
           pid,
           (input.name ?? t('orchestrator:db.newProject')).trim() || t('orchestrator:db.newProject'),
@@ -1320,7 +1327,8 @@ export const projectsRepo = {
           input.status ?? 'active',
           opts.isDefault ? 1 : 0,
           order,
-          input.isolation === 'worktree' ? 'worktree' : 'shared'
+          input.isolation === 'worktree' ? 'worktree' : 'shared',
+          input.projectMemory === false ? 0 : 1
         )
       }
       if (input.unitIds) {

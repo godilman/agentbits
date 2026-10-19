@@ -338,6 +338,10 @@ export interface MemorySuggestion {
   projectId: string | null
   channel: string
   agentId: string | null
+  /** A note for a project memory file (null = a memory row): the file, what is done to it and, for a new file, its guide line. */
+  targetFile: string | null
+  targetOp: 'append' | null
+  targetNote: string | null
   createdAt: string
 }
 
@@ -425,6 +429,8 @@ export interface AppSettings {
   memoryEmbedModel: string
   /** Learning from chat (graph memory): 'ask' = suggest and wait for the user, 'auto' = save right away, 'off'. */
   memoryLearn: 'ask' | 'auto' | 'off'
+  /** Project memory folder: agents' notes — 'ask' = the user approves each, 'auto' = saved right away, 'off' = read only. */
+  projectMemoryWrite: 'ask' | 'auto' | 'off'
 }
 
 export interface TerminalSession {
@@ -491,6 +497,8 @@ export interface Project {
   lastOpenedAt: string | null
   /** `worktree`: each task works on its own git branch in a separate working copy and is merged when done. */
   isolation: 'shared' | 'worktree'
+  /** Project memory folder (`.agentbits/memory` in the project folder) is read and written by agents. */
+  projectMemory: boolean
   createdAt: string
   updatedAt: string
 }
@@ -515,7 +523,7 @@ export interface FolderInspection {
 }
 
 export type ProjectInput = Partial<
-  Pick<Project, 'name' | 'description' | 'rootPath' | 'color' | 'leadAgentId' | 'status' | 'unitIds' | 'isolation'>
+  Pick<Project, 'name' | 'description' | 'rootPath' | 'color' | 'leadAgentId' | 'status' | 'unitIds' | 'isolation' | 'projectMemory'>
 >
 
 export interface TemplateAgentPreview {

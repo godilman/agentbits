@@ -446,5 +446,27 @@
     "codex": "{{provider}} burada kullanılamaz: Codex'in her zaman bir kabuğu var, bu araç ise modele hiçbir araç vermiyor. Claude Code, Anthropic API ya da OpenAI API seç.",
     "cancelled": "İptal edildi.",
     "emptyAnswer": "Sağlayıcı boş bir cevap döndürdü. Yeniden dene."
+  },
+  "projectMemory": {
+    "log": {
+      "read": "Proje hafızası okundu: {{file}}",
+      "search": "Proje hafızasında arandı: “{{query}}” ({{count}} satır)",
+      "written": "Proje hafızasına not eklendi: {{file}}",
+      "suggested": "{{file}} için proje hafızası notu önerildi (onayını bekliyor)"
+    },
+    "errors": {
+      "link": "Proje hafızası klasörü ya da dosyası bir bağlantı (link); Agentbits yalnız projenin içindeki gerçek .agentbits/memory klasörünü kullanır.",
+      "projectOff": "Bu projede proje hafızası kapalı.",
+      "writeOff": "Proje hafızasına yazma kapalı (Ayarlar → Hafıza).",
+      "badName": "Küçük harfli, klasörsüz ve .md ile biten bir dosya adı kullan (ör. deploy.md). MEMORY.md'yi Agentbits tutar.",
+      "badText": "Not boş olamaz ve en fazla {{max}} karakter olabilir.",
+      "aboutRequired": "Yeni hafıza dosyası için “about” gerekli: neyle ilgili olduğunu ve ne zaman okunacağını söyleyen tek satır.",
+      "tooMany": "Proje hafızasında zaten {{max}} dosya var.",
+      "tooLarge": "Dosya {{kb}} KB'ı aşacak; bu konu için yeni bir dosya aç.",
+      "tooLargeToUse": "{{file}} {{kb}} KB, {{max}} KB sınırından büyük: Agentbits onu yarım okumaz ve değiştirmez. Daha küçük dosyalara böl.",
+      "indexWrite": "Not kaydedilemedi ({{message}}); geri alındı, hiçbir şey değişmedi. Yeniden dene.",
+      "undoFailed": "Not kaydedilemedi ({{message}}) ve {{file}} geri alınamadı: yeniden denemeden önce .agentbits/memory klasörüne bak.",
+      "suggestionGone": "Bu öneri zaten işlendi."
+    }
   }
 }

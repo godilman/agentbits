@@ -17,7 +17,7 @@ import { DataSection } from './DataSection'
 import { LimitsSection } from './LimitsSection'
 import { isLocalUrl } from '@shared/endpoints'
 import { Heading, Row } from './parts'
-import { LearnMode } from '@/features/memory/parts'
+import { LearnMode, ProjectMemoryMode } from '@/features/memory/parts'
 
 const SECTIONS: { id: SettingsSection; labelKey: I18nKey; icon: React.ComponentType<{ size?: number }> }[] = [
   { id: 'agents', labelKey: 'settings:sections.agents', icon: Users },
@@ -498,6 +498,11 @@ function MemorySection() {
         <div className="text-[13px] font-semibold text-zinc-100">{t('org:memory.learn.title')}</div>
         <div className="mb-3 mt-0.5 text-[12px] leading-relaxed text-zinc-400">{t('org:memory.learn.desc')}</div>
         <LearnMode />
+      </div>
+      <div className="card mb-5 p-4">
+        <div className="text-[13px] font-semibold text-zinc-100">{t('org:memory.projectNotes.title')}</div>
+        <div className="mb-3 mt-0.5 text-[12px] leading-relaxed text-zinc-400">{t('org:memory.projectNotes.desc')}</div>
+        <ProjectMemoryMode />
       </div>
     </>
   )

@@ -32,6 +32,7 @@ import { appToolsFor, appsPrompt } from '../apps/service'
 import { connectionsFor, connectionsPrompt, rejectApprovalsForRun, type AgentCtx } from '../connections/service'
 import type { ToolSpec } from '../connections/tools'
 import { agentTools, runAgentTool } from '../agentTools'
+import { projectMemoryForReview, projectMemoryOn, projectMemoryPrompt } from '../projectMemory/service'
 import { filesRepo } from '../files/repo'
 import {
   filesSection,
@@ -924,6 +925,8 @@ class Orchestrator {
       const memory = await memoryEngine.context({ agentId: agent.id, taskId: task.id, projectId: pid, query: `${task.title} ${task.description}` })
       runsRepo.update(runId, { recalled: memory.recalled })
       let system = workerSystem(agent, perms, memory.text, ws) + '\n\n' + this.projectContext(project)
+      const projectMemory = projectMemoryPrompt(pid, { role: 'worker', tools: true })
+      if (projectMemory) system += '\n\n' + projectMemory
       if (wt) {
         system +=
           `\n\n## Your working copy\nYou work in your own git worktree of the project (branch ${wt.branch}), not in the project folder itself; ` +
@@ -1575,7 +1578,8 @@ class Orchestrator {
     const leadCtx = { agentId: lead.id, taskId: orig.id, projectId: pid }
     const prompt = racePrompt(orig, { agent: a, label: label(a), output: runA.output }, { agent: b, label: label(b), output: runB.output })
     const criteria = acceptanceList(orig.acceptance)
-    const system = raceSystem(lead, criteria.length)
+    const raceMemory = projectMemoryForReview(pid, [orig.title, orig.description, orig.acceptance].join('\n'))
+    const system = raceSystem(lead, criteria.length) + (raceMemory ? '\n\n' + raceMemory : '')
     this.log({ ...leadCtx, level: 'prompt', message: t('orchestrator:race.comparing', { a: orig.key, b: chal.key }), meta: { from: 'system', prompt, system } })
     const aux = this.auxStart(pid)
     try {
@@ -1852,7 +1856,8 @@ class Orchestrator {
     })
     const rPrompt = reviewPrompt(task, worker, lastRun.output) + (produced.text ? '\n\n' + produced.text : '')
     const criteria = acceptanceList(task.acceptance)
-    const rSystem = reviewSystem(lead, criteria.length)
+    const reviewMemory = projectMemoryForReview(pid, [task.title, task.description, task.acceptance].join('\n'))
+    const rSystem = reviewSystem(lead, criteria.length) + (reviewMemory ? '\n\n' + reviewMemory : '')
     this.log({
       ...leadCtx,
       level: 'prompt',
@@ -2011,16 +2016,16 @@ class Orchestrator {
         this.projectContext(project)
       // Files of this message are inlined while the budget lasts; the rest is read with tools where available.
       const chatTools = provider.kind !== 'codex-cli' && provider.kind !== 'mock'
-      // Codex gets the Agentbits MCP server in chat only for its apps; that server carries every tool the agent may use
-      // in chat (files, read-only connections), so the prompt says so too.
+      // Codex gets the Agentbits MCP server in chat only for its apps or the project memory folder ("remember this");
+      // that server carries every tool the agent may use in chat (files, read-only connections), so the prompt says so too.
       const chatAppTools = appToolsFor(agent.id).length > 0
-      const codexChatApps = provider.kind === 'codex-cli' && chatAppTools
+      const codexChatMcp = provider.kind === 'codex-cli' && (chatAppTools || projectMemoryOn(projectId))
       const fileCtx: AgentCtx = { agentId: agent.id, projectId, mode: 'chat', signal: aux.signal, log: (level, message) => this.log({ agentId: agent.id, projectId, level, message }) }
       const msgFiles = filesSection({
         agentId: agent.id,
         projectId,
         focusIds: opts.fileIds ?? [],
-        toolsAvailable: chatTools || codexChatApps,
+        toolsAvailable: chatTools || codexChatMcp,
         vision: visionFor(provider.kind),
         nativePdf: provider.kind === 'anthropic',
         heading: opts.fileIds?.length ? 'Files attached to this message' : 'Files shared with you'
@@ -2028,11 +2033,13 @@ class Orchestrator {
       const chatSkillCopies = provider.kind === 'codex-cli' ? materializeSkills(agent.id, `chat-${opts.messageId ?? Date.now()}`) : null
       const chatSkills = skillsPrompt(agent.id, { mode: provider.kind === 'codex-cli' ? 'paths' : 'tool', dirs: chatSkillCopies?.dirs })
       if (chatSkills) system += '\n\n' + chatSkills
-      const chatApps = appsPrompt(agent.id, chatTools || provider.kind === 'claude-cli' || codexChatApps)
+      const chatApps = appsPrompt(agent.id, chatTools || provider.kind === 'claude-cli' || codexChatMcp)
       if (chatApps) system += '\n\n' + chatApps
       // Connections in chat: read-only tools where the provider has tools (API function calling, Claude Code via MCP).
-      const chatConn = connectionsPrompt(agent.id, chatTools || provider.kind === 'claude-cli' || codexChatApps, true)
+      const chatConn = connectionsPrompt(agent.id, chatTools || provider.kind === 'claude-cli' || codexChatMcp, true)
       if (chatConn) system += '\n\n' + chatConn
+      const chatMemory = projectMemoryPrompt(projectId, { role: isLeadHere ? 'lead' : 'worker', tools: chatTools || provider.kind === 'claude-cli' || codexChatMcp })
+      if (chatMemory) system += '\n\n' + chatMemory
       const chatPrompt = leadPrompt(history, this.names(), content) + (msgFiles.text ? '\n\n' + msgFiles.text : '')
       const chatCtx = { agentId: agent.id, projectId }
       let chatMcp: { configPath: string; server: { command: string; args: string[]; env: Record<string, string> }; dispose: () => void } | null = null
@@ -2045,7 +2052,7 @@ class Orchestrator {
         imagePaths?: string[]
       } = {}
       let disposeChatImages: (() => void) | null = null
-      if ((provider.kind === 'claude-cli' && (readableFilesOf(agent.id, projectId).length || skillsForAgent(agent.id).length || chatAppTools || connectionsFor(agent.id).length)) || codexChatApps) {
+      if ((provider.kind === 'claude-cli' && (readableFilesOf(agent.id, projectId).length || skillsForAgent(agent.id).length || chatAppTools || connectionsFor(agent.id).length || projectMemoryOn(projectId))) || codexChatMcp) {
         chatMcp = await prepareMcp(fileCtx, `chat-${opts.messageId ?? Date.now()}`)
         chatTools_.mcpConfigPath = chatMcp.configPath
         chatTools_.mcpServer = chatMcp.server

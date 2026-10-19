@@ -22,11 +22,11 @@ yalnızca izin verilen **Bağlantılar** (SSH / PostgreSQL / MySQL / SQL Server)
 hissinde, koyu temalı, ajanların ne yaptığını canlı gösteren güvenli bir "yapay zeka şirketi ofisi".
 Ürün vizyonu → [docs/PROJECT.md](docs/PROJECT.md).
 
-Durum: **v0.5.7** (2026-10-16) — organizasyon, projeler ve tüm proje bölümleri çalışıyor; özellik durumu →
+Durum: **v0.6.0** (2026-10-19) — organizasyon, projeler ve tüm proje bölümleri çalışıyor; özellik durumu →
 [docs/FEATURES.md](docs/FEATURES.md). Depo herkese açık; yayımlanan sürümler v0.1.0 (2026-10-14), v0.2.0 (2026-10-15),
-v0.3.0 (2026-10-15), v0.4.0 (2026-10-15), v0.5.0 (2026-10-16), v0.5.1 (2026-10-16), v0.5.2 (2026-10-16), v0.5.3 (2026-10-16), v0.5.4 (2026-10-16), v0.5.5 (2026-10-16), v0.5.6 (2026-10-16), v0.5.7 (2026-10-16). v0.1.1 taslağı yayımlanmadı; sahibin isteğiyle 2026-10-15'te silindi.
+v0.3.0 (2026-10-15), v0.4.0 (2026-10-15), v0.5.0 (2026-10-16), v0.5.1 (2026-10-16), v0.5.2 (2026-10-16), v0.5.3 (2026-10-16), v0.5.4 (2026-10-16), v0.5.5 (2026-10-16), v0.5.6 (2026-10-16), v0.5.7 (2026-10-16), v0.6.0 (2026-10-19). v0.1.1 taslağı yayımlanmadı; sahibin isteğiyle 2026-10-15'te silindi.
 
-## Güncel durum ve devir notu (son güncelleme: 2026-10-16)
+## Güncel durum ve devir notu (son güncelleme: 2026-10-19)
 
 > Önceki oturumların bağlamı burada özetlenir; yeni bir oturuma başlayan ajan bunu okuyarak devam edebilmelidir.
 > Ayrıntılar: [docs/CHANGELOG.md](docs/CHANGELOG.md) (en üstteki kayıtlar), [docs/SECURITY.md](docs/SECURITY.md),
@@ -99,6 +99,13 @@ Demo sağlayıcı iş türüne göre simülasyon (`shared/demoKind.ts`), paket s
 - **2026-10-16 v0.5.5**: `db_export` (veri modelden geçmez; xlsx / csv / json, CLI'da `.agentbits-exports/` kopyası), `db_query` 1000 satır / 160 KB.
 - **2026-10-16 v0.5.6**: Prompt oluşturucu (üst çubuk; tek seferlik, araçsız, kaydetmez). Gerçek modelle davranış henüz denenmedi.
 - **2026-10-16 v0.5.7**: `db_export` txt / tsv / md / html; desteklenmeyen biçim hata (önce sessizce xlsx → ajan elle yazıyordu).
+- **2026-10-19 v0.6.0**: **proje hafızası klasörü** `.agentbits/memory/` (ADR-030, v20). Sahibin
+  kararları: klasör proje içinde; proje başına aç / kapa, varsayılan açık; yazma ayardan (ask varsayılan / auto / off);
+  sahibin incelemesiyle: klasör başına sıralı yazma + eşzamanlılık testi, MEMORY.md olmadan da dosyalar listelenir, öneri
+  proje / dosya / işlem / içerik taşır ve onayda yeniden denetlenir, **yalnız ekleme** (replace yok), `project_memory_search`,
+  hafıza talimat değildir / izin genişletmez. Aynı gün dış incelemenin 5 bulgusu düzeltildi (büyük rehberin kırpılıp geri
+  yazılması, `about` maskesi, Codex sohbet köprüsü, incelemede adı geçen dosyalar, 256 KB sonrası sayfalama). Kural: kırpılmış
+  okuma (`readHead`) asla diske geri yazılmaz; not + rehber + öneri silme tek kuyruk adımında, hata = not ve rehber geri alınır. ⏳ Gerçek Claude Code / Codex ile denenmedi.
 - `docs/SECURITY.md`'deki 🟡 / ⏳ maddeler (ör. büyük veride UI sayfalama) ve `docs/FEATURES.md` "Bilinen sorunlar".
 
 **Önceki oturumlardan öğrenilenler**
@@ -174,7 +181,7 @@ Kurulum sorunları (Electron binary eksik, siyah pencere, execution policy, Clau
 | `src/main/ipc.ts` | Tek `api` kanalı için handler tablosu (`Api`'ye göre tip kontrollü) + organizasyon/proje kuralları |
 | `src/main/events.ts` | `emit()` / `toast()` — main → renderer olay yayını (`event` kanalı) |
 | `src/main/secrets.ts` | API anahtarı şifreleme (`safeStorage`) |
-| `src/main/db/` | `index.ts` bağlantı + pragmalar, `schema.ts` sürümlü migration'lar (v1–v13), `repos.ts` sorgu katmanı (başlangıç verisi yok: ilk açılış boş organizasyon + tek boş proje) |
+| `src/main/db/` | `index.ts` bağlantı + pragmalar, `schema.ts` sürümlü migration'lar (v1–v20), `repos.ts` sorgu katmanı (başlangıç verisi yok: ilk açılış boş organizasyon + tek boş proje) |
 | `src/main/core/orchestrator.ts` | Tick, görev çalıştırma, onay, inceleme, sohbet — hepsi **proje kapsamlı** |
 | `src/main/core/org.ts` | `ensureOrgDefaults()`, `projectMembers`, `projectLead`, `memberProjectIds`, `activeProjectIds`, `getProject` |
 | `src/main/web/` | `web_fetch` (`browser` izni): `netGuard.ts` (SSRF: yalnızca genel adresler), `fetchPage.ts` (IP sabitleme, yönlendirme denetimi, sınırlar), `tool.ts` — `tests/web.test.ts`, `tests/webFetch.test.ts` |
@@ -183,6 +190,7 @@ Kurulum sorunları (Electron binary eksik, siyah pencere, execution policy, Clau
 | `src/main/core/folders.ts` | Proje klasörü denetimi: `normalizePath`, `isAppFolder`, `inspectFolder`, `assertUsableFolder`, `folderStatus` |
 | `src/main/core/templates.ts` | Hazır takım/şirket şablonları ve `instantiateTemplate()` |
 | `src/main/core/memory.ts` | Hafıza motoru (FTS5 + önem + tazelik; proje + organizasyon geneli) |
+| `src/shared/projectMemory.ts` / `src/main/projectMemory/service.ts` | Proje hafızası klasörü `.agentbits/memory/` (ADR-030): saf ad / rehber / not / arama / prompt bölümü — dosya erişimi, araçlar (`project_memory_read/search/write`), onay — `tests/projectMemory.test.ts`, `tests/e2e/projectMemory.e2e.ts` |
 | `src/main/core/maintenance.ts` | Veri yönetimi: kullanım, proje/organizasyon temizliği, log saklama (`startMaintenance`), yedek (`VACUUM INTO`), geri yükleme (yeniden başlatır), `factoryReset` |
 | `src/main/core/permissions.ts` / `prompts.ts` | İzin matrisi → araç listesi; lider/çalışan/inceleme prompt'ları, ```` ```tasks ```` / ```` ```decision ```` ayrıştırma |
 | `src/main/providers/` | Sağlayıcı adaptörleri: `anthropic`, `openai`, `claudeCli`, `codexCli`, `mock`, ortak `cli.ts`, `types.ts` |
@@ -233,7 +241,7 @@ Kurulum sorunları (Electron binary eksik, siyah pencere, execution policy, Clau
    örneği). İlkel değer ya da `find` ile mevcut nesne döndürmek güvenlidir.
 5. **React StrictMode** dev'de effect'leri iki kez çalıştırır. `init()` idempotenttir; olaylar `id` ile
    tekilleştirilir. Yeni abonelikte aynı korumayı yapın.
-6. **Migration'lar yalnızca eklenir** (`src/main/db/schema.ts`, bugün v13). Uygulanmış olanı **asla
+6. **Migration'lar yalnızca eklenir** (`src/main/db/schema.ts`, bugün v20). Uygulanmış olanı **asla
    düzenlemeyin**. Eski satırları yeni yapıya bağlamak `ensureOrgDefaults()` gibi idempotent kodla yapılır.
    → [docs/DATABASE.md](docs/DATABASE.md)
 7. **DB ↔ tip eşlemesi** `repos.ts`'deki `mapX` fonksiyonlarındadır: `snake_case` ↔ `camelCase`,
@@ -266,6 +274,10 @@ Kurulum sorunları (Electron binary eksik, siyah pencere, execution policy, Clau
    sunucuyu doğrudan vermeyin (Claude Code `--strict-mcp-config`, Codex yalnızca `agentbits` köprüsü). Env/başlık
    değerleri ve OAuth token'ları şifreli; renderer yalnızca anahtar adlarını görür. Skill içeriği yalnızca `skill_read` /
    çalışma kopyalarıyla verilir; kaynaktaki hiçbir şey kurulumda çalıştırılmaz.
+8e. **Proje hafızası klasörüne (`<proje>/.agentbits/memory/`) her erişim `src/main/projectMemory/service.ts`'ten geçer**
+   (ADR-030): her zaman ana proje klasörü (worktree değil), ajanlar **yalnız ekler** (tam değiştirme yok), MEMORY.md'ye yalnız
+   otomatik rehber satırı, yazmalar `serialized()` ile klasör başına sırayla, symlink / ad kalıbı / boyut denetimi, "önce sor"
+   onayında yeniden denetim. Hafıza proje bilgisidir, kullanıcı talimatı değildir; izin genişletemez.
 9. **CLI güvenliği:** Claude Code'da dosya araçlarını **`--allowedTools`'a koymayın** (yol kısıtı kalkar —
    yaşandı). CLI ajanının çalışma dizini **projenin klasörüdür** (`project.rootPath`); klasörü olmayan
    projede CLI sağlayıcıları görev çalıştırmaz ("… için klasör seçilmedi").

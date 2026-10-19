@@ -677,6 +677,18 @@ const MIGRATIONS: { version: number; sql: string }[] = [
       -- The target (route|host:port) an unencrypted yes was given for; another target = no yes (v18 yeses are asked again).
       ALTER TABLE connections ADD COLUMN plaintext_target TEXT;
     `
+  },
+  {
+    version: 20,
+    sql: `
+      -- Project memory folder (<project>/.agentbits/memory): on for every project unless the user turns it off.
+      ALTER TABLE projects ADD COLUMN project_memory INTEGER NOT NULL DEFAULT 1;
+      -- A suggestion can be a note for a project memory file instead of a memory row: which file, what is done to it
+      -- ('append' only) and, for a new file, the guide line saying when to read it.
+      ALTER TABLE memory_suggestions ADD COLUMN target_file TEXT;
+      ALTER TABLE memory_suggestions ADD COLUMN target_op TEXT;
+      ALTER TABLE memory_suggestions ADD COLUMN target_note TEXT;
+    `
   }
 ]
 

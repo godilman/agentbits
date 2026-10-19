@@ -77,7 +77,15 @@ export function NeedsYouButton() {
       out.push({ id: `hd-${id}`, icon: PauseCircle, tone: 'text-amber-300', title: reason ? t('layout:needsYou.held', { reason }) : t('layout:needsYou.heldNoReason'), detail: label(id), taskId: id, projectId: x.projectId })
     }
     for (const m of suggestions) {
-      out.push({ id: `mem-${m.id}`, icon: Brain, tone: 'text-pink-300', title: t('layout:needsYou.memory'), detail: m.content, taskId: null, projectId: null })
+      out.push({
+        id: `mem-${m.id}`,
+        icon: Brain,
+        tone: 'text-pink-300',
+        title: m.targetFile ? t('org:memory.suggest.noteTitle') : t('layout:needsYou.memory'),
+        detail: m.targetFile ? `${m.targetFile}: ${m.content}` : m.content,
+        taskId: null,
+        projectId: null
+      })
     }
     for (const a of agents.filter((x) => x.enabled && x.status === 'error')) {
       out.push({ id: `ag-${a.id}`, icon: AlertTriangle, tone: 'text-rose-300', title: t('layout:needsYou.agentError', { agent: a.name }), detail: a.statusNote ?? '', taskId: null, projectId: null })

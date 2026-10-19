@@ -55,6 +55,10 @@
     "worktree": {
       "title": "Each task in its own git working copy",
       "desc": "For parallel developers: every task works on its own branch (agentbits/ta-…) in a separate copy, so agents never overwrite each other. The folder must be a git repository with at least one commit. A done task is merged into the folder; a conflict goes back to the agent to resolve. Claude Code and Codex agents only."
+    },
+    "projectMemory": {
+      "title": "Keep a project memory",
+      "desc": "Agents read and add notes in .agentbits/memory inside the project folder. You can copy your own .md files there; MEMORY.md is a short guide to them. Whether the folder goes into git is up to you."
     }
   },
   "launcher": {

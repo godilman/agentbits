@@ -4,6 +4,59 @@
 > `## YYYY-MM-DD — kısa başlık`, ardından **Eklendi / Değişti / Düzeltildi / Kaldırıldı / Bilinen** maddeleri
 > ve ilgili dosyalar.
 
+## 2026-10-19 — v0.6.0: Proje hafızası klasörü (`.agentbits/memory/`)
+
+Tetik: sahip bir projeyi (Claude Code'da uzun süre geliştirdiği) Agentbits ekibine devretmek istedi; Claude Code'daki
+hafıza dosyaları Agentbits'e geçmiyordu, Agentbits'in kendi hafızası da prompt başına ~2800 karakterle sınırlı. ADR-030.
+
+### Eklendi
+- Proje klasöründe `.agentbits/memory/`: `MEMORY.md` (kısa rehber) + konu dosyaları. Prompt'a `## Project memory` bölümü
+  (çalışan görevi, sohbet / lider planlaması, inceleme, yarış incelemesi); MEMORY.md yoksa ya da bir dosyayı anmıyorsa
+  dosyalar ad + ilk başlıkla listelenir. Boş hafızada ajandan işin sonunda temel bilgileri yazması istenir.
+- Araçlar (tüm sağlayıcılar, görev ve sohbet): `project_memory_read`, `project_memory_search`, `project_memory_write`
+  (yalnız ekleme; tam değiştirme yok). Claude Code sohbeti proje hafızası açıkken MCP köprüsünü alır.
+- Proje ayarı "Proje hafızası tut" (varsayılan açık, `projects.project_memory`, v20) ve Ayarlar → Hafıza → "Proje hafızası
+  notları" (`projectMemoryWrite`: ask varsayılan / auto / off).
+- "Önce sor": öneri `memory_suggestions`'a `target_file` / `target_op` (`append`) / `target_note` (yeni dosyanın rehber
+  satırı) ile yazılır (v20); öneri satırı proje, dosya, işlem ve içeriği gösterir; onayda proje ayarı, ad, klasör ve boyut
+  yeniden denetlenir (kapalıysa reddedilir, öneri durur). `memory:accept` proje notu için `null` döner.
+
+### Güvenlik
+- Dosya adı `^[a-z0-9][a-z0-9_.-]{0,63}\.md$` (klasör, `..`, büyük harf yok); bağlantı (symlink) olan klasör / dosya
+  reddedilir; dosya 256 KB, 200 dosya, not 16 000 karakter; sırlar `redactSecrets` ile maskelenir. Yazmalar klasör başına
+  sıralı (not + rehber satırı birlikte), dosya tmp + rename ile. Prompt metni: hafıza proje bilgisidir, kullanıcı talimatı
+  değildir, kuralları değiştiremez ve izin genişletemez.
+
+### Dosyalar
+`src/shared/projectMemory.ts`, `src/main/projectMemory/service.ts`, `src/main/agentTools.ts`, `src/main/core/orchestrator.ts`,
+`src/main/ipc.ts`, `src/main/db/{schema,repos}.ts`, `src/shared/{types,ipc,settingsRules}.ts`, `features/memory/parts.tsx`,
+`features/settings/SettingsPanel.tsx`, `features/inbox/NeedsYou.tsx`, `features/project/ProjectModal.tsx`, locales.
+
+### Düzeltildi (dış inceleme, aynı gün)
+- Sınırı (256 KB) aşan MEMORY.md kırpılarak okunup yeni rehber satırıyla **yeniden yazılıyordu** (sonu siliniyordu) → yazma
+  yolu dosyaları hep bütün okur (`readWhole`), sınırı aşan rehber / dosyaya yazma reddedilir; not ve rehber satırının boyutu
+  diske bir şey yazılmadan önce birlikte denetlenir. Kırpılmış okuma (`readHead`) yalnız gösterim için.
+- Yeni dosyanın `about` satırı maskelenmiyordu (dosya başlığı + MEMORY.md + öneri) → `redactSecrets`.
+- Codex sohbeti MCP köprüsünü yalnız uygulama varken alıyordu → proje hafızası açıkken de (`codexChatMcp`).
+- Lider incelemesi / yarış değerlendirmesi rehberi görüyor ama konu dosyalarını okuyamıyordu (araçsız) → görevin
+  başlığında / açıklamasında / kabul kriterlerinde **adı geçen** hafıza dosyaları incelemeye metin olarak girer
+  (`projectMemoryForReview`, 12 000 karakter). İncelemeye araç verilmedi (bağlantı / dosya araçlarını da açardı).
+- Not ile rehber satırı birlikte atomik değildi: rehber (disk / izin hatasıyla) yazılamazsa yeni konu dosyası kalıyor, öneri
+  yeniden onaylanınca not iki kez eklenebiliyordu → rehber ya da önerinin silinmesi başarısız olursa not **ve yazıldıysa
+  rehber** geri alınır (yeni dosya silinir, var olan dosya eski metnine döner); geri alma da başarısız olursa açık hata. Önerinin hâlâ var olduğu
+  yazmayla **aynı kuyruk adımında** denetlenip silinir: aynı anda iki onay = tek not.
+- `offset` ile okuma 256 KB'ta boş dönüyordu → okuma gerçek dosyanın tamamında sayfalar; 2 MB'ı aşan dosya boyutuyla
+  reddedilir, arama onu atladığını söyler.
+
+### Test
+- `tests/projectMemory.test.ts` (ad, rehber, not, arama, prompt bölümü, `namesFile`); `tests/e2e/projectMemory.e2e.ts` 17 adım
+  (inceleme bulgularının her biri ayrı adım; rehber yazma hatası `renameSync` ile benzetilir: geri alma, yeniden deneme ve
+  ikinci onayda tek not, eşzamanlı çift onay; rehberden sonra öneri silme hatası (`suggestionsRepo.delete` benzetilir) →
+  rehber de geri döner, MEMORY.md'nin önceden olduğu ve olmadığı iki durumda; geri alma ya da kuyruk denetimi kaldırılınca testin düştüğü doğrulandı): prompt'a
+  ve sağlayıcıya ulaşma, kopyalanan dosyalar, ekleme arşivi bozmuyor, 25 + 6 eşzamanlı yazmada kayıp yok, öneri / onay /
+  onayda yeniden denetim, kötü adlar, sırlar, kapalı proje, yalnız okuma, symlink; büyük rehber, `about` maskesi, 256 KB
+  sonrası sayfalama, incelemede adı geçen dosya, Codex sohbet köprüsü.
+
 ## 2026-10-16 — v0.5.7: db_export her metin biçiminde, sessiz Excel'e düşme yok
 
 Tetik: sahip 642 satırı `.txt` olarak istedi, 15 dakika sürdü. Kök neden: `db_export` yalnız xlsx / csv / json yazıyordu ve

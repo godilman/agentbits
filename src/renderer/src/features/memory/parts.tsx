@@ -70,6 +70,7 @@ export function SuggestionRow({ s, compact = false }: { s: MemorySuggestion; com
   const toast = useAppStore((st) => st.toast)
   const [text, setText] = useState(s.content)
   const [busy, setBusy] = useState(false)
+  const projectName = useAppStore((st) => (s.targetFile ? st.projects.find((p) => p.id === s.projectId)?.name : undefined))
   const act = async (keep: boolean): Promise<void> => {
     setBusy(true)
     try {
@@ -83,26 +84,55 @@ export function SuggestionRow({ s, compact = false }: { s: MemorySuggestion; com
   return (
     <div data-testid="memory-suggestion" className="rounded-md border border-pink-500/25 bg-pink-500/[0.05] px-3 py-2.5">
       <div className="mb-1.5 flex items-center gap-1.5 text-[11.5px] font-medium text-pink-200">
-        <Sparkles size={12} /> {t('org:memory.suggest.title')}
+        <Sparkles size={12} /> {s.targetFile ? t('org:memory.suggest.noteTitle') : t('org:memory.suggest.title')}
       </div>
+      {s.targetFile && (
+        <div className="mb-1.5 text-[11.5px] text-zinc-300">
+          <div className="font-mono">{t('org:memory.suggest.noteWhere', { project: projectName ?? '—', file: s.targetFile })}</div>
+          {s.targetNote && <div className="text-zinc-400">{t('org:memory.suggest.noteNew', { about: s.targetNote })}</div>}
+        </div>
+      )}
       {compact ? (
         <div className="text-[12.5px] text-zinc-200">“{s.content}”</div>
       ) : (
         <textarea className="textarea text-[12.5px]" rows={2} value={text} onChange={(e) => setText(e.target.value)} />
       )}
-      <div className="mt-1 flex flex-wrap items-center gap-1.5 text-[11px] text-zinc-400">
-        <KindBadge kind={s.kind} />
-        <TopicChips topics={s.topics} />
-      </div>
+      {!s.targetFile && (
+        <div className="mt-1 flex flex-wrap items-center gap-1.5 text-[11px] text-zinc-400">
+          <KindBadge kind={s.kind} />
+          <TopicChips topics={s.topics} />
+        </div>
+      )}
       {s.replacesText && <div className="mt-1 text-[11.5px] text-amber-200/80">{t('org:memory.suggest.replaces', { text: s.replacesText.slice(0, 140) })}</div>}
       <div className="mt-2 flex gap-1.5">
         <button className="btn-primary h-7" disabled={busy || !text.trim()} onClick={() => void act(true)}>
-          <Check size={13} /> {s.replaces ? t('org:memory.suggest.keepReplace') : t('org:memory.suggest.keep')}
+          <Check size={13} /> {s.targetFile ? t('org:memory.suggest.noteKeep') : s.replaces ? t('org:memory.suggest.keepReplace') : t('org:memory.suggest.keep')}
         </button>
         <button className="btn-ghost h-7" disabled={busy} onClick={() => void act(false)}>
           <X size={13} /> {t('org:memory.suggest.drop')}
         </button>
       </div>
+    </div>
+  )
+}
+
+/** Whether agents add notes to project memory folders: ask first, decide themselves, or read only. */
+export function ProjectMemoryMode() {
+  const { t } = useTranslation()
+  const mode = useAppStore((s) => s.settings.projectMemoryWrite)
+  const toast = useAppStore((s) => s.toast)
+  return (
+    <div className="flex flex-wrap items-center gap-2">
+      <Segmented<'ask' | 'auto' | 'off'>
+        value={mode}
+        onChange={(v) => void call('settings:update', { projectMemoryWrite: v }).catch((e) => toast('error', apiError(e)))}
+        options={[
+          { value: 'ask', label: t('org:memory.projectNotes.ask') },
+          { value: 'auto', label: t('org:memory.projectNotes.auto') },
+          { value: 'off', label: t('org:memory.projectNotes.off') }
+        ]}
+      />
+      <span className="text-[11.5px] text-zinc-400">{t(`org:memory.projectNotes.${mode}Hint`)}</span>
     </div>
   )
 }

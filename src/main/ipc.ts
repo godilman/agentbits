@@ -70,6 +70,7 @@ import { decodeText } from './files/extract'
 import { terminals } from './terminal/manager'
 import { filesRepo, originalPath } from './files/repo'
 import { gcBlobs } from './files/storage'
+import { acceptProjectNote } from './projectMemory/service'
 import {
   addFromBytes,
   addFromPaths,
@@ -588,6 +589,7 @@ export const handlers: Handlers = {
     if (input.name !== undefined && !input.name.trim()) throw new Error(t('main:errors.projectNameEmpty'))
     if (id && !projectsRepo.get(id)) throw new Error(t('main:errors.projectNotFoundDeleted'))
     if (input.isolation !== undefined && input.isolation !== 'shared' && input.isolation !== 'worktree') throw new Error(t('main:errors.badRequest'))
+    if (input.projectMemory !== undefined && typeof input.projectMemory !== 'boolean') throw new Error(t('main:errors.badRequest'))
     // Validate the folder only when it changes (an existing project may point at a folder that is gone).
     if (input.rootPath) {
       const before = id ? projectsRepo.get(id)?.rootPath : undefined
@@ -771,8 +773,10 @@ export const handlers: Handlers = {
   },
   'memory:graph': (projectId) => memoryEngine.graph(projectId ?? undefined),
   'memory:suggestions': () => suggestionsRepo.list(),
-  'memory:accept': (id, content) => {
-    const m = memoryEngine.accept(id, content ?? undefined)
+  'memory:accept': async (id, content) => {
+    const s = suggestionsRepo.get(id)
+    if (s?.targetFile) await acceptProjectNote(s, content ?? undefined)
+    const m = s?.targetFile ? null : memoryEngine.accept(id, content ?? undefined)
     emit({ type: 'memory:changed' })
     return m
   },
