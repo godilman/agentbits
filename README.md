@@ -142,13 +142,13 @@ scenario needs.
 
 | | |
 |---|---|
-| **Chat with the lead.** The request becomes four tasks, each assigned to a specialist. <br><img src="docs/screenshots/chat.png" alt="Project chat: the lead splits a request into four tasks"> | **Task board.** Tasks move from To do to Done as the team works. <br><img src="docs/screenshots/tasks.png" alt="Kanban board with four tasks in progress"> |
-| **Agent terminals.** What each agent was asked and what it did. <br><img src="docs/screenshots/terminal.png" alt="Agent terminals showing transcripts of several agents"> | **Organization.** Companies, departments and teams, each with a lead. <br><img src="docs/screenshots/org-chart.png" alt="Organization chart of an e-commerce company with five teams"> |
+| **Chat with the lead.** The request becomes four tasks, each assigned to a specialist. <br><img src="docs/screenshots/chat.png" alt="Project chat: the lead splits a request into four tasks"> | **Task board.** Tasks move from To do to Done as the team works. <br><img src="docs/screenshots/tasks.png" alt="Task board: work in progress (one task awaiting approval) and in review, with a finished task's details and its Result box open"> |
+| **Agent terminals.** What each agent was asked and what it did. <br><img src="docs/screenshots/terminal.png" alt="Agent terminals showing transcripts of several agents (simulated steps)"> | **Organization.** Companies, departments and teams, each with a lead. <br><img src="docs/screenshots/org-chart.png" alt="Organization chart of an e-commerce company with five teams"> |
 | **Reports.** Completed work, success rate, per-agent output and token usage. <br><img src="docs/screenshots/reports.png" alt="Reports page with task reports and agent performance"> | **Connections.** Per-agent database and server access with a required read-only user. <br><img src="docs/screenshots/connections.png" alt="Connection settings for a staging PostgreSQL database"> |
-| **Memory.** The "Knows you" profile and the graph linking memories to topics, tasks and decisions. <br><img src="docs/screenshots/memory.png" alt="Organization → Memory: the profile on the left, the memory graph on the right"> | |
+| **Memory.** The "Knows you" profile and the graph linking memories to tasks and agents. <br><img src="docs/screenshots/memory.png" alt="Organization → Memory: the profile on the left, the memory graph on the right"> | |
 
-*Screenshots were taken in Demo mode (v0.4.0) with example data. Demo only simulates the work: it calls no tools, and
-since v0.8.0 every simulated step is labelled as a simulation.*
+*Screenshots were taken in Demo mode (v0.8.0) with example data. Demo only simulates the work: it calls no tools, and
+every simulated step is labelled as a simulation.*
 
 ## Supported AI providers
 

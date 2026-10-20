@@ -144,13 +144,13 @@ senaryonun neye ihtiyaç duyduğunu söyler.
 
 | | |
 |---|---|
-| **Liderle sohbet.** İstek dört göreve ayrılır, her biri bir uzmana atanır. <br><img src="docs/screenshots/tr/chat.png" alt="Proje sohbeti: lider isteği dört göreve böler"> | **Görev panosu.** Ekip çalıştıkça görevler Yapılacak'tan Bitti'ye ilerler. <br><img src="docs/screenshots/tr/tasks.png" alt="Devam eden görevlerin olduğu Kanban panosu"> |
-| **Ajan terminalleri.** Her ajana ne sorulduğu ve ne yaptığı. <br><img src="docs/screenshots/tr/terminal.png" alt="Birkaç ajanın dökümünü gösteren ajan terminalleri"> | **Organizasyon.** Şirket, departman ve takımlar; her birinin lideri var. <br><img src="docs/screenshots/tr/org-chart.png" alt="Beş takımlı bir e-ticaret şirketinin organizasyon şeması"> |
+| **Liderle sohbet.** İstek dört göreve ayrılır, her biri bir uzmana atanır. <br><img src="docs/screenshots/tr/chat.png" alt="Proje sohbeti: lider isteği dört göreve böler"> | **Görev panosu.** Ekip çalıştıkça görevler Yapılacak'tan Bitti'ye ilerler. <br><img src="docs/screenshots/tr/tasks.png" alt="Görev panosu: devam eden (biri onay bekliyor) ve incelemedeki işler; biten bir görevin ayrıntısı ve Sonuç kutusu açık"> |
+| **Ajan terminalleri.** Her ajana ne sorulduğu ve ne yaptığı. <br><img src="docs/screenshots/tr/terminal.png" alt="Birkaç ajanın dökümünü gösteren ajan terminalleri (simüle edilmiş adımlar)"> | **Organizasyon.** Şirket, departman ve takımlar; her birinin lideri var. <br><img src="docs/screenshots/tr/org-chart.png" alt="Beş takımlı bir e-ticaret şirketinin organizasyon şeması"> |
 | **Raporlar.** Tamamlanan işler, başarı oranı, ajan başına üretim ve token kullanımı. <br><img src="docs/screenshots/tr/reports.png" alt="Görev raporları ve ajan performansıyla Raporlar sayfası"> | **Bağlantılar.** Zorunlu salt-okunur kullanıcıyla, ajan bazında veritabanı ve sunucu erişimi. <br><img src="docs/screenshots/tr/connections.png" alt="Staging PostgreSQL veritabanı için bağlantı ayarları"> |
-| **Hafıza.** "Seni tanıyorum" profili ve hatıraların konulara, görevlere ve kararlara bağlandığı graf. <br><img src="docs/screenshots/tr/memory.png" alt="Organizasyon → Hafıza: solda profil, sağda hafıza grafı"> | |
+| **Hafıza.** "Seni tanıyorum" profili ve hatıraları görevlere ve ajanlara bağlayan graf. <br><img src="docs/screenshots/tr/memory.png" alt="Organizasyon → Hafıza: solda profil, sağda hafıza grafı"> | |
 
-*Ekran görüntüleri Demo modunda (v0.4.0) örnek verilerle alındı. Demo işi yalnızca taklit eder, hiçbir araç
-çağırmaz; v0.8.0'dan beri taklit edilen her adım "simülasyon" diye etiketlenir.*
+*Ekran görüntüleri Demo modunda (v0.8.0) örnek verilerle alındı. Demo işi yalnızca taklit eder, hiçbir araç
+çağırmaz; taklit edilen her adım "simülasyon" diye etiketlenir.*
 
 ## Desteklenen yapay zeka sağlayıcıları
 
