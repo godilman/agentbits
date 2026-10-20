@@ -16,6 +16,7 @@
 - `tests/e2e/fileProcessing.e2e.ts` 6 adım: yeni sonuçtan sonra gelen eski başarı / eski hata; yeni hatadan sonra gelen
   eski başarı; önce biten eski girişim yenisini engellemez; boyut yüzünden atlanan okuma; tek girişim eskisi gibi yazar.
   Dört kasıtlı bozma (başarı koruması, hata koruması, boyut atlaması, temizlikte yenisinin kaydını silmek) yakalandı.
+- `e2e/notify` worktree adımı: bildirimlerin tek 10 sn grubunda toplanması şartı kaldırıldı (yavaş Windows CI'da ikiye bölünüyordu); gruplama ayrı adımda test ediliyor.
 
 ## 2026-10-20 — v0.10.0: İnceleme döngüsü ve kullanıcı mesajları (ADR-033)
 
