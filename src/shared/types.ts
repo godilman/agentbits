@@ -101,6 +101,8 @@ export interface Task {
   updatedAt: string
   startedAt: string | null
   completedAt: string | null
+  /** Who made it done: the lead (review / race) or the user by hand (no review); null for other states and older tasks. */
+  completedBy: 'lead' | 'user' | null
   /** Ids of tasks that must be done before this one starts (autopilot waits; the user can start it after confirming). */
   dependsOn: string[]
   /** Race mode: the original task this one is a challenger copy of (null for an ordinary task). */
@@ -174,6 +176,59 @@ export interface Run {
   endedAt: string | null
   /** Memories that went into this run's prompt ("What did this task know?"). */
   recalled: RecalledMemory[]
+}
+
+/** What the latest run of a task really did, from the tool record (not from the worker's report). */
+export interface RunEvidence {
+  runId: string
+  status: RunStatus
+  endedAt: string | null
+  /** Provider kind that did the run (from its usage record); null when unknown. */
+  provider: string | null
+  /** The Demo provider: nothing real happened. */
+  simulated: boolean
+  /** The provider reports each tool call and its result (Claude Code). Otherwise commands / files are not known. */
+  toolRecord: boolean
+  /** It should have a tool record but none was found for this run (e.g. cleaned up): nothing can be said either way. */
+  recordMissing: boolean
+  /**
+   * Shell commands, a shortened list: every failure is kept, then the latest ones. `error` = the tool reported a
+   * failure (`fixedLater`: the same command succeeded afterwards), `unknown` = no result was recorded.
+   */
+  commands: { command: string; result: 'ok' | 'error' | 'unknown'; fixedLater?: boolean }[]
+  /** All shell commands of the run (not only the ones listed): totals, and how many (failures among them) aren't listed. */
+  commandCount: { total: number; failed: number; failedNotFixed: number; unknown: number; notListed: number; failedNotListed: number }
+  /**
+   * Files the agent tried to write with file tools, a shortened list (written ones first): `written` = at least one
+   * attempt worked (a later failure doesn't undo it); `last` = how the latest attempt ended — `ok`, `error`, `refused`
+   * (not allowed), `unknown` (no result). Files changed by shell commands are not in it (git shows them in worktree mode).
+   */
+  fileWrites: { path: string; written: boolean; last: 'ok' | 'error' | 'refused' | 'unknown' }[]
+  /** All files of the run (not only the ones listed). */
+  fileCount: { total: number; written: number; notWritten: number; notListed: number; writtenNotListed: number }
+  /** Refused: a tool the agent wasn't allowed to use, a connection call that was denied. */
+  denied: string[]
+  /** The report was longer than what the lead's review reads. */
+  reportCut: boolean
+}
+
+/** The task's result as shown first in its details: evidence, who reviewed, what changed (worktree). */
+export interface TaskResult {
+  evidence: RunEvidence | null
+  /** The lead review of that run (null: none since it). `simulated`: the Demo provider; `race`: a comparison of two
+   *  attempts' reports (the tool record isn't part of it). */
+  review: { by: string | null; simulated: boolean; race: boolean } | null
+  /** Worktree projects: the changes in git (`merged`: brought into the project folder). */
+  changes: { files: number; added: number; removed: number; merged: boolean } | null
+}
+
+/** An unsent message, per project + channel. `files`: attachments whose upload finished (name / size kept so a file
+ *  deleted meanwhile can still be named). */
+export interface MessageDraft {
+  projectId: string
+  channel: string
+  text: string
+  files: { id: string; name: string; size: number }[]
 }
 
 export type SenderType = 'user' | 'agent' | 'system'
@@ -403,6 +458,8 @@ export interface AppSettings {
   workspaceRoot: string
   autopilot: boolean // scheduler picks up todo tasks automatically
   reviewByLead: boolean
+  /** Operating-system notifications (and the taskbar flash) while no app window has focus (`main/notify.ts`). */
+  notifications: boolean
   /** Agent logs older than this are pruned automatically (0 = keep forever). */
   logRetentionDays: number
   /** On launch: 'ask' shows the project picker, 'restore' reopens the last open projects. */

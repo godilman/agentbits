@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { Trans, useTranslation } from 'react-i18next'
 import { Brain, Cpu, Database, FolderOpen, Gauge, Plus, Shield, SlidersHorizontal, Trash2, Users, X, Zap } from 'lucide-react'
 import type { AccessLevel } from '@shared/types'
@@ -6,6 +6,7 @@ import { ENV_LABEL, KIND_LABEL, LEVEL_LABEL, LEVEL_ORDER } from '@shared/connect
 import { LANGUAGES, languageName, resolveLanguage, type I18nKey } from '@shared/i18n'
 import { PixelAvatar } from '@/components/common/PixelAvatar'
 import { Segmented, Toggle } from '@/components/common/ui'
+import { useLayer } from '@/components/common/Layer'
 import { PERMISSIONS } from '@/features/agents/constants'
 import { apiError, call } from '@/lib/api'
 import { cn } from '@/lib/format'
@@ -36,19 +37,21 @@ export function SettingsPanel() {
   const openSettings = useAppStore((s) => s.openSettings)
   const close = useAppStore((s) => s.closeSettings)
 
-  useEffect(() => {
-    if (!open) return
-    const onKey = (e: KeyboardEvent): void => {
-      if (e.key === 'Escape') close()
-    }
-    window.addEventListener('keydown', onKey)
-    return () => window.removeEventListener('keydown', onKey)
-  }, [open, close])
+  const ref = useRef<HTMLDivElement>(null)
+  useLayer(open, close, ref, { trap: true })
 
   if (!open) return null
   return (
     <div className="fixed inset-0 z-40 flex justify-end bg-black/50 animate-fade-in" onMouseDown={close}>
-      <div className="flex h-full w-[min(980px,92vw)] border-l border-line bg-[#0e0e11] shadow-pop animate-slide-in" onMouseDown={(e) => e.stopPropagation()}>
+      <div
+        ref={ref}
+        role="dialog"
+        aria-modal="true"
+        aria-label={t('settings:title')}
+        tabIndex={-1}
+        className="flex h-full w-[min(980px,92vw)] border-l border-line bg-[#0e0e11] shadow-pop outline-none animate-slide-in"
+        onMouseDown={(e) => e.stopPropagation()}
+      >
         <nav className="w-[190px] shrink-0 border-r border-line p-3 pt-14">
           <div className="panel-title mb-2 px-2">{t('settings:title')}</div>
           {SECTIONS.map((s) => (
@@ -56,7 +59,7 @@ export function SettingsPanel() {
               key={s.id}
               onClick={() => openSettings(s.id)}
               className={cn(
-                'mb-0.5 flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-[12.5px]',
+                'mb-0.5 flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-[13px]',
                 section === s.id ? 'bg-white/[0.07] text-zinc-100' : 'text-zinc-400 hover:bg-white/[0.03] hover:text-zinc-200'
               )}
             >
@@ -65,7 +68,7 @@ export function SettingsPanel() {
           ))}
         </nav>
         <div className="relative min-w-0 flex-1 overflow-y-auto">
-          <button className="icon-btn absolute right-4 top-14 z-10" onClick={close}>
+          <button className="icon-btn absolute right-4 top-14 z-10" onClick={close} title={t('actions.close')} aria-label={t('actions.close')} data-testid="settings-close">
             <X size={15} />
           </button>
           <div className="px-8 pb-10 pt-14">
@@ -92,13 +95,13 @@ function AgentsSection() {
   return (
     <>
       <Heading title={t('settings:agents.title')} desc={t('settings:agents.desc')} />
-      <div className="card flex items-center gap-5 p-5">
+      <div className="card flex flex-wrap items-center gap-5 p-5">
         <div className="flex -space-x-1.5">
           {agents.slice(0, 6).map((a) => (
             <PixelAvatar key={a.id} agent={a} size={30} className="rounded-md ring-2 ring-surface" />
           ))}
         </div>
-        <div className="min-w-0 flex-1">
+        <div className="min-w-[12rem] flex-1">
           <div className="text-[13px] text-zinc-200">{t('settings:agents.count', { count: agents.length })}</div>
           <div className="text-[12px] text-zinc-400">{t('settings:agents.manage')}</div>
         </div>
@@ -125,14 +128,14 @@ function PermissionsSection() {
     <>
       <Heading title={t('settings:permissions.title')} desc={t('settings:permissions.desc')} />
       <div className="card overflow-hidden">
-        <table className="w-full text-[12.5px]">
+        <table className="w-full text-[13px]">
           <thead>
             <tr className="border-b border-line bg-white/[0.02]">
               <th className="px-4 py-2.5 text-left font-medium text-zinc-400">{t('settings:permissions.colAgent')}</th>
               {PERM_COLS.map((c) => (
                 <th key={c.key} className="px-2 py-2.5 text-center font-medium text-zinc-400">
                   <div>{c.label}</div>
-                  <div className="text-[10px] font-normal text-zinc-400">{c.hint}</div>
+                  <div className="text-[11px] font-normal text-zinc-400">{c.hint}</div>
                 </th>
               ))}
               <th className="px-3 py-2.5 text-center font-medium text-zinc-400">{t('settings:permissions.colPaths')}</th>
@@ -149,7 +152,7 @@ function PermissionsSection() {
                       <PixelAvatar agent={a} size={22} />
                       <div>
                         <div className="text-zinc-200">{a.name}</div>
-                        <div className="text-[10.5px] text-zinc-400">{a.role}</div>
+                        <div className="text-[12px] text-zinc-400">{a.role}</div>
                       </div>
                     </div>
                   </td>
@@ -161,7 +164,7 @@ function PermissionsSection() {
                     </td>
                   ))}
                   <td className="px-3 py-2.5 text-center">
-                    <button className={cn('btn-ghost h-6 text-[11px]', pathAgent === a.id && 'bg-white/5 text-zinc-200')} onClick={() => setPathAgent(pathAgent === a.id ? null : a.id)}>
+                    <button className={cn('btn-ghost h-6 text-[12px]', pathAgent === a.id && 'bg-white/5 text-zinc-200')} onClick={() => setPathAgent(pathAgent === a.id ? null : a.id)}>
                       <FolderOpen size={12} /> {p.allowedPaths.length}
                     </button>
                   </td>
@@ -211,7 +214,7 @@ function ConnectionMatrix() {
     <div className="mt-8">
       <div className="mb-2 flex items-end justify-between gap-4">
         <div>
-          <div className="text-[14px] font-semibold text-zinc-100">{t('settings:connections.title')}</div>
+          <div className="text-[15px] font-semibold text-zinc-100">{t('settings:connections.title')}</div>
           <div className="text-[12px] text-zinc-400">{t('settings:connections.desc')}</div>
         </div>
         <button
@@ -225,17 +228,17 @@ function ConnectionMatrix() {
         </button>
       </div>
       {connections.length === 0 ? (
-        <div className="card px-4 py-5 text-center text-[12px] text-zinc-500">{t('settings:connections.empty')}</div>
+        <div className="card px-4 py-5 text-center text-[13px] text-zinc-500">{t('settings:connections.empty')}</div>
       ) : (
         <div className="card overflow-x-auto">
-          <table className="w-full text-[12px]">
+          <table className="w-full text-[13px]">
             <thead>
               <tr className="border-b border-line bg-white/[0.02]">
                 <th className="px-3 py-2 text-left font-medium text-zinc-400">{t('settings:permissions.colAgent')}</th>
                 {connections.map((c) => (
                   <th key={c.id} className="px-2 py-2 text-left font-medium text-zinc-400" title={`${KIND_LABEL[c.kind]} · ${ENV_LABEL[c.env]}`}>
                     <div className="max-w-[150px] truncate text-zinc-300">{c.name}</div>
-                    <div className={cn('text-[10px] font-normal', c.env === 'production' ? 'text-rose-300' : 'text-zinc-500')}>{ENV_LABEL[c.env]}</div>
+                    <div className={cn('text-[12px] font-normal', c.env === 'production' ? 'text-rose-300' : 'text-zinc-500')}>{ENV_LABEL[c.env]}</div>
                   </th>
                 ))}
               </tr>
@@ -254,7 +257,7 @@ function ConnectionMatrix() {
                     return (
                       <td key={c.id} className="px-2 py-1.5">
                         <select
-                          className={cn('input h-7 w-[132px] text-[11.5px]', l !== 'none' ? 'border-indigo-500/40 text-indigo-200' : 'text-zinc-500')}
+                          className={cn('input h-7 w-[150px] text-[13px]', l !== 'none' ? 'border-indigo-500/40 text-indigo-200' : 'text-zinc-500')}
                           value={l}
                           onChange={(e) => void set(c.id, a.id, e.target.value as AccessLevel)}
                         >
@@ -286,9 +289,9 @@ function PathEditor({ agentId }: { agentId: string }) {
   return (
     <div className="card mt-3 p-4 animate-fade-in">
       <div className="mb-2 flex items-center justify-between">
-        <div className="text-[12.5px] text-zinc-300">{t('settings:permissions.paths.title', { name: agent.name })}</div>
+        <div className="text-[13px] text-zinc-300">{t('settings:permissions.paths.title', { name: agent.name })}</div>
         <button
-          className="btn-outline h-6 text-[11.5px]"
+          className="btn-outline h-6 text-[12px]"
           onClick={async () => {
             const dir = await call('app:pickFolder')
             if (dir && !p.allowedPaths.includes(dir)) update([...p.allowedPaths, dir])
@@ -297,11 +300,11 @@ function PathEditor({ agentId }: { agentId: string }) {
           <Plus size={12} /> {t('settings:permissions.paths.add')}
         </button>
       </div>
-      {p.allowedPaths.length === 0 && <div className="text-[12px] text-zinc-400">{t('settings:permissions.paths.workspaceOnly')}</div>}
+      {p.allowedPaths.length === 0 && <div className="text-[13px] text-zinc-400">{t('settings:permissions.paths.workspaceOnly')}</div>}
       {p.allowedPaths.map((path) => (
-        <div key={path} className="flex items-center gap-2 border-t border-line-soft py-1.5 font-mono text-[11.5px] text-zinc-400">
+        <div key={path} className="flex items-center gap-2 border-t border-line-soft py-1.5 font-mono text-[12px] text-zinc-400">
           <FolderOpen size={12} className="text-zinc-400" /> <span className="flex-1 truncate">{path}</span>
-          <button className="icon-btn" onClick={() => update(p.allowedPaths.filter((x) => x !== path))}>
+          <button className="icon-btn" onClick={() => update(p.allowedPaths.filter((x) => x !== path))} title={t('actions.remove')} aria-label={t('actions.remove')}>
             <X size={12} />
           </button>
         </div>
@@ -337,9 +340,9 @@ function ProvidersSection() {
           <div key={p.id} className="card flex items-center gap-3 px-4 py-3">
             <KindIcon kind={p.kind} size={18} />
             <div className="min-w-0 flex-1">
-              <div className="flex items-center gap-2">
+              <div className="flex flex-wrap items-center gap-x-2">
                 <span className="text-[13px] font-medium text-zinc-100">{p.label}</span>
-                {p.isDefault && <span className="rounded bg-indigo-500/15 px-1.5 text-[10px] font-medium text-indigo-300">{t('settings:providers.default')}</span>}
+                {p.isDefault && <span className="rounded bg-indigo-500/15 px-1.5 text-[12px] font-medium text-indigo-300">{t('settings:providers.default')}</span>}
               </div>
               <div className="font-mono text-[11px] text-zinc-400">
                 {p.model || t('settings:providers.defaultModel')}
@@ -387,14 +390,14 @@ function ProvidersSection() {
             </button>
           </div>
         ))}
-        {providers.length === 0 && !adding && <div className="text-[12.5px] text-zinc-400">{t('settings:providers.empty')}</div>}
+        {providers.length === 0 && !adding && <div className="text-[13px] text-zinc-400">{t('settings:providers.empty')}</div>}
       </div>
       {adding && (
         <div className="card mt-5 p-5">
           <div className="mb-4 flex items-center justify-between">
             <div className="text-[13px] font-medium text-zinc-200">{t('settings:providers.newTitle')}</div>
             {providers.length > 0 && (
-              <button className="icon-btn" onClick={() => setAdding(false)}>
+              <button className="icon-btn" onClick={() => setAdding(false)} title={t('actions.close')} aria-label={t('actions.close')}>
                 <X size={14} />
               </button>
             )}
@@ -438,7 +441,7 @@ function SemanticCard() {
       <div className="mt-3 flex flex-wrap items-center gap-2">
         <select
           data-testid="memory-embed-provider"
-          className="input h-7 w-56 text-[12px]"
+          className="input h-7 w-56 text-[13px]"
           value={settings.memoryEmbedProviderId}
           onChange={(e) => update({ memoryEmbedProviderId: e.target.value })}
         >
@@ -450,7 +453,7 @@ function SemanticCard() {
           ))}
         </select>
         <input
-          className="input h-7 w-64 text-[12px]"
+          className="input h-7 w-64 text-[13px]"
           disabled={!settings.memoryEmbedProviderId}
           value={model}
           onChange={(e) => setModel(e.target.value)}
@@ -459,10 +462,10 @@ function SemanticCard() {
           placeholder={t('settings:memory.semantic.modelHint')}
         />
       </div>
-      {!usable.length && <div className="mt-2 text-[11.5px] text-zinc-500">{t('settings:memory.semantic.noProvider')}</div>}
-      {local && <div className="mt-2 text-[11.5px] text-zinc-500">{t(isLocalUrl(local.baseUrl) ? 'settings:memory.semantic.stays' : 'settings:memory.semantic.leaves')}</div>}
+      {!usable.length && <div className="mt-2 text-[12px] text-zinc-500">{t('settings:memory.semantic.noProvider')}</div>}
+      {local && <div className="mt-2 text-[12px] text-zinc-500">{t(isLocalUrl(local.baseUrl) ? 'settings:memory.semantic.stays' : 'settings:memory.semantic.leaves')}</div>}
       {status?.enabled && (
-        <div className={cn('mt-2 text-[11.5px]', status.error ? 'text-amber-300' : 'text-emerald-400')}>
+        <div className={cn('mt-2 text-[12px]', status.error ? 'text-amber-300' : 'text-emerald-400')}>
           {status.error ? t('settings:memory.semantic.error', { error: status.error }) : t('settings:memory.semantic.status', { indexed: status.indexed, total: status.total })}
         </div>
       )}
@@ -532,7 +535,7 @@ function GeneralSection() {
         <Row title={t('language.label')} desc={t('language.hint')}>
           <select
             data-testid="settings-language"
-            className="input h-7 w-48 text-[12px]"
+            className="input h-7 w-48 text-[13px]"
             value={settings.language}
             onChange={(e) => update({ language: e.target.value })}
           >
@@ -546,7 +549,7 @@ function GeneralSection() {
         </Row>
         <Row title={t('settings:general.folders.title')} desc={t('settings:general.folders.desc')}>
           <div className="flex items-center gap-2">
-            <span className="max-w-[220px] truncate font-mono text-[11.5px] text-zinc-400" title={project?.rootPath}>
+            <span className="max-w-[220px] truncate font-mono text-[11px] text-zinc-400" title={project?.rootPath}>
               {project ? (project.rootPath ? shortPath(project.rootPath, 34) : t('settings:general.folders.none')) : '—'}
             </span>
             <button
@@ -576,6 +579,9 @@ function GeneralSection() {
         </Row>
         <Row title={t('settings:general.review.title')} desc={t('settings:general.review.desc')}>
           <Toggle checked={settings.reviewByLead} onChange={(v) => update({ reviewByLead: v })} />
+        </Row>
+        <Row title={t('settings:general.notifications.title')} desc={t('settings:general.notifications.desc')}>
+          <Toggle checked={settings.notifications} onChange={(v) => update({ notifications: v })} />
         </Row>
         <Row title={t('settings:general.race.title')} desc={t('settings:general.race.desc')}>
           <Toggle checked={settings.raceMode} onChange={(v) => update({ raceMode: v })} />

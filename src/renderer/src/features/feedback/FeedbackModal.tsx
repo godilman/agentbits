@@ -33,7 +33,7 @@ export function FeedbackModal({ open, onClose }: { open: boolean; onClose: () =>
   return (
     <Modal open={open} onClose={onClose} width={560} title={<span className="flex items-center gap-2"><Mail size={15} className="text-indigo-300" /> {t('feedback.title')}</span>}>
       <div className="space-y-3" data-testid="feedback-modal">
-        <p className="text-[12.5px] leading-relaxed text-zinc-300">
+        <p className="text-[13px] leading-relaxed text-zinc-300">
           <Trans t={t} i18nKey="feedback.intro" values={{ email: FEEDBACK_EMAIL }} components={{ mail: email }} />
         </p>
 
@@ -62,7 +62,7 @@ export function FeedbackModal({ open, onClose }: { open: boolean; onClose: () =>
               type="button"
               onClick={() => void call('app:openSupport').catch(() => undefined)}
               data-testid="feedback-coffee"
-              className="inline-flex items-center gap-1.5 rounded-md border border-amber-400/40 bg-amber-400/[0.1] px-3 py-1.5 text-[12.5px] font-medium text-amber-200 transition-colors hover:border-amber-300/70 hover:bg-amber-400/[0.18]"
+              className="inline-flex items-center gap-1.5 rounded-md border border-amber-400/40 bg-amber-400/[0.1] px-3 py-1.5 text-[13px] font-medium text-amber-200 transition-colors hover:border-amber-300/70 hover:bg-amber-400/[0.18]"
             >
               <span aria-hidden>☕</span> {t('app.supportLabel')}
             </button>
@@ -83,7 +83,7 @@ export function FeedbackModal({ open, onClose }: { open: boolean; onClose: () =>
                   onClick={() => setRating(n)}
                   className="p-0.5"
                 >
-                  <Star size={17} className={cn('transition-colors', (hover || rating) >= n ? 'fill-amber-300 text-amber-300' : 'text-zinc-600')} />
+                  <Star size={17} className={cn('transition-colors', (hover || rating) >= n ? 'fill-amber-300 text-amber-300' : 'text-zinc-500')} />
                 </button>
               ))}
             </div>
@@ -93,8 +93,8 @@ export function FeedbackModal({ open, onClose }: { open: boolean; onClose: () =>
           </div>
         </Card>
 
-        <div className="flex items-center justify-between gap-3 text-[11.5px] text-zinc-500">
-          <span>{t('feedback.noMailApp')}</span>
+        <div className="flex flex-wrap items-center justify-between gap-3 gap-y-1 text-[12px] text-zinc-500">
+          <span className="min-w-0">{t('feedback.noMailApp')}</span>
           <button type="button" className="btn btn-ghost shrink-0" onClick={copy} data-testid="feedback-copy">
             <Copy size={12} /> {t('feedback.copy')}
           </button>
@@ -111,7 +111,7 @@ function Card({ icon, tone, title, testId, children }: { icon: ReactNode; tone: 
         {icon}
         <span className="text-zinc-100">{title}</span>
       </div>
-      <div className="text-[12.5px] leading-relaxed text-zinc-300">{children}</div>
+      <div className="text-[13px] leading-relaxed text-zinc-300">{children}</div>
     </section>
   )
 }

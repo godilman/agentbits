@@ -1,7 +1,7 @@
 {
   "chat": {
-    "filesReceived_one": "📎 I got the {{count}} file you attached; I'm adding it to the tasks I create, and the team will be able to read it part by part.",
-    "filesReceived_other": "📎 I got the {{count}} files you attached; I'm adding them to the tasks I create, and the team will be able to read them part by part.",
+    "filesReceived_one": "📎 I'm attaching the {{count}} file you added to the tasks I create. Demo is a simulation: it doesn't read files; with a real provider the team reads them part by part.",
+    "filesReceived_other": "📎 I'm attaching the {{count}} files you added to the tasks I create. Demo is a simulation: it doesn't read files; with a real provider the team reads them part by part.",
     "idle": {
       "r1": "Noted. There's open work on the board right now; if you want something new, just describe what needs to be done in a sentence or two and I'll split it into tasks and hand it out to the team.",
       "r2": "Got it. Give me a clearer job description (what, where, by when) and I'll plan and assign it right away.",
@@ -9,59 +9,31 @@
     },
     "taskDescription": "User request: \"{{request}}\"\n\nScope: {{scope}}",
     "unassigned": "unassigned",
-    "plan_one": "Done — I turned the work into {{count}} task and handed it to the team:",
-    "plan_other": "Done — I split the work into {{count}} parts and handed them out to the team:",
-    "planFooter": "You can follow progress live in the Tasks tab and in the office. I'll review the finished work.",
+    "plan_one": "Demo (simulation): I split the work into {{count}} part and handed it to the team:",
+    "plan_other": "Demo (simulation): I split the work into {{count}} parts and handed them to the team:",
+    "planFooter": "You can follow progress in Tasks and the office. This is a simulation: the team does no real work, edits no files and runs no tests; my review is not a real check either.",
     "noteSent_one": "Got it — I passed it on to the team member working on {{keys}}.",
     "noteSent_other": "Got it — I passed it on to the team members working on {{keys}}.",
     "learned": "I noted this as something to keep in mind from now on.",
     "learnTopic": "Working style"
   },
-  "connections": {
-    "none": "There are no connections I can access.",
-    "error": "error",
-    "ok": "ok",
-    "schemaFailed": "{{name}}: couldn't read the schema",
-    "sampleRead": "{{name}}: read a sample from the {{table}} table",
-    "sampleReadError": "{{name}}: read a sample from the {{table}} table (error)",
-    "changeAttempt": "{{name}}: change attempt → {{result}}",
-    "allowed": "allowed"
-  },
-  "files": {
-    "imageRead": "**{{name}}**: image reviewed (demo: content isn't interpreted)",
-    "imageFailed": "**{{name}}**: couldn't read the image",
-    "noText": "**{{name}}**: no readable text",
-    "partsSummary_one": "**{{name}}** ({{type}}, {{count}} part): {{gist}}",
-    "partsSummary_other": "**{{name}}** ({{type}}, {{count}} parts): {{gist}}",
-    "firstAndLast": "Read the first and the last of {{parts}} parts; the parts needed can be found with search",
-    "instructionLike_one": "⚠️ {{name}} contains {{count}} instruction-like line; treated as data, not followed",
-    "instructionLike_other": "⚠️ {{name}} contains {{count}} instruction-like lines; treated as data, not followed",
-    "summaryFileName": "summary-{{key}}.md",
-    "summaryFileFallback": "task",
-    "summaryTitle": "{{key}} · file summary (demo)",
-    "summaryFailed": "Couldn't save the summary: {{error}}",
-    "summarySaved": "Summary file saved → Files"
-  },
   "task": {
     "defaultTitle": "Task",
     "logInstruction": "Taking the user's instruction into account: {{text}}",
-    "logAnalyzing": "Analyzing the task: {{title}}"
+    "logAnalyzing": "Analyzing the task: {{title}}",
+    "simulatedStep": "Simulation · {{step}} (not really run)"
   },
   "report": {
     "summary": "Summary",
-    "completed": "{{title}} completed.",
-    "connections": "Connections",
-    "files": "Files",
+    "completed": "The simulation of {{title}} finished.",
     "instruction": "User instruction",
-    "instructionApplied": "The work was updated according to the instruction.",
-    "done": "What was done",
-    "changedFiles": "Changed files",
+    "instructionApplied": "The instruction was taken into account in the simulation (nothing was really changed).",
+    "done": "Simulated steps",
     "reviewOnly": "(review only)",
     "notes": "Notes",
     "demoNote": "Simulated with the Demo provider. For real work, add Claude Code or an API key in Settings → Providers.",
-    "skills": "Skills used",
-    "apps": "Apps used",
-    "deliverables": "Deliverables"
+    "simulated": "This is a simulation (Demo provider). No file was read or edited and no command or test ran; the steps and file names below are examples.",
+    "exampleFiles": "Example file names (no file was edited)"
   },
   "review": {
     "approved": {
@@ -69,55 +41,44 @@
       "r2": "Meets the acceptance criteria. 👍",
       "r3": "Looks good, ready to merge."
     },
-    "race": "Both attempts work; this one is more complete and easier to follow."
+    "race": "Both attempts work; this one is more complete and easier to follow.",
+    "simulated": "Simulated review — nothing was really checked:"
   },
   "test": {
     "ready": "Demo provider ready (no real model calls are made)"
   },
-  "skills": {
-    "used": "Followed the skill \"{{name}}\" (read with skill_read).",
-    "failed": "Couldn't read the skill \"{{name}}\"."
-  },
-  "apps": {
-    "used": "Used {{app}} → {{tool}}",
-    "failed": "{{app}} → {{tool}} failed: {{error}}"
-  },
   "kinds": {
     "code": {
-      "done1": "Reviewed the existing code and mapped the affected areas",
-      "done2": "Applied the necessary changes",
-      "done3": "Ran the tests and they passed",
-      "final_one": "✓ {{count}} test passed",
-      "final_other": "✓ {{count}} tests passed",
+      "done1": "Reading the code was simulated",
+      "done2": "The change step was simulated (no file was edited)",
+      "done3": "The test step was simulated (no test ran)",
       "rejected1": "Tests for edge cases are missing, please add them.",
-      "rejected2": "The error messages aren't user-friendly, please take another look."
+      "rejected2": "The error messages aren't user-friendly, please take another look.",
+      "final": "Simulation · no test result (no test ran)"
     },
     "research": {
-      "done1": "Collected and screened sources on the topic",
-      "done2": "Compared the findings side by side",
-      "done3": "Wrote a summary with the key takeaways and open questions",
-      "final_one": "✓ {{count}} source compared",
-      "final_other": "✓ {{count}} sources compared",
+      "done1": "Collecting sources was simulated (no real search)",
+      "done2": "The comparison step was simulated",
+      "done3": "Writing the summary was simulated",
       "rejected1": "Some claims have no source, please add references.",
-      "rejected2": "The comparison is missing a clear recommendation, please conclude."
+      "rejected2": "The comparison is missing a clear recommendation, please conclude.",
+      "final": "Simulation · no sources were compared"
     },
     "content": {
-      "done1": "Read the brief and identified the audience and tone",
-      "done2": "Wrote the draft and alternative headlines",
-      "done3": "Checked spelling, tone and length",
-      "final_one": "✓ Tone and spelling checked ({{count}} paragraph)",
-      "final_other": "✓ Tone and spelling checked ({{count}} paragraphs)",
+      "done1": "Reading the brief was simulated",
+      "done2": "Drafting was simulated (no text was written)",
+      "done3": "The tone and spelling check was simulated",
       "rejected1": "The tone doesn't fit the target audience, please make it warmer.",
-      "rejected2": "The call to action is missing, please add one."
+      "rejected2": "The call to action is missing, please add one.",
+      "final": "Simulation · no text was checked"
     },
     "data": {
-      "done1": "Read the data and checked it for gaps",
-      "done2": "Calculated the requested metrics",
-      "done3": "Summarised the results in a table with notes",
-      "final_one": "✓ {{count}} row checked",
-      "final_other": "✓ {{count}} rows checked",
+      "done1": "Reading the data was simulated (no data was read)",
+      "done2": "Computing the metrics was simulated",
+      "done3": "Building the table was simulated",
       "rejected1": "The calculation method is not explained, please add it.",
-      "rejected2": "Outliers were not addressed, please check them."
+      "rejected2": "Outliers were not addressed, please check them.",
+      "final": "Simulation · no rows were checked"
     }
   },
   "customReport": {

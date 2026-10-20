@@ -251,10 +251,11 @@ export const auditRepo = {
       )
     return mapAudit(getDb().prepare('SELECT * FROM audit_log WHERE id = ?').get(info.lastInsertRowid) as Row)
   },
-  list(opts: { connectionId?: string; actorId?: string; result?: AuditResult; beforeId?: number; limit?: number }): AuditEntry[] {
+  list(opts: { connectionId?: string; actorId?: string; runId?: string; result?: AuditResult; beforeId?: number; limit?: number }): AuditEntry[] {
     const where: string[] = []
     const vals: unknown[] = []
     if (opts.connectionId) (where.push('connection_id = ?'), vals.push(opts.connectionId))
+    if (opts.runId) (where.push('run_id = ?'), vals.push(opts.runId))
     if (opts.actorId) (where.push('actor_id = ?'), vals.push(opts.actorId))
     if (opts.result) (where.push('result = ?'), vals.push(opts.result))
     if (opts.beforeId) (where.push('id < ?'), vals.push(opts.beforeId))

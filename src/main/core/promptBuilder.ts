@@ -71,7 +71,8 @@ export async function generatePrompt(requestId: string, text: string, providerId
     return { prompt, provider: provider.label, model: provider.model }
   } catch (e) {
     if (controller.signal.aborted) throw new Error(t('main:promptBuilder.cancelled'))
-    throw new Error(explainError((e as Error).message || String(e), provider).text)
+    const ex = explainError((e as Error).message || String(e), provider)
+    throw new Error(ex.auth ? ex.text : ex.full)
   } finally {
     if (running.get(requestId) === controller) running.delete(requestId)
     rmSync(cwd, { recursive: true, force: true })

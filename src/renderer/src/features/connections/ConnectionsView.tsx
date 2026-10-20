@@ -78,7 +78,7 @@ export function ConnectionsView() {
         {connections.length > 5 && (
           <div className="relative px-3 pb-2">
             <Search size={12} className="absolute left-5 top-1/2 -translate-y-[60%] text-zinc-500" />
-            <input className="input h-7 pl-7 text-[12px]" placeholder={t('connections:list.search')} value={query} onChange={(e) => setQuery(e.target.value)} />
+            <input className="input h-7 pl-7 text-[13px]" placeholder={t('connections:list.search')} value={query} onChange={(e) => setQuery(e.target.value)} />
           </div>
         )}
         <div className="min-h-0 flex-1 space-y-0.5 overflow-y-auto px-2 pb-2">
@@ -94,26 +94,26 @@ export function ConnectionsView() {
             >
               <KindIcon kind={c.kind} className="mt-0.5 shrink-0 text-zinc-400" />
               <div className="min-w-0 flex-1">
-                <div className="flex items-center gap-1.5">
-                  <span className="truncate text-[12.5px] text-zinc-200">{c.name}</span>
-                  <span className={cn('shrink-0 rounded px-1 text-[9.5px] font-medium', ENV_CLS[c.env])}>{ENV_LABEL[c.env]}</span>
-                  {plaintext(c) && <span className="shrink-0 rounded bg-amber-500/15 px-1 text-[9.5px] font-medium text-amber-300">{t('connections:list.plaintext')}</span>}
+                <div className="flex flex-wrap items-center gap-x-1.5 gap-y-0.5">
+                  <span className="min-w-0 truncate text-[13px] text-zinc-200">{c.name}</span>
+                  <span className={cn('shrink-0 rounded px-1 text-[12px] font-medium', ENV_CLS[c.env])}>{ENV_LABEL[c.env]}</span>
+                  {plaintext(c) && <span className="shrink-0 rounded bg-amber-500/15 px-1 text-[12px] font-medium text-amber-300">{t('connections:list.plaintext')}</span>}
                 </div>
-                <div className="truncate font-mono text-[10.5px] text-zinc-500">
+                <div className="truncate font-mono text-[11px] text-zinc-500">
                   {c.host || '—'}
                   {c.port ? `:${c.port}` : ''}
                 </div>
-                <div className="flex items-center gap-2 text-[10.5px] text-zinc-500">
+                <div className="flex flex-wrap items-center gap-x-2 text-[12px] text-zinc-500">
                   <span>{t('connections:list.agents', { count: accessCount(c.id) })}</span>
                   {c.lastTestOk !== null && (
-                    <span className={c.lastTestOk ? 'text-emerald-400/80' : 'text-rose-400/80'}>{c.lastTestOk ? t('connections:list.testOk') : t('connections:list.testFailed')}</span>
+                    <span className={c.lastTestOk ? 'text-emerald-400/80' : 'text-rose-400'}>{c.lastTestOk ? t('connections:list.testOk') : t('connections:list.testFailed')}</span>
                   )}
                 </div>
               </div>
             </button>
           ))}
           {connections.length === 0 && !creating && (
-            <div className="px-2 py-3 text-[12px] text-zinc-500">{t('connections:list.empty')}</div>
+            <div className="px-2 py-3 text-[13px] text-zinc-500">{t('connections:list.empty')}</div>
           )}
         </div>
         <div className="border-t border-line p-2">
@@ -122,7 +122,7 @@ export function ConnectionsView() {
               setSelected(AUDIT)
               setCreating(null)
             }}
-            className={cn('flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-[12.5px]', selected === AUDIT ? 'bg-white/[0.07] text-zinc-100' : 'text-zinc-400 hover:bg-white/[0.03]')}
+            className={cn('flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-[13px]', selected === AUDIT ? 'bg-white/[0.07] text-zinc-100' : 'text-zinc-400 hover:bg-white/[0.03]')}
           >
             <History size={14} /> {t('connections:list.auditAll')}
           </button>
@@ -143,7 +143,7 @@ export function ConnectionsView() {
           />
         ) : selected === AUDIT ? (
           <div className="px-6 py-5">
-            <h2 className="mb-1 text-[16px] font-semibold text-zinc-100">{t('connections:audit.title')}</h2>
+            <h2 className="mb-1 text-[15px] font-semibold text-zinc-100">{t('connections:audit.title')}</h2>
             <p className="mb-4 text-[12px] text-zinc-400">{t('connections:audit.intro')}</p>
             <AuditList />
           </div>
@@ -170,7 +170,7 @@ function NewMenu({ onPick }: { onPick: (k: ConnectionKind) => void }) {
           {(['postgres', 'mysql', 'mssql', 'ssh'] as ConnectionKind[]).map((k) => (
             <button
               key={k}
-              className="flex w-full items-center gap-2 rounded px-2 py-1.5 text-left text-[12.5px] text-zinc-300 hover:bg-white/[0.05]"
+              className="flex w-full items-center gap-2 rounded px-2 py-1.5 text-left text-[13px] text-zinc-300 hover:bg-white/[0.05]"
               onClick={() => {
                 setOpen(false)
                 onPick(k)
@@ -199,9 +199,9 @@ function ConnectionDetail({ conn, onDeleted }: { conn: Connection; onDeleted: ()
         <div className="min-w-0">
           <div className="flex items-center gap-2">
             <span className="truncate text-[15px] font-semibold text-zinc-100">{conn.name}</span>
-            <span className={cn('rounded px-1.5 text-[10.5px] font-medium', ENV_CLS[conn.env])}>{ENV_LABEL[conn.env]}</span>
+            <span className={cn('rounded px-1.5 text-[12px] font-medium', ENV_CLS[conn.env])}>{ENV_LABEL[conn.env]}</span>
           </div>
-          <div className="text-[11.5px] text-zinc-500">
+          <div className="text-[11px] text-zinc-500">
             {KIND_LABEL[conn.kind]} · {conn.host || t('connections:detail.noHost')}
             {conn.port ? `:${conn.port}` : ''}
             {conn.lastTestAt && ` · ${t('connections:detail.lastTest', { ago: timeAgo(conn.lastTestAt) })}`}
@@ -416,7 +416,7 @@ function ConnectionEditor({
           </Field>
         </div>
         {form.env === 'production' && (
-          <div className="flex items-start gap-2 rounded-md border border-rose-500/30 bg-rose-500/[0.06] px-3 py-2 text-[11.5px] text-rose-200">
+          <div className="flex items-start gap-2 rounded-md border border-rose-500/30 bg-rose-500/[0.06] px-3 py-2 text-[13px] text-rose-200">
             <ShieldAlert size={13} className="mt-0.5 shrink-0" />
             {t('connections:editor.definition.productionWarning')}
           </div>
@@ -467,8 +467,8 @@ function ConnectionEditor({
           <>
             <SecretField label={t('connections:editor.auth.password')} has={!!conn?.hasSecret} value={form.secret} onChange={(v) => set('secret', v)} />
             <div className="rounded-md border border-line bg-white/[0.02] p-3">
-              <div className="mb-1 text-[12.5px] text-zinc-200">{t('connections:editor.auth.readOnlyTitle')}</div>
-              <div className="mb-2 text-[11.5px] text-zinc-400">
+              <div className="mb-1 text-[13px] text-zinc-200">{t('connections:editor.auth.readOnlyTitle')}</div>
+              <div className="mb-2 text-[12px] text-zinc-400">
                 {t('connections:editor.auth.readOnlyHint')}
               </div>
               <div className="grid grid-cols-2 gap-3">
@@ -512,7 +512,7 @@ function ConnectionEditor({
             {form.sshAuth === 'key' && (
               <Field label={conn?.hasSecret ? t('connections:editor.auth.keyStored') : t('connections:editor.auth.keyNew')}>
                 <textarea
-                  className="textarea font-mono text-[11px]"
+                  className="textarea font-mono text-[13px]"
                   rows={4}
                   value={form.secret ?? ''}
                   onChange={(e) => set('secret', e.target.value || undefined)}
@@ -523,12 +523,12 @@ function ConnectionEditor({
             {(form.sshAuth === 'password' || form.sshAuth === 'key-file') && (
               <SecretField label={form.sshAuth === 'password' ? t('connections:editor.auth.password') : t('connections:editor.auth.passphrase')} has={!!conn?.hasSecret} value={form.secret} onChange={(v) => set('secret', v)} />
             )}
-            {form.sshAuth === 'agent' && <div className="text-[11.5px] text-zinc-400">{t('connections:editor.auth.agentHint')}</div>}
+            {form.sshAuth === 'agent' && <div className="text-[12px] text-zinc-400">{t('connections:editor.auth.agentHint')}</div>}
             {conn?.hostKey && (
-              <div className="flex items-center gap-2 text-[11.5px] text-zinc-400">
+              <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-[12px] text-zinc-400">
                 <KeyRound size={12} /> {t('connections:editor.auth.hostKey')} <span className="font-mono text-zinc-300">{conn.hostKey}</span>
                 <button
-                  className="ml-auto text-[11px] text-zinc-400 underline-offset-2 hover:text-zinc-200 hover:underline"
+                  className="ml-auto text-[12px] text-zinc-400 underline-offset-2 hover:text-zinc-200 hover:underline"
                   onClick={async () => {
                     try {
                       await call('connections:save', { resetHostKey: true }, conn.id)
@@ -553,21 +553,21 @@ function ConnectionEditor({
         >
           <div className="grid grid-cols-3 gap-3">
             <Field label={t('connections:editor.commands.read')}>
-              <textarea className="textarea font-mono text-[11px]" rows={8} value={form.sshRead} onChange={(e) => set('sshRead', e.target.value)} />
+              <textarea className="textarea font-mono text-[13px]" rows={8} value={form.sshRead} onChange={(e) => set('sshRead', e.target.value)} />
             </Field>
             <Field label={t('connections:editor.commands.write')}>
-              <textarea className="textarea font-mono text-[11px]" rows={8} value={form.sshWrite} onChange={(e) => set('sshWrite', e.target.value)} placeholder="cp /opt/erp/config/*" />
+              <textarea className="textarea font-mono text-[13px]" rows={8} value={form.sshWrite} onChange={(e) => set('sshWrite', e.target.value)} placeholder="cp /opt/erp/config/*" />
             </Field>
             <Field label={t('connections:editor.commands.execute')}>
-              <textarea className="textarea font-mono text-[11px]" rows={8} value={form.sshExecute} onChange={(e) => set('sshExecute', e.target.value)} placeholder={'systemctl restart erp-api\ndocker restart erp-*'} />
+              <textarea className="textarea font-mono text-[13px]" rows={8} value={form.sshExecute} onChange={(e) => set('sshExecute', e.target.value)} placeholder={'systemctl restart erp-api\ndocker restart erp-*'} />
             </Field>
           </div>
         </Section>
       )}
 
-      {error && <div className="rounded-md border border-rose-500/30 bg-rose-500/[0.06] px-3 py-2 text-[12px] text-rose-200">{error}</div>}
+      {error && <div className="rounded-md border border-rose-500/30 bg-rose-500/[0.06] px-3 py-2 text-[13px] text-rose-200">{error}</div>}
       {test && (
-        <div className={cn('flex items-start gap-2 rounded-md border px-3 py-2 text-[12px]', test.ok ? 'border-emerald-500/30 bg-emerald-500/[0.06] text-emerald-200' : 'border-rose-500/30 bg-rose-500/[0.06] text-rose-200')}>
+        <div className={cn('flex items-start gap-2 rounded-md border px-3 py-2 text-[13px]', test.ok ? 'border-emerald-500/30 bg-emerald-500/[0.06] text-emerald-200' : 'border-rose-500/30 bg-rose-500/[0.06] text-rose-200')}>
           {test.ok ? <CheckCircle2 size={14} className="mt-0.5 shrink-0" /> : <XCircle size={14} className="mt-0.5 shrink-0" />}
           <div className="min-w-0">
             <div>{test.message}</div>
@@ -583,7 +583,7 @@ function ConnectionEditor({
         </div>
       )}
       {!test && conn?.lastTestAt && conn.lastTestOk === false && (
-        <div className="text-[11.5px] text-rose-300/80">{t('connections:editor.lastTestFailed', { message: conn.lastTestMessage })}</div>
+        <div className="text-[12px] text-rose-300/80">{t('connections:editor.lastTestFailed', { message: conn.lastTestMessage })}</div>
       )}
 
       <div className="flex items-center gap-2 border-t border-line pt-4">
@@ -660,13 +660,13 @@ function TransportFields({ form, set }: { form: Form; set: <K extends keyof Form
           </Field>
         )}
       </div>
-      {via && <div className="text-[11.5px] text-zinc-400">{t('connections:editor.transport.viaSshHint')}</div>}
-      {sshList.length === 0 && <div className="text-[11.5px] text-zinc-500">{t('connections:editor.transport.noSsh')}</div>}
+      {via && <div className="text-[12px] text-zinc-400">{t('connections:editor.transport.viaSshHint')}</div>}
+      {sshList.length === 0 && <div className="text-[12px] text-zinc-500">{t('connections:editor.transport.noSsh')}</div>}
       {needsChoice && (
         <div
           data-testid="transport-choice"
           className={cn(
-            'space-y-2 rounded-md border px-3 py-2.5 text-[12px]',
+            'space-y-2 rounded-md border px-3 py-2.5 text-[13px]',
             form.allowPlaintext && !publicLooking ? 'border-amber-500/35 bg-amber-500/[0.07] text-amber-100' : 'border-rose-500/30 bg-rose-500/[0.06] text-rose-100'
           )}
         >
@@ -696,7 +696,7 @@ function Section({ title, hint, children }: { title: string; hint?: string; chil
     <section className="space-y-3">
       <div>
         <div className="text-[13px] font-semibold text-zinc-100">{title}</div>
-        {hint && <div className="text-[11.5px] text-zinc-500">{hint}</div>}
+        {hint && <div className="text-[12px] text-zinc-500">{hint}</div>}
       </div>
       {children}
     </section>
@@ -728,7 +728,7 @@ function SecretField({ label, has, value, onChange }: { label: string; has: bool
           onChange={(e) => onChange(e.target.value === '' ? undefined : e.target.value)}
         />
         {has && (
-          <button className="btn-ghost h-8 shrink-0 px-2 text-[11.5px]" title={t('connections:editor.auth.secretRemove')} onClick={() => onChange(cleared ? undefined : '')}>
+          <button className="btn-ghost h-8 shrink-0 px-2 text-[12px]" title={t('connections:editor.auth.secretRemove')} onClick={() => onChange(cleared ? undefined : '')}>
             {cleared ? <RotateCcw size={12} /> : <Trash2 size={12} />}
           </button>
         )}
@@ -758,7 +758,7 @@ function AccessPane({ conn }: { conn: Connection }) {
 
   return (
     <div className="mx-auto max-w-3xl px-6 py-5">
-      <p className="mb-3 text-[12px] text-zinc-400">
+      <p className="mb-3 text-[13px] text-zinc-400">
         <Trans t={t} i18nKey="connections:access.intro" components={{ b: <b className="text-zinc-200" /> }} />
       </p>
       <div className="card divide-y divide-line">
@@ -768,11 +768,11 @@ function AccessPane({ conn }: { conn: Connection }) {
             <div key={a.id} className="flex items-center gap-3 px-4 py-2.5" data-access-agent={a.name}>
               <PixelAvatar agent={a} size={24} />
               <div className="min-w-0 flex-1">
-                <div className="truncate text-[12.5px] text-zinc-200">{a.name}</div>
-                <div className="truncate text-[11px] text-zinc-500">{lvl === 'none' ? a.role : hints[lvl]}</div>
+                <div className="truncate text-[13px] text-zinc-200">{a.name}</div>
+                <div className="truncate text-[12px] text-zinc-500">{lvl === 'none' ? a.role : hints[lvl]}</div>
               </div>
               <select
-                className={cn('input h-7 w-40 text-[12px]', lvl !== 'none' && 'border-indigo-500/40 text-indigo-200')}
+                className={cn('input h-7 w-auto min-w-40 shrink-0 text-[13px]', lvl !== 'none' && 'border-indigo-500/40 text-indigo-200')}
                 value={lvl}
                 onChange={(e) => void setLevel(a.id, e.target.value as AccessLevel)}
               >
@@ -786,7 +786,7 @@ function AccessPane({ conn }: { conn: Connection }) {
           )
         })}
       </div>
-      <div className="mt-4 space-y-1 text-[11.5px] text-zinc-500">
+      <div className="mt-4 space-y-1 text-[12px] text-zinc-500">
         {LEVEL_ORDER.filter((l) => l !== 'none').map((l) => (
           <div key={l}>
             <b className="text-zinc-400">{LEVEL_LABEL[l]}:</b> {hints[l]}
@@ -837,14 +837,14 @@ function SchemaPane({ conn }: { conn: Connection }) {
         </div>
         <div className="relative ml-auto w-56">
           <Search size={12} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-zinc-500" />
-          <input className="input h-7 pl-7 text-[12px]" placeholder={t('connections:schema.search')} value={filter} onChange={(e) => setFilter(e.target.value)} />
+          <input className="input h-7 pl-7 text-[13px]" placeholder={t('connections:schema.search')} value={filter} onChange={(e) => setFilter(e.target.value)} />
         </div>
         <button className="btn-outline h-7" disabled={busy} onClick={() => void refresh()}>
           {busy ? <Loader2 size={13} className="animate-spin" /> : <RotateCcw size={13} />} {t('connections:schema.read')}
         </button>
       </div>
-      {error && <div className="mb-3 rounded-md border border-rose-500/30 bg-rose-500/[0.06] px-3 py-2 text-[12px] text-rose-200">{error}</div>}
-      <p className="mb-3 text-[11.5px] text-zinc-500">{t('connections:schema.hint')}</p>
+      {error && <div className="mb-3 rounded-md border border-rose-500/30 bg-rose-500/[0.06] px-3 py-2 text-[13px] text-rose-200">{error}</div>}
+      <p className="mb-3 text-[12px] text-zinc-500">{t('connections:schema.hint')}</p>
       <div className="card divide-y divide-line">
         {tables.map((tbl) => {
           const key = `${tbl.schema}.${tbl.name}`
@@ -865,16 +865,16 @@ function SchemaPane({ conn }: { conn: Connection }) {
                 <ChevronRight size={12} className={cn('text-zinc-500 transition-transform', isOpen && 'rotate-90')} />
                 <Table2 size={13} className="text-zinc-400" />
                 <span className="font-mono text-[12px] text-zinc-200">{key}</span>
-                {tbl.kind === 'view' && <span className="rounded bg-white/5 px-1 text-[10px] text-zinc-400">{t('connections:schema.view')}</span>}
+                {tbl.kind === 'view' && <span className="rounded bg-white/5 px-1 text-[12px] text-zinc-400">{t('connections:schema.view')}</span>}
                 <span className="ml-auto text-[11px] text-zinc-500">{t('connections:schema.columns', { count: tbl.columns.length })}</span>
               </button>
               {isOpen && (
                 <div className="bg-black/20 px-9 py-1.5">
                   {tbl.columns.map((c) => (
-                    <div key={c.name} className="flex gap-3 py-0.5 font-mono text-[11.5px]">
+                    <div key={c.name} className="flex gap-3 py-0.5 font-mono text-[12px]">
                       <span className="text-zinc-300">{c.name}</span>
                       <span className="text-zinc-500">{c.type}</span>
-                      {!c.nullable && <span className="text-[10px] text-amber-300/70">NOT NULL</span>}
+                      {!c.nullable && <span className="text-[12px] text-amber-300/70">NOT NULL</span>}
                     </div>
                   ))}
                 </div>
@@ -882,7 +882,7 @@ function SchemaPane({ conn }: { conn: Connection }) {
             </div>
           )
         })}
-        {schema && tables.length === 0 && <div className="px-3 py-4 text-center text-[12px] text-zinc-500">{t('connections:schema.noMatch')}</div>}
+        {schema && tables.length === 0 && <div className="px-3 py-4 text-center text-[13px] text-zinc-500">{t('connections:schema.noMatch')}</div>}
       </div>
     </div>
   )

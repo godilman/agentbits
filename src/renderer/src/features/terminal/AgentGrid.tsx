@@ -68,7 +68,7 @@ export function AgentGrid() {
             { value: 'active', label: t('terminal:grid.active', { count: team.filter((a) => busyIds.has(a.id) || a.status === 'working').length }) }
           ]}
         />
-        <div className="ml-auto flex items-center gap-2 text-[11px] text-zinc-500">
+        <div className="ml-auto flex items-center gap-2 text-[12px] text-zinc-500">
           <LayoutGrid size={12} /> {t('terminal:grid.columns')}
           <Segmented<Cols>
             value={cols}

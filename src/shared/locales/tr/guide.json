@@ -65,7 +65,7 @@
     "watch": {
       "title": "İzle ve yönlendir",
       "why": "Ajanların ne yaptığını canlı görür, gerektiğinde araya girersin; biten işi lider inceler, sen de onaylar ya da geri gönderirsin.",
-      "how": "<b>Terminal → Ajan terminalleri</b>: her ajanın komutları, araç çağrıları ve çıktısı; alttaki kutudan <i>Yönlendir</i> (mevcut adımı keser) ya da <i>Sıraya al</i>. <b>Ofis</b> ekibi haritada gösterir, <b>Görevler</b> görevleri sürükle-bırakla yönetir, <b>Raporlar</b> rapor ve token kullanımını, <b>Kararlar</b> alınan kararları tutar. Üstteki <b>Tümünü duraklat</b> her şeyi durdurur."
+      "how": "<b>Terminal → Ajan terminalleri</b>: her ajanın komutları, araç çağrıları ve çıktısı; alttaki kutudan <i>Yönlendir</i> (mevcut adımı keser) ya da <i>Sıraya al</i>. <b>Ofis</b> ekibi haritada gösterir, <b>Görevler</b> görevleri sürükle-bırakla yönetir, <b>Raporlar</b> rapor ve token kullanımını, <b>Kararlar</b> alınan kararları tutar. Üstteki <b>Tümünü duraklat</b> yeni görevlerin başlamasını engeller, çalışan ajanları bir sonraki adımlarında bekletir (o an çalışan bir komut bitebilir; bir çalışmayı bitirmek için onu durdur)."
     }
   },
   "places": {

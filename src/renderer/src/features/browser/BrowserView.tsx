@@ -70,11 +70,11 @@ export function BrowserView() {
         </button>
         <div className="relative flex-1">
           <Globe size={13} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-zinc-400" />
-          <input className="input h-7 pl-8 font-mono text-[12px]" value={input} onChange={(e) => setInput(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && go(input)} />
+          <input className="input h-7 pl-8 font-mono text-[13px]" value={input} onChange={(e) => setInput(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && go(input)} />
         </div>
         <div className="flex gap-1">
           {BOOKMARKS.map((b) => (
-            <button key={b.url} className="btn-ghost h-7 text-[11.5px]" onClick={() => go(b.url)}>
+            <button key={b.url} className="btn-ghost h-7 text-[12px]" onClick={() => go(b.url)}>
               {b.label}
             </button>
           ))}

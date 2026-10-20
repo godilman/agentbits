@@ -65,7 +65,7 @@
     "watch": {
       "title": "Watch and steer",
       "why": "You see live what the agents are doing and step in when needed; the lead reviews finished work, and you approve it or send it back.",
-      "how": "<b>Terminal → Agent terminals</b>: each agent's commands, tool calls and output; from the box below, <i>Redirect</i> (interrupts the current step) or <i>Queue</i>. <b>Office</b> shows the team on a map, <b>Tasks</b> manages tasks with drag and drop, <b>Reports</b> keeps reports and token usage, <b>Decisions</b> the decisions made. <b>Pause all</b> at the top stops everything."
+      "how": "<b>Terminal → Agent terminals</b>: each agent's commands, tool calls and output; from the box below, <i>Redirect</i> (interrupts the current step) or <i>Queue</i>. <b>Office</b> shows the team on a map, <b>Tasks</b> manages tasks with drag and drop, <b>Reports</b> keeps reports and token usage, <b>Decisions</b> the decisions made. <b>Pause all</b> at the top keeps new tasks from starting and makes running agents wait at their next step (a command already running can finish; to end a run, stop it)."
     }
   },
   "places": {

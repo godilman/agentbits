@@ -32,12 +32,12 @@ export function SkillsView() {
         <div className="space-y-3 border-b border-line p-4">
           <div className="flex items-center gap-2">
             <BookOpen size={15} className="text-indigo-300" />
-            <div className="flex-1 text-[13.5px] font-semibold text-zinc-100">{t('skills:title')}</div>
+            <div className="flex-1 text-[15px] font-semibold text-zinc-100">{t('skills:title')}</div>
             <button className="btn-primary h-7" onClick={() => setAdding(true)} data-testid="skills-add">
               <Plus size={13} /> {t('skills:add')}
             </button>
           </div>
-          <p className="text-[11.5px] leading-relaxed text-zinc-400">{t('skills:intro')}</p>
+          <p className="text-[12px] leading-relaxed text-zinc-400">{t('skills:intro')}</p>
           <div className="relative">
             <Search size={13} className="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 text-zinc-500" />
             <input className="input pl-8" placeholder={t('skills:search')} value={q} onChange={(e) => setQ(e.target.value)} />
@@ -55,18 +55,18 @@ export function SkillsView() {
               )}
             >
               <div className="flex items-center gap-1.5">
-                <span className={cn('truncate font-mono text-[12.5px]', s.enabled ? 'text-zinc-100' : 'text-zinc-500 line-through')}>{s.name}</span>
+                <span className={cn('truncate font-mono text-[13px]', s.enabled ? 'text-zinc-100' : 'text-zinc-500 line-through')}>{s.name}</span>
                 {s.hasScripts && <Tag tone="sky">{t('skills:badges.scripts')}</Tag>}
                 {s.warnings.length > (s.hasScripts ? 1 : 0) && <Tag tone="amber">{t('skills:badges.warnings')}</Tag>}
                 {!s.enabled && <Tag>{t('skills:badges.disabled')}</Tag>}
               </div>
-              <div className="mt-0.5 line-clamp-2 text-[11.5px] leading-snug text-zinc-400">{s.description}</div>
-              <div className="mt-1 text-[10.5px] text-zinc-500">
+              <div className="mt-0.5 line-clamp-2 text-[12px] leading-snug text-zinc-400">{s.description}</div>
+              <div className="mt-1 text-[12px] text-zinc-500">
                 {s.assignments.length ? t('skills:badges.assigned', { count: s.assignments.length }) : t('skills:badges.notAssigned')}
               </div>
             </button>
           ))}
-          {skills.length > 0 && filtered.length === 0 && <div className="p-3 text-[12px] text-zinc-500">{t('skills:noneMatch')}</div>}
+          {skills.length > 0 && filtered.length === 0 && <div className="p-3 text-[13px] text-zinc-500">{t('skills:noneMatch')}</div>}
         </div>
       </aside>
       <main className="min-w-0 flex-1 overflow-y-auto">
@@ -84,7 +84,7 @@ export function SkillsView() {
         ) : selected ? (
           <SkillPanel key={selected.id} skill={selected} onDeleted={() => setSelectedId(null)} />
         ) : (
-          <div className="p-8 text-[12.5px] text-zinc-500">{t('skills:selectHint')}</div>
+          <div className="p-8 text-[13px] text-zinc-500">{t('skills:selectHint')}</div>
         )}
       </main>
       <AddSkillModal
@@ -103,7 +103,7 @@ function Tag({ children, tone }: { children: React.ReactNode; tone?: 'sky' | 'am
   return (
     <span
       className={cn(
-        'shrink-0 rounded px-1 text-[9.5px] font-medium uppercase tracking-wide',
+        'shrink-0 rounded px-1 text-[12px] font-medium uppercase tracking-wide',
         tone === 'sky' ? 'bg-sky-500/15 text-sky-300' : tone === 'amber' ? 'bg-amber-500/15 text-amber-300' : 'bg-zinc-700/50 text-zinc-400'
       )}
     >
@@ -173,10 +173,10 @@ function SkillPanel({ skill, onDeleted }: { skill: Skill; onDeleted: () => void 
         </div>
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2">
-            <h2 className="truncate font-mono text-[16px] font-semibold text-zinc-100">{skill.name}</h2>
+            <h2 className="truncate font-mono text-[15px] font-semibold text-zinc-100">{skill.name}</h2>
             {skill.modified && <Tag>{t('skills:badges.modified')}</Tag>}
           </div>
-          <p className="mt-1 text-[12.5px] leading-relaxed text-zinc-300">{skill.description}</p>
+          <p className="mt-1 text-[13px] leading-relaxed text-zinc-300">{skill.description}</p>
           <div className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-zinc-500">
             <span className="flex items-center gap-1">
               {src.type === 'github' ? <Github size={11} /> : <FileText size={11} />} {sourceText}
@@ -213,7 +213,7 @@ function SkillPanel({ skill, onDeleted }: { skill: Skill; onDeleted: () => void 
       {confirm && (
         <div
           className={cn(
-            'flex items-center gap-3 rounded-lg border px-4 py-3 text-[12.5px]',
+            'flex items-center gap-3 rounded-lg border px-4 py-3 text-[13px]',
             confirm === 'delete' ? 'border-rose-500/30 bg-rose-500/[0.06] text-rose-200' : 'border-amber-500/30 bg-amber-500/[0.06] text-amber-100'
           )}
         >
@@ -235,10 +235,10 @@ function SkillPanel({ skill, onDeleted }: { skill: Skill; onDeleted: () => void 
 
       {skill.warnings.length > 0 && (
         <div className="rounded-lg border border-amber-500/30 bg-amber-500/[0.06] px-4 py-3">
-          <div className="mb-1 flex items-center gap-1.5 text-[12px] font-semibold text-amber-200">
+          <div className="mb-1 flex items-center gap-1.5 text-[13px] font-semibold text-amber-200">
             <AlertTriangle size={13} /> {t('skills:detail.warningsTitle')}
           </div>
-          <ul className="list-disc space-y-0.5 pl-5 text-[12px] text-amber-100/90">
+          <ul className="list-disc space-y-0.5 pl-5 text-[13px] text-amber-100/90">
             {skill.warnings.map((w) => (
               <li key={w}>{w}</li>
             ))}
@@ -250,11 +250,11 @@ function SkillPanel({ skill, onDeleted }: { skill: Skill; onDeleted: () => void 
 
       <div className="grid grid-cols-[minmax(0,1fr)_220px] gap-4">
         <section className="card min-w-0">
-          <header className="flex items-center gap-2 border-b border-line-soft px-4 py-2.5 text-[12.5px] font-semibold text-zinc-200">
+          <header className="flex items-center gap-2 border-b border-line-soft px-4 py-2.5 text-[13px] font-semibold text-zinc-200">
             <FileText size={13} className="text-zinc-400" />
             <span className="flex-1 truncate">{openFile ? openFile.path : t('skills:detail.instructions')}</span>
             {openFile && (
-              <button className="icon-btn h-6 w-6" onClick={() => setOpenFile(null)}>
+              <button className="icon-btn h-6 w-6" onClick={() => setOpenFile(null)} title={t('actions.close')} aria-label={t('actions.close')}>
                 <X size={12} />
               </button>
             )}
@@ -264,7 +264,7 @@ function SkillPanel({ skill, onDeleted }: { skill: Skill; onDeleted: () => void 
               /\.(md|markdown)$/i.test(openFile.path) ? (
                 <Markdown text={openFile.text} />
               ) : (
-                <pre className="whitespace-pre-wrap break-words font-mono text-[11.5px] text-zinc-300">{openFile.text}</pre>
+                <pre className="whitespace-pre-wrap break-words font-mono text-[12px] text-zinc-300">{openFile.text}</pre>
               )
             ) : detail ? (
               <Markdown text={detail.skillMd.replace(/^---\n[\s\S]*?\n---\n?/, '')} />
@@ -315,7 +315,7 @@ function AssignCard({ skill }: { skill: Skill }) {
       <div className="flex items-start gap-3">
         <div className="min-w-0 flex-1">
           <div className="text-[13px] font-semibold text-zinc-100">{t('skills:assign.title')}</div>
-          <p className="mt-0.5 text-[11.5px] leading-snug text-zinc-400">{t('skills:assign.hint')}</p>
+          <p className="mt-0.5 text-[12px] leading-snug text-zinc-400">{t('skills:assign.hint')}</p>
         </div>
         <select
           className="input h-8 w-[240px]"
@@ -350,7 +350,7 @@ function AssignCard({ skill }: { skill: Skill }) {
       <div className="mt-3 flex flex-wrap gap-1.5">
         {skill.assignments.length === 0 && <span className="text-[12px] text-zinc-500">{t('skills:assign.none')}</span>}
         {skill.assignments.map((a) => (
-          <span key={`${a.type}:${a.id}`} className="flex items-center gap-1 rounded-full border border-line bg-surface-2 py-0.5 pl-2.5 pr-1 text-[11.5px] text-zinc-200">
+          <span key={`${a.type}:${a.id}`} className="flex items-center gap-1 rounded-full border border-line bg-surface-2 py-0.5 pl-2.5 pr-1 text-[12px] text-zinc-200">
             {label(a.type, a.id)}
             <button className="rounded-full p-0.5 text-zinc-500 hover:bg-zinc-700 hover:text-zinc-200" title={t('skills:assign.remove')} onClick={() => set(a.type, a.id, false)}>
               <X size={11} />
@@ -394,11 +394,11 @@ function EditSkillModal({ skill, content, onClose }: { skill: Skill; content: st
       }
     >
       {skill.source.type !== 'created' && skill.source.type !== 'package' && (
-        <div className="mb-3 rounded-md border border-amber-500/30 bg-amber-500/[0.06] px-3 py-2 text-[12px] text-amber-200">
+        <div className="mb-3 rounded-md border border-amber-500/30 bg-amber-500/[0.06] px-3 py-2 text-[13px] text-amber-200">
           {t('skills:edit.warning', { source: t(`skills:source.${skill.source.type}` as I18nKey) })}
         </div>
       )}
-      <textarea className="input h-[460px] w-full resize-none font-mono text-[12px] leading-relaxed" value={text} onChange={(e) => setText(e.target.value)} spellCheck={false} />
+      <textarea className="input h-[460px] w-full resize-none font-mono text-[13px] leading-relaxed" value={text} onChange={(e) => setText(e.target.value)} spellCheck={false} />
       {error && <div className="mt-2 whitespace-pre-wrap text-[12px] text-rose-300">{error}</div>}
     </Modal>
   )

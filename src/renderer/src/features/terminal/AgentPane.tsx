@@ -233,13 +233,13 @@ export const AgentPane = memo(function AgentPane({
       <div className="flex shrink-0 items-start gap-2.5 border-b border-line bg-[#0e0e11] px-3 py-2">
         <PixelAvatar agent={agent} size={28} showStatus />
         <div className="min-w-0 flex-1">
-          <div className="flex items-center gap-1.5">
-            <span className="truncate text-[13px] font-semibold text-zinc-100">{agent.name}</span>
+          <div className="flex flex-wrap items-center gap-x-1.5 gap-y-0.5">
+            <span className="min-w-0 truncate text-[13px] font-semibold text-zinc-100">{agent.name}</span>
             {isLead && <Crown size={12} className="shrink-0 text-amber-300" aria-label={t('terminal:pane.projectLead')} />}
-            <span className="truncate text-[11.5px] text-zinc-500">{agent.role}</span>
-            <span className={cn('shrink-0 rounded px-1.5 text-[10px] font-medium', status.cls)}>{runLabel ?? status.label}</span>
+            <span className="truncate text-[12px] text-zinc-500">{agent.role}</span>
+            <span className={cn('shrink-0 rounded px-1.5 text-[12px] font-medium', status.cls)}>{runLabel ?? status.label}</span>
           </div>
-          <div className="mt-0.5 flex min-w-0 items-center gap-2 text-[11px] text-zinc-400">
+          <div className="mt-0.5 flex min-w-0 items-center gap-2 text-[12px] text-zinc-400">
             {task ? (
               <span className="min-w-0 truncate" title={task.title}>
                 <span className="font-mono text-zinc-300">{task.key}</span> {task.title}
@@ -249,7 +249,7 @@ export const AgentPane = memo(function AgentPane({
             )}
           </div>
           <div className="mt-0.5 flex flex-wrap items-center gap-x-3 gap-y-0.5">
-            <span className="text-[10.5px] text-zinc-500" title={t('terminal:pane.provider')}>
+            <span className="text-[11px] text-zinc-500" title={t('terminal:pane.provider')}>
               {provider ? `${provider.label}${(agent.model || provider.model) ? ' · ' + (agent.model || provider.model) : ''}` : 'Demo'}
             </span>
             <TokenStrip task={run ? usage?.currentTask ?? null : undefined} session={usage?.session} allTime={usage?.allTime} reporting={usage?.reporting} />
@@ -277,16 +277,16 @@ export const AgentPane = memo(function AgentPane({
 
       {/* transcript */}
       <div className="relative min-h-0 flex-1">
-        <div ref={scrollRef} onScroll={onScroll} className="selectable absolute inset-0 overflow-y-auto px-3 py-2 font-mono text-[11.5px] leading-[1.45]">
+        <div ref={scrollRef} onScroll={onScroll} className="selectable absolute inset-0 overflow-y-auto px-3 py-2 font-mono text-[12px] leading-[1.45]">
           {hasOlder && (
-            <button className="mb-2 w-full rounded border border-dashed border-line py-1 text-[11px] text-zinc-500 hover:text-zinc-300" onClick={() => void loadOlder()}>
+            <button className="mb-2 w-full rounded border border-dashed border-line py-1 text-[12px] text-zinc-500 hover:text-zinc-300" onClick={() => void loadOlder()}>
               {t('terminal:pane.older')}
             </button>
           )}
           {loading && <div className="text-zinc-500">{t('status.loading')}</div>}
           {loadError && <div className="text-rose-300">{t('terminal:pane.loadFailed', { error: loadError })}</div>}
           {!loading && !entries.length && !loadError && (
-            <div className="py-6 text-center font-sans text-[12px] text-zinc-500">
+            <div className="py-6 text-center font-sans text-[13px] text-zinc-500">
               {t('terminal:pane.empty')}
             </div>
           )}
@@ -296,7 +296,7 @@ export const AgentPane = memo(function AgentPane({
         </div>
         {!stick && unseen > 0 && (
           <button
-            className="absolute bottom-2 right-3 flex items-center gap-1 rounded-full bg-indigo-500 px-2.5 py-1 text-[11px] text-white shadow-pop"
+            className="absolute bottom-2 right-3 flex items-center gap-1 rounded-full bg-indigo-500 px-2.5 py-1 text-[12px] text-white shadow-pop"
             onClick={() => {
               const el = scrollRef.current
               if (el) el.scrollTop = el.scrollHeight
@@ -321,7 +321,7 @@ function StopButton({ runId }: { runId: string }) {
     return () => clearTimeout(timer)
   }, [confirm])
   return confirm ? (
-    <button className="h-6 rounded bg-rose-600 px-2 text-[11px] text-white hover:bg-rose-500" onClick={() => void call('runs:stop', runId)}>
+    <button className="h-6 rounded bg-rose-600 px-2 text-[12px] text-white hover:bg-rose-500" onClick={() => void call('runs:stop', runId)}>
       {t('terminal:pane.stopConfirm')}
     </button>
   ) : (
@@ -336,14 +336,14 @@ function StopButton({ runId }: { runId: string }) {
 const Line = memo(function Line({ log }: { log: AgentLog }) {
   const { t } = useTranslation()
   const [open, setOpen] = useState(false)
-  const stamp = <span className="mr-2 select-none text-zinc-600">{time(log.createdAt)}</span>
+  const stamp = <span className="mr-2 select-none text-zinc-500">{time(log.createdAt)}</span>
   switch (log.level) {
     case 'status':
       return (
-        <div className="my-1.5 flex items-center gap-2 text-[10.5px] text-zinc-500">
+        <div className="my-1.5 flex items-center gap-2 text-[12px] text-zinc-500">
           <span className="h-px flex-1 bg-line" />
           <span className="whitespace-pre-wrap">{log.message}</span>
-          <span className="select-none text-zinc-600">{time(log.createdAt)}</span>
+          <span className="select-none text-zinc-500">{time(log.createdAt)}</span>
           <span className="h-px flex-1 bg-line" />
         </div>
       )
@@ -352,12 +352,12 @@ const Line = memo(function Line({ log }: { log: AgentLog }) {
       const sys = typeof log.meta?.system === 'string' ? (log.meta.system as string) : null
       return (
         <div className="my-1.5 rounded border border-indigo-500/25 bg-indigo-500/[0.06] px-2 py-1.5 font-sans">
-          <div className="whitespace-pre-wrap text-[12px] text-indigo-100">
+          <div className="whitespace-pre-wrap text-[13px] text-indigo-100">
             {stamp}
             {log.message}
           </div>
           {(full || sys) && (
-            <button className="mt-1 flex items-center gap-1 text-[10.5px] text-indigo-300/80 hover:text-indigo-200" onClick={() => setOpen((v) => !v)}>
+            <button className="mt-1 flex items-center gap-1 text-[12px] text-indigo-300/80 hover:text-indigo-200" onClick={() => setOpen((v) => !v)}>
               {open ? <ChevronDown size={11} /> : <ChevronRight size={11} />} {t('terminal:pane.fullPrompt')}
             </button>
           )}
@@ -365,11 +365,11 @@ const Line = memo(function Line({ log }: { log: AgentLog }) {
             <div className="mt-1 space-y-1.5">
               {sys && (
                 <details className="rounded bg-black/30 px-2 py-1">
-                  <summary className="cursor-pointer text-[10.5px] text-zinc-400">{t('terminal:pane.systemPrompt')}</summary>
-                  <pre className="max-h-64 overflow-auto whitespace-pre-wrap font-mono text-[10.5px] text-zinc-400">{sys}</pre>
+                  <summary className="cursor-pointer text-[12px] text-zinc-400">{t('terminal:pane.systemPrompt')}</summary>
+                  <pre className="max-h-64 overflow-auto whitespace-pre-wrap font-mono text-[12px] text-zinc-400">{sys}</pre>
                 </details>
               )}
-              {full && <pre className="max-h-72 overflow-auto whitespace-pre-wrap rounded bg-black/30 px-2 py-1 font-mono text-[10.5px] text-zinc-300">{full}</pre>}
+              {full && <pre className="max-h-72 overflow-auto whitespace-pre-wrap rounded bg-black/30 px-2 py-1 font-mono text-[12px] text-zinc-300">{full}</pre>}
             </div>
           )}
         </div>
@@ -377,12 +377,12 @@ const Line = memo(function Line({ log }: { log: AgentLog }) {
     }
     case 'instruction':
       return (
-        <div className="my-1.5 flex gap-1.5 rounded border border-amber-500/30 bg-amber-500/[0.07] px-2 py-1.5 font-sans text-[12px] text-amber-100">
+        <div className="my-1.5 flex gap-1.5 rounded border border-amber-500/30 bg-amber-500/[0.07] px-2 py-1.5 font-sans text-[13px] text-amber-100">
           <User size={12} className="mt-0.5 shrink-0 text-amber-300" />
           <div className="min-w-0 whitespace-pre-wrap">
             {stamp}
             {log.message}
-            {typeof log.meta?.note === 'string' && <span className="ml-1.5 text-[10.5px] text-amber-300/70">({log.meta.note as string})</span>}
+            {typeof log.meta?.note === 'string' && <span className="ml-1.5 text-[12px] text-amber-300">({log.meta.note as string})</span>}
             {Array.isArray(log.meta?.files) && (log.meta.files as { id: string; name: string }[]).length > 0 && (
               <div className="mt-1 flex flex-wrap gap-1">
                 {(log.meta.files as { id: string; name: string }[]).map((f) => (
@@ -483,12 +483,12 @@ function Composer({
   const primary: InstructionMode = running ? 'redirect' : waiting ? 'queue' : 'task'
 
   if (!agent.enabled) {
-    return <div className="shrink-0 border-t border-line px-3 py-2 text-[11.5px] text-zinc-500">{t('terminal:composer.disabled')}</div>
+    return <div className="shrink-0 border-t border-line px-3 py-2 text-[13px] text-zinc-500">{t('terminal:composer.disabled')}</div>
   }
 
   return (
     <div className="shrink-0 border-t border-line bg-[#0e0e11] px-2.5 py-2">
-      <div className="mb-1 flex items-center gap-1.5 text-[10.5px] text-zinc-500">
+      <div className="mb-1 flex items-center gap-1.5 text-[12px] text-zinc-500">
         <MessageSquareText size={11} className="text-indigo-300" />
         <span>
           <Trans i18nKey="terminal:composer.heading" components={{ b: <b className="font-medium text-zinc-400" /> }} />
@@ -503,7 +503,7 @@ function Composer({
       <div className="flex items-end gap-1.5">
         <AttachButton onClick={() => void att.pick()} className="h-[34px] w-8" />
         <textarea
-          className="textarea min-h-[34px] flex-1 resize-none py-1.5 text-[12px]"
+          className="textarea min-h-[34px] flex-1 resize-none py-1.5 text-[13px]"
           rows={1}
           value={text}
           placeholder={
@@ -538,7 +538,7 @@ function Composer({
         )}
       </div>
       {(error || info || running) && (
-        <div className={cn('mt-1 text-[10.5px]', error ? 'text-rose-300' : info ? 'text-emerald-300' : 'text-zinc-500')}>
+        <div className={cn('mt-1 text-[12px]', error ? 'text-rose-300' : info ? 'text-emerald-300' : 'text-zinc-500')}>
           {error ?? info ?? steering.label}
         </div>
       )}

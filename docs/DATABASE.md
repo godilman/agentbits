@@ -32,7 +32,7 @@ const MIGRATIONS: { version: number; sql: string }[] = [ { version: 1, sql: `...
 
 - `migrate(db)` önce `schema_migrations` tablosunu oluşturur, `MAX(version)`'dan büyük her migration'ı
   **kendi transaction'ında** çalıştırıp sürümünü kaydeder.
-- **Yalnızca ekleyin.** Uygulanmış bir migration'ı (bugün: v1–v20) asla düzenlemeyin, silmeyin, yeniden
+- **Yalnızca ekleyin.** Uygulanmış bir migration'ı (bugün: v1–v22) asla düzenlemeyin, silmeyin, yeniden
   numaralandırmayın — kullanıcı makinelerindeki DB'ler onu zaten çalıştırdı ve değişiklik oraya ulaşmaz.
 - Yeni değişiklik = dizinin sonuna `{ version: N+1, sql: ... }`. SQLite'ta tipik olarak
   `ALTER TABLE x ADD COLUMN y ... NOT NULL DEFAULT ...`; sütun silme/CHECK değiştirme için tabloyu yeniden
@@ -64,6 +64,8 @@ const MIGRATIONS: { version: number; sql: string }[] = [ { version: 1, sql: `...
 | 15 | 2026-10-15 | Anlamsal hafıza: `memory_vectors (memory_id PK → memories ON DELETE CASCADE, model TEXT, vec BLOB)` — normalize Float32 vektör, `model` = `sağlayıcıId\|model` (başka model = yeniden gömülür). Gerçek SQLite ile uçtan uca denendi (silmede vektör de gidiyor) |
 | 14 | 2026-10-15 | Yarış modu: `tasks.race_of TEXT` (rakip kopyanın asıl görevi), `tasks.race_result TEXT` CHECK `won, lost`, `idx_tasks_race (race_of)`. SQL bellekte SQLite ile denendi (CHECK geçersiz değeri reddediyor) |
 | 20 | 2026-10-19 | Proje hafızası klasörü (ADR-030): `projects.project_memory INTEGER NOT NULL DEFAULT 1`; `memory_suggestions.target_file`, `target_op` (`append`), `target_note` (TEXT) — proje hafızası dosyasına not önerisi. Gerçek SQLite ile uçtan uca denendi |
+| 21 | 2026-10-19 | Görevi kim bitirdi (Paket 1B): `tasks.completed_by TEXT` (`lead` = lider onayı / yarış kararı, `user` = elle Bitti'ye taşıma, NULL = eski kayıt ya da bitmemiş). Bitti dışına çıkınca NULL'a döner. Gerçek SQLite ile uçtan uca denendi |
+| 22 | 2026-10-19 | Mesaj taslakları (Paket 3): `message_drafts` (proje + kanal başına bir satır; metin ve yüklemesi bitmiş eklerin `{id, name, size}` listesi; proje silinince FK ile gider). Gerçek SQLite ile uçtan uca denendi |
 
 ## 3. Tablolar
 
@@ -175,6 +177,7 @@ transaction'da yazılır.
 | `race_result` | TEXT | *(v14)* CHECK `won, lost`; NULL = yarış yok ya da sürüyor |
 | `acceptance` | TEXT DEFAULT `''` | *(v16)* Kabul kriterleri, satır başına bir tane |
 | `acceptance_check` | TEXT | *(v16)* Liderin son incelemedeki kontrolü, JSON `[{text, met, note}]`. Yarışta her iki deneme için ayrı ayrı yazılır |
+| `completed_by` | TEXT | *(v21)* `lead` (lider onayı / yarış kararı) · `user` (elle Bitti; lider incelemesi yok) · NULL. Durum `done` dışına çıkınca `tasksRepo.update` / `move` NULL yazar |
 
 İndeksler: `idx_tasks_status (status, sort_order)`, `idx_tasks_assignee (assignee_id)`, `idx_tasks_project (project_id, status)`.
 `tasksRepo.nextFor(agentId, exclude, assignedIn, unassignedIn)` — ajana atanmış görevleri `assignedIn`
@@ -199,6 +202,17 @@ Main içi tam liste için `tasksRepo.listAll()`.
 | `recalled` | TEXT | *(v17)* Çalışmanın istemine giren hatıralar, JSON `[{id, kind, content, via}]` (`via`: `profile`, `match`, `graph`) — görev ayrıntısındaki "Bu görev neyi biliyordu?" |
 
 İndeksler: `idx_runs_status`, `idx_runs_task`. Açılışta yarım kalanlar `cancelled` yapılır (`cancelStale`).
+
+### `message_drafts` *(v22)*
+| Sütun | Tip | Not |
+|---|---|---|
+| `project_id` | TEXT FK → `projects(id)` ON DELETE CASCADE | PK'nin parçası |
+| `channel` | TEXT | PK'nin parçası; `general`, `agent:<id>`, `task:<id>` (IPC doğrular) |
+| `text` | TEXT DEFAULT `''` | En fazla 100 000 karakter |
+| `files` | TEXT JSON DEFAULT `'[]'` | `[{id, name, size}]`: yüklemesi bitmiş ekler; dosyanın kendisi `files`'ta kalır (kopya yok). Ad/boyut, dosya sonradan silinirse adıyla gösterilebilsin diye |
+| `updated_at` | TEXT | |
+
+Boş taslak (metin yok, ek yok) satırı silinir (`draftsRepo.save`). Süre sonu yok. Başarılı gönderim renderer'da temizler.
 
 ### `messages`
 | Sütun | Tip | Not |

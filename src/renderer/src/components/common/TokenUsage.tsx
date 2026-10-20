@@ -52,8 +52,8 @@ export function TokenStrip({
       {chip(tt('layout:usage.task'), task)}
       {chip(tt('layout:usage.session'), session)}
       {chip(tt('layout:usage.allTime'), allTime)}
-      {est && <span className="rounded bg-white/5 px-1 text-[10px] text-zinc-500" title={USAGE_REPORTING_LABEL.simulated}>{tt('layout:usage.estimated')}</span>}
-      {none && <span className="rounded bg-white/5 px-1 text-[10px] text-zinc-500" title={USAGE_REPORTING_LABEL.none}>{tt('layout:usage.notReported')}</span>}
+      {est && <span className="rounded bg-white/5 px-1 text-[12px] text-zinc-500" title={USAGE_REPORTING_LABEL.simulated}>{tt('layout:usage.estimated')}</span>}
+      {none && <span className="rounded bg-white/5 px-1 text-[12px] text-zinc-500" title={USAGE_REPORTING_LABEL.none}>{tt('layout:usage.notReported')}</span>}
     </span>
   )
 }

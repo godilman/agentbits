@@ -72,6 +72,13 @@ Durum: ✅ düzeltildi · 🟡 kısmen / azaltıldı · 📄 bilinçli sınır, 
 - OAuth girişini yalnızca güvendiğiniz sunuculara yapın: SDK düzeltmesi yeni bir etkileşimli girişte kötü niyetli bir
   sunucunun sizi kendi giriş sayfasına yönlendirmesini engellemez; açılan sayfanın adresini kontrol edin.
 - Paketler imzasızdır (sertifika tanımlanana kadar).
+- Sistem bildirimleri (Paket 5B) proje adını (40 karakter), görev anahtarını, görev başlığının ilk 50 karakterini
+  (sahibin kararı), yanıtta ajanın adını, bağlantı / uygulama onayında bağlantının ya da uygulamanın adını (40) ve
+  yarışta kapatılan denemenin anahtarını taşır; Windows bunları kilit ekranında ve bildirim merkezinde gösterebilir.
+  Bu adlarda sır benzeri metin `redactSecrets` ile maskelenir (görev başlığını ajan da yazabilir); yön değiştiren ve
+  görünmez denetim karakterleri atılır. Bildirim tıklaması ana süreçten renderer'a tek yönlü bir `navigate` olayıdır;
+  renderer'ın bildirim gösteren ya da bir iş başlatan yeni bir IPC'si yok (`notify:takePending` yalnız bekleyen yeri okur). Ham hata, komut çıktısı ve sohbet içeriği
+  hiç girmez. İstemeyen Ayarlar → Genel → Bildirimler'den kapatır.
 - Paylaşım paketleri (`.agentbits`) güvenilmeyen girdidir: içe aktarma öncesi her şey gösterilir, ajanlar "Onay iste" açık ve ek
   klasörsüz başlar, paket izin yükseltemez, çalıştırılabilir dosyalar alınmaz, kurulu skill'in üzerine yazılmaz
   (`tests/share.test.ts`). İş tanımı ve kişilik ajanın talimatı olur: içe aktarmadan önce okuyun. Dışa aktarılan pakette

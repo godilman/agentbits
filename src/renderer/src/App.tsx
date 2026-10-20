@@ -1,10 +1,12 @@
 import { useEffect } from 'react'
+import { loadDrafts } from '@/lib/drafts'
 import { useTranslation } from 'react-i18next'
 import { setLanguage } from '@/i18n'
 import { ErrorBoundary } from '@/components/common/ErrorBoundary'
 import { Sidebar } from '@/components/layout/Sidebar'
 import { StatusBar } from '@/components/layout/StatusBar'
 import { Logo } from '@/components/common/Logo'
+import { StartWorkBanner } from '@/features/project/StartWorkBanner'
 import { TABS, TopBar } from '@/components/layout/TopBar'
 import { Toasts } from '@/components/layout/Toasts'
 import { Onboarding } from '@/components/onboarding/Onboarding'
@@ -44,7 +46,7 @@ export default function App() {
   }, [language])
 
   useEffect(() => {
-    void init()
+    void init().then(() => loadDrafts().catch(() => undefined))
   }, [init])
 
   useEffect(() => {
@@ -109,9 +111,13 @@ export default function App() {
   return (
     <div className="flex h-full flex-col">
       <TopBar />
-      <div className="flex min-h-0 flex-1">
+      {/* relative: the folded side panel opens over the content (Sidebar's Rail). */}
+      <div className="relative flex min-h-0 flex-1">
         {activeProjectId && <Sidebar />}
-        <main className="relative min-w-0 flex-1 bg-canvas">
+        <main className="flex min-w-0 flex-1 flex-col bg-canvas">
+          {inProject && <StartWorkBanner projectId={activeProjectId!} />}
+          {/* overflow-auto: on a very short window (zoomed) a view taller than this scrolls here instead of running over the status bar. */}
+          <div className="relative min-h-0 flex-1 overflow-auto">
           <ErrorBoundary resetKey={`${view}:${activeProjectId}:${tab}`}>
             {view === 'org' && <OrgView />}
             {view === 'project' && !activeProjectId && <ProjectHome />}
@@ -132,8 +138,9 @@ export default function App() {
             {inProject && tab === 'decisions' && <DecisionsView />}
             {inProject && tab === 'files' && <FilesView />}
           </ErrorBoundary>
+          </div>
         </main>
-        {/* Setup guide: a side panel that narrows the content instead of covering it. */}
+        {/* Setup guide: a side panel that narrows the content; over it when the content would get too narrow. */}
         <GuideDrawer />
       </div>
       <StatusBar />

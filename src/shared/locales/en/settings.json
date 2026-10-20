@@ -56,7 +56,7 @@
       "openai": "Model call via the Chat Completions API: no file system or terminal access; uses the app's file and connection tools.",
       "codexCli": "Runs OpenAI's `codex exec` command in sandbox mode.",
       "mockTitle": "Demo (simulation)",
-      "mock": "No key needed. Agents behave as if they were really working."
+      "mock": "No key needed. A simulation: agents look as if they were working but do no real work; no files, connections or tools are used and no tests run. For getting to know the screens and the team setup."
     },
     "form": {
       "apiKeyRequired": "API key is required.",
@@ -70,6 +70,10 @@
       "codexLogin": "Run `codex login` once in a terminal to sign in.",
       "model": "Model",
       "continueDemo": "Continue with demo",
+      "tryDemo": "Try with Demo",
+      "cliInstalled": "{{name}} is installed on this computer. If you haven't signed in yet, the test will say so (sign-in step below).",
+      "cliMissing": "{{name}} was not found on this computer. You can install it and type its path; to try without installing, start with the Demo simulation (it does no real work; you can switch later).",
+      "demoInstead": "To try without setting this up for now, start with the Demo simulation; it does no real work, and you can switch later in Settings → Providers.",
       "saveTest": "Save and test"
     },
     "modelSaved": "Model changed: {{model}}",
@@ -145,6 +149,10 @@
     "race": {
       "title": "Race mode",
       "desc": "When a task starts, a copy also goes to a free member on another provider or model; the lead keeps the better attempt and discards the other. Needs the lead's review. Costs about twice as much."
+    },
+    "notifications": {
+      "title": "Notifications",
+      "desc": "While the app window isn't in focus, shows a system notification for replies from the lead and agents you message directly, approvals waiting, tasks that need your decision or have stopped, and finished tasks; finished tasks are collected for 10 seconds into one notification. For approvals and tasks that need your decision or have stopped, the taskbar icon also flashes (not for replies or finished tasks). Turning this off stops both."
     }
   },
   "data": {

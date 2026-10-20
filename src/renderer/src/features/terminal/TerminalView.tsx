@@ -51,7 +51,7 @@ function ModeTab({ active, onClick, icon, label, hint, children }: { active: boo
       onClick={onClick}
       title={hint}
       className={cn(
-        'flex h-7 items-center gap-1.5 rounded-md px-2.5 text-[12.5px] font-medium',
+        'flex h-7 items-center gap-1.5 rounded-md px-2.5 text-[12px] font-medium',
         active ? 'bg-white/[0.08] text-zinc-100' : 'text-zinc-400 hover:bg-white/[0.04] hover:text-zinc-200'
       )}
     >
@@ -240,15 +240,15 @@ function ShellPanel({ active }: { active: boolean }) {
               )}
             >
               <SquareTerminal size={14} className={s.alive ? 'text-emerald-400' : 'text-zinc-500'} />
-              <span className="flex-1 truncate text-[12.5px]">{s.title}</span>
-              {s.mode === 'pipe' && <span className="text-[9.5px] text-amber-300/80">pipe</span>}
+              <span className="min-w-0 flex-1 truncate text-[13px]">{s.title}</span>
+              {s.mode === 'pipe' && <span className="text-[12px] text-amber-300/80">pipe</span>}
               <button className="icon-btn h-5 w-5 opacity-0 group-hover:opacity-100" title={t('actions.close')} onClick={(e) => (e.stopPropagation(), void kill(s.id))}>
                 <X size={12} />
               </button>
             </div>
           ))}
         </div>
-        {error && <div className="mx-2 mt-2 rounded border border-rose-500/30 bg-rose-500/[0.06] px-2 py-1.5 text-[11px] text-rose-200">{error}</div>}
+        {error && <div className="mx-2 mt-2 rounded border border-rose-500/30 bg-rose-500/[0.06] px-2 py-1.5 text-[12px] text-rose-200">{error}</div>}
       </nav>
 
       <div className="relative min-w-0 flex-1 bg-[#0a0a0c]">
@@ -257,9 +257,9 @@ function ShellPanel({ active }: { active: boolean }) {
             <SquareTerminal size={13} />
             <span className="truncate font-mono">{sel.cwd}</span>
             {sel.mode === 'pty' ? (
-              <span className="ml-auto shrink-0 rounded bg-emerald-500/10 px-1.5 text-[10.5px] text-emerald-300">{t('terminal:shell.pty')}</span>
+              <span className="ml-auto shrink-0 rounded bg-emerald-500/10 px-1.5 text-[12px] text-emerald-300">{t('terminal:shell.pty')}</span>
             ) : (
-              <span className="ml-auto flex shrink-0 items-center gap-1 rounded bg-amber-500/10 px-1.5 text-[10.5px] text-amber-300" title={t('terminal:shell.pipeTitle')}>
+              <span className="ml-auto flex shrink-0 items-center gap-1 rounded bg-amber-500/10 px-1.5 text-[12px] text-amber-300" title={t('terminal:shell.pipeTitle')}>
                 <TriangleAlert size={11} /> {t('terminal:shell.pipe')}
               </span>
             )}

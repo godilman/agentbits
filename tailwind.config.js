@@ -11,6 +11,9 @@ module.exports = {
       },
       colors: {
         canvas: '#09090b',
+        // Lighter than Tailwind's #71717a, which is below 4.5:1 for small text on every panel background here (3.4–4.1);
+        // this one is ≥ 4.8:1 on surface-3 and still a step below zinc-400.
+        zinc: { 500: '#8b8b93' },
         surface: { DEFAULT: '#111113', 2: '#18181b', 3: '#1f1f23' },
         line: { DEFAULT: '#27272a', soft: '#1f1f23' },
         accent: { DEFAULT: '#6366f1', soft: '#818cf8', muted: '#312e81' }

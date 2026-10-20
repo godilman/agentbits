@@ -75,10 +75,10 @@ export function OrgChart() {
         <div className="flex shrink-0 items-center gap-2">
           <UserRoundX size={14} className="text-zinc-500" />
           <span className="panel-title">{t('org:chart.unassigned')}</span>
-          <span className="font-mono text-[11px] text-zinc-600">{unassigned.length}</span>
+          <span className="font-mono text-[11px] text-zinc-500">{unassigned.length}</span>
         </div>
         {unassigned.length === 0 ? (
-          <span className="text-[12px] text-zinc-600">{t('org:chart.allAssigned')}</span>
+          <span className="text-[13px] text-zinc-500">{t('org:chart.allAssigned')}</span>
         ) : (
           <div className="flex min-w-0 flex-1 gap-1.5 overflow-x-auto">
             {unassigned.map((a) => (
@@ -90,7 +90,7 @@ export function OrgChart() {
               >
                 <PixelAvatar agent={a} size={20} showStatus />
                 <span className="text-[12px] text-zinc-300">{a.name}</span>
-                <span className="text-[11px] text-zinc-600">{a.role}</span>
+                <span className="text-[12px] text-zinc-500">{a.role}</span>
               </button>
             ))}
           </div>
@@ -151,13 +151,14 @@ function NodeCard({ unit, ctx, childCount, collapsed }: { unit: OrgUnit; ctx: Ch
       >
         <div className="h-[3px]" style={{ background: unit.color }} />
         <div className="px-3.5 pb-3 pt-2.5">
-          <div className="flex items-center gap-1.5 text-[10.5px] font-medium uppercase tracking-wider" style={{ color: unit.color }}>
-            <meta.icon size={12} />
+          {/* The unit color (any color the user picked) on the icon only: as text it can be unreadable. */}
+          <div className="flex items-center gap-1.5 text-[12px] font-medium uppercase tracking-wider text-zinc-400">
+            <meta.icon size={12} style={{ color: unit.color }} />
             {meta.label}
           </div>
-          <div className="mt-0.5 truncate text-[13.5px] font-semibold text-zinc-100 group-hover:text-white">{unit.name}</div>
+          <div className="mt-0.5 truncate text-[13px] font-semibold text-zinc-100 group-hover:text-white">{unit.name}</div>
           {lead && (
-            <div className="mt-0.5 flex items-center gap-1 truncate text-[11px] text-zinc-500">
+            <div className="mt-0.5 flex items-center gap-1 truncate text-[12px] text-zinc-500">
               <Star size={10} className="shrink-0 fill-amber-300 text-amber-300" /> {lead.name}
             </div>
           )}
@@ -173,20 +174,20 @@ function NodeCard({ unit, ctx, childCount, collapsed }: { unit: OrgUnit; ctx: Ch
                 +{members.length - MAX_AVATARS}
               </span>
             )}
-            {members.length === 0 && <span className="text-[11px] text-zinc-600">{t('org:chart.noDirectMembers')}</span>}
+            {members.length === 0 && <span className="text-[12px] text-zinc-500">{t('org:chart.noDirectMembers')}</span>}
           </div>
 
-          <div className="mt-2.5 flex items-center justify-between gap-2 text-[11px]">
+          <div className="mt-2.5 flex flex-wrap items-center justify-between gap-2 gap-y-1 text-[12px]">
             <span className="text-zinc-500">
               {t('org:counts.agents', { count: members.length })}
-              {deep > members.length && <span className="text-zinc-600"> · {t('org:chart.total', { count: deep })}</span>}
+              {deep > members.length && <span className="text-zinc-500"> · {t('org:chart.total', { count: deep })}</span>}
             </span>
             {projectCount > 0 ? (
               <span className="inline-flex items-center gap-1 rounded bg-indigo-500/10 px-1.5 py-px text-indigo-300">
                 <FolderKanban size={10} /> {t('org:chart.inProjects', { count: projectCount })}
               </span>
             ) : (
-              <span className="text-zinc-700">{t('org:chart.notInProject')}</span>
+              <span className="text-zinc-500">{t('org:chart.notInProject')}</span>
             )}
           </div>
         </div>

@@ -99,6 +99,7 @@
     "drop": "Dosyaları bırak"
   },
   "attach": {
+    "gone": "artık yok (silinmiş ya da erişilemiyor); gönderilmez, kaldırabilirsin",
     "tooBig": "çok büyük ({{size}}; en fazla {{limit}})",
     "moreFiles_one": "+{{count}} dosya",
     "moreFiles_other": "+{{count}} dosya",

@@ -61,6 +61,8 @@ Hepsi tek pencerede, verilerin de kendi bilgisayarında kalır.
   etkileşimli kabuklar (PowerShell / bash) da var.
 - **Bana ihtiyaç var.** Üst barda, seni bekleyen her şeyin tek listesi: onaylar, birleştirilmemiş işler, liderin karar
   veremediği incelemeler, nedeniyle bekletilen görevler. Kart, görevin neden ilerlemediğini söyler.
+- **Bildirimler.** Agentbits önde değilken yanıtları, onayları, seni bekleyen kararları ve biten işleri sistem
+  bildirimiyle söyler (gruplanmış, bayatlamış olanlar düşer); tıklama yalnız ilgili yeri açar. Ayarlar'da tek anahtar.
 - **Lider incelemesi, hafıza ve kararlar.** Biten iş liderin incelemesine gider; görevin kabul kriterleri varsa her biri
   kontrol edilir, "Ne değişti?" dosyaları ve farkı gösterir. Kabul edilen kararlar ADR tarzında
   kaydedilir, kalıcı proje hafızası (SQLite FTS5) da bağlamı çalışmalar arasında korur. İsteğe bağlı anlamsal hafıza,

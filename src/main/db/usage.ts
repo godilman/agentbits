@@ -51,6 +51,17 @@ const SUMS = `COALESCE(SUM(input),0) AS input, COALESCE(SUM(output),0) AS output
   COALESCE(SUM(cost_usd),0) AS cost_usd, COUNT(*) AS calls, COALESCE(MAX(estimated),0) AS estimated`
 
 export const usageRepo = {
+  /** Tasks whose latest run (`task`) or the review since it (`review`) was done by the Demo provider — a simulation. */
+  simulatedTasks(mode: 'task' | 'review'): string[] {
+    const rows = getDb()
+      .prepare(
+        `SELECT DISTINCT u.task_id AS id FROM token_usage u
+         WHERE u.provider = 'mock' AND u.mode = ? AND u.task_id IS NOT NULL
+           AND u.created_at >= COALESCE((SELECT MAX(r.started_at) FROM runs r WHERE r.task_id = u.task_id), '')`
+      )
+      .all(mode) as { id: string }[]
+    return rows.map((r) => r.id)
+  },
   record(e: {
     agentId: string
     runId?: string | null

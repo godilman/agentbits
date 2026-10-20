@@ -18,6 +18,7 @@ import type {
   MemorySuggestion,
   MemoryScope,
   Message,
+  MessageDraft,
   OrgUnit,
   OrgUnitInput,
   PermissionsPatch,
@@ -406,6 +407,7 @@ const mapTask = (r: Row): Task => ({
   updatedAt: r.updated_at,
   startedAt: r.started_at,
   completedAt: r.completed_at,
+  completedBy: r.completed_by === 'lead' || r.completed_by === 'user' ? r.completed_by : null,
   dependsOn: JSON.parse(r.depends_on || '[]'),
   raceOf: r.race_of ?? null,
   raceResult: r.race_result === 'won' || r.race_result === 'lost' ? r.race_result : null,
@@ -546,6 +548,8 @@ export const tasksRepo = {
     return this.get(id)!
   },
   update(id: string, patch: Partial<Task>): Task {
+    // Leaving "done" forgets who made it done.
+    if (patch.status !== undefined && patch.status !== 'done' && patch.completedBy === undefined) patch = { ...patch, completedBy: null }
     const map: Record<string, string> = {
       title: 'title',
       description: 'description',
@@ -557,6 +561,7 @@ export const tasksRepo = {
       reviewNote: 'review_note',
       startedAt: 'started_at',
       completedAt: 'completed_at',
+      completedBy: 'completed_by',
       raceResult: 'race_result',
       acceptance: 'acceptance',
       acceptanceCheck: 'acceptance_check'
@@ -582,6 +587,7 @@ export const tasksRepo = {
         .o
     const patch: Partial<Task> = { status, sortOrder: order }
     if (status === 'done') (patch.completedAt = now()), (patch.progress = 100)
+    else patch.completedBy = null
     if (status === 'todo') patch.progress = 0
     return this.update(id, patch)
   },
@@ -721,6 +727,30 @@ const mapMessage = (r: Row): Message => ({
   createdAt: r.created_at
 })
 
+export const draftsRepo = {
+  list(): MessageDraft[] {
+    return (getDb().prepare('SELECT * FROM message_drafts').all() as Row[]).map((r) => ({
+      projectId: r.project_id as string,
+      channel: r.channel as string,
+      text: r.text as string,
+      files: JSON.parse((r.files as string) || '[]') as MessageDraft['files']
+    }))
+  },
+  /** Saves a draft; an empty one (no text, no files) is removed. */
+  save(d: MessageDraft): void {
+    if (!d.text && !d.files.length) {
+      getDb().prepare('DELETE FROM message_drafts WHERE project_id = ? AND channel = ?').run(d.projectId, d.channel)
+      return
+    }
+    getDb()
+      .prepare(
+        `INSERT INTO message_drafts (project_id, channel, text, files, updated_at) VALUES (?, ?, ?, ?, ?)
+         ON CONFLICT(project_id, channel) DO UPDATE SET text = excluded.text, files = excluded.files, updated_at = excluded.updated_at`
+      )
+      .run(d.projectId, d.channel, d.text, JSON.stringify(d.files), now())
+  }
+}
+
 export const messagesRepo = {
   list(channel?: string, limit = 200, projectId?: string): Message[] {
     const where: string[] = []
@@ -778,6 +808,10 @@ const mapLog = (r: Row): AgentLog => ({
 })
 
 export const logsRepo = {
+  /** Did this run really start working (its task prompt went out), or did it end while waiting for approval? */
+  runStarted(runId: string): boolean {
+    return !!getDb().prepare("SELECT 1 FROM agent_logs WHERE run_id = ? AND level = 'prompt' LIMIT 1").get(runId)
+  },
   add(entry: {
     runId?: string | null
     agentId?: string | null
@@ -1272,6 +1306,10 @@ export const projectsRepo = {
       unit_id: string
     }[]
     return mapProject(r, links)
+  },
+  /** Adds a team to a project (its other teams stay). */
+  addUnit(projectId: string, unitId: string): void {
+    getDb().prepare('INSERT OR IGNORE INTO project_units(project_id, unit_id) VALUES (?, ?)').run(projectId, unitId)
   },
   /** Marks projects as opened now (recent list order). Unknown ids are ignored. */
   touch(ids: string[]): void {

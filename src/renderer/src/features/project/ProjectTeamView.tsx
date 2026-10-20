@@ -11,6 +11,7 @@ import { apiError, call } from '@/lib/api'
 import { cn, compact, STATUS_META } from '@/lib/format'
 import { autoProjectLead, useProjectScope } from '@/lib/org'
 import { useAppStore } from '@/store/useAppStore'
+import { useLayer } from '@/components/common/Layer'
 
 /** Project → Team section: teams assigned to the active project and their members. */
 export function ProjectTeamView() {
@@ -56,18 +57,18 @@ export function ProjectTeamView() {
 
   return (
     <div className="flex h-full flex-col">
-      <div className="flex items-center gap-4 border-b border-line px-6 py-4">
+      <div className="flex flex-wrap items-center gap-4 gap-y-2 border-b border-line px-6 py-4">
         <span className="h-3 w-3 shrink-0 rounded-full" style={{ background: project.color }} />
         <div className="min-w-0">
           <h1 className="truncate text-[15px] font-semibold text-zinc-100">{t('project:team.title', { name: project.name })}</h1>
-          <div className="text-[11.5px] text-zinc-400">
+          <div className="text-[12px] text-zinc-400">
             {t('project:agents', { count: members.length })} · {t('project:team.unitsAssigned', { count: assigned.length })} · {t('project:team.sharedNote')}
           </div>
         </div>
         <div className="ml-auto flex items-center gap-2">
           <div className="flex items-center gap-2 rounded-md border border-line bg-surface-2 py-0.5 pl-2 pr-0.5">
             <Crown size={13} className="text-amber-300" />
-            <span className="text-[11.5px] text-zinc-400">{t('project:lead')}</span>
+            <span className="text-[12px] text-zinc-400">{t('project:lead')}</span>
             {lead && <PixelAvatar agent={lead} size={18} />}
             <select
               className="h-6 max-w-[220px] rounded bg-transparent pr-1 text-[12px] text-zinc-200 outline-none"
@@ -108,7 +109,7 @@ export function ProjectTeamView() {
                   </button>
                   {picker === 'empty' && <UnitPicker assignedIds={project.unitIds} onPick={addUnit} onClose={() => setPicker(null)} />}
                 </div>
-                <button className="btn-outline" onClick={() => showOrg('templates')}>
+                <button className="btn-outline" onClick={() => showOrg('templates', project?.id)}>
                   <LayoutTemplate size={14} /> {t('project:team.fromTemplate')}
                 </button>
               </div>
@@ -184,7 +185,7 @@ function UnitCard({
         </div>
         <div className="min-w-0 flex-1">
           {crumbs.length > 0 && (
-            <div className="flex items-center gap-0.5 truncate text-[10.5px] text-zinc-500">
+            <div className="flex items-center gap-0.5 truncate text-[11px] text-zinc-500">
               {crumbs.map((c, i) => (
                 <span key={c.id} className="flex items-center gap-0.5">
                   {i > 0 && <ChevronRight size={10} />}
@@ -193,14 +194,14 @@ function UnitCard({
               ))}
             </div>
           )}
-          <div className="truncate text-[13.5px] font-semibold text-zinc-100">{unit.name}</div>
+          <div className="truncate text-[13px] font-semibold text-zinc-100">{unit.name}</div>
           <div className="text-[11px] text-zinc-400">
             {KIND_META[unit.kind].label} · {t('project:agents', { count: total })}
           </div>
         </div>
         <div className="flex shrink-0 items-center gap-0.5">
           <button
-            className="btn-ghost h-6 px-2 text-[11.5px]"
+            className="btn-ghost h-6 px-2 text-[12px]"
             onClick={() => {
               showOrg('teams')
               selectUnit(unit.id)
@@ -214,11 +215,11 @@ function UnitCard({
         </div>
       </div>
       <div className="flex-1 py-1">
-        {total === 0 && <div className="px-4 py-3 text-[12px] text-zinc-500">{t('project:team.noAgentsInUnit')}</div>}
+        {total === 0 && <div className="px-4 py-3 text-[13px] text-zinc-500">{t('project:team.noAgentsInUnit')}</div>}
         {groups.map((g) => (
           <div key={g.unit.id}>
             {g.unit.id !== unit.id && g.rows.length > 0 && (
-              <div className="flex items-center gap-1.5 px-4 pb-0.5 pt-2 text-[10.5px] font-medium uppercase tracking-wider text-zinc-500">
+              <div className="flex items-center gap-1.5 px-4 pb-0.5 pt-2 text-[12px] font-medium uppercase tracking-wider text-zinc-500">
                 {(() => {
                   const SubIcon = KIND_META[g.unit.kind].icon
                   return <SubIcon size={11} style={{ color: g.unit.color }} />
@@ -240,23 +241,23 @@ function UnitCard({
                   <PixelAvatar agent={a} size={26} showStatus className={a.enabled ? '' : 'opacity-40 grayscale'} />
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-1.5">
-                      <span className="truncate text-[12.5px] font-medium text-zinc-200">{a.name}</span>
+                      <span className="min-w-0 truncate text-[13px] font-medium text-zinc-200">{a.name}</span>
                       {a.id === projectLeadId && (
-                        <span className="rounded bg-amber-500/15 px-1 text-[9.5px] font-semibold uppercase tracking-wide text-amber-300">{t('project:projectLead')}</span>
+                        <span className="shrink-0 rounded bg-amber-500/15 px-1 text-[12px] font-semibold uppercase tracking-wide text-amber-300">{t('project:projectLead')}</span>
                       )}
                       {g.unit.leadAgentId === a.id && a.id !== projectLeadId && (
-                        <span className="rounded bg-indigo-500/15 px-1 text-[9.5px] font-semibold uppercase tracking-wide text-indigo-300">{t('project:lead')}</span>
+                        <span className="shrink-0 rounded bg-indigo-500/15 px-1 text-[12px] font-semibold uppercase tracking-wide text-indigo-300">{t('project:lead')}</span>
                       )}
                     </div>
-                    <div className="truncate text-[11px] text-zinc-400">{title ? `${title} · ${a.role}` : a.role}</div>
+                    <div className="truncate text-[12px] text-zinc-400">{title ? `${title} · ${a.role}` : a.role}</div>
                   </div>
                   {away ? (
-                    <span className="flex max-w-[140px] shrink-0 items-center gap-1 text-[10.5px] text-zinc-500" title={t('project:team.busyIn')}>
+                    <span className="flex max-w-[140px] shrink-0 items-center gap-1 text-[11px] text-zinc-500" title={t('project:team.busyIn')}>
                       <span className="h-1.5 w-1.5 shrink-0 rounded-full" style={{ background: projectColor(away.projectId!) }} />
                       <span className="truncate">{projectName(away.projectId!)}</span>
                     </span>
                   ) : (
-                    <span className={cn('shrink-0 text-[10.5px]', STATUS_META[a.status].text)}>{STATUS_META[a.status].label}</span>
+                    <span className={cn('shrink-0 text-[12px]', STATUS_META[a.status].text)}>{STATUS_META[a.status].label}</span>
                   )}
                   <MemberTokens agentId={a.id} />
                 </button>
@@ -287,16 +288,10 @@ function UnitPicker({ assignedIds, onPick, onClose }: { assignedIds: string[]; o
       // the wrapper also holds the toggle button, which handles its own clicks
       if (!ref.current?.parentElement?.contains(e.target as Node)) onClose()
     }
-    const onKey = (e: KeyboardEvent): void => {
-      if (e.key === 'Escape') onClose()
-    }
     window.addEventListener('mousedown', onDown)
-    window.addEventListener('keydown', onKey)
-    return () => {
-      window.removeEventListener('mousedown', onDown)
-      window.removeEventListener('keydown', onKey)
-    }
+    return () => window.removeEventListener('mousedown', onDown)
   }, [onClose])
+  useLayer(true, onClose, ref) // mounted only while open
 
   return (
     <div ref={ref} className="card shadow-pop absolute right-0 top-9 z-40 w-[320px] p-1.5 text-left animate-fade-in">
@@ -314,14 +309,14 @@ function UnitPicker({ assignedIds, onPick, onClose }: { assignedIds: string[]; o
               style={{ paddingLeft: 8 + depth * 16 }}
             >
               <Icon size={13} style={{ color: unit.color }} className="shrink-0" />
-              <span className="truncate text-[12.5px] text-zinc-200">{unit.name}</span>
-              <span className="ml-auto shrink-0 text-[10.5px] text-zinc-500">{done ? t('project:team.added') : t('project:people', { count: unit.members.length })}</span>
+              <span className="min-w-0 truncate text-[13px] text-zinc-200">{unit.name}</span>
+              <span className="ml-auto shrink-0 text-[12px] text-zinc-500">{done ? t('project:team.added') : t('project:people', { count: unit.members.length })}</span>
             </button>
           )
         })}
       </div>
       <div className="mt-1 border-t border-line pt-1">
-        <button className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-[12px] text-zinc-400 hover:bg-white/[0.05] hover:text-zinc-200" onClick={() => showOrg('templates')}>
+        <button className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-[12px] text-zinc-400 hover:bg-white/[0.05] hover:text-zinc-200" onClick={() => showOrg('templates', useAppStore.getState().activeProjectId)}>
           <LayoutTemplate size={13} /> {t('project:team.newFromTemplate')}
         </button>
       </div>
@@ -333,7 +328,7 @@ function MemberTokens({ agentId }: { agentId: string }) {
   const { t } = useTranslation()
   const u = useAppStore((s) => s.usage?.agents.find((x) => x.agentId === agentId))
   return (
-    <span className="w-14 shrink-0 text-right font-mono text-[10.5px] text-zinc-500" title={usageTitle(t('office:allTime'), u?.allTime, u?.reporting)}>
+    <span className="min-w-14 shrink-0 text-right font-mono text-[11px] text-zinc-500" title={usageTitle(t('office:allTime'), u?.allTime, u?.reporting)}>
       {u?.allTime.calls ? `${compact(u.allTime.total)} tk` : '—'}
     </span>
   )

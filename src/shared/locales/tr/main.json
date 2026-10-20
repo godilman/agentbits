@@ -21,6 +21,8 @@
     "invalidResetMode": "Geçersiz sıfırlama türü",
     "agentNotFound": "Ajan bulunamadı",
     "taskNotFound": "Görev bulunamadı",
+    "invalidDraft": "Taslak kaydedilemedi (bilinmeyen kanal ya da çok uzun).",
+    "stopNotConfirmed": "{{key}} durduğu doğrulanamadı, bu yüzden taşınmadı. Yeniden durdur, sonra taşı.",
     "messageEmpty": "Mesaj boş",
     "modelsTimeout": "Model listesi isteği zaman aşımına uğradı.",
     "noSecureStorage": "Bu bilgisayarda güvenli anahtar deposu (işletim sistemi anahtar zinciri) yok; bu yüzden Agentbits parola, anahtar ya da token saklamaz. Linux'ta bir anahtarlık (GNOME Keyring / KWallet) kurup kilidini aç.",
@@ -468,5 +470,59 @@
       "undoFailed": "Not kaydedilemedi ({{message}}) ve {{file}} geri alınamadı: yeniden denemeden önce .agentbits/memory klasörüne bak.",
       "suggestionGone": "Bu öneri zaten işlendi."
     }
+  },
+  "quit": {
+    "title": "Agentbits hâlâ çalışıyor",
+    "message": "Şimdi kapatırsan:",
+    "runs_one": "• {{count}} görev çalışması yarıda durur. Agentbits'i yeniden açınca seni bekler, kendiliğinden yeniden başlamaz.",
+    "runs_other": "• {{count}} görev çalışması yarıda durur. Agentbits'i yeniden açınca seni bekler, kendiliğinden yeniden başlamaz.",
+    "replies_one": "• {{count}} sohbet yanıtı ya da inceleme kesilir.",
+    "replies_other": "• {{count}} sohbet yanıtı ya da inceleme kesilir.",
+    "approvals_one": "• {{count}} onay isteği reddedilir.",
+    "approvals_other": "• {{count}} onay isteği reddedilir.",
+    "nothingUndone": "Önceden yapılmış hiçbir şey geri alınmaz.",
+    "keep": "Çalışmaya devam et",
+    "quit": "Yine de kapat"
+  },
+  "notify": {
+    "reply": "{{agent}} yanıt verdi — sohbete bak",
+    "runApproval": "{{task}} başlamak için onayını bekliyor — onayla ya da reddet",
+    "connectionApprovalTask": "{{task}}: {{target}} için onayını bekliyor — onayla ya da reddet",
+    "connectionApproval": "{{agent}}, {{target}} için onayını bekliyor — onayla ya da reddet",
+    "undecided": "{{task}}: inceleme karara bağlanamadı — karar sende",
+    "held": {
+      "failed": "{{task}} hata verip durdu — ne yapılacağına sen karar ver",
+      "limit": "{{task}} çalışma sınırına takılıp durdu — ne yapılacağına sen karar ver",
+      "revision": "{{task}} revizyon sınırına ulaştı — ne yapılacağına sen karar ver",
+      "commit": "{{task}}: değişiklikler kaydedilemedi, görev durdu — ne yapılacağına sen karar ver",
+      "isolation": "{{task}}: kendi çalışma kopyası açılamadı, görev durdu — ne yapılacağına sen karar ver",
+      "auth": "{{task}}: sağlayıcı oturumu düştü, işler duraklatıldı — oturumu yenile"
+    },
+    "done": {
+      "none": "{{task}}: lider onayladı, görev bitti",
+      "merged": "{{task}}: lider onayladı, projeye birleştirildi",
+      "waiting": "{{task}}: lider onayladı; birleştirme bekliyor — değişiklikleri incele ve birleştir",
+      "conflict": "{{task}}: lider onayladı ama birleştirmede çakışma çıktı — görev ajanına geri döndü"
+    },
+    "race": {
+      "none": "{{task}} yarışı kazandı ({{loser}} kapatıldı)",
+      "merged": "{{task}} yarışı kazandı ({{loser}} kapatıldı), projeye birleştirildi",
+      "waiting": "{{task}} yarışı kazandı ({{loser}} kapatıldı); birleştirme bekliyor — değişiklikleri incele ve birleştir",
+      "conflict": "{{task}} yarışı kazandı ({{loser}} kapatıldı) ama birleştirmede çakışma çıktı — görev ajanına geri döndü"
+    },
+    "count": {
+      "approval_one": "{{count}} onay",
+      "approval_other": "{{count}} onay",
+      "needsYou_one": "{{count}} karar sende",
+      "needsYou_other": "{{count}} karar sende",
+      "reply_one": "{{count}} yanıt",
+      "reply_other": "{{count}} yanıt"
+    },
+    "groupUrgent_one": "{{count}} iş seni bekliyor",
+    "groupUrgent_other": "{{count}} iş seni bekliyor",
+    "groupDone_one": "{{count}} görevi lider onayladı",
+    "groupDone_other": "{{count}} görevi lider onayladı",
+    "more_one": "+{{count}} tane daha",
+    "more_other": "+{{count}} tane daha"
   }
 }

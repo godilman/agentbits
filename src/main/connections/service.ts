@@ -13,6 +13,7 @@ import { saveAgentFile } from '../files/service'
 import { fileRef, safeFileName } from '@shared/files'
 import { existsSync, mkdirSync, writeFileSync } from 'fs'
 import { join } from 'path'
+import { notifyUser } from '../notify'
 
 /**
  * Connection access for agents and the user. Every agent operation goes through
@@ -311,6 +312,7 @@ export function waitForApproval(ctx: AgentCtx, req: Omit<ConnectionApproval, 'id
     }, APPROVAL_TTL)
     pending.set(id, { runId: ctx.runId ?? null, info, resolve: res, timer })
     emit({ type: 'approvals:changed' })
+    if (info.projectId) notifyUser({ kind: 'connectionApproval', projectId: info.projectId, approvalId: id, taskId: info.taskId, agentName: info.agentName, target: req.connectionName, stillPending: () => pending.has(id) })
     emit({
       type: 'toast',
       level: 'info',

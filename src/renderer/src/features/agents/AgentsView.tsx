@@ -42,12 +42,12 @@ export function AgentsView() {
               <p className="text-[12px] text-zinc-400">{t('agents:view.subtitle')}</p>
             </div>
           </div>
-          <button className="btn-primary h-8 w-full text-[12.5px]" onClick={() => setCreating(true)}>
+          <button className="btn-primary h-8 w-full text-[13px]" onClick={() => setCreating(true)}>
             <Plus size={15} /> {t('agents:view.newAgent')}
           </button>
           <div className="relative">
             <Search size={13} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-zinc-400" />
-            <input className="input h-7 pl-8 text-[12.5px]" placeholder={t('agents:view.search')} value={query} onChange={(e) => setQuery(e.target.value)} />
+            <input className="input h-7 pl-8 text-[13px]" placeholder={t('agents:view.search')} value={query} onChange={(e) => setQuery(e.target.value)} />
           </div>
         </div>
 
@@ -69,16 +69,16 @@ export function AgentsView() {
                     <span className="truncate text-[13px] font-medium text-zinc-100">{a.name}</span>
                     {a.isLead && <Star size={11} className="shrink-0 fill-indigo-300 text-indigo-300" />}
                   </div>
-                  <div className="truncate text-[11.5px] text-zinc-400">{a.role || t('agents:view.noRole')}</div>
+                  <div className="truncate text-[12px] text-zinc-400">{a.role || t('agents:view.noRole')}</div>
                 </div>
-                <span className={cn('shrink-0 text-[10.5px]', STATUS_META[a.status].text)}>{STATUS_META[a.status].label}</span>
+                <span className={cn('shrink-0 text-[12px]', STATUS_META[a.status].text)}>{STATUS_META[a.status].label}</span>
               </button>
             )
           })}
-          {filtered.length === 0 && <div className="px-3 py-6 text-center text-[12px] text-zinc-400">{t('agents:view.noMatch')}</div>}
+          {filtered.length === 0 && <div className="px-3 py-6 text-center text-[13px] text-zinc-400">{t('agents:view.noMatch')}</div>}
         </div>
 
-        <div className="flex items-center justify-between border-t border-line px-4 py-2.5 text-[11px] text-zinc-400">
+        <div className="flex items-center justify-between border-t border-line px-4 py-2.5 text-[12px] text-zinc-400">
           <span>{t('agents:view.count', { count: agents.length })}</span>
           <span className={cn(workers > WORKER_DESK_COUNT && 'text-amber-400/80')}>
             {t('agents:view.desks', { used: Math.min(workers, WORKER_DESK_COUNT), total: WORKER_DESK_COUNT })}

@@ -105,6 +105,8 @@ export const claudeCliAdapter: ProviderAdapter = {
     let tokensIn = 0
     let tokensOut = 0
     let costUsd = 0
+    // File-tool calls waiting for their result (tool_use id → path).
+    const writes = new Map<string, string>()
     let toolUses = 0
     let resultError: string | null = null
     let sessionId: string | null = ctx.resumeSessionId ?? null
@@ -159,9 +161,10 @@ export const claudeCliAdapter: ProviderAdapter = {
               toolUses++
               const detail = block.input?.file_path ?? block.input?.command ?? block.input?.sql ?? block.input?.pattern ?? block.input?.url ?? block.input?.connection ?? ''
               ctx.onLog('tool', `${block.name} ${String(detail).slice(0, 240)}`, { toolUseId: block.id })
+              // A write is reported once its result says it worked (an attempt that fails or is refused wrote nothing).
               if (/^(Edit|MultiEdit|Write|NotebookEdit)$/.test(block.name)) {
                 const written = block.input?.file_path ?? block.input?.notebook_path
-                if (typeof written === 'string') ctx.onFileWritten?.(written)
+                if (typeof written === 'string' && block.id) writes.set(block.id, written)
               }
               ctx.onProgress(Math.min(90, 10 + toolUses * 6))
             }
@@ -194,7 +197,10 @@ export const claudeCliAdapter: ProviderAdapter = {
               ? block.content.map((c: any) => (typeof c?.text === 'string' ? c.text : '')).join('\n')
               : String(block.content ?? '')
             const first = body.trim().split('\n').slice(0, 3).join(' ⏎ ').slice(0, 300)
-            if (first) ctx.onLog(block.is_error ? 'error' : 'debug', `↳ ${first}`, { toolUseId: block.tool_use_id })
+            // Always recorded (also without output): the result of every tool call is evidence (`core/evidence.ts`).
+            ctx.onLog(block.is_error ? 'error' : 'debug', `↳ ${first || (block.is_error ? '✗' : '✓')}`, { toolUseId: block.tool_use_id })
+            const written = writes.get(block.tool_use_id)
+            if (written && !block.is_error) ctx.onFileWritten?.(written)
           }
         } else if (ev.type === 'result') {
           text = ev.result ?? text
@@ -213,7 +219,9 @@ export const claudeCliAdapter: ProviderAdapter = {
           if (costUsd) ctx.onUsage?.({ ...zeroUsage(), costUsd })
           for (const d of ev.permission_denials ?? []) {
             const target = d.tool_input?.file_path ?? d.tool_input?.command ?? d.tool_input?.url ?? ''
-            ctx.onLog('warn', t('orchestrator:providers.permissionDenied', { tool: d.tool_name, target: String(target).slice(0, 160) }))
+            ctx.onLog('warn', t('orchestrator:providers.permissionDenied', { tool: d.tool_name, target: String(target).slice(0, 160) }), {
+              denied: { tool: d.tool_name, target: String(target).slice(0, 160) }
+            })
           }
           if (ev.is_error) resultError = ev.result || ev.subtype || t('orchestrator:providers.claudeError')
         } else if (ev.type === 'system' && ev.subtype === 'init') {

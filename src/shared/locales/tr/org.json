@@ -82,7 +82,12 @@
     "newAgents_other": "{{count}} yeni ajan",
     "summary": "<b>{{agents}}</b> oluşturulur; iş tanımları, yetenekleri ve izinleri hazır gelir. Sonra hepsini düzenleyebilir, birimi istediğin projelere atayabilirsin.",
     "summaryWithUnits": "{{units}} ve <b>{{agents}}</b> oluşturulur; iş tanımları, yetenekleri ve izinleri hazır gelir. Sonra hepsini düzenleyebilir, birimi istediğin projelere atayabilirsin.",
-    "instantiated": "{{name}} kuruldu · {{agents}}"
+    "instantiated": "{{name}} kuruldu · {{agents}}",
+    "instantiatedToProject": "{{name}} kuruldu · {{agents}} · {{project}} projesine eklendi; lider sohbette seni bekliyor",
+    "instantiatedNotAssigned": "{{name}} kuruldu · {{agents}}. {{project}} projesine eklenmedi; projenin Ekip bölümünden ekleyebilirsin",
+    "addToProject": "Bu projeye ekle: <b>{{project}}</b>",
+    "addToProjectHint": "Ekip yalnız bu projeye atanır; lideri projenin sohbetinde hemen konuşmaya hazır olur. Başka projeler değişmez.",
+    "addToProjectOff": "Ekip kurulur ama hiçbir projeye atanmaz; bu projenin sohbetinde konuşacak lider olmaz."
   },
   "unit": {
     "nameRequired": "Ad boş olamaz",

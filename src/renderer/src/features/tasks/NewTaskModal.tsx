@@ -70,8 +70,9 @@ export function NewTaskModal() {
         <span className="flex items-center gap-2">
           {t('tasks:new.title')}
           {project && (
-            <span className="flex items-center gap-1.5 rounded bg-white/5 px-1.5 py-px text-[11px] font-normal text-zinc-400">
+            <span className="flex items-center gap-1.5 rounded bg-white/5 px-1.5 py-px text-[12px] font-normal text-zinc-400">
               <span className="h-1.5 w-1.5 rounded-full" style={{ background: project.color }} />
+              <span className="sr-only"> — </span>
               {project.name}
             </span>
           )}
@@ -140,7 +141,7 @@ export function NewTaskModal() {
                 <PixelAvatar agent={a} size={18} /> {a.name}
               </button>
             ))}
-            {agents.length === 0 && <span className="self-center text-[11.5px] text-zinc-500">{t('tasks:new.noAgents')}</span>}
+            {agents.length === 0 && <span className="self-center text-[12px] text-zinc-500">{t('tasks:new.noAgents')}</span>}
           </div>
         </div>
       </div>

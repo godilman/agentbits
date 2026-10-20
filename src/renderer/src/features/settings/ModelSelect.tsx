@@ -128,7 +128,7 @@ export function ModelSelect({
 
       {customMode && (
         <input
-          className="input font-mono text-[12px]"
+          className="input font-mono text-[13px]"
           value={draft}
           autoFocus={!value}
           placeholder={t(`settings:models.customPlaceholder.${kind === 'mock' ? 'anthropic' : kind}` as I18nKey)}

@@ -4,6 +4,602 @@
 > `## YYYY-MM-DD — kısa başlık`, ardından **Eklendi / Değişti / Düzeltildi / Kaldırıldı / Bilinen** maddeleri
 > ve ilgili dosyalar.
 
+## 2026-10-20 — v0.8.0: güvenli hata, dürüst Demo, taslaklar, sonuç kutusu, erişilebilirlik, sistem bildirimleri
+
+Sürüm 0.8.0; aşağıdaki Paket 1A–5B kayıtlarının hepsini içerir (her biri sahibin incelemesinden geçti). Migration v21
+(`tasks.completed_by`) ve v22 (`message_drafts`); ilk açılışta kendiliğinden uygulanır, veri silinmez.
+
+- **1A Hata ve inceleme:** ilk hatada görev bekletilir (otopilot aynı işi sessizce yeniden almaz), hata kullanıcı
+  dilinde açıklanır, takılan lider incelemesi "Bana ihtiyaç var"a nedeniyle düşer, "İncelemeyi yeniden dene".
+- **1B Kapatma, durdurma, tamamlama:** projeyi açmak iş başlatmaz ("Bu projede çalışmayı başlat"), kapatırken yarıda
+  kalacak iş sayılarla sorulur, elle Bitti önce sorar ve kendiliğinden birleştirmez.
+- **2 Dürüst Demo:** Demo hiçbir araç çağırmaz, her yerde "simülasyon" der; şablon proje içinden "Bu projeye ekle".
+- **3 Günlük kullanım:** kalıcı mesaj taslakları (proje + kanal), "Yeni mesajlar ↓", görünür kaydetme hataları,
+  onay bekleyen iş "henüz başlamadı".
+- **4 Sonuç ve doğrulama:** görev ayrıntısında "Sonuç" kutusu (komutlar, değişen dosyalar, kim değerlendirdi); lider
+  incelemesi araç kaydındaki kanıtı görür.
+- **5A Erişilebilirlik ve dar pencere:** Escape / odak katman sırasıyla, görünür klavye odağı, dar pencerede ikon
+  şeridi, Kılavuz sığmazsa üstte, ölçülü kontrast ve tip ölçeği.
+- **5B Sistem bildirimleri:** yanıt, onay, karar sende ve bitti; gruplanır, bayatlar düşer, tıklama yalnız ilgili
+  yeri açar (Ayarlar ya da yazı yazılan pencere açıkken yönlendirmez), görev çubuğu onay / kararda yanıp söner.
+- CI: `test:renderer` eklendi.
+
+## 2026-10-20 — Paket 5B: sistem bildirimleri (sürüm artırılmadı)
+
+Kaynak: sahibin 5B kararları (`docs/UX_REVIEW_2026-10-19.md` §8) ve 2026-10-20 ek kuralları.
+
+### Eklendi
+- **Sistem bildirimleri** (Ayarlar → Genel → Bildirimler, varsayılan açık) yalnız uygulamanın hiçbir penceresi odakta
+  değilken. Dört olay:
+  - liderin ya da doğrudan yazılan ajanın gerçek yanıtı
+  - onay gerekiyor: çalıştırma onayı, bağlantı / uygulama onayı
+  - karar sende: karasız inceleme ya da duran görev; sebep hata, çalışma sınırı, revizyon sınırı, commit, izolasyon
+    ya da sağlayıcı oturumu olabilir
+  - bitti: lider onayı ya da yarış sonucu
+- **Bildirilmeyenler:**
+  - kullanıcının kendi yaptığı: durdurma, reddetme, elle Bitti'ye taşıma
+  - açılışta yarıda kalan görevler; yeniden açılışta eski olaylar
+  - boş, yalnız gizli bloklu, iptal edilen ya da hatalı yanıt
+- **Zamanlama:**
+  - proje başına ilk onay / karar sende olayı hemen gösterilir; yanıtların ayrı penceresi var (bir yanıt onayı
+    geciktirmez, onay da yanıtı)
+  - aynı penceredeki sonraki 10 sn içindekiler tek bildirimde toplanır; ilk satırda türe göre sayı yazar
+    ("2 onay · 1 karar sende")
+  - bitişler 10 sn toplanır
+  - gösterilmeden önce artık beklemeyen (cevaplanmış onay, kalkmış bekletme, silinmiş görev) düşer
+  - pencere odağa dönünce ya da ayar kapanınca toplananlar atılır, sonradan gösterilmez
+- **Tekilleştirme** olayın kendi kimliğiyle: çalıştırma, inceleme, onay ya da yanıt. Aynı olay iki kaynaktan gelirse
+  tek bildirim çıkar; görev yeniden çalıştırılıp yine hata verirse yeni bildirim çıkar.
+- **"Bitti" birleştirmeyi söyler:** birleşti / birleştirme bekliyor / çakışma çıktı, görev ajanına döndü / çalışma
+  kopyası yok. Yarış tek bildirim: kazanan, kapatılan denemeyle birlikte; kaybeden için ayrıca "bitti" yok.
+- **Metin:** proje adı (40), görev anahtarı + başlık (50) ve beklenen adım; yanıtta ajan adı, onayda bağlantı /
+  uygulama adı (40). Kısaltma harf ve emoji bütünlüğünü bozmaz. Ham hata, komut çıktısı ve sohbet içeriği yok.
+- **Tıklama:** pencere öne gelir ve ilgili yer açılır: görev ayrıntısı ya da sohbet kanalı; farklı yerlere ait grupsa
+  projenin panosu (yalnız yanıtlardan oluşan grupta ilk yanıtın sohbeti).
+  Silinmiş görev, silinmiş proje ya da sonuçlanmış onay toast ile söylenir. Hiçbir tıklama işi başlatmaz, yeniden
+  denemez, onaylamaz, birleştirmez.
+- **Görev çubuğu:** onay ve karar bekleyenlerde yanıp söner; bildirimin gösterilip gösterilmediğine bağlı değildir.
+  Odağa dönünce ve ayar kapanınca durur.
+- Bildirim gösterilemezse görev ya da sohbet akışı bozulmaz.
+
+### Test
+- `tests/notify.test.ts` (unit): 10 sn pencere, hemen / grup, eskiyen olay, temizleme, yeniden çalıştırma anahtarı,
+  projeler ayrı, yanıt / onay pencerelerinin ayrılığı, Unicode kısaltma, yön / denetim karakterlerinin atılması.
+- `tests/e2e/notify.e2e.ts`, 19 adım (pencere yokken tıklama + `notify:takePending`, küçültülmüş ama aktif pencere dahil): gerçek orkestratör, git ve IPC; sağlayıcı ve Electron bildirimi taklit.
+  - açılış ve odak
+  - onay ve tıklama
+  - grupta cevaplanmış onay
+  - iki kez hata veren görev
+  - bitiş grubu ve silinen görev
+  - yarış
+  - worktree'de birleşti / bekliyor
+  - odağa dönüş
+  - ayarın kapanması
+  - lider ve doğrudan yanıt; boş ve hatalı yanıt
+  - gösterim hatası
+  - uzun ad
+  - tek pencerede: bildirim desteği yokken yanıp sönme, yeniden denenen inceleme (yeni olay), karara
+    bağlanamayan yarış (tek bildirim), karışık grup metni ("2 onay · 2 karar sende", "+1 tane daha"), göreve bağlı
+    bağlantı onayı ve tıklaması, gösterim öncesi silinen proje
+  - odak olayı gelmeden odaklanan pencere: gösterim anındaki denetim
+- Kasıtlı bozmalar yakalandı: eskiyen olay filtresi, odakta temizleme, görev kimliğine bağlı anahtar, boş yanıt,
+  gösterim anında odak denetimi, yanıp sönmenin bildirim desteğine bağlanması.
+- `tests/renderer/notifyNav.test.ts`, 9 adım (işleyicinin sırası, açık diyalogda geçiş yok, açılamayan proje, görevsiz onay dahil): tıklamanın yeri, silinmiş görev / proje, arşivlenmiş proje, silinmiş
+  ajanın sohbeti, sonuçlanmış onay, yalnız ekran.
+
+### Denetim düzeltmeleri (4 bağımsız denetçi, 1. tur)
+- Yeniden denenen inceleme eskisiyle aynı anahtarı taşıyordu; sonucu (bitti / karar sende / revizyon sınırı)
+  susuyordu. Artık her inceleme denemesinin ve her yarış karşılaştırmasının kendi kimliği var.
+- Karara bağlanamayan yarış iki bildirim üretiyordu; artık tek.
+- Birleştirme durumu `finishTaskBranch`'in gerçek sonucundan okunuyor: birleşecek değişiklik yoksa "birleşti" denmiyor;
+  birleşip artığı kalan kopya "bekliyor" sayılıyor. Hata atarsa yakalanıyor, bildirim yine çıkıyor.
+- Windows'ta zaman aşımıyla bildirim merkezine düşen bildirime sonradan tıklanabilsin diye son 20 bildirim tutuluyor.
+- macOS'ta pencere kapalıyken tıklama pencereyi yeniden açar, yüklenince ilgili yere gider.
+- Zamanlama monoton saatle (saat geri alınırsa 10 sn pencere uzamaz).
+- Görev çubuğu yalnız onay ve karar bekleyenlerde yanıp söner (yanıtlarda değil; ayar metniyle aynı).
+- Göreve bağlı bağlantı onayı satırında ajan adı yok (bildirim 3–4 satır gösterir).
+- Yalnız yanıtlardan oluşan grup, ilk yanıtın kanalını açar (#general'i değil).
+- Tıklama: arşivlenmiş proje ve silinmiş ajanın sohbeti söylenir; Ayarlar / proje penceresi kapanır; proje açılamazsa
+  başka projede hiçbir şey açılmaz.
+- Kullanıcı durdurduktan sonra gelen geç kullanım raporu ya da süre sayacı "sınır" sayılmaz.
+- Metinler: TR "{görev}: lider onayladı", "projeye birleştirildi", "iş seni bekliyor"; EN grup başlığı "approved by
+  the lead", onay notu "artık beklemiyor (cevaplandı ya da süresi doldu)", görev notu "bulunamadı (silinmiş olabilir)".
+- Belgeler: FEATURES'taki eski "işletim sistemi bildirimleri yok" satırı, SECURITY'de bildirimin taşıdığı adlar.
+
+### Denetim düzeltmeleri (4 bağımsız denetçi, 2. tur)
+- macOS'ta pencere kapalıyken tıklanan bildirimin yeri ana süreçte tutulur; yeni pencerenin renderer'ı verisini
+  yükleyip olayları dinlemeye başlayınca `notify:takePending` ile alır (önce gönderilen olay kayboluyordu).
+- Tıklama, açık "Yeni görev" ya da proje ayarları penceresinin altında projeyi değiştirmez (yazılanı kaybettirebilir
+  ya da görevi öbür projede açtırabilirdi); bunu söyleyen bir not gösterir. İşleyici `lib/notifyNav.ts` `applyNav`.
+- Birleştirme sonucu kopya silinmeden kaydedilir (silme başarısız olsa da "birleşti" doğru).
+- Kilit ekranına giden adlarda (görev başlığı ajan da yazabilir, ajan / bağlantı / proje adı) sır benzeri metin
+  `redactSecrets` ile maskelenir; yön değiştiren ve görünmez denetim karakterleri atılır (emoji birleştiricileri
+  korunur).
+- `Modal` belge köküne portal ile çizilir: üst çubuktaki (Prompt oluşturucu) ya da çekmecedeki bir diyalog artık
+  Kılavuz / görev çekmecesi altında kalmaz. Üst çubuk z-40: açılır menüleri çekmece ve şeridin üstünde.
+- İç içe iki katman aynı anda kapanınca (Ayarlar içindeki onay ve Ayarlar) odak açan düğmeye döner.
+- Karara bağlanamayan yarışın iki görev notu canlı akışta tek satır (ortak olay kimliği).
+- Durum metinleri: sohbet başlığındaki ajan durumu ve sol paneldeki çalışma durumu 12 px ve kesilmez; canlı yanıtın
+  "görev yazıyor…" satırı ve terminaldeki talimat notu 12 px.
+- e2e dosya başına zaman sınırı 180 → 300 sn (bildirim e2e'si 10 sn pencereleri gerçek saatle bekler, ~100 sn).
+- `tests/settings.test.ts`: `notifications` doğrulama ve varsayılan.
+
+### Bilinen / açık
+- Taklit bildirim testi işletim sisteminin gösterdiğini kanıtlamaz. Gerçek Windows'ta ayrıca denenecek:
+  - bildirimin görünmesi (tek olay ve grup)
+  - tıklamanın pencereyi öne getirip doğru yeri açması; toast zaman aşımıyla bildirim merkezine düştükten sonra
+    oradan tıklama
+  - pencere küçültülmüşken (hâlâ aktif pencereyken) yeni onayda bildirim ve yanıp sönme
+  - görev çubuğunun yanıp sönmesi ve odakla / geri getirmeyle durması
+  - Odak Yardımı / Rahatsız Etmeyin açıkken davranış (yanıp sönme yine olmalı)
+  - kilit ekranında görünen metin
+  - özel karakterler (`& < > " '`) içeren proje / görev adının doğru görünmesi
+  - uzun grup gövdesinin (özet + 3 satır + "+N tane daha") nerede kesildiği
+  - (macOS) pencere kapalıyken tıklamanın pencereyi açıp yere gitmesi — gerçek Mac'te denenmedi
+- Uygulamanın kendi yerel diyaloğu (klasör seçici, çıkış onayı) açıkken pencere odakta sayılmaz: o sırada gelen
+  bildirim gösterilebilir. Bilinen sınır.
+
+### Denetim düzeltmeleri (4 bağımsız denetçi, 3. tur)
+- Yanıtlar onayla aynı 10 sn penceresini kullanıyordu: yanıttan hemen sonra gelen onay 10 sn bekleyebiliyordu. Artık
+  iki ayrı pencere (onay / karar sende ve yanıtlar).
+- Windows'ta küçültülmüş pencere "aktif" kalabilir: artık küçültülmüş ya da gizli pencere odakta sayılmaz; pencere geri
+  getirilince ('restore') toplananlar atılır.
+- `Modal` portal'a geçince bağlantı onay kutusu (ApprovalsDock) modalların altında kalıyordu: kutu z-[55].
+- Katman açan devri yalnız gerçekten sayfadan çıkan katmanda (Kılavuz yan panele dönünce değil).
+- Pencere hazır değilken ikinci tıklama: en son tıklanan yer açılır.
+- "Karar sende" grupta gösterilmeden önce görevin hâlâ incelemede olduğu da denetlenir.
+- Görevsiz bağlantı onayına (sohbetten) sonradan tıklanınca da "artık beklemiyor" notu.
+- Görev ayrıntısı görev değişince sıfırlanır (birleştirme önizlemesi önceki göreve ait kalmaz).
+- Metinler: ayar açıklaması davranışla birebir; TR grup başlığı "N görevi lider onayladı"; diyalog notu.
+
+### Sahip incelemesi sonrası
+- Tıklama, Ayarlar açıkken de yönlendirmez: Ayarlar'daki kaydedilmemiş sağlayıcı formu (anahtar, model) proje
+  değişince ya da Ayarlar kapanınca kayboluyordu. Ayarlar ve proje yerinde kalır, nedenini söyleyen bir not çıkar;
+  hiçbir şey kendiliğinden kaydedilmez, sağlayıcı testi başlamaz. (1. turdaki "Ayarlar kapanır" maddesinin yerine.)
+- `tests/renderer/notifyNav.test.ts` 10 adım: aynı ve farklı projeden görev / sohbet / pano tıklamasında Ayarlar
+  kapanmaz, proje değişmez, yazılan girdi durur.
+
+## 2026-10-20 — Paket 5A inceleme düzeltmeleri (sürüm artırılmadı)
+
+Kaynak: `reports/agentbits-paket-5A-inceleme-2026-10-20.md` (sahibin incelemesi).
+
+### Düzeltildi
+- **Canlı sohbet farklı mesajları gizleyebiliyordu:** tekilleştirme aynı gönderen + 5 sn + #general'de görev anahtarı
+  geçmesini "aynı olay" sayıyordu (`TA-11 onaylandı` bir TA-1 notunu, sistem olayı bir kullanıcı notunu gizleyebiliyordu).
+  Artık ana süreç aynı olayı #general'e ve görev akış(lar)ına yazarken kopyalara ortak `meta.event` verir
+  (birleştirme, çalıştırma sonu, sınır / izolasyon / hata, yarış başlangıcı ve sonucu, onay, revizyon) ve canlı akış
+  yalnız bu kimlikle birleştirir (#general kopyası kalır). Başka hiçbir eşleştirme yok. Kayıtlar zaten silinmiyordu.
+  Bu değişiklikten önce yazılmış olaylar kimliksiz: canlı akışta iki kopya da görünür (hiçbiri gizlenmez).
+- **Kılavuz, Ayarlar'ın arkasındayken odağı ve Escape'i alabiliyordu** (Ayarlar açıkken F1; ya da Kılavuz yanda,
+  Ayarlar açık, pencere daraltılınca). Katman yığını açılış sırasını değil görsel sırayı (z-index) izliyor: alttaki
+  katman açılınca odak üstteki diyalogda kalır, ilk Escape onu kapatır, sonra odak Kılavuz'a geçer; Kılavuz kapanınca
+  odak Kılavuz düğmesine döner (açanı kapanmış bir diyaloğun içindeyse).
+- **Adsız yalnız-ikon düğmeler:** Ayarlar'ın kapat düğmesi; ayrıca bildirim kapatma, ofis paneli kapatma, Skill dosya
+  önizlemesi kapatma, yeni sağlayıcı formu kapatma (`Kapat` / `Close`) ve ortam değişkeni satırı / izinli yol silme
+  (`Kaldır` / `Remove`).
+
+### Test
+- `tests/renderer/feed.test.ts` 7 adım: incelemenin üç olumsuz örneği (farklı içerik + aynı lider + anahtar;
+  `TA-11` / `TA-1`; kullanıcı notu + sistem olayı), farklı görevlerde aynı metin, ortak kimlikli kopyalar ve yarış.
+- `tests/renderer/layer.test.ts` 7 adım (gerçek `Layer.ts`, sahte DOM `stubs/dom.ts`): Ayarlar → F1; Kılavuz yanda →
+  Ayarlar → daralt; alttaki katman çekilince odak yerinde; Yeni görev → dosya önizlemesi; Ayarlar içindeki onay ve
+  Ayarlar aynı anda kapanınca odak dişli düğmesine; yalnız katman olmaktan çıkan Kılavuz açan devretmez; üst çubuk
+  popover'ı.
+  Üç kasıtlı bozma (eski "son açılan üstte" yığını, alttaki katmanın odağı geri çekmesi, eski anahtar eşleştirmesi)
+  yakalandı.
+- `tests/e2e/firstRun.e2e.ts`: gerçek Demo çalıştırması + incelemede bitiş ve karar mesajlarının #general ve görev
+  akışındaki kopyaları aynı, olay başına farklı `meta.event` taşıyor.
+- Tarayıcı düzeneği (TR/EN): iki zincirde odak / Escape / odağın Kılavuz düğmesine dönüşü; Ayarlar X adı
+  `Kapat` / `Close`, klavyeyle kapanınca odak açan düğmede; Yeni görev → önizleme zinciri değişmedi.
+
+## 2026-10-20 — Paket 5A eki: Kılavuz dar pencerede üstte, kontrast ve odak denetimi (sürüm artırılmadı)
+
+Kaynak: sahibin 5A incelemesi (Kılavuz kararı; tip ölçeği ve kontrastın ölçülerek denetlenmesi).
+
+### Değişti
+- **Kılavuz:** geniş pencerede yine içeriği daraltan yan panel. Pano (4 × 230 px) yanında sığmıyorsa içeriğin üstünde
+  açılır: başlığıyla adlandırılmış diyalog, odak içeri alınır, Tab içeride kalır, Escape yalnız en üst katmanı kapatır
+  (Kılavuz'dan açılan Ayarlar önce kapanır), kapanınca odak Kılavuz düğmesine döner; arka plana tıklama kapatır.
+  Pencere boyutu değişince kip kendiliğinden değişir; açık sekme, açık adım ve kaydırma konumu korunur, odak Kılavuz'un
+  içinden çekilmez. Kararın tek yeri `lib/layout.ts` `fitLayout`. Pano sütunlarının 230 px alt sınırı korundu.
+- **Büyütülmüş yazı / dar pencere (960 CSS px altı):** üst çubuktaki Organizasyon, Kılavuz, Tümünü duraklat ve bölüm
+  sekmeleri yalnız ikon gösterir (ad ekran okuyucuda ve ipucunda). Önce %150 büyütmede bölüm sekmeleri 767 px'e
+  sabitlenip bütün uygulamayı yana kaydırıyordu; Organizasyon düğmesi ve durum çubuğundaki "klasör seçilmedi" komşusunun
+  üstüne biniyordu.
+- **Kontrast (ölçülerek):** `zinc-500` yazı tonu `#71717a` → `#8b8b93` (Tailwind'inki panel zeminlerinde 3,4–4,1:1'di,
+  küçük yazı için 4,5 gerekir; önceki turda "yükseltilen" tonlar da buna çekilmişti). Kullanıcının seçtiği birim rengi
+  Şema ve Şablonlar'da yazı rengi değil ikon / nokta rengi (varsayılan indigo 4,2, slate 4,0:1'di). Bağlantı testi
+  "başarısız" yazısı saydamlıksız. Form alanlarının odak kenarı `accent/60` (2,2:1) → `#818cf8` (5,9:1); hatalı alanın
+  kenarı `rose-500/50–60` (2,0–2,5:1) → `rose-500` (4,8:1), odakta `rose-300`.
+- **Seçili sekme** (`Segmented`) artık `aria-pressed` taşıyor (yalnız renkle belirtiliyordu).
+
+### Test
+- `tests/renderer/layout.test.ts` (6 adım; 3 mutasyon yakalandı).
+- UI düzeneği, TR + EN: 1100 / 1366 / 1500 / 1700 / 1920 genişlikte pano ve Kılavuz; kip geçişinde sekme / adım /
+  kaydırma; diyalog adı, odak, 40 Tab + Shift+Tab, iç içe Escape, odağın dönmesi, arka plan tıklaması; %150 ve %200
+  büyütmede kapat düğmesinin görünür ve tıklanabilir olması.
+- Kontrast: 21 ekran durumunda (sohbet + gönderim hatası, ofis, ekip, terminal, pano, görev çekmecesi, raporlar,
+  kararlar, dosyalar, Kılavuz iki sekme, yeni görev, Ayarlar sekmeleri, Organizasyon sekmeleri) görünen her yazı,
+  bileşik zemine karşı WCAG oranıyla: önce TR 110 / EN 110 metin 4,5'in altında, sonra 0 / 0 (devre dışı öğeler hariç, 3).
+  Klavye odağı: sohbet, pano, ekip, dosyalar, Kılavuz diyaloğu, Ayarlar'da her durak görünür bir gösterge taşıyor;
+  `#818cf8` halkası zeminlere karşı 5,0–6,7:1.
+
+### Tip ölçeği (sahibin kuralıyla)
+- 17 farklı yazı boyutu (9–22 px) → 7: **10** yalnız kısa sayı rozeti · **11** zaman, kimlik / anahtar, yol, boyut,
+  kısayol, alan altı ipucu · **12** durum, rol, etiket, çip, alan etiketi, küçük düğme / sekme yazısı, başlık altı
+  açıklama, satır içi hata / uyarı · **13** normal metin, mesaj, liste adı, boş durum, uyarı kutusu, form alanları
+  (monospace olanlar dahil) · **15** panel / modal / görünüm başlığı · **18** sayfa başlığı, büyük sayı · **22** karşılama.
+  67 dosyada ~690 sınıf; işlevine göre tek tek (sohbet, görev kartı / ayrıntısı, Ayarlar önce; sonra kalan ekranlar).
+  Ekranda 10 px'te artık yalnız rakam var (TR ve EN ölçüldü); "Onay bekliyor", "Hata", "Karar sende" ≥ 12.
+- Büyüyen metin küçültülmedi; yerleşim düzeltildi: kart başlık satırı, Ayarlar satırları, sağlayıcı kartı, Veri
+  istatistikleri, Organizasyon başlığı, ajan durum şeridi, terminal bölmesi başlığı, Raporlar'daki ajan listesi,
+  Hafıza (dar pencerede alt alta), `Segmented` satıra sarar; sabit genişlikler `min-w-*`. Görev ayrıntısında
+  atanan seçici genişledi.
+- Çok kısa pencerede (büyütme) içerik alanı kendi içinde kayar, durum çubuğunun üstüne taşmaz (`App.tsx`).
+- Üst çubuk 640 CSS px altında "Agentbits" yazısını ve + düğmesini gizler (yeni proje, proje menüsünde de var);
+  "Bana ihtiyaç var" 1100 altında yalnız ikon ama adı ekran okuyucuda kalır (önce `hidden` idi).
+- Erişilebilirlik: görev ayrıntısının kapat düğmesi adsızdı; yeni görev diyaloğunun adı "Yeni görevÇok Uzun…" diye
+  bitişik okunuyordu.
+- `tests/renderer/typeScale.test.ts`: renderer'da ölçek dışı boyut kalmasın (kural dışı bir değerle yakalandığı denendi).
+
+### Doğrulama (tip ölçeği)
+- Örtüşme / kırpılma denetimi (görünen metin, düğme, alan kutularının kesişmesi; üç noktasız kesilen metin), TR + EN,
+  1366×768, 1100×680, 733×453 (%150), 550×340 (%200): sohbet, pano, görev ayrıntısı, yeni görev, Ayarlar'ın 7 sekmesi,
+  proje açıcı, ofis, ekip, terminal, raporlar, kararlar, tarayıcı, dosyalar, Kılavuz (3 sekme), Bana ihtiyaç var,
+  proje ayarları, prompt oluşturucu, geri bildirim, Organizasyon'un 8 sekmesi. Sonuç: yalnız Şema'daki aç/kapa
+  haplarının kart kenarına bilerek oturması raporlanıyor.
+- Kontrast yeniden: 21 ekran durumu TR / EN, 4,5:1 altında 0. Klavye odağı: sohbet, pano, ekip, dosyalar, Kılavuz,
+  Ayarlar ve **yeni görev modalı** (20 durak, hepsi görünür; Tab içeride, Escape sonrası odak açan düğmede).
+
+### Bilinen / açık
+- **⏳ %200 büyütmede proje sekmesi (Windows'ta doğrulanacak):** en küçük pencerede (550 CSS px) üst satırdaki proje
+  sekmesi sığmıyor; örtüşme yok ama sekme görünmüyor (proje menüsünden erişilir). Sebep: sağdaki 150 px pencere
+  düğmeleri payı CSS px olarak sabit, büyütmeyle küçülmüyor. Düzeltme (`env(titlebar-area-*)`) gerçek Windows
+  penceresinde denenmeli.
+- Gerçek Electron penceresinde, Windows yazı ölçeklemesiyle ve ekran okuyucuyla elle denenmedi. Ölçümler tarayıcı
+  düzeneğinde (Chromium, aynı renderer). 5A bu yüzden "tamamen doğrulandı" sayılmaz.
+- Ofis tuvali, piksel yazı, hafıza grafiğinin çizilen düğüm etiketleri ve xterm yazı boyutu ölçek dışı (çizim).
+
+## 2026-10-19 — Paket 5A: erişilebilirlik, dar pencere, tekrar ve durum dili (sürüm artırılmadı)
+
+Kaynak: birleşik plan Paket 5 (5A önce, 5B bildirimler sonra — sahibin kararı), `docs/UX_REVIEW_2026-10-19.md` V1–V4, G5, G6.
+
+### Eklendi
+- **Katmanlar** (`components/common/Layer.ts` `useLayer`): Escape yalnız en üstteki katmanı kapatır (iç içe modalda önce
+  üstteki); kapanınca odak açan öğeye döner (autoFocus alanlı modalda da). Modal ve Ayarlar: `role="dialog"`,
+  `aria-modal`, başlıkla adlandırılır, odak içeri alınır ve Tab içeride kalır; kapat düğmesinin adı var. Açılır
+  menüler (Bana ihtiyaç var, projeler, takım seçici) aynı yığında.
+- **Odak halkası:** klavye odağı her yerde görünür (`:focus-visible`; kendi halkası olan alanlar hariç).
+- **Dar pencere:** ana içeriğe kalan alan (pencere − kayıtlı sol panel − açıksa Kılavuz) panonun dört sütununun
+  ihtiyacından (988 px) azsa sol panel ikon şeridine iner (etiketli, klavyeyle açılır, onay bekleyen sayısı rozette).
+  Şeritten açılan panel içeriğin üstüne gelir (sohbeti / panoyu daraltmaz), kayıtlı genişliğiyle; Escape ve dışarı
+  tıklamayla kapanır, odak ikona döner. Kayıtlı panel genişliği değişmez.
+- **Tek görünen durum** (`shownStatus`): onay bekleyen / duraklatılmış çalışması olan ajan ofis, sol panel ve sohbet
+  başlığında aynı ("Onay bekliyor", "Duraklatıldı") — önce biri "çalışıyor", öbürü "boşta" diyordu.
+
+### Düzeltildi
+- **Pano sütunları üst üste biniyordu:** sütun izleri 230 px'in altına inebiliyordu, kartlar komşu sütunun üstüne
+  taşıyordu. Artık en az 230 px; dar alanda pano yana kayar.
+- **Pano başlığı** uzun proje adıyla kelime kelime alt alta diziliyordu: başlık tek satır (kesilir, tam adı ipucunda),
+  araçlar alta sarar.
+- **Canlı sohbette aynı olay iki satır** (görev akışı + #general kopyası; aynı metin ya da görevi anan #general
+  satırı) tek satır (`lib/feed.ts` `dedupeFeed`).
+- En düşük kontrastlı metin tonları (`zinc-600/700`, 34 yer) `zinc-500`'e çekildi.
+
+### Test
+- `tests/renderer/feed.test.ts` (tekrar birleştirme, görünen durum; 2 mutasyon yakalandı). UI düzeneğinde 1100×680 /
+  1366×768 / 1600×960 × TR / EN ölçümü ve klavye senaryoları (modal adı, odak tuzağı, iç içe Escape, odağın dönmesi,
+  şerit paneli Escape / dışarı tıklama / odak, odak halkası).
+
+### Bilinen / kapsam dışı
+- ~~Kılavuz açıkken pano yana kayar~~ → 2026-10-20 ekinde çözüldü (Kılavuz dar pencerede içeriğin üstünde açılır).
+- Tip ölçeği (17 farklı yazı boyutu) ve genel kontrast denetimi yapılmadı; yalnız en düşük tonlar düzeltildi.
+- Gerçek Electron penceresinde ve ekran okuyucuyla elle denenmedi.
+
+## 2026-10-19 — Paket 4: sonuç ve doğrulama sunumu (sürüm artırılmadı)
+
+Kaynak: birleşik plan Paket 4, `docs/UX_REVIEW_2026-10-19.md` K4 ve §8'deki yarış sınırı. Migration yok.
+
+### Eklendi
+- **Görev ayrıntısında "Sonuç" kutusu** (incelemede / bitti, en üstte): çalışma durumu ("sağlayıcı hatasız bitirdi — bu
+  işin doğru olduğu anlamına gelmez"), kim değerlendirdi (lider adı / sen elle / Demo inceleme / karar sende), ne değişti
+  (worktree: git dosya sayısı +/−, birleşti mi; Claude Code: yazılan dosyalar; diğerleri: "bu sağlayıcı bildirmez"),
+  çalışan komutlar araç kaydından ✓ / ✗ / ? (hiç yoksa "test doğrulanmadı"; kayıt vermeyen sağlayıcıda "bilinmiyor"),
+  engellenenler (izin reddi, bağlantı reddi), sınırlar (rapor kesildi), senden beklenen. Demo'da yalnız "simülasyon".
+  `core/evidence.ts` (`runEvidence`, `reviewOfRun`), `tasks:result`, `features/tasks/TaskResult.tsx`.
+- **Lider incelemesi kanıt görüyor:** istemde "araç kaydından kanıt" bölümü (komutlar ve sonuçları, yazılan / git'te
+  değişen dosyalar + en fazla 8 000 karakter diff, retler, rapor kesildiyse not); sistem istemi: rapor işçinin kendi
+  anlatımıdır, kayıtla desteklenmeyen "testler geçti" doğrulanmamıştır, notta söylenir.
+- **Yarış:** B'nin kopyası sonradan düzenlendiyse istemde "B'ye verilen görev ayrıntıları" ayrıca gösterilir (§8 kapandı).
+
+### Değişti
+- Kabul kriteri işaretlerinin etiketi "Liderin değerlendirmesi (rapor ve araç kaydı üzerinden; testleri kendisi
+  çalıştırmaz)".
+- Claude Code izin retleri logda yapılandırılmış işaret taşır (`meta.denied`); bağlantı denetimi `runId` ile süzülebilir.
+
+### Test
+- `tests/e2e/result.e2e.ts` (8 adım: sahte Claude Code araç kaydı, komutsuz çalışma, kayıt vermeyen API sağlayıcısı,
+  bağlantı reddi, uzun rapor, Demo, worktree diff + birleşti, yarış B ayrıntıları); 5 mutasyonun hepsi yakalandı.
+  UI düzeneğinde Sonuç kutusu: rapor "testler geçti" derken kutu `npm test` ✗ ve engellenen komutu gösteriyor.
+
+### Düzeltildi (sahibin Paket 4 incelemesi, aynı gün)
+Ortak ilke: araç çağrısı niyeti gerçek etki değildir; eksik ya da kırpılmış kayıt olayın yokluğunu kanıtlamaz.
+- **Başarısız yazma "yazıldı" sayılıyordu:** dosya araçları sonucuyla eşleşir — yazıldı / hata / reddedildi / sonuç
+  kaydedilmedi; yalnız başarılı olan yazılmış sayılır (aynı dosyaya son deneme belirler). Kabuk komutu çalıştıysa
+  "kabuk komutları da dosya değiştirmiş olabilir" denir (git yoksa "yazılmadı" iddiası yok). Claude Code ayrıştırıcısı
+  ekip farkındalığına yazmayı artık araç isteğinde değil başarılı sonuçta bildirir; çıktısız sonuç da kaydedilir (`↳ ✓`).
+- **Uzun çalışmada başarısız test kayboluyordu:** kanıt son 5 000 log yerine çalışmanın tüm araç / sonuç / ret
+  kayıtlarından; sayımlar tam (toplam, hata, sonra düzelen, sonuçsuz, listelenmeyen); hatalar listede korunur, gerisi
+  "N komut listelenmedi" der; aynı komutun sonra başarılı olduğu hata "sonra düzeldi" diye ayrılır. Kayıt hiç yoksa
+  "hiç komut çalışmadı" değil "kayıt bulunamadı" denir.
+- **Yarışta B'nin incelemesi yoktu:** tek kullanım kaydı (asıl görevde) iki taraftan da bulunur (kopyalanmaz); sonuç
+  kutusu yarışta "iki denemenin raporlarını karşılaştırdı (araç kaydı bu karşılaştırmaya verilmez)" der, Demo'da
+  "yarış karşılaştırması simülasyonu". Kayıt vermeyen sağlayıcıda "yalnız raporu okuyarak" der.
+- **Tekrar kontrol (aynı gün):** aynı dosyaya tekrar denemeler — her dosya için "en az bir kez yazıldı" ve "son denemenin
+  sonucu" ayrı (`fileWrites[].written / last`); ret yalnız başarısız denemeyi açıklar (ret → sonra başarılı = yazıldı),
+  sonraki hata önceki yazımı geri almaz ("yazıldı, sonraki deneme başarısız; önceki değişiklik duruyor"). Sayımlar
+  listeden bağımsız: `fileCount` (yazılan / yazılmayan / listelenmeyen), `commandCount.failedNotListed`; liste önce
+  yazılanları gösterir; "dosya yazılmadı" ve "tüm hatalar listede" yalnız tam sayım öyle diyorsa söylenir. `result.e2e`
+  17 adım; 4 mutasyon yakalandı.
+- **İfade (sahibin isteği):** "dosya yazılmadı" iddiası yerine "Dosya araçlarıyla başarılı yazma kaydı yok" (istem, TR,
+  EN); kardeş ifadeler de aynı dilde ("başarılı yazma kaydı yok, her deneme hata verdi / izin verilmedi", "başarılı yazma
+  kaydı olmayan N dosya listede yok"). Sonucu bilinmeyenler ayrı satırda kalır.
+- Test: `result.e2e` 15 adım (+ dosya sonuçları, 41 komut, 5 100 log satırı, sonra düzelen, kayıp kayıt, yarış 4
+  kombinasyon + tek kullanım kaydı, gerçek Claude Code ayrıştırıcısı sahte `claude` ile); 8 mutasyonun hepsi yakalandı.
+
+### Bilinen / kapsam dışı
+- Komut ve dosya kanıtı yalnız Claude Code'da (araç çağrısı + sonucu kaydı). Codex düz metin verir; API sağlayıcıları
+  yalnız bağlantı / dosya araçlarını kullanır — "bilinmiyor" denir, tahmin edilmez.
+- Komutun "bitti / hata verdi" olması aracın bildirdiğidir; testin neyi sınadığı yorumlanmaz. Otomatik test çalıştırma
+  eklenmedi (izin ve proje komutu kararı gerektirir).
+- Yarış değerlendirmesine araç kaydı kanıtı eklenmedi (yalnız tek görev incelemesine).
+- Bitti kartında kanıt özeti yok (kart başına sorgu gerektirir); onaylayan kartta, ayrıntı ayrıntıda.
+
+## 2026-10-19 — Paket 3: günlük kullanım — taslak, kaydırma, hata, durum dili (sürüm artırılmadı)
+
+Kaynak: birleşik plan Paket 3. Sahibin kararı: taslaklar kalıcı, proje + kanal bazında; süre sonu ve ayar yok.
+
+### Eklendi
+- **Kalıcı mesaj taslakları** (migration v22 `message_drafts`): metin + yüklemesi bitmiş eklerin referansı, proje + kanal
+  başına; yeniden açılışta, kanal / proje değişince korunur, başka kanala taşmaz. Başarılı gönderim temizler, başarısız
+  gönderimde metin ve ekler kalır. Metin ve ekler kaldırılınca kayıt silinir. Silinmiş / erişilemeyen ek "artık yok"
+  diye gösterilir ve gönderilmez. Proje silinince taslakları da gider. `drafts:list` / `drafts:save` (main doğrular).
+- **"Yeni mesajlar ↓"**: sohbet, görev akışı / logları ve sol panel yalnız en alttayken kayar.
+
+### Düzeltildi
+- **Sohbet ekleri kanala taşıyordu:** ek listesi yalnız projeye bağlıydı; #general'de eklenen dosya DM'e geçince orada
+  gönderilebiliyordu. Artık kanalın taslağına ait. Kompozitörden çıkınca yüklenmiş ek de artık silinmiyor.
+- **Sol paneldeki lidere mesaj** gönderimden önce kutuyu boşaltıyordu; hata olursa metin kayboluyor, hata da
+  görünmüyordu. **Görev notu** hatası da görünmüyordu. İkisi de artık metni korur ve hatayı gösterir.
+- **Görev düzenleme hatası sessizdi** (başlık / açıklama / öncelik / atanan): artık hata gösterilir, alanlar kayıtlı değere
+  döner, görevler yeniden yüklenir.
+- **Onay bekleyen iş çalışıyor gibi görünüyordu** (kart "Devam eden %2"): kart "onay bekliyor" der, ilerleme çubuğu yok;
+  görev ayrıntısında "henüz başlamadı" ve nasıl onaylanacağı / sormaması için "Onay iste" ayarı; sol panelde "Henüz
+  başlamadı"; sohbet mesajı aynı yolu söyler. Şema değişmedi (görünür durum eşlemesi).
+- Hata durumundaki ekin "kaldır" düğmesinin adı yoktu (ekran okuyucu).
+
+### Test
+- `tests/e2e/drafts.e2e.ts` (5 adım: ayrım, değiştirme / boşalınca silme, yeniden açılış, doğrulama, proje silme); 2
+  mutasyon yakalandı. UI düzeneğinde (Chromium): taslak + ek → DM'de boş → geri gelince var → başka projede boş → geri
+  gelince var → sayfa yeniden yükleme sonrası var → başarısız gönderimde metin + ek + hata → başarılı gönderimde temiz
+  (yeniden yükleme sonrası da) → metin ve ek kaldırılınca kayıt yok → silinen ek "artık yok" (yeniden yükleme sonrası
+  da) → kaldırınca kayıt yok; yukarıdayken yeni yanıt kaydırmıyor, "Yeni mesajlar" sona götürüyor, sondayken takip
+  ediyor; onay bekleyen iş üç ekranda aynı; reddedilen düzenleme hata + başlık geri.
+
+### Düzeltildi (sahibin Paket 3 incelemesi, aynı gün)
+Ortak kök: eski bir işlemin sonucu, o anda ekranda olan en yeni veriyi temizliyordu. Artık yalnız başladığı veriyi değiştirir.
+- **Gönderim sürerken yazılan metin siliniyordu:** gönderim, başladığı proje + kanala ve metnin düzenleme sayısına
+  (`textRev`, saklanmaz) bağlı (`draftSnapshot` → `clearSent`): metin ancak gönderimden sonra değişmediyse, ekler yalnız
+  gönderilenler temizlenir. Sohbet, sol panel hızlı mesaj ve görev notu aynı yolu kullanır.
+- **Başka kanalın ekleri silinebiliyordu:** gönderim sonrası `att.clear()` o anki kanalın listesini körlemesine
+  boşaltıyordu. Kaldırıldı; temizlik taslak deposunda gönderimin anahtarında yapılır, ek listesi depodan senkronlanır.
+- **Açılışta yeni yazılan taslak eziliyordu:** kayıtlı liste geldiğinde, o ana kadar değişen (yazılan / boşaltılan)
+  taslaklar korunarak birleştirilir. Liste okunamazsa hata gösterilir, 5 sn sonra aynı güvenli birleştirmeyle yeniden denenir.
+- **Test sırasında bulunan:** sohbet ekranı taslaklar yüklendikten sonra açılırsa, ilk açılışta boş ek listesi taslağa
+  yazılıyor ve kayıtlı ekler siliniyordu (yeniden açılışta ekler kayboluyordu). Ek listesi yalnız taslaktan geri
+  yüklendikten sonra kaydedilir.
+- Test: UI düzeneğinde gerçek arayüz koduyla geciktirilmiş gönderim (3 sn) ve geciktirilmiş / bir kez başarısız taslak
+  listesi: aynı kanalda ikinci metin + sonradan eklenen dosya korunur (yeniden açılışta da); A kanalının gönderimi B'nin
+  metin + ekine dokunmaz, A'nın gönderdiği dosya silinmez; geciken liste yeni metni ezmez; hata görünür, yeniden deneme
+  hem kayıtlıyı getirir hem yazılanı korur. Her düzeltme tek tek geri alınınca ilgili senaryo düştü.
+
+### Düzeltildi (sahibin Paket 3 tekrar kontrolü, aynı gün)
+- **Kutu boşaltılıp yeniden yazılınca yeni mesaj siliniyordu (ABA):** düzenleme işareti taslak başına sayaçtı; taslak
+  silinip yeniden yazılınca yine 1 oluyordu. Artık tek, hiç tekrarlanmayan bir sayaçtan (`nextRev`); A → boş → B → A'nın
+  başarısı B'yi korur, A → boş → aynı A da yeni düzenleme sayılır.
+- **İlk yüklemeden önce yazınca kayıtlı ekler kayboluyordu:** yükleme bitmeden düzenleme alan bazında tutulur (metin
+  değişti mi, hangi ek eklendi / kaldırıldı) ve **kaydedilmez**; liste gelince birleştirilir (yeni metin + kayıtlı ekler,
+  arada eklenen ek katılır, arada kaldırılan geri gelmez) ve sonra kaydedilir. Hata ve yeniden deneme aynı yoldan.
+- **Testler depoda:** `npm run test:renderer` (`scripts/renderer-tests.mjs`, mevcut esbuild; yeni bağımlılık yok) gerçek
+  `lib/drafts.ts`'i sahte IPC / store / i18n ile çalıştırır: `tests/renderer/drafts-send|load|retry.test.ts` (13 adım),
+  CI'a eklendi. 5 mutasyonun hepsi yakalandı. UI düzeneği senaryoları (R1–R3b) yeni kodla yeniden geçti.
+
+### Bilinen / kapsam dışı
+- İlk taslak listesi gelmeden pencere kapanırsa o arada yazılanlar kaydedilmez (bilinmeyen ekleri ezmemek için).
+- `useAttachments` (React hook) depodaki testlerde değil; yarışları UI düzeneğinde (Chromium) doğrulandı.
+- Gönderim sürerken metne ekleme yapılırsa (silmeden), gönderilen kısım da taslakta kalır (veri kaybı yerine fazlası).
+- Taslak yazma 400 ms gruplanır; uygulama çökerse son 400 ms'lik yazı kaybolabilir. Normal kapanışta bekleyen kayıt
+  `beforeunload`'da gönderilir, ama bu async IPC'dir; kesin kayıt garantisi değildir.
+- Kenar paneldeki lidere hızlı mesaj kutusu sohbetin #general taslağını paylaşır (aynı kanal); eklerini göstermez.
+- Silinen görev / ajanın taslağı satırda kalır (görünmez; proje silinince gider).
+- Gerçek Electron penceresinde elle denenmedi (UI düzeneği gerçek main süreci + derlenmiş arayüz).
+
+## 2026-10-19 — Paket 2: dürüst Demo ve ilk işe kesintisiz yol (sürüm artırılmadı)
+
+Kaynak: birleşik plan Paket 2 (2A Demo, 2B Kurulum) ve `docs/UX_REVIEW_2026-10-19.md` (İ1, İ2, İ4). Sahibin kararı: Demo
+yalnız simülasyon; gerçek araç yok, yeni ayar yok.
+
+### Değişti
+- **Demo hiçbir araç çağırmıyor:** bağlantı (`SELECT`, 0 satırlık `UPDATE`), SSH (`uptime` / `df`), MCP uygulama araçları,
+  ek dosya okuma, Dosyalar'a özet kaydı ve skill okuma kaldırıldı; sahte dosya yolları ekip farkındalığına / çakışma
+  uyarısına bildirilmiyor. Sohbet ve görev geçmişi uygulama veritabanına yazılmaya devam ediyor.
+- **Demo sonucu her yerde simülasyon:** rapor ilk satırda "Bu bir simülasyon…", adımlar "simüle edildi", dosyalar "Örnek
+  dosya adları (hiçbir dosya düzenlenmedi)", test satırı "test çalışmadı" ("✓ N test geçti" kaldırıldı); terminal adımları
+  "Simülasyon · … (gerçekte çalışmadı)"; lider planı "Demo (simülasyon)" ile başlar ve incelemenin gerçek olmadığını söyler;
+  lider notu "Simülasyon değerlendirmesi — gerçek doğrulama yapılmadı:". Görev kartında "Demo simülasyonu — gerçek iş
+  yapılmadı" ve "Simülasyon onayı", ayrıntıda açıklama (`orchestrator:state.simulated`, `usageRepo.simulatedTasks`;
+  migration yok). Durum çubuğu Demo'da "simulated" model kimliğini göstermiyor.
+- **Demo görev bölme:** yalnız cümle sonu ve satır sonunda (`demoParts`); dosya adı, sürüm numarası, URL ve numaralı liste
+  bölünmüyor, tek cümle tek görev; dosya adıyla başlayan başlığın harfi korunuyor.
+- **Şablon → proje:** proje içinden açılan şablonda (sohbet / ofis / proje ekibi boş durumu, Kılavuz) hedef proje adıyla
+  işaretli "Bu projeye ekle"; takım yalnız o projeye atanır ve projenin sohbeti açılır; işaret kaldırılırsa sonuç "projeye
+  eklenmedi" der. Organizasyon görünümünden kurulum hiçbir projeye dokunmaz. `templates:instantiate(…, { projectId })`;
+  proje yok / arşivliyse hiçbir şey kurulmadan hata.
+- **Sohbet boş durumu** nedeni ayırıyor: takım atanmadı (mevcut takım varsa "Takım ekle") / takımda ajan yok / üyeler kapalı.
+- **Sağlayıcı kurulumu:** CLI için kurulu / bulunamadı açıklaması; bulunamazsa ya da test başarısızsa açık "Demo ile dene".
+  Varsayılan seçim (Claude Code CLI) sessizce Demo'ya dönmüyor.
+
+### Test
+- `tests/e2e/firstRun.e2e.ts` (7 adım; gerçek Demo sağlayıcısı, her türlü araç sunulmuş hâlde hiçbir çağrı yok),
+  `tests/demo.test.ts` bölme vakaları. 5 mutasyon doğru adımda yakalandı. UI düzeneğinde boş profil → "Demo ile dene" →
+  Başla → sohbet "takım atanmadı" → Şablondan kur → Oluştur → (kutu işaretli, proje adı görünür) Oluştur → liderle sohbet →
+  ilk mesaj: 7 tık (sekme ve mesaj kutusu dahil; ofis boş durumundan 5). Önce: 12+ tık ve "lider yok" çıkmazı.
+
+### Düzeltildi (sahibin Paket 2 incelemesi, aynı gün)
+- **Kısa iş emirleri görev olmuyordu:** Demo lideri dört kelimeden kısa her mesajı sohbet sayıyordu; "math.js'i düzelt",
+  "Hatayı düzelt", "Fix math.js" bölücüye ulaşmıyordu. Artık kısa mesaj bir iş fiili içeriyorsa görevdir (`demoIsWork`);
+  soru ve selamlaşma sohbet kalır. Gerçek Demo adapter yolundan test edildi.
+- **Demo incelemesi gerçek çalışmayı "gerçek iş yapılmadı" diye etiketliyordu:** çalışma ve inceleme ayrı:
+  `state.simulatedWork` / `simulatedReview` (`usageRepo.simulatedTasks('task' | 'review')`). Kart: Demo çalışma →
+  "Demo simülasyonu — gerçek iş yapılmadı"; Demo inceleme → "İnceleme simülasyonu — gerçek doğrulama yapılmadı" (ve
+  simüle incelemenin onayı "Lider onayladı" diye gösterilmez); ayrıntı metni üç duruma göre. `leadSimulated` kaldırıldı.
+  Test: gerçek / Demo çalışan × gerçek / Demo lider, dört kombinasyon gerçek orkestratör çalışmasıyla.
+- **Site:** Demo'nun gerçek araç çağırdığını söyleyen sayfalar (providers, connections, apps, skills; EN+TR) düzeltildi;
+  yayınlanmadı.
+
+### Bilinen / kapsam dışı
+- Soru biçimindeki iş isteği ("Bunu düzeltebilir misin?") Demo'da sohbet sayılır (soru işareti kuralı korunuyor).
+- Şablon ajanları "önce sor" ayarlı olduğundan Demo görevi de çalışma onayı ister (gerçek araç çalıştırmaz; onayın nedeni
+  ve "Onay bekliyor" durumu İ3, sonraki paket). "Örnek onay" simülasyonu eklenmedi (gerek görülmedi).
+- "Klasör seçilmedi" uyarısı Demo'da da sarı (İ5, bu pakette değil).
+- Gerçek Claude Code CLI ile ilk iş yolu bu ortamda denenmedi (CLI yok); "giriş gerekli" durumu yalnız testin mesajıyla söylenir.
+
+## 2026-10-19 — Paket 1B: kapatma, durdurma ve tamamlama (sürüm artırılmadı)
+
+Kaynak: `docs/UX_REVIEW_2026-10-19.md` (K3, K5) ve sahibin birleşik planı (Paket 1B). Amaç: iş kullanıcının haberi olmadan
+başlamasın, sessizce kesilmesin ve incelemesiz / birleştirmesiz "bitmiş" görünmesin.
+
+### Eklendi
+- **Projeyi açmak iş başlatmaz:** otopilot yalnız bu oturumda başlatılmış projelerde çalışır. Bekleyen görevi olan projede
+  "Bu projede N görev bekliyor" şeridi + "Bu projede çalışmayı başlat" (`projects:startWork`, `StartWorkBanner.tsx`).
+  Başlayınca sekme değiştirmek / küçültmek durdurmaz; yeniden açılışta yine bekler; bekletilen görevler serbest kalmaz.
+  Başlatılmamış projede liderin açtığı görevler için sohbete nasıl başlatılacağı yazılır.
+- **Kapatma uyarısı:** yarıda kalacak çalışma, sohbet yanıtı / inceleme ve onay isteği sayılarıyla yerel pencere;
+  "Çalışmaya devam et" varsayılan (Esc de), "bir daha sorma" yok; iş yoksa sorulmaz (`core/quitGuard.ts`, `index.ts`).
+- **Durdurma notu:** durdurma ve sınır görev akışına bir kez "hiçbir şey geri alınmadı, değişiklikler şurada" yazar
+  (çalışma kopyası + dal / proje klasörü / klasörsüz projede ajanın çalıştığı klasör).
+- **Kim bitirdi:** migration v21 `tasks.completed_by` (`lead` / `user`). Kartta "Lider onayladı" ve "Elle tamamlandı
+  (lider incelemesi yok)" ayrı rozet.
+
+### Değişti
+- **Elle Bitti:** çalışan görevi Bitti'ye taşımak önce sorar ("Durdur ve Bitti'ye taşı", `DoneGuard.tsx`). Elle Bitti
+  hiçbir şeyi kendiliğinden birleştirmez (önce worktree'de hemen birleştiriyordu): değişiklikler kopyada kalır, kart
+  "Birleştirme bekliyor" der, bağımlı görevler bekler; görev ayrıntısındaki düğme artık "Değişiklikleri incele ve
+  birleştir" ("Şimdi birleştir" anahtarı kaldırıldı, metinler güncellendi). Durdurma notu yerine tek "elle tamamladın" notu.
+- **"Tümünü duraklat" dürüst:** ipucu ve Kılavuz "her şeyi durdurur" demiyor; o an çalışan komut bitebilir, sohbet
+  yanıtları ve incelemeler sürer.
+
+### Düzeltildi
+- "Değişiklikleri incele" yarıda durdurulan çalışmanın commit'lenmemiş **yeni dosyalarını** göstermiyordu, ama birleştirme
+  onları getiriyordu (`taskChanges` → `git add --intent-to-add`, yalnız görevin kopyasında).
+
+### Test
+- `tests/e2e/sessionStop.e2e.ts` (9 adım): başlatma kapısı, yeniden açılış, bekletme korunur, başlatılmamış projede not,
+  durdurma notu, çalışan → Bitti (kullanıcı, tek not), lider onayı, worktree elle Bitti (birleşmez, bağımlı bekler,
+  incele + birleştir), kapatma uyarısı sayıları. 6 mutasyonun hepsi doğru adımda yakalandı. `failureReview.e2e`
+  otopilot adımları işi başlatıyor (yoksa boşuna geçerdi).
+
+### Düzeltildi (sahibin 1B incelemesi, aynı gün)
+- **Başlatmadan inceleme ve birleştirme:** açılışta İncelemede görevler hâlâ kendiliğinden incelemeye giriyordu; onay görevi
+  bitirip birleştirebiliyordu. Artık ertelenir (`deferredReviews`); "Bu projede çalışmayı başlat" yalnız o projenin
+  bekletilmemiş incelemelerini kuyruğa alır (başka proje ve bekletilen görev serbest kalmaz). Şerit bekleyen incelemeleri
+  de sayar ve yalnız inceleme bekleyen projede otopilot kapalıyken de görünür. Kullanıcının "İncelemeyi yeniden dene"si
+  kapıdan bağımsız.
+- **Durmayan çalışma Bitti oluyordu:** `stopTaskAndWait` durmayı doğrulayamazsa (ya da görev bu arada silindiyse)
+  `tasks:move` artık hiçbir şey yazmaz, hata verir; pano gerçek duruma döner, hata toast olarak görünür.
+- **"İncele ve birleştir" doğrudan birleştiriyordu:** düğme artık önizleme penceresi açar (mevcut `TaskChanges`);
+  birleştirme ayrı "Ana projeye birleştir" kararı. Önizleme kopyanın git ağacına bağlı (`basis` = `write-tree`):
+  bakıldıktan sonra kopya değiştiyse birleştirme reddedilir, yeniden bakılır. Vazgeç hiçbir şey değiştirmez; başarısız
+  birleştirme nedenini gösterir, değişiklikler kopyada kalır. `tasks:merge(id, basis)` (basis zorunlu).
+- Kendi eklememdeki risk: kopyanın index'i yalnız görev çalışmıyorken güncellenir (ajanın git'iyle kilit çakışması olmasın).
+- Test: `sessionStop.e2e` 12 adım (ertelenen inceleme + başka proje + bekletilen, durmayan çalışma, bayat önizleme, başarısız
+  birleştirme); 7 mutasyon doğru adımda yakalandı. `failureReview` C adımı başlatmadan incelenmediğini ve başlatınca
+  yeniden incelendiğini doğruluyor (yoksa boşuna geçiyordu).
+
+### Bilinen / kapsam dışı
+- Kapatma penceresi gerçek Windows / macOS penceresinde elle denenmedi (metin ve sayılar testli).
+- Önizleme sırasında yalnız ikili (binary) bir dosyanın içeriği değişirse de yakalanır (git ağaç kimliği); ancak
+  ekranda ikili dosyanın farkı gösterilmez, yalnız adı.
+- Başlatılmış projeler yalnız bellekte; yeniden açılışta bilerek sıfırlanır (sahibin kararı).
+- **Paket 4'e (sonuç / inceleme) devredildi:** yarış değerlendirmesinde istem asıl görevin (A) başlık / açıklama / kabul
+  kriterlerini taşır; rakip kopyanın (B) sonradan değiştirilen açıklaması isteme girmez (1A'da yalnız B değişince
+  karşılaştırmanın yenilenmesi sağlandı). Sahibin isteğiyle bilinen sınır olarak izleniyor.
+
+## 2026-10-19 — Paket 1A: hata ve inceleme güvenliği (sürüm artırılmadı)
+
+Kaynak: `docs/UX_REVIEW_2026-10-19.md` ve sahibin birleşik iyileştirme planı (Paket 1A). Amaç: başarısız iş kullanıcı fark
+etmeden yeniden uygulanmasın; lider incelemesi takılınca görev sessiz kalmasın.
+
+### Değişti
+- **İlk hatada bekletme:** normal çalışma hatası artık ilk seferde bekletiliyor (önce yalnız 2. hatada; soğuma bitince
+  otopilot aynı işi yeniden alabiliyordu). Kimlik hatası da görevi bekletiyor (önce otopilot "Devam et" sonrası aynı
+  görevi yeniden alıyordu); `authFailure` yönlendirmesi aynı. Bekletme yeniden açılışta korunur; yalnız kullanıcının
+  "Yeniden dene / Şimdi başlat"ı kaldırır.
+- **Hata görünür:** görev akışına tek açıklama ("ne oldu, iş ne durumda, ne yapabilirsin" + "Ayrıntı:" satırı; aynı not
+  tekrar yazılmaz). `explainError` zaman aşımı / ağ / aşırı yük / çıkış kodunu kullanıcı dilinde açıklıyor (`text` kısa
+  yerler için, `full` teknik satırlı); sırlar run kaydında, nedende ve akışta maskeleniyor.
+- **Önceki girişim:** yeniden başlatılan çalışmanın istemine, son girişim gerçekten çalıştıysa "## Previous attempt"
+  bölümü (nasıl bitti, dosya / harici sistem değişmiş olabilir, önce durumu kontrol et).
+- **İnceleme sessiz kalmıyor:** inceleme hatası (ağ / zaman aşımı / 429 / 5xx), inceleyebilecek etkin kimse olmaması,
+  çalışan raporu olmaması, anlaşılmayan karar — yarış değerlendirmesi dahil — görevi incelemede tutar ve nedeniyle
+  "Bana ihtiyaç var"a, karta ve akışa düşürür. İptal edilen inceleme hata sayılmaz. Aynı görev için ikinci inceleme
+  kuyruğa girmez.
+- **"İncelemeyi yeniden dene":** yeni `tasks:retryReview(id)` (`'queued' | 'pending'`); görev ayrıntısında neden kutusu ve
+  düğme. İncelemedeki görevde "Şimdi başlat" → "Çalışanı yeniden çalıştır" (çalışanı baştan çalıştırdığı belli olsun).
+
+### Düzeltildi
+- Kimlik hatasında `pauseAll`, henüz `active`'ten çıkmamış başarısız çalışmayı "paused" yapıyordu (kayıt "failed"
+  kalmıyordu).
+- TR "net karar yok" mesajı "Tamamlandı'ya taşı" diyordu; sütun adı "Bitti".
+
+### Düzeltildi (sahibin 1A incelemesi, aynı gün)
+- **Eski inceleme yeni çalışmayı onaylayabiliyordu:** 1. çalışmanın incelemesi sürerken çalışan yeniden çalıştırılıp
+  bitince, eski incelemenin geç gelen "onaylandı"sı görevi Bitti yapıyordu; ayrıca yeni çalışmanın incelemesi
+  tekilleştirme yüzünden kuyruğa hiç girmeyebiliyordu. Artık inceleme değerlendirdiği **çalışma kimliğine ve görev
+  girdilerine** (başlık, açıklama, kabul kriterleri) bağlı (`reviewBasis`); sonuç (onay / ret / belirsiz / hata) gelince
+  bunlar değiştiyse atılır ve güncel hâl incelenir (`staleReview`, `reviewAgain`). Yarış değerlendirmesi iki çalışmaya
+  bağlı. Aynı çalışma ikinci kez modele gitmez (`reviewedRun`; "İncelemeyi yeniden dene" bunu temizler). Yeni çalışma
+  başlarken eski "karar sende" işareti temizlenir.
+- **Önceki girişim uyarısı kayboluyordu:** gerçek hata → onayda reddedilen çalışma → yeniden çalıştırma zincirinde yalnız
+  hemen önceki kayda bakılıyordu. Artık hiç başlamamış (yalnız onay beklemiş) kayıtlar atlanıp en son gerçek girişim
+  kullanılıyor; araya başarılı bir çalışma girdiyse uyarı yok.
+- **Yarışta güncel karşılaştırma kayboluyordu** (sahibin ikinci kontrolü): karşılaştırma B'nin kuyruğundan başlayıp A
+  değişince "tekrar bak" işareti A'ya konuyor, ama yalnız B'nin kuyruk adımı bitiyordu; işaret sahipsiz kalıyor, iki görev
+  de sessizce incelemede duruyordu. Artık bir kuyruk adımı bitince kuyrukta / çalışmakta olmayan **bütün** işaretli
+  görevler gerçekten kuyruğa alınıyor (yarış partneri zaten kuyruktaysa o kapsıyor). Aynı iki çalışma için ikinci
+  karşılaştırma modele gitmiyor (`reviewedRun` yarışa da uygulandı; "İncelemeyi yeniden dene" yine sorar).
+- Test: `failureReview.e2e.ts` +4 yarış adımı (B'den başlat / A değişir — eski sonuç onay ve hata; A'dan başlat / B
+  değişir; iki taraf da kuyruğa girer + belirsiz karar → tek karşılaştırma); ilk üçü önceki kodla düşüyor.
+- Test: `failureReview.e2e.ts` +4 adım (geç onay, geç hata, inceleme sırasında değişen açıklama, hata → ret → tekrar);
+  dördü de düzeltme öncesi kodla düşüyor. "Sonra tekrar bak" işaretinin atlanan istekteki kolu yalnız bir mikro-görev
+  aralığını kapatıyor; deterministik testi yok.
+
+### Bilinen / kapsam dışı
+- Lider kapatılınca `projectLead` ilk etkin üyeye düşüyor; inceleme işi yapan ajanın kendisine kalabilir (önceden de
+  böyleydi, ayrı karar).
+- Açılışta `in_review` görevlerin incelemesi otomatik yeniden kuyruğa girer (önceden de böyleydi; inceleme araçsız, yan
+  etkisiz).
+- Sol paneldeki canlı sohbette görev akışı ve `#general` notları birlikte görünüyor (Paket 3/5).
+
+### Test
+- `tests/runErrors.test.ts` (hata türleri; kimlik deseni birebir eski).
+- `tests/e2e/failureReview.e2e.ts` 26 adım (18 + iki düzeltme turunda 4 + 4): yan etkiden sonra hata → bekletme, soğuma / boşa çıkma / otopilot / yeniden
+  açılışta ikinci çalışma yok; tek not; sır maskesi; yalnız onay bekleyen girişim "önceki girişim" sayılmıyor; kimlik
+  hatası, kullanıcı durdurması, proje ayrımı; çift başlatma tek çalışma; inceleme hatası → karar sende, iki tekrar →
+  tek inceleme ve çalışan run sayısı değişmez; tekrar yeniden düşerse tek not (yeniden açılış dahil); anlaşılmayan karar;
+  inceleyen yok; tekrar yalnız incelemedeki göreve; geç gelen inceleme hatası taşınmış / silinmiş görevde kayıt
+  bırakmaz; kuyruk tekilleştirme. Dört temel düzeltme ayrı ayrı geri alınınca ilgili adımlar düşüyor.
+
 ## 2026-10-19 — v0.7.1: Canlı yanıt: gizli blok kapanışı, anında iptal
 
 Dış inceleme (v0.7.0 sonrası), üçü de yayımlanmış kodla yeniden üretildi.

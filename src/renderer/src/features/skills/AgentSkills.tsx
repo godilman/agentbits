@@ -44,16 +44,16 @@ export function AgentSkills({ agent }: { agent: Agent }) {
       }
     >
       <div className="space-y-1.5" data-testid="agent-skills">
-        {mine.length === 0 && <div className="text-[12px] text-zinc-500">{t('skills:agent.none')}</div>}
+        {mine.length === 0 && <div className="text-[13px] text-zinc-500">{t('skills:agent.none')}</div>}
         {mine.map(({ skill, via }) => (
           <div key={skill.id} className="flex items-center gap-3 rounded-md border border-line px-3 py-2">
             <div className="min-w-0 flex-1">
-              <div className="font-mono text-[12.5px] text-zinc-100">{skill.name}</div>
-              <div className="truncate text-[11.5px] text-zinc-400">{skill.description}</div>
+              <div className="font-mono text-[13px] text-zinc-100">{skill.name}</div>
+              <div className="truncate text-[12px] text-zinc-400">{skill.description}</div>
             </div>
             <div className="flex shrink-0 flex-wrap justify-end gap-1">
               {via.map((v) => (
-                <span key={`${v.type}:${v.id}`} className={cn('rounded px-1.5 text-[10.5px]', v.type === 'agent' ? 'bg-indigo-500/15 text-indigo-200' : 'bg-zinc-700/50 text-zinc-300')}>
+                <span key={`${v.type}:${v.id}`} className={cn('rounded px-1.5 text-[12px]', v.type === 'agent' ? 'bg-indigo-500/15 text-indigo-200' : 'bg-zinc-700/50 text-zinc-300')}>
                   {v.type === 'agent' ? t('skills:agent.direct') : t('skills:agent.via', { name: v.name })}
                 </span>
               ))}

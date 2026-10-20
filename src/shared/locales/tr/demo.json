@@ -1,7 +1,7 @@
 {
   "chat": {
-    "filesReceived_one": "📎 Eklediğin {{count}} dosyayı aldım; oluşturduğum görevlere ekliyorum, ekip dosyaları bölüm bölüm okuyabilecek.",
-    "filesReceived_other": "📎 Eklediğin {{count}} dosyayı aldım; oluşturduğum görevlere ekliyorum, ekip dosyaları bölüm bölüm okuyabilecek.",
+    "filesReceived_one": "📎 Eklediğin {{count}} dosyayı oluşturduğum görevlere ekliyorum. Demo bir simülasyon: dosyaları okumaz; gerçek bir sağlayıcıyla ekip onları bölüm bölüm okur.",
+    "filesReceived_other": "📎 Eklediğin {{count}} dosyayı oluşturduğum görevlere ekliyorum. Demo bir simülasyon: dosyaları okumaz; gerçek bir sağlayıcıyla ekip onları bölüm bölüm okur.",
     "idle": {
       "r1": "Not aldım. Şu an panoda açık işler var; yeni bir iş istersen ne yapılması gerektiğini bir iki cümleyle anlatman yeterli, görevlere bölüp ekibe dağıtırım.",
       "r2": "Anladım. Daha net bir iş tanımı verirsen (ne, nerede, ne zamana kadar) hemen planlayıp atama yaparım.",
@@ -9,59 +9,31 @@
     },
     "taskDescription": "Kullanıcı isteği: \"{{request}}\"\n\nKapsam: {{scope}}",
     "unassigned": "atanmadı",
-    "plan_one": "Tamamdır, işi {{count}} parçaya böldüm ve ekibe dağıttım:",
-    "plan_other": "Tamamdır, işi {{count}} parçaya böldüm ve ekibe dağıttım:",
-    "planFooter": "İlerlemeyi Görevler sekmesinden ve ofisten canlı takip edebilirsin. Biten işleri ben inceleyeceğim.",
+    "plan_one": "Demo (simülasyon): işi {{count}} parçaya böldüm ve ekibe dağıttım:",
+    "plan_other": "Demo (simülasyon): işi {{count}} parçaya böldüm ve ekibe dağıttım:",
+    "planFooter": "İlerlemeyi Görevler sekmesinden ve ofisten izleyebilirsin. Bu bir simülasyon: ekip gerçek bir iş yapmaz, dosya düzenlemez, test çalıştırmaz; incelemem de gerçek bir doğrulama değildir.",
     "noteSent_one": "Tamam, {{keys}} üzerinde çalışan ekip arkadaşına ilettim.",
     "noteSent_other": "Tamam, {{keys}} üzerinde çalışan ekip arkadaşlarına ilettim.",
     "learned": "Bunu bundan sonra aklımda tutulacak bir şey olarak not ettim.",
     "learnTopic": "Çalışma tarzı"
   },
-  "connections": {
-    "none": "Erişebildiğim bir bağlantı yok.",
-    "error": "hata",
-    "ok": "tamam",
-    "schemaFailed": "{{name}}: şema okunamadı",
-    "sampleRead": "{{name}}: {{table}} tablosundan örnek okundu",
-    "sampleReadError": "{{name}}: {{table}} tablosundan örnek okundu (hata)",
-    "changeAttempt": "{{name}}: değişiklik denemesi → {{result}}",
-    "allowed": "izin verildi"
-  },
-  "files": {
-    "imageRead": "**{{name}}**: görsel incelendi (demo: içerik yorumlanmaz)",
-    "imageFailed": "**{{name}}**: görsel okunamadı",
-    "noText": "**{{name}}**: okunabilir metin yok",
-    "partsSummary_one": "**{{name}}** ({{type}}, {{count}} bölüm): {{gist}}",
-    "partsSummary_other": "**{{name}}** ({{type}}, {{count}} bölüm): {{gist}}",
-    "firstAndLast": "{{parts}} bölümün ilki ve sonuncusu okundu; arama ile gerekli kısımlar bulunabilir",
-    "instructionLike_one": "⚠️ {{name}} içinde {{count}} talimat benzeri satır var; veri olarak ele alındı, uygulanmadı",
-    "instructionLike_other": "⚠️ {{name}} içinde {{count}} talimat benzeri satır var; veri olarak ele alındı, uygulanmadı",
-    "summaryFileName": "ozet-{{key}}.md",
-    "summaryFileFallback": "gorev",
-    "summaryTitle": "{{key}} · dosya özeti (demo)",
-    "summaryFailed": "Özet kaydedilemedi: {{error}}",
-    "summarySaved": "Özet dosyası kaydedildi → Dosyalar"
-  },
   "task": {
     "defaultTitle": "Görev",
     "logInstruction": "Kullanıcı talimatı dikkate alınıyor: {{text}}",
-    "logAnalyzing": "Görev analiz ediliyor: {{title}}"
+    "logAnalyzing": "Görev analiz ediliyor: {{title}}",
+    "simulatedStep": "Simülasyon · {{step}} (gerçekte çalışmadı)"
   },
   "report": {
     "summary": "Özet",
-    "completed": "{{title}} tamamlandı.",
-    "connections": "Bağlantılar",
-    "files": "Dosyalar",
+    "completed": "{{title}} için simülasyon bitti.",
     "instruction": "Kullanıcı talimatı",
-    "instructionApplied": "Talimat doğrultusunda çalışma güncellendi.",
-    "done": "Yapılanlar",
-    "changedFiles": "Değişen dosyalar",
+    "instructionApplied": "Talimat simülasyonda dikkate alındı (gerçek bir değişiklik yapılmadı).",
+    "done": "Simüle edilen adımlar",
     "reviewOnly": "(yalnızca inceleme)",
     "notes": "Notlar",
     "demoNote": "Demo sağlayıcısı ile simüle edildi. Gerçek çalışma için Ayarlar → Sağlayıcılar'dan Claude Code veya bir API anahtarı ekleyin.",
-    "skills": "Kullanılan skill'ler",
-    "apps": "Kullanılan uygulamalar",
-    "deliverables": "Teslim edilenler"
+    "simulated": "Bu bir simülasyon (Demo sağlayıcı). Hiçbir dosya okunmadı ya da düzenlenmedi, komut veya test çalışmadı; aşağıdaki adımlar ve dosya adları örnektir.",
+    "exampleFiles": "Örnek dosya adları (hiçbir dosya düzenlenmedi)"
   },
   "review": {
     "approved": {
@@ -69,55 +41,44 @@
       "r2": "Kabul kriterlerini karşılıyor. 👍",
       "r3": "İyi görünüyor, birleştirilebilir."
     },
-    "race": "İki deneme de çalışıyor; bu daha eksiksiz ve daha kolay okunuyor."
+    "race": "İki deneme de çalışıyor; bu daha eksiksiz ve daha kolay okunuyor.",
+    "simulated": "Simülasyon değerlendirmesi — gerçek doğrulama yapılmadı:"
   },
   "test": {
     "ready": "Demo sağlayıcı hazır (gerçek model çağrısı yapılmaz)"
   },
-  "skills": {
-    "used": "\"{{name}}\" skill'ine göre çalışıldı (skill_read ile okundu).",
-    "failed": "\"{{name}}\" skill'i okunamadı."
-  },
-  "apps": {
-    "used": "{{app}} kullanıldı → {{tool}}",
-    "failed": "{{app}} → {{tool}} başarısız: {{error}}"
-  },
   "kinds": {
     "code": {
-      "done1": "Mevcut kod incelendi ve etki alanı çıkarıldı",
-      "done2": "Gerekli değişiklikler uygulandı",
-      "done3": "Testler çalıştırıldı ve geçti",
-      "final_one": "✓ {{count}} test geçti",
-      "final_other": "✓ {{count}} test geçti",
+      "done1": "Kodun incelenmesi simüle edildi",
+      "done2": "Değişiklik adımı simüle edildi (dosya düzenlenmedi)",
+      "done3": "Test adımı simüle edildi (gerçek test çalışmadı)",
       "rejected1": "Kenar durumları için test eksik, lütfen ekle.",
-      "rejected2": "Hata mesajları kullanıcı dostu değil, tekrar bak."
+      "rejected2": "Hata mesajları kullanıcı dostu değil, tekrar bak.",
+      "final": "Simülasyon · test sonucu yok (test çalışmadı)"
     },
     "research": {
-      "done1": "Konuyla ilgili kaynaklar toplandı ve elendi",
-      "done2": "Bulgular yan yana karşılaştırıldı",
-      "done3": "Önemli çıkarımlar ve açık sorularla bir özet yazıldı",
-      "final_one": "✓ {{count}} kaynak karşılaştırıldı",
-      "final_other": "✓ {{count}} kaynak karşılaştırıldı",
+      "done1": "Kaynak toplama simüle edildi (gerçek arama yapılmadı)",
+      "done2": "Karşılaştırma adımı simüle edildi",
+      "done3": "Özet yazma adımı simüle edildi",
       "rejected1": "Bazı iddiaların kaynağı yok, lütfen kaynak ekle.",
-      "rejected2": "Karşılaştırmada net bir öneri yok, lütfen bir sonuca bağla."
+      "rejected2": "Karşılaştırmada net bir öneri yok, lütfen bir sonuca bağla.",
+      "final": "Simülasyon · kaynak karşılaştırılmadı"
     },
     "content": {
-      "done1": "Brif okundu; hedef kitle ve ton belirlendi",
-      "done2": "Taslak ve alternatif başlıklar yazıldı",
-      "done3": "Yazım, ton ve uzunluk kontrol edildi",
-      "final_one": "✓ Ton ve yazım kontrol edildi ({{count}} paragraf)",
-      "final_other": "✓ Ton ve yazım kontrol edildi ({{count}} paragraf)",
+      "done1": "Brif okuma adımı simüle edildi",
+      "done2": "Taslak yazma adımı simüle edildi (metin üretilmedi)",
+      "done3": "Ton ve yazım kontrolü simüle edildi",
       "rejected1": "Ton hedef kitleye uymuyor, biraz daha sıcak olsun.",
-      "rejected2": "Harekete geçirici çağrı eksik, lütfen ekle."
+      "rejected2": "Harekete geçirici çağrı eksik, lütfen ekle.",
+      "final": "Simülasyon · metin kontrol edilmedi"
     },
     "data": {
-      "done1": "Veri okundu ve eksikler kontrol edildi",
-      "done2": "İstenen metrikler hesaplandı",
-      "done3": "Sonuçlar notlarla birlikte tabloya döküldü",
-      "final_one": "✓ {{count}} satır kontrol edildi",
-      "final_other": "✓ {{count}} satır kontrol edildi",
+      "done1": "Veri okuma adımı simüle edildi (veri okunmadı)",
+      "done2": "Metrik hesabı simüle edildi",
+      "done3": "Tablo hazırlama adımı simüle edildi",
       "rejected1": "Hesaplama yöntemi açıklanmamış, lütfen ekle.",
-      "rejected2": "Aykırı değerlere bakılmamış, lütfen kontrol et."
+      "rejected2": "Aykırı değerlere bakılmamış, lütfen kontrol et.",
+      "final": "Simülasyon · satır kontrol edilmedi"
     }
   },
   "customReport": {

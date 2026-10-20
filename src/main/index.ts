@@ -1,6 +1,7 @@
-import { app, BrowserWindow, session, shell } from 'electron'
+import { app, BrowserWindow, dialog, session, shell } from 'electron'
 import { join } from 'path'
 import { openDb, closeDb } from './db'
+import { startNotifications } from './notify'
 import { ensureOrgDefaults } from './core/org'
 import { dropUnboundOAuth, renameLegacyDefne, upgradePlainSecrets } from './core/legacy'
 import { applyLanguageSetting, t } from './i18n'
@@ -12,7 +13,8 @@ import { startMaintenance, stopMaintenance } from './core/maintenance'
 import { startFiles } from './files/service'
 import { stopBridge } from './connections/bridge'
 import { closeAllApps } from './apps/client'
-import { rejectAllApprovals } from './connections/service'
+import { listApprovals, rejectAllApprovals } from './connections/service'
+import { quitWarning } from './core/quitGuard'
 import { scheduleIndex } from './core/embeddings'
 import { terminals } from './terminal/manager'
 
@@ -69,6 +71,36 @@ function hardenSessions(): void {
   })
 }
 
+/** The user said "Close anyway" (or there was nothing to cut off): don't ask again on the way out. */
+let quitConfirmed = false
+/** before-quit seen: on macOS a window close only ends the app when quitting (otherwise work goes on). */
+let quitting = false
+
+/**
+ * Closing would stop running tasks, cut off replies / reviews and turn down approvals: say so with the counts and let
+ * the user keep working (the default). Nothing to cut off → close without asking. No "don't ask again" on purpose.
+ */
+function confirmQuit(win: BrowserWindow | null): boolean {
+  if (quitConfirmed) return true
+  const work = orchestrator.workSummary()
+  const warning = quitWarning({ ...work, approvals: work.approvals + listApprovals().length })
+  if (!warning) return true
+  const options = {
+    type: 'warning' as const,
+    title: warning.title,
+    message: warning.message,
+    detail: warning.detail,
+    buttons: [warning.keep, warning.quit],
+    defaultId: 0,
+    cancelId: 0,
+    noLink: true
+  }
+  const choice = win && !win.isDestroyed() ? dialog.showMessageBoxSync(win, options) : dialog.showMessageBoxSync(options)
+  if (choice !== 1) return false
+  quitConfirmed = true
+  return true
+}
+
 function createWindow(): BrowserWindow {
   const win = new BrowserWindow({
     width: 1480,
@@ -95,7 +127,13 @@ function createWindow(): BrowserWindow {
   })
 
   mainWindow = win
+  startNotifications(win, createWindow)
   win.once('ready-to-show', () => win.show())
+  win.on('close', (e) => {
+    // macOS: closing the window keeps the app (and its work) running; only quitting asks.
+    if (process.platform === 'darwin' && !quitting) return
+    if (!confirmQuit(win)) e.preventDefault()
+  })
   win.webContents.setWindowOpenHandler(({ url }) => {
     if (/^https?:/.test(url)) void shell.openExternal(url)
     return { action: 'deny' }
@@ -171,8 +209,14 @@ app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') app.quit()
 })
 
-app.on('before-quit', () => {
+app.on('before-quit', (e) => {
   if (!gotLock) return
+  quitting = true
+  if (!confirmQuit(mainWindow)) {
+    e.preventDefault()
+    quitting = false
+    return
+  }
   stopMaintenance()
   rejectAllApprovals()
   stopBridge()

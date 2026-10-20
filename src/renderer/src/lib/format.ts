@@ -3,6 +3,7 @@ export function cn(...parts: (string | false | null | undefined)[]): string {
 }
 
 import { locale, t } from '@/i18n'
+import type { Agent, Run } from '@shared/types'
 
 export function timeAgo(iso: string | null | undefined): string {
   if (!iso) return ''
@@ -52,6 +53,17 @@ export const STATUS_META = {
   error: { get label() { return t('agentStatus.error') }, dot: 'bg-rose-500', text: 'text-rose-400' },
   offline: { get label() { return t('agentStatus.offline') }, dot: 'bg-zinc-600', text: 'text-zinc-400' }
 } as const
+
+/**
+ * What an agent is really doing, said the same on every screen: a run waiting for approval or paused is neither
+ * "working" nor "idle" (the agent's own status says idle while it waits).
+ */
+export function shownStatus(agent: Pick<Agent, 'id' | 'status'>, runs: Pick<Run, 'agentId' | 'status'>[]): { label: string; dot: string; text: string } {
+  const run = runs.find((r) => r.agentId === agent.id && (r.status === 'awaiting_approval' || r.status === 'paused'))
+  if (run?.status === 'awaiting_approval') return { label: t('agentStatus.awaitingApproval'), dot: 'bg-amber-400', text: 'text-amber-300' }
+  if (run?.status === 'paused') return { label: t('agentStatus.paused'), dot: 'bg-zinc-400', text: 'text-zinc-300' }
+  return STATUS_META[agent.status]
+}
 
 export const TASK_COLUMNS = [
   { id: 'todo', get label() { return t('taskColumns.todo') }, accent: 'bg-zinc-500' },

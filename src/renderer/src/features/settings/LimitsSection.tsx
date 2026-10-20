@@ -26,7 +26,7 @@ function LimitInput({ k, step, suffix }: { k: NumKey; step: number; suffix: stri
     <div className="flex items-center gap-2">
       <input
         data-testid={`limit-${k}`}
-        className="input h-7 w-28 text-right text-[12px]"
+        className="input h-7 w-28 text-right text-[13px]"
         inputMode="decimal"
         min={0}
         step={step}
@@ -37,7 +37,7 @@ function LimitInput({ k, step, suffix }: { k: NumKey; step: number; suffix: stri
         onBlur={save}
         onKeyDown={(e) => e.key === 'Enter' && (e.target as HTMLInputElement).blur()}
       />
-      <span className="w-12 text-[11.5px] text-zinc-400">{suffix}</span>
+      <span className="w-12 text-[12px] text-zinc-400">{suffix}</span>
     </div>
   )
 }
@@ -82,7 +82,7 @@ export function LimitsSection() {
         <Row title={t('settings:limits.privacy.audit')} desc={t('settings:limits.privacy.auditDesc')}>
           <select
             data-testid="limit-audit-retention"
-            className="input h-7 w-32 text-[12px]"
+            className="input h-7 w-32 text-[13px]"
             value={settings.auditRetentionDays}
             onChange={(e) => void update({ auditRetentionDays: Number(e.target.value) })}
           >
@@ -97,7 +97,7 @@ export function LimitsSection() {
           <LimitInput k="filesQuotaMb" step={512} suffix={t('settings:limits.unit.mb')} />
         </Row>
         <Row title={t('settings:limits.privacy.redact')} desc={t('settings:limits.privacy.redactDesc')}>
-          <span className="text-[11.5px] text-emerald-300">{t('settings:limits.privacy.always')}</span>
+          <span className="text-[12px] text-emerald-300">{t('settings:limits.privacy.always')}</span>
         </Row>
       </div>
 
@@ -107,7 +107,7 @@ export function LimitsSection() {
         <div className="mt-3 flex items-start gap-2">
           <textarea
             data-testid="limit-env"
-            className="textarea min-h-[34px] flex-1 font-mono text-[12px]"
+            className="textarea min-h-[34px] flex-1 font-mono text-[13px]"
             rows={2}
             placeholder={t('settings:limits.env.placeholder')}
             value={env}
@@ -117,7 +117,7 @@ export function LimitsSection() {
             {t('actions.save')}
           </button>
         </div>
-        <p className="mt-2 text-[11.5px] text-zinc-400">{t('settings:limits.env.never')}</p>
+        <p className="mt-2 text-[12px] text-zinc-400">{t('settings:limits.env.never')}</p>
       </div>
     </>
   )

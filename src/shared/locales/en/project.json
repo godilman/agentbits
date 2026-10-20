@@ -118,5 +118,13 @@
     "added": "added",
     "newFromTemplate": "Set up a new team from a template"
   },
-  "folderTooBroad": "This folder is too broad for agents (a drive root, your home folder or a folder that holds Agentbits' data). Pick the project's own folder."
+  "folderTooBroad": "This folder is too broad for agents (a drive root, your home folder or a folder that holds Agentbits' data). Pick the project's own folder.",
+  "startWork": {
+    "waiting_one": "{{count}} task is waiting in this project.",
+    "waiting_other": "{{count}} tasks are waiting in this project.",
+    "reviews_one": "{{count}} task waits for the lead's review.",
+    "reviews_other": "{{count}} tasks wait for the lead's review.",
+    "hint": "Opening a project starts nothing; once you start it, autopilot and the waiting reviews run here (for this session — tasks on hold stay on hold).",
+    "start": "Start work in this project"
+  }
 }

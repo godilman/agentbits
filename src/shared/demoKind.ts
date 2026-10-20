@@ -33,3 +33,34 @@ export function demoKind(taskText: string, agentProfile = ''): DemoKind {
   }
   return best
 }
+
+/**
+ * Demo lead: the parts a request is split into, one task each. Only sentence ends (. ! ? ; followed by a space; not a
+ * list number like "2.") and line
+ * breaks split, so file names, version numbers and URLs stay whole and a one-sentence request stays one task. A part
+ * under three words joins its neighbour; more than four parts end in one last part (nothing the user wrote is dropped).
+ */
+export function demoParts(msg: string): string[] {
+  const words = (s: string): number => s.split(/\s+/).filter(Boolean).length
+  const out: string[] = []
+  for (const s of msg.split(/(?<=[.!?;])(?<!(?:^|\s)\d{1,3}\.)\s+|\n+/)) {
+    const p = s.trim()
+    if (!p) continue
+    if (out.length && (words(p) < 3 || words(out[out.length - 1]) < 3)) out[out.length - 1] += ` ${p}`
+    else out.push(p)
+  }
+  if (out.length > 4) out.splice(3, out.length, out.slice(3).join(' '))
+  return out.map((p) => p.replace(/[.;]+$/, ''))
+}
+
+// Work verbs (Turkish + English): a short message with one is a work order, not small talk.
+const ORDER = /\b(fix|add|write|make|update|create|remove|delete|build|implement|change|refactor|rename|test|check|review|prepare|draft|translate|design|research|find)\b|düzelt|ekle|yaz\b|yazın|yap\b|yapın|sil\b|güncelle|oluştur|kur\b|hazırla|değiştir|incele|kontrol et|test et|çevir|tasarla|araştır|bul\b/i // i18n-ignore
+
+/**
+ * Demo lead: is the message work to plan (tasks) or talk? A question is talk; a short message (under four words) is talk
+ * unless it names work ("Fix math.js", "Hatayı düzelt"); anything longer is work.
+ */
+export function demoIsWork(msg: string): boolean {
+  if (/\?\s*$/.test(msg)) return false
+  return msg.split(/\s+/).filter(Boolean).length >= 4 || ORDER.test(msg)
+}

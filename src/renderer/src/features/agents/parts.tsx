@@ -42,7 +42,7 @@ export function Field({ label, hint, children, className }: { label: string; hin
     <div className={className}>
       <label className="label">{label}</label>
       {children}
-      {hint && <div className="mt-1 text-[11.5px] text-zinc-400">{hint}</div>}
+      {hint && <div className="mt-1 text-[11px] text-zinc-400">{hint}</div>}
     </div>
   )
 }
@@ -50,7 +50,7 @@ export function Field({ label, hint, children, className }: { label: string; hin
 export function Swatches({ label, colors, value, onPick }: { label: string; colors: string[]; value: string; onPick: (c: string) => void }) {
   return (
     <div className="flex items-center gap-3">
-      <span className="w-14 shrink-0 text-[11.5px] text-zinc-400">{label}</span>
+      <span className="min-w-14 shrink-0 text-[12px] text-zinc-400">{label}</span>
       <div className="flex flex-wrap gap-1.5">
         {colors.map((c) => (
           <button
@@ -91,7 +91,7 @@ export function TagInput({
   }
   return (
     <div
-      className="flex min-h-8 w-full cursor-text flex-wrap items-center gap-1.5 rounded-md border border-line bg-surface-2 px-1.5 py-1 transition-colors focus-within:border-accent/60 focus-within:ring-2 focus-within:ring-accent/15"
+      className="flex min-h-8 w-full cursor-text flex-wrap items-center gap-1.5 rounded-md border border-line bg-surface-2 px-1.5 py-1 transition-colors focus-within:border-accent-soft focus-within:ring-2 focus-within:ring-accent/15"
       onMouseDown={(e) => {
         if (e.target === e.currentTarget) {
           e.preventDefault()
@@ -153,7 +153,7 @@ export function SavedIndicator({ saved }: { saved: boolean }) {
   const { t } = useTranslation()
   return (
     <span
-      className={cn('flex items-center gap-1 text-[11.5px] text-emerald-400 transition-opacity duration-300', saved ? 'opacity-100' : 'opacity-0')}
+      className={cn('flex items-center gap-1 text-[12px] text-emerald-400 transition-opacity duration-300', saved ? 'opacity-100' : 'opacity-0')}
       aria-live="polite"
     >
       <Check size={13} /> {t('status.saved')}

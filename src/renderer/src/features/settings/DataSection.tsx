@@ -106,7 +106,7 @@ export function DataSection() {
       />
 
       {/* usage overview */}
-      <div className="mb-2 grid grid-cols-5 gap-3">
+      <div className="mb-2 grid grid-cols-[repeat(auto-fit,minmax(9rem,1fr))] gap-3">
         <Stat
           icon={HardDrive}
           label={t('settings:data.stats.database')}
@@ -173,7 +173,7 @@ export function DataSection() {
         >
           <div className="flex items-center gap-2">
             <select
-              className="input h-7 w-28 text-[12px]"
+              className="input h-7 w-28 text-[13px]"
               value={settings.logRetentionDays}
               onChange={(e) => void call('settings:update', { logRetentionDays: Number(e.target.value) })}
             >
@@ -223,7 +223,7 @@ export function DataSection() {
             }
           />
         ))}
-        {backups.length === 0 && <div className="px-5 py-4 text-[12px] text-zinc-400">{t('settings:data.backups.empty')}</div>}
+        {backups.length === 0 && <div className="px-5 py-4 text-[13px] text-zinc-400">{t('settings:data.backups.empty')}</div>}
       </div>
 
       {/* factory reset */}
@@ -244,7 +244,7 @@ export function DataSection() {
 function Stat({ icon: Icon, label, value, sub }: { icon: React.ComponentType<{ size?: number; className?: string }>; label: string; value: string; sub: string }) {
   return (
     <div className="card p-3.5">
-      <div className="flex items-center gap-1.5 text-[11px] text-zinc-400">
+      <div className="flex items-center gap-1.5 text-[12px] text-zinc-400">
         <Icon size={12} /> {label}
       </div>
       <div className="mt-1 text-[18px] font-semibold tabular-nums text-zinc-100">{value}</div>
@@ -257,7 +257,7 @@ function SectionTitle({ title, desc, action }: { title: string; desc: string; ac
   return (
     <div className="mb-2.5 flex items-end justify-between gap-4">
       <div>
-        <div className="text-[13.5px] font-semibold text-zinc-100">{title}</div>
+        <div className="text-[13px] font-semibold text-zinc-100">{title}</div>
         <div className="text-[12px] text-zinc-400">{desc}</div>
       </div>
       {action && <div className="shrink-0 whitespace-nowrap">{action}</div>}
@@ -302,9 +302,9 @@ function ProjectRow({
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2 text-[13px] text-zinc-200">
             <span className="truncate">{p.name}</span>
-            {p.status === 'archived' && <span className="rounded bg-white/5 px-1.5 text-[10px] text-zinc-400">{t('settings:data.projects.archived')}</span>}
+            {p.status === 'archived' && <span className="rounded bg-white/5 px-1.5 text-[12px] text-zinc-400">{t('settings:data.projects.archived')}</span>}
           </div>
-          <div className="text-[11.5px] tabular-nums text-zinc-500">
+          <div className="text-[11px] tabular-nums text-zinc-500">
             {t('settings:data.projects.summary', {
               tasks: p.tasks,
               messages: p.messages,
@@ -323,7 +323,7 @@ function ProjectRow({
       </div>
       {open && (
         <div className="px-5 pb-4">
-          <div className="grid grid-cols-3 gap-2">
+          <div className="grid grid-cols-[repeat(auto-fit,minmax(11rem,1fr))] gap-2">
             {PARTS.map((x) => {
               const n = x.count(p)
               return (
@@ -336,7 +336,7 @@ function ProjectRow({
                 >
                   <input type="checkbox" className="mt-0.5 accent-indigo-500" checked={parts.has(x.id)} onChange={() => toggle(x.id)} />
                   <div className="min-w-0">
-                    <div className="text-[12.5px] text-zinc-200">
+                    <div className="text-[13px] text-zinc-200">
                       {t(x.labelKey)} <span className="tabular-nums text-zinc-500">({n})</span>
                     </div>
                     <div className="text-[11px] text-zinc-500">{t(x.hintKey)}</div>
@@ -347,7 +347,7 @@ function ProjectRow({
           </div>
           <div className="mt-3 flex items-center gap-3">
             {parts.has('memories') && (
-              <label className="flex items-center gap-2 text-[12px] text-zinc-300">
+              <label className="flex items-center gap-2 text-[13px] text-zinc-300">
                 <Toggle size="sm" checked={keepDecisions} onChange={setKeepDecisions} /> {t('settings:data.projects.keepDecisionMemory')}
               </label>
             )}
@@ -373,7 +373,7 @@ function OrgMemoryRow({ total, decisions, busy, onClear }: { total: number; deci
   return (
     <Row title={t('settings:data.org.memoryTitle')} desc={t('settings:data.org.memoryDesc', { total, decisions })}>
       <div className="flex items-center gap-3">
-        <label className="flex items-center gap-2 text-[12px] text-zinc-300">
+        <label className="flex items-center gap-2 text-[13px] text-zinc-300">
           <Toggle size="sm" checked={keep} onChange={setKeep} /> {t('settings:data.org.keepDecisions')}
         </label>
         {confirm ? (
@@ -415,7 +415,7 @@ function BackupRow({ b, onDelete, onRestore }: { b: BackupInfo; onDelete: () => 
       </div>
       {confirm ? (
         <div className="flex items-center gap-2">
-          <span className="text-[11.5px] text-amber-300">{t('settings:data.backups.restoreWarning')}</span>
+          <span className="text-[12px] text-amber-300">{t('settings:data.backups.restoreWarning')}</span>
           <button className="btn-ghost h-7" onClick={() => setConfirm(false)}>
             {t('actions.cancel')}
           </button>
@@ -450,7 +450,7 @@ function FactoryReset({ busy, onReset }: { busy: boolean; onReset: (mode: ResetM
   const ready = typed.trim().toLocaleUpperCase(locale()) === resetWord
   return (
     <div className="rounded-lg border border-rose-500/30 bg-rose-500/[0.04] p-5">
-      <div className="flex items-center gap-2 text-[13.5px] font-semibold text-rose-200">
+      <div className="flex items-center gap-2 text-[13px] font-semibold text-rose-200">
         <TriangleAlert size={15} /> {t('settings:data.reset.title')}
       </div>
       <div className="mt-1 text-[12px] text-rose-200/70">
@@ -470,13 +470,13 @@ function FactoryReset({ busy, onReset }: { busy: boolean; onReset: (mode: ResetM
               <span className={cn('h-3 w-3 rounded-full border', mode === m.id ? 'border-rose-400 bg-rose-400' : 'border-zinc-500')} />
               {t(m.titleKey)}
             </div>
-            <div className="mt-1.5 text-[11.5px] leading-snug text-zinc-300">{t(m.descKey)}</div>
+            <div className="mt-1.5 text-[12px] leading-snug text-zinc-300">{t(m.descKey)}</div>
             <div className="mt-1 text-[11px] leading-snug text-zinc-500">{t(m.keepsKey)}</div>
           </button>
         ))}
       </div>
       <div className="mt-4 flex items-center gap-3">
-        <div className="text-[12px] text-zinc-300">
+        <div className="text-[13px] text-zinc-300">
           <Trans
             i18nKey="settings:data.reset.confirm"
             values={{ word: resetWord }}

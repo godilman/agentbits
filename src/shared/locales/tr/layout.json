@@ -1,4 +1,6 @@
 {
+  "draftsLoadFailed": "Kayıtlı taslaklar yüklenemedi ({{error}}); birazdan yeniden denenecek. Bu arada yazdıkların korunur.",
+  "newMessages": "Yeni mesajlar",
   "app": {
     "loadFailed": "Veriler yüklenemedi",
     "retry": "Tekrar dene",
@@ -45,7 +47,7 @@
     "organizationTitle": "Organizasyon (Ctrl+O)",
     "newProject": "Yeni proje",
     "resumeAllTitle": "Tüm ajanları devam ettir",
-    "pauseAllTitle": "Tüm ajanları duraklat",
+    "pauseAllTitle": "Tümünü duraklat: yeni görev başlamaz, çalışan ajanlar bir sonraki adımlarında bekler. O an çalışan bir komut ya da program işini bitirebilir; sohbet yanıtları ve incelemeler sürer. Bir çalışmayı bitirmek için onu durdur.",
     "resume": "Devam et",
     "pauseAll": "Tümünü duraklat",
     "settings": "Ayarlar",
@@ -78,6 +80,7 @@
     "openProjectOf": "{{name}} projesini aç",
     "switchToProject": "{{name}} projesine geç",
     "awaitingApproval": "onay bekliyor",
+    "awaitingHint": "Henüz başlamadı: onaylanana kadar hiçbir şey yapılmaz.",
     "paused": "duraklatıldı",
     "working": "çalışıyor",
     "resume": "Devam et",
@@ -101,7 +104,10 @@
     "agent": "Ajan",
     "typing": "{{name}} yazıyor",
     "placeholderLead": "{{name}}'a yaz… (iş tarif et)",
-    "placeholder": "Mesaj yaz…"
+    "placeholder": "Mesaj yaz…",
+    "railRunningWaiting_one": "Çalışan işler · {{count}} onay bekliyor",
+    "railRunningWaiting_other": "Çalışan işler · {{count}} onay bekliyor",
+    "panel": "Yan panel"
   },
   "store": {
     "projectNotFound": "Proje bulunamadı; silinmiş olabilir",
@@ -123,7 +129,8 @@
     "held": "Bekletiliyor: {{reason}}",
     "heldNoReason": "Bekletiliyor",
     "agentError": "{{agent}} bir hatayla durdu",
-    "memory": "Hatırlanacak bir şey"
+    "memory": "Hatırlanacak bir şey",
+    "reviewIssue": "Karar sende: {{reason}}"
   },
   "promptBuilder": {
     "button": "Prompt oluşturucu",
@@ -147,5 +154,14 @@
     "cliNote": "Claude Code kendi oturum dosyalarını bu bilgisayarda, Agentbits'in dışında tutar.",
     "noProviders": "Henüz kurulu bir AI sağlayıcısı yok.",
     "openProviders": "Ayarlar → Sağlayıcılar'ı aç"
+  },
+  "notifyNav": {
+    "projectGone": "Bildirimin ait olduğu proje artık yok.",
+    "taskGone": "Bildirimin ait olduğu görev bulunamadı (silinmiş olabilir); proje panosu açıldı.",
+    "approvalDone": "Bu onay artık beklemiyor (cevaplandı ya da süresi doldu); görev açıldı.",
+    "projectArchived": "Bildirimin ait olduğu proje arşivde; açmak için önce arşivden çıkar.",
+    "agentGone": "Bu sohbetin ajanı artık yok; projenin genel sohbeti açıldı.",
+    "dialogOpen": "Açık bir pencere var (yeni görev ya da proje ayarları); yazdıkların kaybolmasın diye bildirimin yeri açılmadı. Önce onu kaydet ya da kapat.",
+    "settingsOpen": "Ayarlar açık; orada yazdıkların (örneğin sağlayıcı formu) kaybolmasın diye bildirimin yeri açılmadı. Önce Ayarlar'ı kaydet ya da kapat."
   }
 }

@@ -88,33 +88,33 @@ export function ReportsView() {
       </div>
 
       <div className="flex min-h-0 flex-1">
-        <div className="flex w-[300px] shrink-0 flex-col border-r border-line">
-          <div className="border-b border-line p-3">
+        <div className="flex min-h-0 w-[300px] shrink-0 flex-col border-r border-line">
+          <div className="max-h-[45%] shrink-0 overflow-y-auto border-b border-line p-3">
             <div className="panel-title mb-2.5">{t('reports:list.agentPerformance')}</div>
             <div className="space-y-2">
-              {perAgent.length === 0 && <div className="text-[11.5px] text-zinc-500">{t('reports:list.noRuns')}</div>}
+              {perAgent.length === 0 && <div className="text-[13px] text-zinc-500">{t('reports:list.noRuns')}</div>}
               {perAgent.map((p) => {
                 const a = agentById(agents, p.agentId)
                 return (
                   <div key={p.agentId} className="flex items-center gap-2">
                     <PixelAvatar agent={a} size={18} />
-                    <span className="w-14 truncate text-[11.5px] text-zinc-400">{a?.name}</span>
+                    <span className="w-20 shrink-0 truncate text-[13px] text-zinc-400">{a?.name}</span>
                     <div className="h-2 flex-1 overflow-hidden rounded-sm bg-white/[0.04]">
                       <div className="h-full rounded-sm" style={{ width: `${(p.done / maxDone) * 100}%`, background: a?.color ?? '#6366f1' }} />
                     </div>
-                    <span className="w-6 text-right font-mono text-[11px] text-zinc-400">{p.done}</span>
+                    <span className="min-w-6 text-right font-mono text-[11px] text-zinc-400">{p.done}</span>
                   </div>
                 )
               })}
             </div>
           </div>
-          <div className="flex items-center justify-between px-3 pb-1.5 pt-3">
+          <div className="flex flex-wrap items-center justify-between gap-y-1 px-3 pb-1.5 pt-3">
             <span className="panel-title" title={project?.name}>{t('reports:list.title')}</span>
             <div className="flex items-center gap-1">
-              <button className="btn-outline h-6 text-[11.5px]" disabled={writing} onClick={() => setAsking((v) => !v)} title={t('reports:custom.hint')}>
+              <button className="btn-outline h-6 text-[12px]" disabled={writing} onClick={() => setAsking((v) => !v)} title={t('reports:custom.hint')}>
                 <Sparkles size={12} /> {t('reports:custom.button')}
               </button>
-              <button className="btn-outline h-6 text-[11.5px]" disabled={generating} onClick={() => void generate()}>
+              <button className="btn-outline h-6 text-[12px]" disabled={generating} onClick={() => void generate()}>
                 <CalendarDays size={12} /> {t('reports:list.daily')}
               </button>
             </div>
@@ -123,7 +123,7 @@ export function ReportsView() {
             <div className="mx-3 mb-2 rounded-md border border-line bg-surface-2 p-2">
               <textarea
                 data-testid="custom-report-request"
-                className="textarea min-h-[56px] w-full text-[12px]"
+                className="textarea min-h-[56px] w-full text-[13px]"
                 rows={3}
                 autoFocus
                 placeholder={t('reports:custom.placeholder')}
@@ -133,9 +133,9 @@ export function ReportsView() {
                   if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) void custom()
                 }}
               />
-              <div className="mt-1.5 flex items-center justify-between gap-2">
-                <span className="text-[10.5px] text-zinc-400">{t('reports:custom.note')}</span>
-                <button className="btn-primary h-6 text-[11.5px]" disabled={writing || !request.trim()} onClick={() => void custom()}>
+              <div className="mt-1.5 flex flex-wrap items-center justify-between gap-2 gap-y-1">
+                <span className="min-w-0 text-[11px] text-zinc-400">{t('reports:custom.note')}</span>
+                <button className="btn-primary h-6 text-[12px]" disabled={writing || !request.trim()} onClick={() => void custom()}>
                   {writing && <Loader2 size={12} className="animate-spin" />} {t('reports:custom.write')}
                 </button>
               </div>
@@ -148,8 +148,8 @@ export function ReportsView() {
             >
               <Coins size={16} className="text-amber-300" />
               <div className="min-w-0 flex-1">
-                <div className="truncate text-[12.5px] text-zinc-200">{t('reports:usage.title')}</div>
-                <div className="text-[10.5px] text-zinc-400">{t('reports:list.usageSub')}</div>
+                <div className="truncate text-[13px] text-zinc-200">{t('reports:usage.title')}</div>
+                <div className="text-[12px] text-zinc-400">{t('reports:list.usageSub')}</div>
               </div>
             </button>
             {reports.map((r) => (
@@ -160,15 +160,15 @@ export function ReportsView() {
               >
                 {r.agentId ? <PixelAvatar agent={agentById(agents, r.agentId)} size={20} /> : <CalendarDays size={16} className="mt-0.5 text-indigo-300" />}
                 <div className="min-w-0 flex-1">
-                  <div className="truncate text-[12.5px] text-zinc-200">{r.title}</div>
-                  <div className="text-[10.5px] text-zinc-400">
+                  <div className="truncate text-[13px] text-zinc-200">{r.title}</div>
+                  <div className="text-[11px] text-zinc-400">
                     {r.kind === 'daily' ? t('reports:list.kindDaily') : r.kind === 'custom' ? t('reports:list.kindCustom') : t('reports:list.kindTask')} · {timeAgo(r.createdAt)}
                   </div>
                 </div>
               </button>
             ))}
             {reports.length >= reportsWindow && (
-              <button className="btn-outline mt-1 h-7 w-full justify-center text-[11.5px]" onClick={() => void loadMoreReports()}>
+              <button className="btn-outline mt-1 h-7 w-full justify-center text-[12px]" onClick={() => void loadMoreReports()}>
                 {t('reports:list.showOlder')}
               </button>
             )}
@@ -180,7 +180,7 @@ export function ReportsView() {
           ) : report ? (
             <div className="mx-auto max-w-3xl px-8 py-6">
               <div className="mb-2 flex justify-end">
-                <button className="btn-danger h-6 text-[11.5px]" onClick={() => void call('reports:delete', report.id)}>
+                <button className="btn-danger h-6 text-[12px]" onClick={() => void call('reports:delete', report.id)}>
                   <Trash2 size={12} /> {t('actions.delete')}
                 </button>
               </div>
@@ -198,9 +198,9 @@ export function ReportsView() {
 function Stat({ label, value, sub }: { label: string; value: string | number; sub: string }) {
   return (
     <div className="bg-canvas px-5 py-4">
-      <div className="text-[11px] font-medium uppercase tracking-wider text-zinc-400">{label}</div>
+      <div className="text-[12px] font-medium uppercase tracking-wider text-zinc-400">{label}</div>
       <div className="mt-1 font-mono text-[22px] font-medium tabular-nums text-zinc-100">{value}</div>
-      <div className="text-[11px] text-zinc-400">{sub}</div>
+      <div className="text-[12px] text-zinc-400">{sub}</div>
     </div>
   )
 }

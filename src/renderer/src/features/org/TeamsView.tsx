@@ -65,7 +65,7 @@ export function TeamsView({ freshUnitId, onCreateChild }: { freshUnitId: string 
           style={{ paddingLeft: 6 + depth * 14 }}
         >
           <button
-            className={cn('flex h-5 w-4 shrink-0 items-center justify-center text-zinc-600 hover:text-zinc-300', !children.length && 'invisible')}
+            className={cn('flex h-5 w-4 shrink-0 items-center justify-center text-zinc-500 hover:text-zinc-300', !children.length && 'invisible')}
             onClick={() => toggle(u.id)}
             title={open ? t('org:teams.collapse') : t('org:teams.expand')}
           >
@@ -73,9 +73,9 @@ export function TeamsView({ freshUnitId, onCreateChild }: { freshUnitId: string 
           </button>
           <button className="flex min-w-0 flex-1 items-center gap-2 text-left" onClick={() => selectUnit(u.id)}>
             <Icon size={13} className="shrink-0" style={{ color: u.color }} />
-            <span className={cn('truncate text-[12.5px]', active && 'font-medium')}>{u.name}</span>
+            <span className={cn('truncate text-[13px]', active && 'font-medium')}>{u.name}</span>
           </button>
-          <span className="font-mono text-[10.5px] text-zinc-600 group-hover:hidden">{count || ''}</span>
+          <span className="font-mono text-[10px] text-zinc-500 group-hover:hidden">{count || ''}</span>
           <button
             className="icon-btn hidden h-5 w-5 group-hover:inline-flex"
             title={t('org:teams.addChild')}
@@ -101,8 +101,8 @@ export function TeamsView({ freshUnitId, onCreateChild }: { freshUnitId: string 
       <aside className="flex w-[300px] shrink-0 flex-col border-r border-line bg-[#0c0c0e]">
         <div className="border-b border-line p-3">
           <div className="relative">
-            <Search size={13} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-zinc-600" />
-            <input className="input h-7 pl-8 text-[12.5px]" placeholder={t('org:teams.search')} value={query} onChange={(e) => setQuery(e.target.value)} />
+            <Search size={13} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-zinc-500" />
+            <input className="input h-7 pl-8 text-[13px]" placeholder={t('org:teams.search')} value={query} onChange={(e) => setQuery(e.target.value)} />
           </div>
         </div>
         <div className="min-h-0 flex-1 overflow-y-auto p-2">
@@ -117,8 +117,8 @@ export function TeamsView({ freshUnitId, onCreateChild }: { freshUnitId: string 
                   >
                     <Icon size={13} style={{ color: u.color }} />
                     <div className="min-w-0">
-                      <div className="truncate text-[12.5px] text-zinc-200">{u.name}</div>
-                      <div className="truncate text-[10.5px] text-zinc-600">
+                      <div className="truncate text-[13px] text-zinc-200">{u.name}</div>
+                      <div className="truncate text-[11px] text-zinc-500">
                         {unitPath(units, u.id)
                           .slice(0, -1)
                           .map((p) => p.name)
@@ -129,9 +129,9 @@ export function TeamsView({ freshUnitId, onCreateChild }: { freshUnitId: string 
                 )
               })
             : root && renderNode(root, 0)}
-          {matches && matches.length === 0 && <div className="py-6 text-center text-[12px] text-zinc-600">{t('org:teams.noMatch')}</div>}
+          {matches && matches.length === 0 && <div className="py-6 text-center text-[13px] text-zinc-500">{t('org:teams.noMatch')}</div>}
         </div>
-        <div className="border-t border-line px-4 py-2.5 text-[11px] text-zinc-600">
+        <div className="border-t border-line px-4 py-2.5 text-[12px] text-zinc-500">
           <Trans
             i18nKey="org:teams.footer"
             values={{ units: t('org:counts.units', { count: units.length }) }}

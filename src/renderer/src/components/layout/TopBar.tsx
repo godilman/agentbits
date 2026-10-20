@@ -37,6 +37,7 @@ import { useOpenFolder } from '@/features/project/ProjectLauncher'
 import { NeedsYouButton } from '@/features/inbox/NeedsYou'
 import { Logo } from '@/components/common/Logo'
 import { PromptBuilderButton } from '@/features/promptBuilder/PromptBuilder'
+import { useLayer } from '@/components/common/Layer'
 
 type TabDef = { id: Tab; readonly label: string; icon: ComponentType<{ size?: number; className?: string }>; key: string }
 /** `label` is a getter: it is translated on every read (current language). */
@@ -65,7 +66,7 @@ export function TopBar() {
   const view = useAppStore((s) => s.view)
   const hasProject = useAppStore((s) => !!s.activeProjectId)
   return (
-    <header className="relative z-20 shrink-0 border-b border-line bg-[#0c0c0e]">
+    <header className="relative z-40 shrink-0 border-b border-line bg-[#0c0c0e]">
       <ProjectStrip />
       {view === 'project' && hasProject && <SectionBar />}
     </header>
@@ -98,7 +99,7 @@ function ProjectStrip() {
     <div className={cn('drag flex h-10 items-center gap-2', platform === 'darwin' ? 'pl-[78px]' : 'pl-3', overlayRight ? 'pr-[150px]' : 'pr-3')}>
       <div className="flex shrink-0 items-center gap-2 pr-1">
         <Logo />
-        <span className="text-[13px] font-semibold tracking-tight text-zinc-100">Agentbits</span>
+        <span className="text-[13px] font-semibold tracking-tight text-zinc-100 max-[640px]:hidden">Agentbits</span>
       </div>
 
       <nav className="no-drag flex min-w-0 items-center gap-0.5">
@@ -106,12 +107,12 @@ function ProjectStrip() {
           onClick={() => showOrg()}
           title={t('layout:topBar.organizationTitle')}
           className={cn(
-            'relative flex h-7 shrink-0 items-center gap-1.5 rounded-md px-2.5 text-[12.5px] font-medium transition-colors',
+            'relative flex h-7 shrink-0 items-center gap-1.5 rounded-md px-2.5 text-[13px] font-medium transition-colors',
             view === 'org' ? 'bg-white/[0.08] text-zinc-100' : 'text-zinc-400 hover:bg-white/[0.04] hover:text-zinc-200'
           )}
         >
           <Network size={14} className={view === 'org' ? 'text-indigo-300' : ''} />
-          {t('layout:topBar.organization')}
+          <span className="max-[960px]:sr-only">{t('layout:topBar.organization')}</span>
         </button>
         <span className="mx-1 h-4 w-px shrink-0 bg-line" />
         <div className="flex min-w-0 items-center gap-0.5 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
@@ -119,7 +120,7 @@ function ProjectStrip() {
             <ProjectTab key={p.id} project={p} running={runCount.get(p.id) ?? 0} closable />
           ))}
         </div>
-        <button className="icon-btn h-7 w-7 shrink-0" title={t('layout:topBar.newProject')} onClick={() => openProjectModal(null)}>
+        <button className="icon-btn h-7 w-7 shrink-0 max-[640px]:hidden" title={t('layout:topBar.newProject')} onClick={() => openProjectModal(null)}>
           <Plus size={15} />
         </button>
         <ProjectSwitcher />
@@ -141,7 +142,7 @@ function ProjectStrip() {
           title={paused ? t('layout:topBar.resumeAllTitle') : t('layout:topBar.pauseAllTitle')}
         >
           {paused ? <Play size={13} /> : <Pause size={13} />}
-          {paused ? t('layout:topBar.resume') : t('layout:topBar.pauseAll')}
+          <span className="max-[960px]:sr-only">{paused ? t('layout:topBar.resume') : t('layout:topBar.pauseAll')}</span>
         </button>
         <button className="icon-btn h-7 w-7" onClick={() => openSettings()} title={t('layout:topBar.settings')}>
           <Settings2 size={15} />
@@ -159,7 +160,7 @@ function MemoryButton() {
   return (
     <button data-testid="memory-shortcut" className="icon-btn relative h-7 w-7" onClick={() => showOrg('memory')} title={t('layout:topBar.memory')}>
       <Brain size={15} />
-      {pending > 0 && <span className="absolute -right-0.5 -top-0.5 rounded bg-pink-500 px-1 text-[9.5px] font-semibold leading-[14px] text-white">{pending}</span>}
+      {pending > 0 && <span className="absolute -right-0.5 -top-0.5 rounded bg-pink-500 px-1 text-[10px] font-semibold leading-[14px] text-white">{pending}</span>}
     </button>
   )
 }
@@ -181,7 +182,7 @@ function GuideButton() {
         open ? 'border-indigo-500/40 bg-indigo-500/10 text-indigo-200' : left ? 'border-indigo-500/30 bg-indigo-500/[0.06] text-indigo-200 hover:bg-indigo-500/10' : 'border-line bg-surface-2 text-zinc-400 hover:text-zinc-200'
       )}
     >
-      <BookOpen size={13} /> {t('layout:topBar.guide')}
+      <BookOpen size={13} /> <span className="max-[960px]:sr-only">{t('layout:topBar.guide')}</span>
       {left > 0 && <span className="rounded bg-indigo-500/30 px-1 text-[10px] text-indigo-100">{steps.length - left}/{steps.length}</span>}
     </button>
   )
@@ -205,7 +206,7 @@ function ProjectTab({ project, running, closable }: { project: Project; running:
           : t('layout:topBar.projectTabTitleNoFolder', { name: project.name })
       }
       className={cn(
-        'group relative flex h-7 max-w-[200px] shrink-0 cursor-pointer items-center gap-1.5 rounded-md pl-2.5 text-[12.5px] font-medium transition-colors',
+        'group relative flex h-7 max-w-[200px] shrink-0 cursor-pointer items-center gap-1.5 rounded-md pl-2.5 text-[13px] font-medium transition-colors',
         closable ? 'pr-1' : 'pr-2.5',
         active ? 'bg-white/[0.08] text-zinc-100' : 'text-zinc-400 hover:bg-white/[0.04] hover:text-zinc-200'
       )}
@@ -253,16 +254,10 @@ function ProjectSwitcher() {
     const onDown = (e: MouseEvent): void => {
       if (!ref.current?.contains(e.target as Node)) setOpen(false)
     }
-    const onKey = (e: KeyboardEvent): void => {
-      if (e.key === 'Escape') setOpen(false)
-    }
     window.addEventListener('mousedown', onDown)
-    window.addEventListener('keydown', onKey)
-    return () => {
-      window.removeEventListener('mousedown', onDown)
-      window.removeEventListener('keydown', onKey)
-    }
+    return () => window.removeEventListener('mousedown', onDown)
   }, [open])
+  useLayer(open, () => setOpen(false), ref)
 
   const active = useMemo(() => projects.filter((p) => p.status === 'active'), [projects])
   const archived = useMemo(() => projects.filter((p) => p.status === 'archived'), [projects])
@@ -307,17 +302,17 @@ function ProjectSwitcher() {
           </div>
           <div className="mt-1 border-t border-line pt-1">
             <button
-              className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-[12.5px] text-zinc-300 hover:bg-white/[0.05]"
+              className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-[13px] text-zinc-300 hover:bg-white/[0.05]"
               onClick={() => {
                 setOpen(false)
                 openLauncher()
               }}
             >
               <FolderOpen size={14} className="text-indigo-300" /> {t('layout:topBar.openProject')}
-              <span className="ml-auto font-mono text-[10.5px] text-zinc-500">Ctrl+P</span>
+              <span className="ml-auto font-mono text-[11px] text-zinc-500">Ctrl+P</span>
             </button>
             <button
-              className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-[12.5px] text-zinc-300 hover:bg-white/[0.05]"
+              className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-[13px] text-zinc-300 hover:bg-white/[0.05]"
               onClick={() => {
                 setOpen(false)
                 void openFolder()
@@ -326,7 +321,7 @@ function ProjectSwitcher() {
               <FolderPlus size={14} className="text-indigo-300" /> {t('layout:topBar.openFolder')}
             </button>
             <button
-              className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-[12.5px] text-zinc-300 hover:bg-white/[0.05]"
+              className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-[13px] text-zinc-300 hover:bg-white/[0.05]"
               onClick={() => {
                 setOpen(false)
                 openProjectModal(null)
@@ -348,15 +343,15 @@ function SwitcherRow({ project, isOpen, isActive, onPick }: { project: Project; 
     <button onClick={onPick} className="flex w-full items-center gap-2.5 rounded-md px-2 py-1.5 text-left hover:bg-white/[0.05]">
       <span className={cn('h-2 w-2 shrink-0 rounded-full', archived && 'opacity-50')} style={{ background: project.color }} />
       <div className="min-w-0 flex-1">
-        <div className={cn('truncate text-[12.5px]', archived ? 'text-zinc-400' : 'text-zinc-200')}>{project.name}</div>
-        <div className="truncate font-mono text-[10.5px] text-zinc-500">{project.rootPath ? shortPath(project.rootPath, 38) : t('layout:topBar.noFolder')}</div>
+        <div className={cn('truncate text-[13px]', archived ? 'text-zinc-400' : 'text-zinc-200')}>{project.name}</div>
+        <div className="truncate font-mono text-[11px] text-zinc-500">{project.rootPath ? shortPath(project.rootPath, 38) : t('layout:topBar.noFolder')}</div>
       </div>
       {archived ? (
-        <span className="shrink-0 text-[10.5px] text-zinc-500">{t('layout:topBar.archived')}</span>
+        <span className="shrink-0 text-[12px] text-zinc-500">{t('layout:topBar.archived')}</span>
       ) : isActive ? (
         <Check size={13} className="shrink-0 text-indigo-300" />
       ) : isOpen ? (
-        <span className="shrink-0 text-[10.5px] text-zinc-500">{t('layout:topBar.open')}</span>
+        <span className="shrink-0 text-[12px] text-zinc-500">{t('layout:topBar.open')}</span>
       ) : null}
     </button>
   )
@@ -386,12 +381,13 @@ function SectionBar() {
               onClick={() => setTab(x.id)}
               title={t('layout:topBar.tabTitle', { label: x.label, key: x.key })}
               className={cn(
-                'group relative flex h-7 items-center gap-1.5 rounded-md px-2.5 text-[12.5px] font-medium transition-colors',
+                'group relative flex h-7 items-center gap-1.5 rounded-md px-2.5 text-[13px] font-medium transition-colors',
                 active ? 'bg-white/[0.07] text-zinc-100' : 'text-zinc-400 hover:bg-white/[0.04] hover:text-zinc-200'
               )}
             >
               <x.icon size={14} className={active ? 'text-indigo-300' : 'text-zinc-400 group-hover:text-zinc-300'} />
-              {x.label}
+              {/* A narrow or zoomed window: icons only (the name stays for screen readers and in the tooltip). */}
+              <span className="max-[960px]:sr-only">{x.label}</span>
               {count > 0 && (
                 <span className={cn('rounded px-1 font-mono text-[10px]', active ? 'bg-indigo-500/25 text-indigo-200' : 'bg-white/5 text-zinc-400')}>
                   {count}
@@ -418,7 +414,7 @@ function SectionBar() {
             <button
               onClick={() => openProjectModal(pid)}
               title={t('layout:topBar.noFolderTitle')}
-              className="flex h-6 shrink-0 items-center gap-1.5 rounded-md border border-amber-500/30 bg-amber-500/10 px-2 text-[11.5px] text-amber-300 hover:bg-amber-500/15"
+              className="flex h-6 shrink-0 items-center gap-1.5 rounded-md border border-amber-500/30 bg-amber-500/10 px-2 text-[12px] text-amber-300 hover:bg-amber-500/15"
             >
               <TriangleAlert size={12} /> {t('layout:topBar.noFolderChip')}
             </button>

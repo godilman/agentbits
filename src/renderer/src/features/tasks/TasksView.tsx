@@ -5,18 +5,20 @@ import type { Task, TaskStatus } from '@shared/types'
 import { locale } from '@/i18n'
 import { PixelAvatar } from '@/components/common/PixelAvatar'
 import { Empty, ProgressBar } from '@/components/common/ui'
-import { call } from '@/lib/api'
+import { apiError, call } from '@/lib/api'
 import { cn, PRIORITY_META, TASK_COLUMNS, timeAgo } from '@/lib/format'
 import { useProjectScope } from '@/lib/org'
 import { agentById, useAppStore } from '@/store/useAppStore'
 import { TaskDrawer } from './TaskDrawer'
 import { useStartGuard } from './StartGuard'
+import { useDoneGuard } from './DoneGuard'
 
 export function TasksView() {
   const { t } = useTranslation(['common', 'tasks'])
   const allTasks = useAppStore((s) => s.tasks)
   const { pid, project, team } = useProjectScope()
   const [guardStart, startModal] = useStartGuard()
+  const [guardDone, doneModal] = useDoneGuard()
   const tasks = useMemo(() => allTasks.filter((x) => x.projectId === pid), [allTasks, pid])
   // Only the newest done tasks are loaded (store DONE_WINDOW); the rest load on request.
   const doneTotal = useAppStore((s) => (pid ? s.doneTotals[pid] ?? 0 : 0))
@@ -31,6 +33,7 @@ export function TasksView() {
     return allAgents.filter((a) => ids.has(a.id))
   }, [allAgents, team, tasks])
   const setNewTaskOpen = useAppStore((s) => s.setNewTaskOpen)
+  const selectedTaskId = useAppStore((s) => s.selectedTaskId)
   const [query, setQuery] = useState('')
   const [assignee, setAssignee] = useState<string | null>(null)
   const [dragId, setDragId] = useState<string | null>(null)
@@ -72,29 +75,35 @@ export function TasksView() {
     const move = (force?: boolean): void => {
       // optimistic
       useAppStore.setState((st) => ({ tasks: st.tasks.map((x) => (x.id === id ? { ...x, status, sortOrder } : x)) }))
-      void call('tasks:move', id, status, sortOrder, force)
+      // Refused (e.g. the run could not be confirmed stopped): the board reloads; say why.
+      void call('tasks:move', id, status, sortOrder, force).catch((e) => useAppStore.getState().toast('error', apiError(e)))
     }
     if (status === 'in_progress' && task.status !== 'in_progress') guardStart(task.id, task.key, move)
+    else if (status === 'done' && task.status !== 'done') guardDone(task, () => move())
     else move()
   }
 
   return (
     <div className="flex h-full flex-col">
       {startModal}
-      <div className="flex items-center gap-3 border-b border-line px-5 py-3">
-        <div>
-          <h1 className="text-[15px] font-semibold text-zinc-100">{project ? t('tasks:board.titleWithProject', { project: project.name }) : t('tasks:board.title')}</h1>
-          <div className="text-[11.5px] text-zinc-400">
+      {doneModal}
+      {/* Narrow space: the tools wrap below the title instead of squeezing it word by word. */}
+      <div className="flex flex-wrap items-center gap-x-3 gap-y-2 border-b border-line px-5 py-3">
+        <div className="min-w-[200px] flex-1">
+          <h1 className="truncate text-[15px] font-semibold text-zinc-100" title={project?.name}>
+            {project ? t('tasks:board.titleWithProject', { project: project.name }) : t('tasks:board.title')}
+          </h1>
+          <div className="truncate text-[11px] text-zinc-400">
             {t('tasks:board.subtitle', { count: tasks.length + hiddenDone })}
           </div>
         </div>
-        <div className="ml-auto flex items-center gap-2">
+        <div className="ml-auto flex flex-wrap items-center gap-2">
           <div className="relative">
             <Search size={13} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-zinc-400" />
-            <input className="input h-7 w-52 pl-7 text-[12px]" placeholder={t('tasks:board.searchPlaceholder')} value={query} onChange={(e) => setQuery(e.target.value)} />
+            <input className="input h-7 w-52 pl-7 text-[13px]" placeholder={t('tasks:board.searchPlaceholder')} value={query} onChange={(e) => setQuery(e.target.value)} />
           </div>
           <div className="flex items-center gap-0.5 rounded-md border border-line bg-surface-2 p-0.5">
-            <button className={cn('h-6 rounded px-2 text-[11px]', !assignee ? 'bg-white/10 text-zinc-100' : 'text-zinc-400')} onClick={() => setAssignee(null)}>
+            <button className={cn('h-6 rounded px-2 text-[12px]', !assignee ? 'bg-white/10 text-zinc-100' : 'text-zinc-400')} onClick={() => setAssignee(null)}>
               {t('tasks:board.all')}
             </button>
             {agents.map((a) => (
@@ -114,7 +123,8 @@ export function TasksView() {
         </div>
       </div>
 
-      <div className="grid min-h-0 flex-1 grid-cols-4 gap-3 overflow-x-auto p-4">
+      {/* Columns never go below 230 px (no overlap): a narrow space scrolls sideways. */}
+      <div className="grid min-h-0 flex-1 grid-cols-[repeat(4,minmax(230px,1fr))] gap-3 overflow-x-auto p-4">
         {TASK_COLUMNS.map((col) => {
           const items = byColumn(col.id)
           return (
@@ -135,7 +145,7 @@ export function TasksView() {
             >
               <div className="flex items-center gap-2 px-3 py-2.5">
                 <span className={cn('h-2 w-2 rounded-sm', col.accent)} />
-                <span className="text-[12.5px] font-medium text-zinc-200">{col.label}</span>
+                <span className="text-[13px] font-medium text-zinc-200">{col.label}</span>
                 <span className="font-mono text-[11px] text-zinc-400">{col.id === 'done' && !query && !assignee ? items.length + hiddenDone : items.length}</span>
                 {col.id === 'todo' && (
                   <button className="icon-btn ml-auto" onClick={() => setNewTaskOpen(true)} title={t('tasks:board.addTask')}>
@@ -152,11 +162,11 @@ export function TasksView() {
                   }} onDragEnd={() => setDragId(null)} />
                 ))}
                 {items.length === 0 && hiddenDone === 0 && (
-                  <div className="rounded-md border border-dashed border-line-soft py-6 text-center text-[11.5px] text-zinc-400">{t('tasks:board.emptyColumn')}</div>
+                  <div className="rounded-md border border-dashed border-line-soft py-6 text-center text-[12px] text-zinc-400">{t('tasks:board.emptyColumn')}</div>
                 )}
                 {col.id === 'done' && hiddenDone > 0 && pid && (
                   <button
-                    className="btn-outline h-7 w-full justify-center text-[11.5px]"
+                    className="btn-outline h-7 w-full justify-center text-[12px]"
                     disabled={loadingDone}
                     onClick={() => {
                       setLoadingDone(true)
@@ -177,7 +187,8 @@ export function TasksView() {
           <Empty icon={<SquareKanban size={18} />} title={t('tasks:board.emptyTitle')} hint={t('tasks:board.emptyHint')} />
         </div>
       )}
-      <TaskDrawer />
+      {/* A new task (a notification click, another card) starts with fresh details: no merge review left for the last one. */}
+      <TaskDrawer key={selectedTaskId ?? ''} />
     </div>
   )
 }
@@ -221,7 +232,13 @@ function TaskCard({ task, dragging, onDragStart, onDragEnd }: { task: Task; drag
   )
   const heldWhy = useAppStore((s) => (task.status === 'todo' ? (s.orchestratorWaits.held[task.id] ?? null) : null))
   const undecided = useAppStore((s) => task.status === 'in_review' && s.orchestratorWaits.undecided.includes(task.id))
+  const undecidedWhy = useAppStore((s) => (task.status === 'in_review' ? (s.orchestratorWaits.undecidedWhy[task.id] ?? '') : ''))
+  const mergeWaits = useAppStore((s) => task.status === 'done' && s.orchestratorWaits.unmerged.includes(task.id))
   const ownUnmerged = useAppStore((s) => task.status === 'done' && s.orchestratorWaits.unmerged.includes(task.id))
+  // The Demo provider did its latest run (nothing real was done) and / or its review (nothing was really checked).
+  const shown = task.status === 'in_review' || task.status === 'done'
+  const simWork = useAppStore((s) => shown && s.orchestratorWaits.simulatedWork.includes(task.id))
+  const simReview = useAppStore((s) => shown && s.orchestratorWaits.simulatedReview.includes(task.id))
   const racePartner = useAppStore((s) => {
     if (task.status !== 'in_review' || task.raceResult) return ''
     const p = task.raceOf ? s.tasks.find((x) => x.id === task.raceOf) : s.tasks.find((x) => x.raceOf === task.id)
@@ -241,13 +258,13 @@ function TaskCard({ task, dragging, onDragStart, onDragEnd }: { task: Task; drag
         dragging && 'opacity-40'
       )}
     >
-      <div className="flex items-center gap-1.5">
-        <span className="font-mono text-[10.5px] text-zinc-400">{task.key}</span>
+      <div className="flex flex-wrap items-center gap-x-1.5 gap-y-0.5">
+        <span className="font-mono text-[11px] text-zinc-400">{task.key}</span>
         <span className={cn('h-1.5 w-1.5 rounded-full', pr.dot)} title={t('tasks:card.priority', { label: pr.label })} />
         {(task.raceOf || task.raceResult || isRaced) && (
           <span
             className={cn(
-              'rounded px-1 text-[10px]',
+              'rounded px-1 text-[12px]',
               task.raceResult === 'won' ? 'bg-emerald-500/15 text-emerald-300' : task.raceResult === 'lost' ? 'bg-zinc-500/15 text-zinc-400' : 'bg-orange-500/15 text-orange-300'
             )}
             title={t('tasks:card.raceHint')}
@@ -259,52 +276,75 @@ function TaskCard({ task, dragging, onDragStart, onDragEnd }: { task: Task; drag
           <MessageSquareWarning size={12} className="text-amber-400/80" aria-label={t('tasks:card.revisionNote')} />
         )}
         {run && (
-          <span className={cn('ml-auto flex items-center gap-1 text-[10.5px]', run.status === 'awaiting_approval' ? 'text-amber-300' : 'text-emerald-400')}>
+          <span className={cn('ml-auto flex items-center gap-1 text-[12px]', run.status === 'awaiting_approval' ? 'text-amber-300' : 'text-emerald-400')}>
             {run.status === 'awaiting_approval' ? t('tasks:card.awaitingApproval') : run.status === 'paused' ? t('tasks:card.paused') : <Loader2 size={11} className="animate-spin" />}
           </span>
         )}
       </div>
-      <div className="mt-1 line-clamp-2 text-[12.5px] leading-snug text-zinc-200">{task.title}</div>
+      <div className="mt-1 line-clamp-2 text-[13px] leading-snug text-zinc-200">{task.title}</div>
       {waitsFor && (
-        <div className="mt-1.5 inline-flex items-center gap-1 rounded bg-sky-500/10 px-1.5 py-0.5 text-[10.5px] text-sky-300" title={t('tasks:card.waitsForHint')}>
+        <div className="mt-1.5 inline-flex items-center gap-1 rounded bg-sky-500/10 px-1.5 py-0.5 text-[12px] text-sky-300" title={t('tasks:card.waitsForHint')}>
           <Hourglass size={10} /> {t('tasks:card.waitsFor', { keys: waitsFor })}
         </div>
       )}
       {waitsMerge && (
-        <div className="mt-1.5 inline-flex items-center gap-1 rounded bg-sky-500/10 px-1.5 py-0.5 text-[10.5px] text-sky-300" title={t('tasks:card.waitsMergeHint')}>
+        <div className="mt-1.5 inline-flex items-center gap-1 rounded bg-sky-500/10 px-1.5 py-0.5 text-[12px] text-sky-300" title={t('tasks:card.waitsMergeHint')}>
           <GitMerge size={10} /> {t('tasks:card.waitsMerge', { keys: waitsMerge })}
         </div>
       )}
       {heldWhy !== null && (
-        <div className="mt-1.5 flex items-start gap-1 rounded bg-amber-500/10 px-1.5 py-0.5 text-[10.5px] leading-snug text-amber-300" title={t('tasks:card.heldHint')}>
+        <div className="mt-1.5 flex items-start gap-1 rounded bg-amber-500/10 px-1.5 py-0.5 text-[12px] leading-snug text-amber-300" title={t('tasks:card.heldHint')}>
           <PauseCircle size={10} className="mt-[2px] shrink-0" /> <span className="line-clamp-2">{heldWhy ? t('tasks:card.held', { reason: heldWhy }) : t('tasks:card.heldNoReason')}</span>
         </div>
       )}
       {undecided && (
-        <div className="mt-1.5 inline-flex items-center gap-1 rounded bg-violet-500/10 px-1.5 py-0.5 text-[10.5px] text-violet-300">
-          <UserCheck size={10} /> {t('tasks:card.undecided')}
+        <div className="mt-1.5 flex items-start gap-1 rounded bg-violet-500/10 px-1.5 py-0.5 text-[12px] leading-snug text-violet-300">
+          <UserCheck size={10} className="mt-[2px] shrink-0" />{' '}
+          <span className="line-clamp-2">{undecidedWhy ? t('tasks:card.undecidedWhy', { reason: undecidedWhy }) : t('tasks:card.undecided')}</span>
+        </div>
+      )}
+      {task.status === 'done' && ((task.completedBy && !(task.completedBy === 'lead' && simReview)) || mergeWaits) && (
+        <div
+          className={cn(
+            'mt-1.5 inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-[12px]',
+            mergeWaits ? 'bg-amber-500/10 text-amber-300' : task.completedBy === 'user' ? 'bg-sky-500/10 text-sky-300' : 'bg-emerald-500/10 text-emerald-300'
+          )}
+        >
+          {/* A lead approval from a simulated review is not shown as one: the review chip below says what it was. */}
+          {[task.completedBy && !(task.completedBy === 'lead' && simReview) ? t(`tasks:card.completedBy.${task.completedBy}`) : '', mergeWaits ? t('tasks:card.mergeWaits') : ''].filter(Boolean).join(' · ')}
+        </div>
+      )}
+      {simWork && (
+        <div className="mt-1.5 flex items-center gap-1 rounded bg-zinc-500/15 px-1.5 py-0.5 text-[12px] text-zinc-300" data-testid="card-simulated">
+          {t('tasks:card.simulated')}
+        </div>
+      )}
+      {simReview && (
+        <div className="mt-1.5 flex items-center gap-1 rounded bg-zinc-500/15 px-1.5 py-0.5 text-[12px] text-zinc-300" data-testid="card-review-simulated">
+          {t('tasks:card.reviewSimulated')}
         </div>
       )}
       {racePartner && (
-        <div className="mt-1.5 inline-flex items-center gap-1 rounded bg-orange-500/10 px-1.5 py-0.5 text-[10.5px] text-orange-300">
+        <div className="mt-1.5 inline-flex items-center gap-1 rounded bg-orange-500/10 px-1.5 py-0.5 text-[12px] text-orange-300">
           <Hourglass size={10} /> {t('tasks:card.racePartner', { key: racePartner })}
         </div>
       )}
       {ownUnmerged && (
-        <div className="mt-1.5 inline-flex items-center gap-1 rounded bg-sky-500/10 px-1.5 py-0.5 text-[10.5px] text-sky-300" title={t('tasks:card.waitsMergeHint')}>
+        <div className="mt-1.5 inline-flex items-center gap-1 rounded bg-sky-500/10 px-1.5 py-0.5 text-[12px] text-sky-300" title={t('tasks:card.waitsMergeHint')}>
           <GitMerge size={10} /> {t('tasks:card.notMerged')}
         </div>
       )}
-      {(task.status === 'in_progress' || (task.progress > 0 && task.status !== 'done')) && (
+      {/* Waiting for approval is not work: no progress bar until the run really starts. */}
+      {(task.status === 'in_progress' || (task.progress > 0 && task.status !== 'done')) && run?.status !== 'awaiting_approval' && (
         <div className="mt-2 flex items-center gap-2">
           <ProgressBar value={task.progress} tone={task.status === 'in_review' ? 'violet' : 'emerald'} />
-          <span className="font-mono text-[10px] text-zinc-400">{task.progress}%</span>
+          <span className="font-mono text-[11px] text-zinc-400">{task.progress}%</span>
         </div>
       )}
       <div className="mt-2 flex items-center gap-1.5">
         <PixelAvatar agent={agent} size={18} />
-        <span className="truncate text-[11px] text-zinc-400">{agent?.name ?? t('tasks:card.unassigned')}</span>
-        <span className="ml-auto text-[10.5px] text-zinc-400">{timeAgo(task.updatedAt)}</span>
+        <span className="truncate text-[12px] text-zinc-400">{agent?.name ?? t('tasks:card.unassigned')}</span>
+        <span className="ml-auto text-[11px] text-zinc-400">{timeAgo(task.updatedAt)}</span>
       </div>
     </div>
   )

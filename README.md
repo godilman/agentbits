@@ -61,6 +61,8 @@ own computer.
   (PowerShell / bash) are available too.
 - **Needs you.** One list, in the top bar, of everything waiting for you: approvals, unmerged work, reviews the lead
   couldn't decide, held tasks with their reason. Cards say why a task doesn't move.
+- **Notifications.** When Agentbits isn't in front, the system tells you about replies, approvals, decisions waiting
+  for you and finished work (grouped, never stale); a click only opens the right place. One switch in Settings.
 - **Lead review, memory and decisions.** Finished work goes to the lead for review, checked against the task's acceptance
   criteria when it has them; "What changed?" shows the files and the diff. Accepted decisions are stored as
   ADR-style records, and a persistent project memory (SQLite FTS5) keeps context between runs. Optional semantic

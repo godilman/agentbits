@@ -118,5 +118,13 @@
     "added": "ekli",
     "newFromTemplate": "Hazır şablondan yeni takım kur"
   },
-  "folderTooBroad": "Bu klasör ajanlar için fazla geniş (bir sürücü kökü, kullanıcı klasörün ya da Agentbits verisini içeren bir klasör). Projenin kendi klasörünü seç."
+  "folderTooBroad": "Bu klasör ajanlar için fazla geniş (bir sürücü kökü, kullanıcı klasörün ya da Agentbits verisini içeren bir klasör). Projenin kendi klasörünü seç.",
+  "startWork": {
+    "waiting_one": "Bu projede {{count}} görev bekliyor.",
+    "waiting_other": "Bu projede {{count}} görev bekliyor.",
+    "reviews_one": "{{count}} görev lider incelemesini bekliyor.",
+    "reviews_other": "{{count}} görev lider incelemesini bekliyor.",
+    "hint": "Projeyi açmak hiçbir işi başlatmaz; sen başlatınca bu oturum boyunca otopilot ve bekleyen incelemeler bu projede çalışır (bekletilen görevler bekletilmeye devam eder).",
+    "start": "Bu projede çalışmayı başlat"
+  }
 }

@@ -11,6 +11,7 @@ import {
   memoriesRepo,
   suggestionsRepo,
   messagesRepo,
+  draftsRepo,
   permissionsRepo,
   projectsRepo,
   providersRepo,
@@ -25,6 +26,7 @@ import { SettingsError, validateSettingsPatch } from '@shared/settingsRules'
 import { assertPathsAllowed, grantPaths } from './pathGrants'
 import { checkBaseUrl } from '@shared/endpoints'
 import { hasGithubToken, setGithubToken } from './skills/githubToken'
+import { takePendingNav } from './notify'
 import { argsMatch } from '@shared/ipcSchema'
 import { instantiateTemplate, listTemplates } from './core/templates'
 import { buildPackage, importPackage, previewPackage } from './core/share'
@@ -49,6 +51,7 @@ import { FEEDBACK_EMAIL, FEEDBACK_KINDS, SUPPORT_URL, type FeedbackKind } from '
 import { release } from 'os'
 import { relabelDefaults } from './core/org'
 import { memoryEngine } from './core/memory'
+import { reviewOfRun, runEvidence } from './core/evidence'
 import { orchestrator } from './core/orchestrator'
 import { cancelPrompt, generatePrompt } from './core/promptBuilder'
 import { usageSummary } from './core/usage'
@@ -107,6 +110,7 @@ type Handlers = { [M in ApiMethod]: (...args: Parameters<Api[M]>) => ReturnType<
 export const handlers: Handlers = {
   /* settings */
   'settings:get': () => settingsRepo.get(),
+  'notify:takePending': () => takePendingNav(),
   'settings:update': (raw) => {
     let patch: ReturnType<typeof validateSettingsPatch>
     try {
@@ -232,7 +236,14 @@ export const handlers: Handlers = {
     const before = tasksRepo.get(id)
     // A running task is stopped first and its run allowed to end: its clean-up puts the task back in "To do", which
     // must not overwrite the column the user chose (nor may a merge start while the agent still writes).
-    if (before?.status === 'in_progress' && status !== 'in_progress') await orchestrator.stopTaskAndWait(id)
+    if (before?.status === 'in_progress' && status !== 'in_progress') {
+      // Not confirmed stopped (or gone meanwhile): nothing is moved; the board reloads the real state.
+      const stopped = await orchestrator.stopTaskAndWait(id, undefined, status === 'done')
+      if (!stopped || !tasksRepo.get(id)) {
+        emit({ type: 'tasks:changed' })
+        throw new Error(t(stopped ? 'main:errors.taskNotFound' : 'main:errors.stopNotConfirmed', { key: before.key }))
+      }
+    }
     // Put back in the queue by the user (not a stop): autopilot may take it again.
     else if (status === 'todo' && before && before.status !== 'todo') orchestrator.release(id)
     if (status === 'in_progress' && before?.status !== 'in_progress') {
@@ -241,17 +252,46 @@ export const handlers: Handlers = {
       emit({ type: 'tasks:changed' })
       return tasksRepo.get(id)!
     }
-    const t = tasksRepo.move(id, status, sortOrder)
+    const moved = tasksRepo.move(id, status, sortOrder)
+    if (status === 'done' && before && before.status !== 'done') {
+      // Done by hand: no lead review, and nothing is merged on its own (worktree mode: the changes stay in the task's
+      // copy, "Review changes and merge" brings them in; tasks depending on it wait until then).
+      tasksRepo.update(id, { completedBy: 'user' })
+      orchestrator.release(id) // a stopped run held it; a done task waits for nothing
+      orchestrator.noteManualDone(id)
+    }
     emit({ type: 'tasks:changed' })
-    // Worktree mode: a task the user marks done gets its branch merged.
-    if (status === 'done' && before?.status !== 'done') void orchestrator.finishTaskBranch(id)
-    return tasksRepo.get(id) ?? t
+    emit({ type: 'orchestrator:changed' })
+    return tasksRepo.get(id) ?? moved
   },
-  'tasks:merge': async (id) => {
-    await orchestrator.finishTaskBranch(id)
+  'tasks:merge': async (id, basis) => {
+    // Merges only what the user was shown (`basis` from tasks:changes); a reason it didn't is the error.
+    const problem = await orchestrator.finishTaskBranch(id, basis)
+    if (problem && orchestrator.pendingMerge(id)) throw new Error(problem)
     return orchestrator.pendingMerge(id)
   },
   'tasks:mergePending': (id) => orchestrator.pendingMerge(id),
+  'tasks:result': async (id) => {
+    if (!tasksRepo.get(id)) throw new Error(t('main:errors.taskNotFound'))
+    const task = tasksRepo.get(id)!
+    const run = runsRepo.list({ taskId: id, limit: 1 })[0]
+    // A race is judged once (usage on the original task): the challenger finds its review there.
+    const race = !!task.raceOf || !!task.raceResult || !!tasksRepo.challengerOf(id)
+    const review = run ? reviewOfRun([id, task.raceOf ?? ''], run.startedAt) : null
+    const changes = await orchestrator.changesOf(id)
+    return {
+      evidence: run ? runEvidence(run.id) : null,
+      review: review ? { by: agentsRepo.get(review.agentId)?.name ?? null, simulated: review.provider === 'mock', race } : null,
+      changes: changes
+        ? {
+            files: changes.files.length,
+            added: changes.files.reduce((n, f) => n + f.added, 0),
+            removed: changes.files.reduce((n, f) => n + f.removed, 0),
+            merged: !orchestrator.pendingMerge(id)
+          }
+        : null
+    }
+  },
   'tasks:changes': (id) => orchestrator.changesOf(id),
   'tasks:delete': (id) => {
     const doomed = tasksRepo.get(id)
@@ -263,7 +303,9 @@ export const handlers: Handlers = {
   'tasks:start': (id, force) => {
     void orchestrator.startTask(id, undefined, { force: force === true })
   },
+  'tasks:retryReview': (id) => orchestrator.retryReview(id),
   'tasks:waitingFor': (id) => orchestrator.waitingFor(id),
+  'projects:startWork': (id) => orchestrator.startProjectWork(id),
   'promptBuilder:generate': (requestId, text, providerId) => generatePrompt(requestId, text, providerId),
   'promptBuilder:cancel': (requestId) => cancelPrompt(requestId),
 
@@ -576,7 +618,14 @@ export const handlers: Handlers = {
     return r
   },
   'templates:instantiate': (templateId, opts) => {
-    const r = instantiateTemplate(templateId, opts)
+    // `projectId`: set up from inside a project with "Add to this project" ticked — the new team joins that project only.
+    const target = opts?.projectId ? projectsRepo.get(opts.projectId) : null
+    if (opts?.projectId && (!target || target.status !== 'active')) throw new Error(t('main:errors.projectNotFound'))
+    const r = instantiateTemplate(templateId, { parentId: opts?.parentId, name: opts?.name })
+    if (target) {
+      projectsRepo.addUnit(target.id, r.unitId)
+      emit({ type: 'projects:changed' })
+    }
     emit({ type: 'units:changed' })
     emit({ type: 'agents:changed' })
     emit({ type: 'permissions:changed' })
@@ -645,6 +694,20 @@ export const handlers: Handlers = {
 
   /* chat */
   'messages:list': (channel, limit, projectId) => messagesRepo.list(channel, limit, projectId),
+  'drafts:list': () => draftsRepo.list(),
+  'drafts:save': (d) => {
+    // Checked here (the renderer sends it): a known project, a channel name, bounded text and attachment list.
+    if (!projectsRepo.get(d.projectId)) throw new Error(t('main:errors.projectNotFound'))
+    if (typeof d.channel !== 'string' || !/^(general|agent:[\w-]{1,64}|task:[\w-]{1,64})$/.test(d.channel)) throw new Error(t('main:errors.invalidDraft'))
+    const files = Array.isArray(d.files) ? d.files : []
+    if (typeof d.text !== 'string' || d.text.length > 100_000 || files.length > MAX_FILES_PER_SEND) throw new Error(t('main:errors.invalidDraft'))
+    draftsRepo.save({
+      projectId: d.projectId,
+      channel: d.channel,
+      text: d.text,
+      files: files.map((f) => ({ id: String(f.id).slice(0, 64), name: String(f.name ?? '').slice(0, 260), size: Number(f.size) || 0 }))
+    })
+  },
   'messages:send': (channel, content, projectId, opts) => {
     const fileIds = [...new Set(opts?.fileIds ?? [])]
     if (fileIds.length > MAX_FILES_PER_SEND) throw new Error(t('main:files.errors.tooManyPerMessage', { max: MAX_FILES_PER_SEND }))

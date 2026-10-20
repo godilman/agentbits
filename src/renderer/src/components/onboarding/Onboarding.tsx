@@ -78,7 +78,7 @@ export function Onboarding() {
         <div className="absolute bottom-8 left-8 max-w-md">
           <div className="mb-2 flex items-center gap-2">
             <Logo size={26} />
-            <span className="text-[20px] font-semibold tracking-tight text-zinc-100">Agentbits</span>
+            <span className="text-[22px] font-semibold tracking-tight text-zinc-100">Agentbits</span>
           </div>
           <p className="text-[13px] leading-relaxed text-zinc-400">
             {t('onboarding:intro')}
@@ -96,9 +96,9 @@ export function Onboarding() {
         {step === 1 && (
           <div className="animate-fade-in">
             <LanguagePicker value={settings.language} onError={setError} />
-            <h1 className="text-[20px] font-semibold text-zinc-100">{t('onboarding:provider.title')}</h1>
-            <p className="mb-5 mt-1 text-[12.5px] text-zinc-400">{t('onboarding:provider.hint')}</p>
-            {error && <div className="mb-4 rounded-md border border-rose-500/30 bg-rose-500/[0.06] px-3 py-2 text-[12px] text-rose-200">{error}</div>}
+            <h1 className="text-[18px] font-semibold text-zinc-100">{t('onboarding:provider.title')}</h1>
+            <p className="mb-5 mt-1 text-[13px] text-zinc-400">{t('onboarding:provider.hint')}</p>
+            {error && <div className="mb-4 rounded-md border border-rose-500/30 bg-rose-500/[0.06] px-3 py-2 text-[13px] text-rose-200">{error}</div>}
             <ProviderForm
               compactCards
               onSaved={(p) => {
@@ -111,8 +111,8 @@ export function Onboarding() {
 
         {step === 2 && (
           <div className="animate-fade-in">
-            <h1 className="text-[20px] font-semibold text-zinc-100">{t('onboarding:project.title')}</h1>
-            <p className="mb-5 mt-1 text-[12.5px] text-zinc-400">{t('onboarding:project.hint')}</p>
+            <h1 className="text-[18px] font-semibold text-zinc-100">{t('onboarding:project.title')}</h1>
+            <p className="mb-5 mt-1 text-[13px] text-zinc-400">{t('onboarding:project.hint')}</p>
             <label className="label">{t('onboarding:project.nameLabel')}</label>
             <input
               className="input mb-3"
@@ -124,7 +124,7 @@ export function Onboarding() {
             <label className="label">{t('onboarding:project.folderLabel')}</label>
             <div className="card mb-4 flex items-center gap-3 p-3">
               <FolderOpen size={18} className="text-zinc-400" />
-              <div className="min-w-0 flex-1 truncate font-mono text-[12px] text-zinc-300">{workspace || t('onboarding:project.notSelected')}</div>
+              <div className="min-w-0 flex-1 truncate font-mono text-[11px] text-zinc-300">{workspace || t('onboarding:project.notSelected')}</div>
               <button
                 className="btn-outline"
                 onClick={async () => {
@@ -144,7 +144,7 @@ export function Onboarding() {
                 {t('actions.chooseFolder')}
               </button>
             </div>
-            {error && <div className="mb-4 rounded-md border border-rose-500/30 bg-rose-500/[0.06] px-3 py-2 text-[12px] text-rose-200">{error}</div>}
+            {error && <div className="mb-4 rounded-md border border-rose-500/30 bg-rose-500/[0.06] px-3 py-2 text-[13px] text-rose-200">{error}</div>}
             {provider && (
               <div className="mb-6 flex items-center gap-2 text-[12px] text-zinc-400">
                 <Check size={14} className="text-emerald-400" /> {t('onboarding:project.provider')} <span className="text-zinc-300">{provider.label}</span>
@@ -160,7 +160,7 @@ export function Onboarding() {
             >
               {t('onboarding:project.start')} <ArrowRight size={15} />
             </button>
-            <p className="mt-3 text-center text-[11px] text-zinc-400">
+            <p className="mt-3 text-center text-[12px] text-zinc-400">
               {agents.length ? t('onboarding:project.agentsReady', { count: agents.length }) : t('onboarding:project.noAgents')}
             </p>
           </div>
@@ -194,7 +194,7 @@ function LanguagePicker({ value, onError }: { value: string; onError: (msg: stri
       </label>
       <select
         id="onboarding-language"
-        className="input h-7 w-auto text-[12px]"
+        className="input h-7 w-auto text-[13px]"
         value={value || 'auto'}
         disabled={busy}
         onChange={(e) => void change(e.target.value)}
@@ -216,7 +216,7 @@ function StepDot({ n, active, done, label }: { n: number; active: boolean; done:
     <span className={cn('flex items-center gap-2', active ? 'text-zinc-200' : 'text-zinc-400')}>
       <span
         className={cn(
-          'flex h-5 w-5 items-center justify-center rounded-full text-[10.5px] font-semibold',
+          'flex h-5 w-5 items-center justify-center rounded-full text-[10px] font-semibold',
           done ? 'bg-emerald-500/20 text-emerald-300' : active ? 'bg-indigo-500 text-white' : 'bg-white/5'
         )}
       >

@@ -94,7 +94,9 @@
     "working": "Working",
     "break": "On break",
     "error": "Error",
-    "offline": "Offline"
+    "offline": "Offline",
+    "awaitingApproval": "Awaiting approval",
+    "paused": "Paused"
   },
   "priority": {
     "low": "Low",

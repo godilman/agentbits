@@ -18,7 +18,7 @@ export const KIND_CLS: Record<MemoryKind, string> = {
 
 export function KindBadge({ kind }: { kind: MemoryKind }) {
   const { t } = useTranslation()
-  return <span className={cn('shrink-0 rounded px-1.5 py-px text-[10px] font-medium', KIND_CLS[kind])}>{t(`org:memory.kinds.${kind}`)}</span>
+  return <span className={cn('shrink-0 rounded px-1.5 py-px text-[12px] font-medium', KIND_CLS[kind])}>{t(`org:memory.kinds.${kind}`)}</span>
 }
 
 export function TopicChips({ topics }: { topics: string[] }) {
@@ -26,7 +26,7 @@ export function TopicChips({ topics }: { topics: string[] }) {
   return (
     <span className="inline-flex flex-wrap gap-1">
       {topics.map((x) => (
-        <span key={x} className="rounded bg-amber-500/10 px-1.5 py-px text-[10.5px] text-amber-200/90">
+        <span key={x} className="rounded bg-amber-500/10 px-1.5 py-px text-[12px] text-amber-200/90">
           #{x}
         </span>
       ))}
@@ -50,8 +50,8 @@ export function MemoryEditor({ memory, onDone }: { memory: Pick<Memory, 'id' | '
   }
   return (
     <div className="w-full space-y-1.5">
-      <textarea className="textarea text-[12.5px]" rows={2} value={text} onChange={(e) => setText(e.target.value)} autoFocus />
-      <input className="input h-7 text-[12px]" value={topics} onChange={(e) => setTopics(e.target.value)} placeholder={t('org:memory.topicsPlaceholder')} />
+      <textarea className="textarea text-[13px]" rows={2} value={text} onChange={(e) => setText(e.target.value)} autoFocus />
+      <input className="input h-7 text-[13px]" value={topics} onChange={(e) => setTopics(e.target.value)} placeholder={t('org:memory.topicsPlaceholder')} />
       <div className="flex justify-end gap-1.5">
         <button className="btn-ghost h-7" onClick={onDone}>
           {t('actions.cancel')}
@@ -83,27 +83,27 @@ export function SuggestionRow({ s, compact = false }: { s: MemorySuggestion; com
   }
   return (
     <div data-testid="memory-suggestion" className="rounded-md border border-pink-500/25 bg-pink-500/[0.05] px-3 py-2.5">
-      <div className="mb-1.5 flex items-center gap-1.5 text-[11.5px] font-medium text-pink-200">
+      <div className="mb-1.5 flex items-center gap-1.5 text-[12px] font-medium text-pink-200">
         <Sparkles size={12} /> {s.targetFile ? t('org:memory.suggest.noteTitle') : t('org:memory.suggest.title')}
       </div>
       {s.targetFile && (
-        <div className="mb-1.5 text-[11.5px] text-zinc-300">
-          <div className="font-mono">{t('org:memory.suggest.noteWhere', { project: projectName ?? '—', file: s.targetFile })}</div>
+        <div className="mb-1.5 text-[12px] text-zinc-300">
+          <div className="font-mono text-[11px]">{t('org:memory.suggest.noteWhere', { project: projectName ?? '—', file: s.targetFile })}</div>
           {s.targetNote && <div className="text-zinc-400">{t('org:memory.suggest.noteNew', { about: s.targetNote })}</div>}
         </div>
       )}
       {compact ? (
-        <div className="text-[12.5px] text-zinc-200">“{s.content}”</div>
+        <div className="text-[13px] text-zinc-200">“{s.content}”</div>
       ) : (
-        <textarea className="textarea text-[12.5px]" rows={2} value={text} onChange={(e) => setText(e.target.value)} />
+        <textarea className="textarea text-[13px]" rows={2} value={text} onChange={(e) => setText(e.target.value)} />
       )}
       {!s.targetFile && (
-        <div className="mt-1 flex flex-wrap items-center gap-1.5 text-[11px] text-zinc-400">
+        <div className="mt-1 flex flex-wrap items-center gap-1.5 text-[12px] text-zinc-400">
           <KindBadge kind={s.kind} />
           <TopicChips topics={s.topics} />
         </div>
       )}
-      {s.replacesText && <div className="mt-1 text-[11.5px] text-amber-200/80">{t('org:memory.suggest.replaces', { text: s.replacesText.slice(0, 140) })}</div>}
+      {s.replacesText && <div className="mt-1 text-[12px] text-amber-200/80">{t('org:memory.suggest.replaces', { text: s.replacesText.slice(0, 140) })}</div>}
       <div className="mt-2 flex gap-1.5">
         <button className="btn-primary h-7" disabled={busy || !text.trim()} onClick={() => void act(true)}>
           <Check size={13} /> {s.targetFile ? t('org:memory.suggest.noteKeep') : s.replaces ? t('org:memory.suggest.keepReplace') : t('org:memory.suggest.keep')}
@@ -132,7 +132,7 @@ export function ProjectMemoryMode() {
           { value: 'off', label: t('org:memory.projectNotes.off') }
         ]}
       />
-      <span className="text-[11.5px] text-zinc-400">{t(`org:memory.projectNotes.${mode}Hint`)}</span>
+      <span className="min-w-0 text-[12px] text-zinc-400">{t(`org:memory.projectNotes.${mode}Hint`)}</span>
     </div>
   )
 }
@@ -144,7 +144,7 @@ export function RecalledTrace({ items, title }: { items: RecalledMemory[]; title
   const { t } = useTranslation()
   if (!items.length) return null
   return (
-    <details className="mt-1.5 text-[11.5px] text-zinc-400" data-testid="memory-trace">
+    <details className="mt-1.5 text-[12px] text-zinc-400" data-testid="memory-trace">
       <summary className="cursor-pointer select-none hover:text-zinc-200">
         <Brain size={11} className="mr-1 inline" />
         {title} ({items.length})
@@ -182,7 +182,7 @@ export function LearnMode() {
           { value: 'off', label: t('org:memory.learn.off') }
         ]}
       />
-      <span className="text-[11.5px] text-zinc-400">{t(`org:memory.learn.${mode}Hint`)}</span>
+      <span className="min-w-0 text-[12px] text-zinc-400">{t(`org:memory.learn.${mode}Hint`)}</span>
     </div>
   )
 }

@@ -121,7 +121,7 @@ export function AddSkillModal({ open, onClose, onInstalled }: { open: boolean; o
                 <label className="label">{t('skills:modal.githubLabel')}</label>
                 <div className="flex gap-2">
                   <input
-                    className="input flex-1 font-mono text-[12px]"
+                    className="input flex-1 font-mono text-[13px]"
                     value={url}
                     placeholder={t('skills:modal.githubPlaceholder')}
                     onChange={(e) => setUrl(e.target.value)}
@@ -133,7 +133,7 @@ export function AddSkillModal({ open, onClose, onInstalled }: { open: boolean; o
                     {busy ? <Loader2 size={13} className="animate-spin" /> : <Github size={13} />} {busy ? t('skills:modal.reading') : t('skills:modal.read')}
                   </button>
                 </div>
-                <p className="mt-1.5 text-[11.5px] leading-snug text-zinc-400">{t('skills:modal.githubHint')}</p>
+                <p className="mt-1.5 text-[12px] leading-snug text-zinc-400">{t('skills:modal.githubHint')}</p>
                 <GithubTokenRow />
               </div>
             )}
@@ -155,8 +155,8 @@ export function AddSkillModal({ open, onClose, onInstalled }: { open: boolean; o
                 }}
               >
                 <Upload size={20} className="mx-auto mb-2 text-zinc-500" />
-                <div className="text-[12.5px] text-zinc-300">{t('skills:modal.drop')}</div>
-                <p className="mx-auto mt-1 max-w-[480px] text-[11.5px] leading-snug text-zinc-500">{t('skills:modal.computerHint')}</p>
+                <div className="text-[13px] text-zinc-300">{t('skills:modal.drop')}</div>
+                <p className="mx-auto mt-1 max-w-[480px] text-[12px] leading-snug text-zinc-500">{t('skills:modal.computerHint')}</p>
                 <div className="mt-4 flex justify-center gap-2">
                   <button className="btn-outline" disabled={busy} onClick={() => void pick('folder')}>
                     <FolderOpen size={13} /> {t('skills:modal.pickFolder')}
@@ -174,9 +174,9 @@ export function AddSkillModal({ open, onClose, onInstalled }: { open: boolean; o
             )}
             {tab === 'write' && (
               <div>
-                <p className="mb-2 text-[11.5px] text-zinc-400">{t('skills:modal.writeHint')}</p>
+                <p className="mb-2 text-[12px] text-zinc-400">{t('skills:modal.writeHint')}</p>
                 <textarea
-                  className="input h-[360px] w-full resize-none font-mono text-[12px] leading-relaxed"
+                  className="input h-[360px] w-full resize-none font-mono text-[13px] leading-relaxed"
                   value={draft}
                   onChange={(e) => setDraft(e.target.value)}
                   spellCheck={false}
@@ -189,7 +189,7 @@ export function AddSkillModal({ open, onClose, onInstalled }: { open: boolean; o
 
         {preview && (
           <div>
-            <div className="mb-3 flex items-center gap-2 text-[12.5px] text-zinc-300">
+            <div className="mb-3 flex items-center gap-2 text-[13px] text-zinc-300">
               <span className="flex-1 truncate">{t('skills:modal.found', { count: preview.candidates.length, source: preview.sourceLabel })}</span>
               {preview.candidates.length > 1 && (
                 <>
@@ -222,23 +222,23 @@ export function AddSkillModal({ open, onClose, onInstalled }: { open: boolean; o
                       />
                       <div className="min-w-0 flex-1">
                         <div className="flex flex-wrap items-center gap-1.5">
-                          <span className="font-mono text-[12.5px] text-zinc-100">{c.name}</span>
-                          {c.existingId && <span className="rounded bg-sky-500/15 px-1 text-[10px] text-sky-300">{t('skills:modal.existing')}</span>}
-                          {c.hasScripts && <span className="rounded bg-sky-500/15 px-1 text-[10px] uppercase text-sky-300">{t('skills:badges.scripts')}</span>}
-                          {c.hasBinaries && <span className="rounded bg-rose-500/15 px-1 text-[10px] text-rose-300">{t('skills:modal.binaries')}</span>}
-                          <span className="text-[10.5px] text-zinc-500">
+                          <span className="font-mono text-[13px] text-zinc-100">{c.name}</span>
+                          {c.existingId && <span className="rounded bg-sky-500/15 px-1 text-[12px] text-sky-300">{t('skills:modal.existing')}</span>}
+                          {c.hasScripts && <span className="rounded bg-sky-500/15 px-1 text-[12px] uppercase text-sky-300">{t('skills:badges.scripts')}</span>}
+                          {c.hasBinaries && <span className="rounded bg-rose-500/15 px-1 text-[12px] text-rose-300">{t('skills:modal.binaries')}</span>}
+                          <span className="text-[11px] text-zinc-500">
                             {t('skills:modal.sizeLine', { files: t('skills:modal.files', { count: c.fileCount }), size: formatBytes(c.size) })}
                             {c.subpath ? ` · ${c.subpath}` : ''}
                           </span>
                         </div>
                         <div className="mt-0.5 text-[12px] leading-snug text-zinc-400">{c.description || t('skills:modal.noDescription')}</div>
                         {c.notes.map((n) => (
-                          <div key={n} className="mt-1 text-[11px] text-zinc-500">
+                          <div key={n} className="mt-1 text-[12px] text-zinc-500">
                             • {n}
                           </div>
                         ))}
                         {c.suspicious.length > 0 && (
-                          <div className="mt-1.5 rounded border border-amber-500/30 bg-amber-500/[0.06] px-2 py-1.5 text-[11px] text-amber-200">
+                          <div className="mt-1.5 rounded border border-amber-500/30 bg-amber-500/[0.06] px-2 py-1.5 text-[12px] text-amber-200">
                             <div className="mb-0.5 flex items-center gap-1 font-medium">
                               <AlertTriangle size={11} /> {t('skills:modal.suspicious')}
                             </div>
@@ -252,13 +252,13 @@ export function AddSkillModal({ open, onClose, onInstalled }: { open: boolean; o
                       </div>
                     </label>
                     <button
-                      className="flex w-full items-center gap-1 border-t border-line-soft px-3 py-1.5 text-left text-[11px] text-zinc-400 hover:text-zinc-200"
+                      className="flex w-full items-center gap-1 border-t border-line-soft px-3 py-1.5 text-left text-[12px] text-zinc-400 hover:text-zinc-200"
                       onClick={() => setExpanded(open ? null : c.key)}
                     >
                       {open ? <ChevronDown size={11} /> : <ChevronRight size={11} />} {open ? t('skills:modal.hideMd') : t('skills:modal.showMd')}
                     </button>
                     {open && (
-                      <pre className="max-h-[260px] overflow-y-auto whitespace-pre-wrap break-words border-t border-line-soft px-3 py-2 font-mono text-[11px] text-zinc-300">
+                      <pre className="max-h-[260px] overflow-y-auto whitespace-pre-wrap break-words border-t border-line-soft px-3 py-2 font-mono text-[12px] text-zinc-300">
                         {c.skillMdPreview}
                       </pre>
                     )}
@@ -269,7 +269,7 @@ export function AddSkillModal({ open, onClose, onInstalled }: { open: boolean; o
           </div>
         )}
 
-        {error && <div className="mt-3 whitespace-pre-wrap rounded-md border border-rose-500/25 bg-rose-500/[0.06] px-3 py-2 text-[12px] text-rose-200">{error}</div>}
+        {error && <div className="mt-3 whitespace-pre-wrap rounded-md border border-rose-500/25 bg-rose-500/[0.06] px-3 py-2 text-[13px] text-rose-200">{error}</div>}
       </div>
     </Modal>
   )
@@ -296,17 +296,17 @@ function GithubTokenRow() {
     }
   }
   return (
-    <div className="mt-2 rounded-md border border-line bg-surface-2/60 px-2.5 py-2 text-[11.5px]">
-      <div className="flex items-center gap-2">
+    <div className="mt-2 rounded-md border border-line bg-surface-2/60 px-2.5 py-2 text-[12px]">
+      <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
         <span className="text-zinc-300">{t('skills:modal.token.title')}</span>
         <span className={has ? 'text-emerald-300' : 'text-zinc-400'}>{has ? t('skills:modal.token.stored') : t('skills:modal.token.none')}</span>
         <div className="ml-auto flex gap-1">
           {has && (
-            <button className="btn-ghost h-6 text-[11px]" onClick={() => void save('')}>
+            <button className="btn-ghost h-6 text-[12px]" onClick={() => void save('')}>
               {t('skills:modal.token.remove')}
             </button>
           )}
-          <button className="btn-outline h-6 text-[11px]" onClick={() => setOpen((v) => !v)}>
+          <button className="btn-outline h-6 text-[12px]" onClick={() => setOpen((v) => !v)}>
             {has ? t('skills:modal.token.replace') : t('skills:modal.token.add')}
           </button>
         </div>
@@ -315,14 +315,14 @@ function GithubTokenRow() {
         <div className="mt-2 flex gap-2">
           <input
             type="password"
-            className="input h-7 flex-1 font-mono text-[11.5px]"
+            className="input h-7 flex-1 font-mono text-[13px]"
             placeholder="github_pat_…"
             value={token}
             onChange={(e) => setToken(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && token.trim() && void save(token)}
             autoFocus
           />
-          <button className="btn-primary h-7 text-[11.5px]" disabled={!token.trim()} onClick={() => void save(token)}>
+          <button className="btn-primary h-7 text-[12px]" disabled={!token.trim()} onClick={() => void save(token)}>
             {t('actions.save')}
           </button>
         </div>

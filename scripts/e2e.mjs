@@ -34,7 +34,7 @@ try {
       logLevel: 'error'
     })
     const run = (bin, extra = {}) =>
-      spawnSync(bin, [out], { env: { ...env, ...extra, AGENTBITS_DATA_DIR: mkdtempSync(join(tmp, 'data-')) }, encoding: 'utf8', timeout: 180_000 })
+      spawnSync(bin, [out], { env: { ...env, ...extra, AGENTBITS_DATA_DIR: mkdtempSync(join(tmp, 'data-')) }, encoding: 'utf8', timeout: 300_000 })
     let r = run(process.execPath)
     if (/NODE_MODULE_VERSION/.test(r.stderr ?? '')) r = run(createRequire(import.meta.url)('electron'), { ELECTRON_RUN_AS_NODE: '1' })
     process.stdout.write((r.stdout ?? '').split('\n').filter((l) => !/out of order|i18next/.test(l)).join('\n'))

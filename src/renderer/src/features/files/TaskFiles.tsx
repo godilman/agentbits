@@ -56,7 +56,7 @@ export function TaskFiles({ task, droppedFiles }: { task: Task; droppedFiles: Fi
   }, [droppedFiles])
 
   return (
-    <div className="text-[12px]" data-testid="task-files">
+    <div className="text-[13px]" data-testid="task-files">
       <div className="mb-1 flex items-center gap-2 text-zinc-400">
         {t('files:title')}
         <AttachButton
@@ -82,7 +82,7 @@ export function TaskFiles({ task, droppedFiles }: { task: Task; droppedFiles: Fi
           ))}
         </div>
       ) : (
-        <div className="text-[11.5px] text-zinc-500">{t('files:task.none')}</div>
+        <div className="text-[12px] text-zinc-500">{t('files:task.none')}</div>
       )}
     </div>
   )

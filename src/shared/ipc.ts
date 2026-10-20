@@ -3,6 +3,7 @@ import type { FeedbackKind } from './support'
 import type { AppImportCandidate, AppServer, AppServerInput, AppTestResult, ToolPolicy } from './apps'
 import type { AgentSkill, Skill, SkillDetail, SkillPreview, SkillSourceInput, SkillTargetType } from './skills'
 import type { SharePreview } from './share'
+import type { NavTarget } from './notify'
 import type {
   Agent,
   ProviderKind,
@@ -35,6 +36,8 @@ import type {
   MemorySuggestion,
   MemoryKind,
   Message,
+  MessageDraft,
+  TaskResult,
   OrgUnit,
   OrgUnitInput,
   Project,
@@ -69,6 +72,8 @@ import type {
 export interface Api {
   // settings
   'settings:get': () => AppSettings
+  /** A clicked notification's place kept while there was no window (`main/notify.ts`); taken once. */
+  'notify:takePending': () => NavTarget | null
   'settings:update': (patch: Partial<AppSettings>) => AppSettings
   'app:pickFolder': () => string | null
   'app:info': () => { version: string; dbPath: string; platform: string }
@@ -114,7 +119,8 @@ export interface Api {
   'units:removeMember': (unitId: string, agentId: string) => OrgUnit
   'templates:list': () => TeamTemplate[]
   /** Creates the template's units and agents under `parentId` (default: organization root). */
-  'templates:instantiate': (templateId: string, opts?: { parentId?: string | null; name?: string }) => { unitId: string; agentIds: string[] }
+  /** `projectId`: the new team is added to that project too (set up from inside it, "Add to this project"). */
+  'templates:instantiate': (templateId: string, opts?: { parentId?: string | null; name?: string; projectId?: string }) => { unitId: string; agentIds: string[] }
   /** Saves a unit (with everything under it) or an agent as a .agentbits file; null = cancelled. */
   'share:export': (target: { type: 'unit' | 'agent'; id: string }) => string | null
   /** Reads a package from a file the user picks (null = cancelled) or a GitHub link, for the import preview. */
@@ -138,10 +144,13 @@ export interface Api {
   /** Unfinished tasks + the newest `doneLimit` done tasks of each project (security review #27). */
   'tasks:board': (doneLimit: number) => TaskBoard
   /** Worktree mode: merge a done task's branch now (true while it still waits, e.g. uncommitted changes in the folder). */
-  'tasks:merge': (id: string) => boolean
+  /** Merges the task's copy if it still is what `basis` (from tasks:changes) says; otherwise throws the reason. */
+  'tasks:merge': (id: string, basis: string) => boolean
   'tasks:mergePending': (id: string) => boolean
+  /** The latest run's result: what really ran (tool record), who reviewed it, what changed (worktree). */
+  'tasks:result': (id: string) => TaskResult
   /** "What changed?" from git (worktree projects): files with +/- lines and the diff; null without git history. */
-  'tasks:changes': (id: string) => { files: { path: string; added: number; removed: number }[]; diff: string; truncated: boolean } | null
+  'tasks:changes': (id: string) => { files: { path: string; added: number; removed: number }[]; diff: string; truncated: boolean; basis: string } | null
   'tasks:create': (input: TaskInput) => Task
   'tasks:update': (id: string, patch: Partial<Pick<Task, 'title' | 'description' | 'priority' | 'assigneeId' | 'acceptance'>>) => Task
   /** `force`: start even though tasks it depends on aren't done (the user confirmed). */
@@ -149,6 +158,10 @@ export interface Api {
   'tasks:delete': (id: string) => void
   'tasks:start': (id: string, force?: boolean) => void
   /** Keys of the unfinished tasks this one waits for (asked before a manual start). */
+  /** Only the lead's review again (the worker is not run again); 'pending' when one is already queued or running. */
+  'tasks:retryReview': (id: string) => 'queued' | 'pending'
+  /** Start autopilot for this project in this session (opening a project starts nothing; held tasks stay held). */
+  'projects:startWork': (id: string) => void
   'tasks:waitingFor': (id: string) => string[]
   /** Prompt builder: one stateless model call on this message only (no tools, nothing stored but the token count). */
   'promptBuilder:generate': (requestId: string, text: string, providerId?: string | null) => { prompt: string; provider: string; model: string }
@@ -227,6 +240,9 @@ export interface Api {
   'messages:list': (channel?: string, limit?: number, projectId?: string) => Message[]
   /** `opts.fileIds`: attachments uploaded with files:add; `opts.share` overrides who receives them (default: by channel). */
   'messages:send': (channel: string, content: string, projectId: string, opts?: SendOptions) => Message
+  /** Unsent drafts (all projects); saving an empty one removes it. */
+  'drafts:list': () => MessageDraft[]
+  'drafts:save': (draft: MessageDraft) => void
 
   // attachments
   'files:list': (opts: FileListOpts) => FileRecord[]
@@ -312,7 +328,20 @@ export interface Api {
   'orchestrator:pauseAll': () => void
   'orchestrator:resumeAll': () => void
   /** Pause state + what waits for the user: held tasks (with reason), done tasks not merged yet, reviews the lead left open. */
-  'orchestrator:state': () => { paused: boolean; held: { taskId: string; reason: string }[]; unmerged: string[]; undecided: string[] }
+  'orchestrator:state': () => {
+    paused: boolean
+    held: { taskId: string; reason: string }[]
+    unmerged: string[]
+    undecided: string[]
+    /** Why each undecided task waits for the user (review failed, no lead, no report, unclear verdict). */
+    undecidedWhy: Record<string, string>
+    /** Projects whose work the user started in this session (autopilot runs only there). */
+    startedProjects: string[]
+    deferredReviews: string[]
+    /** Tasks whose latest run was a Demo simulation / whose review since that run was. Labelled separately. */
+    simulatedWork: string[]
+    simulatedReview: string[]
+  }
 }
 
 export type ApiMethod = keyof Api
@@ -350,6 +379,8 @@ export type AppEvent =
   | { type: 'terminal:data'; id: string; data: string }
   | { type: 'terminal:exit'; id: string; code: number | null }
   | { type: 'toast'; level: 'info' | 'success' | 'error'; text: string }
+  /** A notification was clicked: open this place (`main/notify.ts`). */
+  | { type: 'navigate'; target: NavTarget }
 
 export interface PreloadBridge {
   invoke<M extends ApiMethod>(method: M, ...args: ApiArgs<M>): Promise<Awaited<ApiResult<M>>>

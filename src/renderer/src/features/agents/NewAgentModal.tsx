@@ -103,7 +103,7 @@ export function NewAgentModal({
             <div className="rounded-xl border border-line bg-surface-2 p-1.5">
               <PixelAvatar agent={preview} size={64} />
             </div>
-            <button className="btn-ghost h-6 px-1.5 text-[11px]" title={t('agents:new.shuffleTitle')} onClick={() => setLook(randomLook(agents))}>
+            <button className="btn-ghost h-6 px-1.5 text-[12px]" title={t('agents:new.shuffleTitle')} onClick={() => setLook(randomLook(agents))}>
               <Shuffle size={11} /> {t('agents:fields.shuffle')}
             </button>
           </div>
@@ -111,7 +111,7 @@ export function NewAgentModal({
             <Field label={t('agents:fields.name')}>
               <input
                 autoFocus
-                className={cn('input', error && 'border-rose-500/60')}
+                className={cn('input', error && 'border-rose-500')}
                 value={name}
                 placeholder={t('agents:new.namePlaceholder')}
                 maxLength={40}
@@ -125,7 +125,7 @@ export function NewAgentModal({
             <Field label={t('agents:fields.role')}>
               <input className="input" value={role} placeholder={t('agents:new.rolePlaceholder')} onChange={(e) => setRole(e.target.value)} />
             </Field>
-            {error && <div className="col-span-2 -mt-1 text-[11.5px] text-rose-400">{error}</div>}
+            {error && <div className="col-span-2 -mt-1 text-[12px] text-rose-400">{error}</div>}
           </div>
         </div>
 
@@ -159,7 +159,7 @@ export function NewAgentModal({
                   )}
                 >
                   <div className="flex items-center justify-between">
-                    <span className={cn('text-[12.5px] font-medium', active ? 'text-zinc-100' : 'text-zinc-300')}>{pt.label}</span>
+                    <span className={cn('text-[13px] font-medium', active ? 'text-zinc-100' : 'text-zinc-300')}>{pt.label}</span>
                     <span
                       className={cn(
                         'flex h-3.5 w-3.5 items-center justify-center rounded-full border',
@@ -169,7 +169,7 @@ export function NewAgentModal({
                       {active && <Check size={9} strokeWidth={3} />}
                     </span>
                   </div>
-                  <div className="mt-1 text-[11px] leading-snug text-zinc-400">{pt.desc}</div>
+                  <div className="mt-1 text-[12px] leading-snug text-zinc-400">{pt.desc}</div>
                   <div className="mt-2 flex flex-wrap gap-1">
                     {PERMISSIONS.filter((p) => pt.perms[p.key]).map((p) => (
                       <span key={p.key} title={p.label} className="flex h-5 w-5 items-center justify-center rounded bg-white/[0.05] text-zinc-400">
@@ -181,18 +181,18 @@ export function NewAgentModal({
               )
             })}
           </div>
-          <div className="mt-1.5 text-[11.5px] text-zinc-400">{t('agents:new.permNote')}</div>
+          <div className="mt-1.5 text-[12px] text-zinc-400">{t('agents:new.permNote')}</div>
         </div>
 
         {unit && (
-          <div className="flex items-center gap-2 rounded-md border border-line bg-surface-2/60 px-3 py-2 text-[12px] text-zinc-400">
+          <div className="flex items-center gap-2 rounded-md border border-line bg-surface-2/60 px-3 py-2 text-[13px] text-zinc-400">
             <span className="h-2 w-2 shrink-0 rounded-full" style={{ background: unit.color }} />
             <Trans i18nKey="agents:new.unitNote" values={{ unit: unit.name }} components={{ b: <span className="font-medium text-zinc-200" /> }} />
           </div>
         )}
 
         {deskFull && (
-          <div className="flex items-start gap-2 rounded-md border border-amber-500/25 bg-amber-500/[0.06] px-3 py-2 text-[12px] text-amber-200/90">
+          <div className="flex items-start gap-2 rounded-md border border-amber-500/25 bg-amber-500/[0.06] px-3 py-2 text-[13px] text-amber-200/90">
             <TriangleAlert size={14} className="mt-px shrink-0 text-amber-400" />
             {t('agents:new.desksFull', { desks: WORKER_DESK_COUNT })}
           </div>

@@ -74,7 +74,7 @@ export function AddMembersModal({ open, unit, onClose }: { open: boolean; unit: 
       }
     >
       <div className="relative mb-3">
-        <Search size={13} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-zinc-600" />
+        <Search size={13} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-zinc-500" />
         <input autoFocus className="input pl-8" placeholder={t('org:addMembers.search')} value={query} onChange={(e) => setQuery(e.target.value)} />
       </div>
       <div className="-mx-1 max-h-[360px] space-y-0.5 overflow-y-auto">
@@ -101,14 +101,14 @@ export function AddMembersModal({ open, unit, onClose }: { open: boolean; unit: 
               </span>
               <PixelAvatar agent={a} size={26} />
               <div className="min-w-0 flex-1">
-                <div className="text-[12.5px] text-zinc-200">{a.name}</div>
-                <div className="truncate text-[11px] text-zinc-500">{a.role}</div>
+                <div className="text-[13px] text-zinc-200">{a.name}</div>
+                <div className="truncate text-[12px] text-zinc-500">{a.role}</div>
               </div>
-              {member && <span className="text-[11px] text-zinc-500">{t('org:addMembers.alreadyMember')}</span>}
+              {member && <span className="text-[12px] text-zinc-500">{t('org:addMembers.alreadyMember')}</span>}
             </button>
           )
         })}
-        {list.length === 0 && <div className="py-6 text-center text-[12px] text-zinc-600">{t('org:addMembers.noMatch')}</div>}
+        {list.length === 0 && <div className="py-6 text-center text-[13px] text-zinc-500">{t('org:addMembers.noMatch')}</div>}
       </div>
     </Modal>
   )

@@ -5,16 +5,24 @@ import type { Task } from '@shared/types'
 import { call } from '@/lib/api'
 import { cn } from '@/lib/format'
 
-type Changes = Awaited<ReturnType<typeof window.agentbits.invoke<'tasks:changes'>>>
+export type Changes = Awaited<ReturnType<typeof window.agentbits.invoke<'tasks:changes'>>>
 
-/** "What changed?" — files the task changed with +/- lines and the diff (worktree projects, from git). */
-export function TaskChanges({ task }: { task: Task }) {
+/** "What changed?" — files the task changed with +/- lines and the diff (worktree projects, from git). `onLoad` gets
+ *  each reading (null: none / unreadable). */
+export function TaskChanges({ task, onLoad }: { task: Task; onLoad?: (d: Changes) => void }) {
   const { t } = useTranslation(['tasks'])
   const [data, setData] = useState<Changes>(null)
   const [showDiff, setShowDiff] = useState(false)
   useEffect(() => {
     let alive = true
-    void call('tasks:changes', task.id).then((d) => alive && setData(d), () => undefined)
+    void call('tasks:changes', task.id).then(
+      (d) => {
+        if (!alive) return
+        setData(d)
+        onLoad?.(d)
+      },
+      () => alive && onLoad?.(null)
+    )
     return () => {
       alive = false
     }
@@ -25,19 +33,19 @@ export function TaskChanges({ task }: { task: Task }) {
   const lines = showDiff ? data.diff.split('\n').slice(0, 4000) : []
   return (
     <div className="rounded-md border border-line bg-surface-2/50 px-3 py-2">
-      <div className="flex items-center gap-2 text-[12px]">
+      <div className="flex items-center gap-2 text-[13px]">
         <FileDiff size={13} className="text-sky-300" />
         <span className="font-medium text-zinc-200">{t('tasks:changes.title')}</span>
         <span className="text-zinc-400">{t('tasks:changes.summary', { count: data.files.length })}</span>
         <span className="font-mono text-[11px] text-emerald-400">+{added}</span>
         <span className="font-mono text-[11px] text-rose-400">−{removed}</span>
-        <button className="btn-ghost ml-auto h-6 text-[11.5px]" onClick={() => setShowDiff((v) => !v)}>
+        <button className="btn-ghost ml-auto h-6 text-[12px]" onClick={() => setShowDiff((v) => !v)}>
           {showDiff ? t('tasks:changes.hideDiff') : t('tasks:changes.showDiff')}
         </button>
       </div>
       <ul className="mt-1.5 space-y-0.5">
         {data.files.map((f) => (
-          <li key={f.path} className="flex gap-2 font-mono text-[11.5px]">
+          <li key={f.path} className="flex gap-2 font-mono text-[12px]">
             <span className="min-w-0 flex-1 truncate text-zinc-300" title={f.path}>
               {f.path}
             </span>
@@ -47,7 +55,7 @@ export function TaskChanges({ task }: { task: Task }) {
         ))}
       </ul>
       {showDiff && (
-        <pre className="selectable mt-2 max-h-96 overflow-auto rounded border border-line-soft bg-black/30 p-2 text-[11px] leading-snug">
+        <pre className="selectable mt-2 max-h-96 overflow-auto rounded border border-line-soft bg-black/30 p-2 text-[12px] leading-snug">
           {lines.map((l, i) => (
             <div
               key={i}

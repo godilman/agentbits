@@ -21,6 +21,8 @@
     "invalidResetMode": "Invalid reset type",
     "agentNotFound": "Agent not found",
     "taskNotFound": "Task not found",
+    "invalidDraft": "The draft could not be saved (unknown channel or too long).",
+    "stopNotConfirmed": "{{key}} could not be confirmed as stopped, so it was not moved. Stop it again, then move it.",
     "messageEmpty": "Message is empty",
     "modelsTimeout": "Model list request timed out.",
     "noSecureStorage": "This computer has no secure key storage (OS keychain), so Agentbits does not store passwords, keys or tokens. On Linux install and unlock a keyring (GNOME Keyring / KWallet).",
@@ -468,5 +470,59 @@
       "undoFailed": "Saving the note failed ({{message}}) and {{file}} couldn't be taken back: check the .agentbits/memory folder before trying again.",
       "suggestionGone": "This suggestion was already handled."
     }
+  },
+  "quit": {
+    "title": "Agentbits is still working",
+    "message": "If you close it now:",
+    "runs_one": "• {{count}} task run stops halfway. When you open Agentbits again it waits for you and never restarts on its own.",
+    "runs_other": "• {{count}} task runs stop halfway. When you open Agentbits again they wait for you and never restart on their own.",
+    "replies_one": "• {{count}} chat reply or review is cut off.",
+    "replies_other": "• {{count}} chat replies or reviews are cut off.",
+    "approvals_one": "• {{count}} approval request is turned down.",
+    "approvals_other": "• {{count}} approval requests are turned down.",
+    "nothingUndone": "Nothing that was already done is undone.",
+    "keep": "Keep working",
+    "quit": "Close anyway"
+  },
+  "notify": {
+    "reply": "{{agent}} replied — see the chat",
+    "runApproval": "{{task}} is waiting for your approval to start — approve or reject",
+    "connectionApprovalTask": "{{task}}: waiting for your approval for {{target}} — approve or reject",
+    "connectionApproval": "{{agent}} is waiting for your approval for {{target}} — approve or reject",
+    "undecided": "{{task}}: the review couldn't reach a decision — it's your call",
+    "held": {
+      "failed": "{{task}} stopped with an error — decide what to do",
+      "limit": "{{task}} stopped at a run limit — decide what to do",
+      "revision": "{{task}} reached the revision limit — decide what to do",
+      "commit": "{{task}}: its changes couldn't be saved, the task stopped — decide what to do",
+      "isolation": "{{task}}: its own working copy couldn't be made, the task stopped — decide what to do",
+      "auth": "{{task}}: the provider session ended, work is paused — sign in again"
+    },
+    "done": {
+      "none": "{{task}} is done (approved by the lead)",
+      "merged": "{{task}} is done (approved by the lead) and merged into the project",
+      "waiting": "{{task}} was approved by the lead; the merge is waiting — review the changes and merge",
+      "conflict": "{{task}} was approved by the lead but the merge hit a conflict — the task went back to its agent"
+    },
+    "race": {
+      "none": "{{task}} won the race ({{loser}} closed)",
+      "merged": "{{task}} won the race ({{loser}} closed) and was merged into the project",
+      "waiting": "{{task}} won the race ({{loser}} closed); the merge is waiting — review the changes and merge",
+      "conflict": "{{task}} won the race ({{loser}} closed) but the merge hit a conflict — the task went back to its agent"
+    },
+    "count": {
+      "approval_one": "{{count}} approval",
+      "approval_other": "{{count}} approvals",
+      "needsYou_one": "{{count}} decision for you",
+      "needsYou_other": "{{count}} decisions for you",
+      "reply_one": "{{count}} reply",
+      "reply_other": "{{count}} replies"
+    },
+    "groupUrgent_one": "{{count}} thing is waiting for you",
+    "groupUrgent_other": "{{count}} things are waiting for you",
+    "groupDone_one": "{{count}} task approved by the lead",
+    "groupDone_other": "{{count}} tasks approved by the lead",
+    "more_one": "+{{count}} more",
+    "more_other": "+{{count}} more"
   }
 }

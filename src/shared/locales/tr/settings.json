@@ -56,7 +56,7 @@
       "openai": "Chat Completions API ile model çağrısı: dosya sistemine ve terminale erişmez; uygulamanın dosya ve bağlantı araçlarını kullanır.",
       "codexCli": "OpenAI `codex exec` komutunu sandbox moduyla çalıştırır.",
       "mockTitle": "Demo (simülasyon)",
-      "mock": "Anahtar gerekmez. Ajanlar gerçekçi şekilde çalışıyormuş gibi davranır."
+      "mock": "Anahtar gerekmez. Bir simülasyon: ajanlar çalışıyormuş gibi görünür ama gerçek iş yapmaz; dosya, bağlantı ya da araç kullanmaz, test çalıştırmaz. Arayüzü ve ekip düzenini tanımak için."
     },
     "form": {
       "apiKeyRequired": "API anahtarı gerekli.",
@@ -70,6 +70,10 @@
       "codexLogin": "Hesap girişi için bir kez terminalde `codex login` çalıştırın.",
       "model": "Model",
       "continueDemo": "Demo ile devam et",
+      "tryDemo": "Demo ile dene",
+      "cliInstalled": "{{name}} bu bilgisayarda kurulu. Hesabına giriş yapılmamışsa test bunu söyler (aşağıdaki giriş adımı).",
+      "cliMissing": "{{name}} bu bilgisayarda bulunamadı. Kurup yolunu yazabilirsin; kurmadan denemek istersen Demo simülasyonuyla başla (gerçek iş yapmaz, sonra değiştirebilirsin).",
+      "demoInstead": "Şimdilik kurmadan denemek istersen Demo simülasyonuyla başla; gerçek iş yapmaz, sonra Ayarlar → Sağlayıcılar'dan değiştirebilirsin.",
       "saveTest": "Kaydet ve test et"
     },
     "modelSaved": "Model değiştirildi: {{model}}",
@@ -145,6 +149,10 @@
     "race": {
       "title": "Yarış modu",
       "desc": "Bir görev başlarken kopyası başka sağlayıcı ya da modeldeki boşta bir üyeye de verilir; lider iyi olan denemeyi tutar, diğerini atar. Lider incelemesi açık olmalı. Yaklaşık iki kat maliyetlidir."
+    },
+    "notifications": {
+      "title": "Bildirimler",
+      "desc": "Uygulama penceresi odakta değilken liderin ve doğrudan yazdığın ajanların yanıtları, onay bekleyenler, karar bekleyen ya da duran görevler ve biten görevler için sistem bildirimi gösterir; biten görevler 10 saniye toplanıp tek bildirimde gelir. Onay bekleyenlerde, karar bekleyen ya da duran görevlerde görev çubuğu simgesi de yanıp söner (yanıtlarda ve biten görevlerde değil). Kapatınca ikisi de durur."
     }
   },
   "data": {

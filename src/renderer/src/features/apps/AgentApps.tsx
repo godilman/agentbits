@@ -25,7 +25,7 @@ export function AgentApps({ agent }: { agent: Agent }) {
       }
     >
       <div className="space-y-1.5" data-testid="agent-apps">
-        {apps.length === 0 && <div className="text-[12px] text-zinc-500">{t('apps:agent.none')}</div>}
+        {apps.length === 0 && <div className="text-[13px] text-zinc-500">{t('apps:agent.none')}</div>}
         {apps.map((a) => (
           <label key={a.id} className="flex items-center gap-3 rounded-md border border-line px-3 py-2">
             <Toggle
@@ -34,8 +34,8 @@ export function AgentApps({ agent }: { agent: Agent }) {
               onChange={(v) => void call('apps:setPermission', a.id, agent.id, v).catch((e) => toast('error', apiError(e)))}
             />
             <div className="min-w-0 flex-1">
-              <div className={a.enabled ? 'text-[12.5px] text-zinc-100' : 'text-[12.5px] text-zinc-500'}>{a.name}</div>
-              {a.description && <div className="truncate text-[11.5px] text-zinc-400">{a.description}</div>}
+              <div className={a.enabled ? 'text-[13px] text-zinc-100' : 'text-[13px] text-zinc-500'}>{a.name}</div>
+              {a.description && <div className="truncate text-[12px] text-zinc-400">{a.description}</div>}
             </div>
             <span className="shrink-0 text-[11px] text-zinc-500">{t('apps:toolCount', { count: a.tools.filter((tl) => policyOf(a, tl) !== 'block').length })}</span>
           </label>

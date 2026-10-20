@@ -32,10 +32,10 @@ export function DecisionsView() {
   return (
     <div className="flex h-full">
       <div className="flex w-[360px] shrink-0 flex-col border-r border-line">
-        <div className="flex items-center justify-between border-b border-line px-4 py-3">
-          <div>
+        <div className="flex flex-wrap items-center justify-between gap-2 border-b border-line px-4 py-3">
+          <div className="min-w-0">
             <h1 className="text-[15px] font-semibold text-zinc-100">{t('decisions:list.title')}</h1>
-            <div className="text-[11.5px] text-zinc-400">{t('decisions:list.subtitle')}</div>
+            <div className="text-[12px] text-zinc-400">{t('decisions:list.subtitle')}</div>
           </div>
           <button className="btn-primary" onClick={() => setCreating(true)}>
             <Plus size={14} /> {t('decisions:list.new')}
@@ -67,15 +67,15 @@ export function DecisionsView() {
               )}
             >
               <div className="flex items-center gap-2">
-                <span className="font-mono text-[10.5px] text-zinc-400">ADR-{d.seq}</span>
-                <span className={cn('rounded px-1.5 py-px text-[10px] font-medium ring-1 ring-inset', STATUS[d.status].cls)}>{STATUS[d.status].label}</span>
-                <span className="ml-auto text-[10.5px] text-zinc-400">{timeAgo(d.createdAt)}</span>
+                <span className="font-mono text-[11px] text-zinc-400">ADR-{d.seq}</span>
+                <span className={cn('rounded px-1.5 py-px text-[12px] font-medium ring-1 ring-inset', STATUS[d.status].cls)}>{STATUS[d.status].label}</span>
+                <span className="ml-auto text-[11px] text-zinc-400">{timeAgo(d.createdAt)}</span>
               </div>
-              <div className="mt-1.5 line-clamp-2 text-[12.5px] leading-snug text-zinc-200">{d.title}</div>
-              {d.decidedBy && <div className="mt-1 text-[11px] text-zinc-400">{d.decidedBy}</div>}
+              <div className="mt-1.5 line-clamp-2 text-[13px] leading-snug text-zinc-200">{d.title}</div>
+              {d.decidedBy && <div className="mt-1 text-[12px] text-zinc-400">{d.decidedBy}</div>}
             </button>
           ))}
-          {list.length === 0 && <div className="py-8 text-center text-[12px] text-zinc-400">{t('decisions:list.empty')}</div>}
+          {list.length === 0 && <div className="py-8 text-center text-[13px] text-zinc-400">{t('decisions:list.empty')}</div>}
         </div>
       </div>
       <div className="min-w-0 flex-1 overflow-y-auto">
@@ -131,9 +131,9 @@ function DecisionEditor({
 
   return (
     <div className="mx-auto max-w-2xl px-8 py-6">
-      <div className="mb-4 flex items-center gap-2">
-        {decision && <span className="font-mono text-[12px] text-zinc-400">ADR-{decision.seq}</span>}
-        {decision && <span className={cn('rounded px-1.5 py-px text-[10.5px] font-medium ring-1 ring-inset', STATUS[decision.status].cls)}>{STATUS[decision.status].label}</span>}
+      <div className="mb-4 flex flex-wrap items-center gap-2 gap-y-2">
+        {decision && <span className="font-mono text-[11px] text-zinc-400">ADR-{decision.seq}</span>}
+        {decision && <span className={cn('rounded px-1.5 py-px text-[12px] font-medium ring-1 ring-inset', STATUS[decision.status].cls)}>{STATUS[decision.status].label}</span>}
         <div className="ml-auto flex gap-1.5">
           {decision && decision.status !== 'accepted' && (
             <button className="btn h-7 bg-emerald-500/15 text-emerald-300 hover:bg-emerald-500/25" onClick={() => void save('accepted')}>
@@ -158,7 +158,7 @@ function DecisionEditor({
         </div>
       </div>
       <input
-        className="mb-5 w-full bg-transparent text-[18px] font-semibold text-zinc-100 outline-none placeholder:text-zinc-700"
+        className="mb-5 w-full bg-transparent text-[18px] font-semibold text-zinc-100 outline-none placeholder:text-zinc-500"
         placeholder={t('decisions:editor.titlePlaceholder')}
         value={form.title}
         onChange={(e) => set('title', e.target.value)}

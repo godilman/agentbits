@@ -1,5 +1,4 @@
 import { useState } from 'react'
-import { createPortal } from 'react-dom'
 import { Cpu, Database, FolderOpen, MessageSquareHeart, Network, TriangleAlert, Zap } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { locale } from '@/i18n'
@@ -26,7 +25,7 @@ export function StatusBar() {
   const errors = agents.filter((a) => a.status === 'error').length
 
   return (
-    <footer className="flex h-6 shrink-0 items-center gap-4 overflow-hidden whitespace-nowrap border-t border-line bg-[#0c0c0e] px-3 text-[11px] text-zinc-400">
+    <footer className="flex h-6 shrink-0 items-center gap-4 overflow-hidden whitespace-nowrap border-t border-line bg-[#0c0c0e] px-3 text-[12px] text-zinc-400">
       <span className="flex items-center gap-1.5">
         <span className={cn('h-1.5 w-1.5 rounded-full', paused ? 'bg-amber-400' : 'bg-emerald-400')} />
         {paused ? t('statusBar.paused') : settings.autopilot ? t('statusBar.autopilotOn') : t('statusBar.autopilotOff')}
@@ -37,7 +36,7 @@ export function StatusBar() {
         {errors > 0 && <span className="text-rose-400"> · {t('statusBar.errors', { count: errors })}</span>}
       </span>
       <button className="flex items-center gap-1 hover:text-zinc-300" onClick={() => openSettings('providers')}>
-        <Cpu size={11} /> {def ? `${def.label}${def.model ? ' · ' + def.model : ''}` : t('statusBar.demoProvider')}
+        <Cpu size={11} /> {def ? `${def.label}${def.model && def.kind !== 'mock' ? ' · ' + def.model : ''}` : t('statusBar.demoProvider')}
       </button>
       {view === 'org' ? (
         <span className="flex items-center gap-1.5">
@@ -45,7 +44,7 @@ export function StatusBar() {
         </span>
       ) : (
         project && (
-          <button className="flex min-w-0 items-center gap-1.5 hover:text-zinc-300" onClick={() => openProjectModal(project.id)} title={t('statusBar.projectSettings')}>
+          <button className="flex min-w-0 items-center gap-1.5 overflow-hidden hover:text-zinc-300" onClick={() => openProjectModal(project.id)} title={t('statusBar.projectSettings')}>
             <span className="h-1.5 w-1.5 shrink-0 rounded-full" style={{ background: project.color }} />
             <span className="truncate text-zinc-300">{project.name}</span>
             {project.rootPath ? (
@@ -97,7 +96,7 @@ function FeedbackButton() {
         <span className="hidden min-[1400px]:inline">{t('feedback.button')}</span>
       </button>
       {/* Portal: the status bar's nowrap / small-text styles must not leak into the modal. */}
-      {open && createPortal(<FeedbackModal open onClose={() => setOpen(false)} />, document.body)}
+      {open && <FeedbackModal open onClose={() => setOpen(false)} />}
     </>
   )
 }

@@ -67,7 +67,7 @@ export function AgentUnits({ agent, onSaved }: { agent: Agent; onSaved: () => vo
           />
         ))}
         {memberships.length === 0 && (
-          <div className="rounded-md border border-dashed border-line px-3 py-3 text-[12px] text-zinc-500">
+          <div className="rounded-md border border-dashed border-line px-3 py-3 text-[13px] text-zinc-500">
             {t('agents:units.none')}
           </div>
         )}
@@ -75,7 +75,7 @@ export function AgentUnits({ agent, onSaved }: { agent: Agent; onSaved: () => vo
 
       <div className="mt-3 flex items-center gap-2">
         <select
-          className="input h-7 w-auto min-w-[240px] text-[12px]"
+          className="input h-7 w-auto min-w-[240px] text-[13px]"
           value=""
           onChange={(e) => e.target.value && void run(() => call('units:addMember', e.target.value, agent.id))}
           disabled={options.length === 0}
@@ -105,7 +105,7 @@ export function AgentUnits({ agent, onSaved }: { agent: Agent; onSaved: () => vo
             ))}
           </div>
         ) : (
-          <div className="flex items-center gap-1.5 text-[12px] text-zinc-600">
+          <div className="flex items-center gap-1.5 text-[13px] text-zinc-500">
             <FolderKanban size={12} /> {t('agents:units.noProjects')}
           </div>
         )}
@@ -141,17 +141,17 @@ function MembershipRow({
       </div>
       <button className="min-w-0 flex-1 text-left" onClick={onOpen} title={t('agents:units.openUnit')}>
         <div className="flex items-center gap-1.5">
-          <span className="truncate text-[12.5px] font-medium text-zinc-200 hover:text-white">{unit.name}</span>
+          <span className="truncate text-[13px] font-medium text-zinc-200 hover:text-white">{unit.name}</span>
           {isLead && (
-            <span className="inline-flex items-center gap-0.5 rounded bg-amber-500/10 px-1 text-[10px] font-medium text-amber-300">
+            <span className="inline-flex items-center gap-0.5 rounded bg-amber-500/10 px-1 text-[12px] font-medium text-amber-300">
               <Star size={9} className="fill-amber-300" /> {t('agents:units.lead')}
             </span>
           )}
         </div>
-        <div className="truncate text-[11px] text-zinc-600">{path ? `${path} · ${KIND_META[unit.kind].label}` : KIND_META[unit.kind].label}</div>
+        <div className="truncate text-[12px] text-zinc-500">{path ? `${path} · ${KIND_META[unit.kind].label}` : KIND_META[unit.kind].label}</div>
       </button>
       <input
-        className="input h-7 w-[200px] text-[12px]"
+        className="input h-7 w-[200px] text-[13px]"
         placeholder={t('agents:units.titlePlaceholder')}
         value={draft}
         onChange={(e) => setDraft(e.target.value)}

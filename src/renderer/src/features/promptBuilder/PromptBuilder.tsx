@@ -101,7 +101,7 @@ function PromptBuilderBody({ onOpenProviders }: { onOpenProviders: () => void })
 
   if (!providers.length) {
     return (
-      <div className="space-y-3 text-[12.5px] text-zinc-300">
+      <div className="space-y-3 text-[13px] text-zinc-300">
         <p>{t('layout:promptBuilder.noProviders')}</p>
         <button
           className="btn-primary h-8"
@@ -118,12 +118,12 @@ function PromptBuilderBody({ onOpenProviders }: { onOpenProviders: () => void })
 
   return (
     <div className="space-y-3" data-testid="prompt-builder">
-      <div className="text-[12.5px] leading-relaxed text-zinc-300">
+      <div className="text-[13px] leading-relaxed text-zinc-300">
         <p className="font-medium text-zinc-100">{t('layout:promptBuilder.welcome1')}</p>
         <p>{t('layout:promptBuilder.welcome2')}</p>
       </div>
 
-      <label className="block text-[11.5px] text-zinc-400" htmlFor="prompt-builder-input">
+      <label className="block text-[12px] text-zinc-400" htmlFor="prompt-builder-input">
         {t('layout:promptBuilder.inputLabel')}
       </label>
       <textarea
@@ -144,13 +144,13 @@ function PromptBuilderBody({ onOpenProviders }: { onOpenProviders: () => void })
       />
 
       <div className="flex flex-wrap items-center gap-2">
-        <label className="text-[11.5px] text-zinc-400" htmlFor="prompt-builder-provider">
+        <label className="text-[12px] text-zinc-400" htmlFor="prompt-builder-provider">
           {t('layout:promptBuilder.provider')}
         </label>
         <select
           id="prompt-builder-provider"
           data-testid="prompt-builder-provider"
-          className="input h-8 min-w-0 max-w-[300px] flex-1 text-[12px]"
+          className="input h-8 min-w-0 max-w-[300px] flex-1 text-[13px]"
           value={providerId ?? ''}
           disabled={busy}
           onChange={(e) => setProviderId(e.target.value || null)}
@@ -171,10 +171,10 @@ function PromptBuilderBody({ onOpenProviders }: { onOpenProviders: () => void })
       </div>
 
       {error && (
-        <div data-testid="prompt-builder-error" role="alert" className="flex items-start gap-2 rounded-md border border-rose-500/30 bg-rose-500/10 px-3 py-2 text-[12px] text-rose-200">
+        <div data-testid="prompt-builder-error" role="alert" className="flex items-start gap-2 rounded-md border border-rose-500/30 bg-rose-500/10 px-3 py-2 text-[13px] text-rose-200">
           <span className="min-w-0 flex-1">{error}</span>
           {!busy && text.trim() && (
-            <button data-testid="prompt-builder-retry" className="btn-ghost h-6 shrink-0 px-2 text-[11.5px]" onClick={() => void send()}>
+            <button data-testid="prompt-builder-retry" className="btn-ghost h-6 shrink-0 px-2 text-[12px]" onClick={() => void send()}>
               <RotateCcw size={11} /> {t('layout:promptBuilder.retry')}
             </button>
           )}
@@ -183,9 +183,9 @@ function PromptBuilderBody({ onOpenProviders }: { onOpenProviders: () => void })
 
       {output && (
         <div className="space-y-1.5">
-          <div className="flex items-center justify-between">
-            <span className="text-[11.5px] text-zinc-400">{t('layout:promptBuilder.output')}</span>
-            <button data-testid="prompt-builder-copy" className={cn('btn-ghost h-6 px-2 text-[11.5px]', copied && 'text-emerald-300')} onClick={copy}>
+          <div className="flex flex-wrap items-center justify-between gap-y-1">
+            <span className="min-w-0 text-[12px] text-zinc-400">{t('layout:promptBuilder.output')}</span>
+            <button data-testid="prompt-builder-copy" className={cn('btn-ghost h-6 px-2 text-[12px]', copied && 'text-emerald-300')} onClick={copy}>
               {copied ? <Check size={11} /> : <Copy size={11} />} {copied ? t('layout:promptBuilder.copied') : t('layout:promptBuilder.copy')}
             </button>
           </div>
@@ -193,13 +193,13 @@ function PromptBuilderBody({ onOpenProviders }: { onOpenProviders: () => void })
             ref={outRef}
             readOnly
             data-testid="prompt-builder-output"
-            className="selectable input min-h-[140px] w-full resize-y py-2 font-mono text-[12.5px] leading-relaxed"
+            className="selectable input min-h-[140px] w-full resize-y py-2 font-mono text-[12px] leading-relaxed"
             value={output}
           />
         </div>
       )}
 
-      <p className="text-[11px] leading-relaxed text-zinc-400">
+      <p className="text-[12px] leading-relaxed text-zinc-400">
         {t('layout:promptBuilder.privacy')}
         {provider?.kind === 'claude-cli' ? ` ${t('layout:promptBuilder.cliNote')}` : ''}
       </p>

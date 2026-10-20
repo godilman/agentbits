@@ -27,6 +27,7 @@ jobs:
       - run: npm run typecheck
       # SQL / SSH classification (incl. the 2026-10-13 security review cases), file extraction, skills, MCP config, translations
       - run: npm run test:unit
+      - run: npm run test:renderer
       # Connections end to end: real SQLite and SSH server, fake MySQL / PostgreSQL (TLS cases need openssl)
       - run: npm run test:e2e
       - run: npm run build

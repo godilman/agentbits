@@ -689,6 +689,29 @@ const MIGRATIONS: { version: number; sql: string }[] = [
       ALTER TABLE memory_suggestions ADD COLUMN target_op TEXT;
       ALTER TABLE memory_suggestions ADD COLUMN target_note TEXT;
     `
+  },
+  {
+    version: 21,
+    sql: `
+      -- Who marked a done task done: 'lead' (its review approved it / won the race) or 'user' (moved it by hand,
+      -- without the lead's review). NULL = not done, or done before this column existed.
+      ALTER TABLE tasks ADD COLUMN completed_by TEXT;
+    `
+  },
+  {
+    version: 22,
+    sql: `
+      -- Unsent message drafts, one per project + channel: the text and the ids of attachments whose upload finished
+      -- (the files themselves stay in files). Kept across restarts; removed with the project.
+      CREATE TABLE message_drafts (
+        project_id TEXT NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
+        channel    TEXT NOT NULL,
+        text       TEXT NOT NULL DEFAULT '',
+        files      TEXT NOT NULL DEFAULT '[]',
+        updated_at TEXT NOT NULL,
+        PRIMARY KEY (project_id, channel)
+      );
+    `
   }
 ]
 

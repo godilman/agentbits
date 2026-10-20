@@ -26,6 +26,7 @@ import type {
 } from '@shared/types'
 import { apiError, bridge, call } from '@/lib/api'
 import { t } from '@/i18n'
+import { applyNav } from '@/lib/notifyNav'
 
 /** Sections inside a project tab. */
 export type Tab = 'chat' | 'office' | 'team' | 'terminal' | 'tasks' | 'files' | 'reports' | 'decisions' | 'browser'
@@ -110,7 +111,7 @@ interface State {
   auditVersion: number
   orchestratorPaused: boolean
   /** Held tasks → reason; done tasks not merged yet; reviews the lead left to the user. */
-  orchestratorWaits: { held: Record<string, string>; unmerged: string[]; undecided: string[] }
+  orchestratorWaits: { held: Record<string, string>; unmerged: string[]; undecided: string[]; undecidedWhy: Record<string, string>; startedProjects: string[]; deferredReviews: string[]; simulatedWork: string[]; simulatedReview: string[] }
   toasts: Toast[]
   memoryVersion: number
   memorySuggestions: MemorySuggestion[]
@@ -124,6 +125,8 @@ interface State {
   // ui
   view: View
   orgTab: OrgTab
+  /** Templates opened from inside this project ("Add to this project" offered); null from the organization. */
+  templateFor: string | null
   activeProjectId: string | null
   /** Project tabs open in the tab strip (persisted per viewer). */
   openProjectIds: string[]
@@ -164,7 +167,8 @@ interface State {
   /** Ctrl+Tab / Ctrl+Shift+Tab: activates the next / previous open project tab. */
   cycleProject: (dir: 1 | -1) => void
   closeProject: (id: string) => void
-  showOrg: (tab?: OrgTab) => void
+  /** `forProject`: opened from inside that project (templates offer to add the new team to it). */
+  showOrg: (tab?: OrgTab, forProject?: string | null) => void
   selectUnit: (id: string | null) => void
   /** Opens the create (null) / edit project modal. */
   openProjectModal: (projectId?: string | null, draft?: ProjectDraft, opts?: { fromLauncher?: boolean }) => void
@@ -309,13 +313,20 @@ async function loadAll(): Promise<void> {
     ready: true
   })
   if (!unsubscribe) unsubscribe = bridge().on(handleEvent)
+  // A notification clicked while there was no window (macOS): its place, once the app is ready to show it.
+  void call('notify:takePending').then((target) => target && handleEvent({ type: 'navigate', target }), () => undefined)
   void useAppStore.getState().refresh('memory')
 }
 
-const waitsOf = (o: { held: { taskId: string; reason: string }[]; unmerged: string[]; undecided: string[] }): State['orchestratorWaits'] => ({
+const waitsOf = (o: { held: { taskId: string; reason: string }[]; unmerged: string[]; undecided: string[]; undecidedWhy: Record<string, string>; startedProjects: string[]; deferredReviews: string[]; simulatedWork: string[]; simulatedReview: string[] }): State['orchestratorWaits'] => ({
   held: Object.fromEntries(o.held.map((h) => [h.taskId, h.reason])),
   unmerged: o.unmerged,
-  undecided: o.undecided
+  undecided: o.undecided,
+  undecidedWhy: o.undecidedWhy,
+  startedProjects: o.startedProjects,
+  deferredReviews: o.deferredReviews,
+  simulatedWork: o.simulatedWork,
+  simulatedReview: o.simulatedReview
 })
 
 export const useAppStore = create<State>((set, get) => ({
@@ -356,7 +367,7 @@ export const useAppStore = create<State>((set, get) => ({
   approvals: [],
   auditVersion: 0,
   orchestratorPaused: false,
-  orchestratorWaits: { held: {}, unmerged: [], undecided: [] },
+  orchestratorWaits: { held: {}, unmerged: [], undecided: [], undecidedWhy: {}, startedProjects: [], deferredReviews: [], simulatedWork: [], simulatedReview: [] },
   toasts: [],
   memoryVersion: 0,
   memorySuggestions: [],
@@ -366,6 +377,7 @@ export const useAppStore = create<State>((set, get) => ({
 
   view: 'project',
   orgTab: 'chart',
+  templateFor: null,
   activeProjectId: null,
   openProjectIds: [],
   selectedUnitId: null,
@@ -543,7 +555,7 @@ export const useAppStore = create<State>((set, get) => ({
       void get().refresh('stats')
     } else set({ openProjectIds: open })
   },
-  showOrg: (orgTab) => set((s) => ({ view: 'org', orgTab: orgTab ?? s.orgTab })),
+  showOrg: (orgTab, forProject) => set((s) => ({ view: 'org', orgTab: orgTab ?? s.orgTab, templateFor: forProject ?? null })),
   selectUnit: (selectedUnitId) => set({ selectedUnitId }),
   openProjectModal: (projectId, draft, opts) =>
     set((s) => ({ projectModal: { open: true, projectId: projectId ?? null, draft, fromLauncher: !!opts?.fromLauncher }, launcher: { ...s.launcher, open: false } })),
@@ -627,6 +639,9 @@ function handleEvent(e: AppEvent): void {
       return schedule('reports')
     case 'settings:changed':
       return schedule('settings')
+    case 'navigate':
+      // A clicked notification: open the place it was about (screens only — nothing starts or is approved).
+      return applyNav(e.target, () => useAppStore.getState())
     case 'orchestrator:changed':
       return schedule('orchestrator')
     case 'units:changed':

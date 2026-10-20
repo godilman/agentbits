@@ -82,7 +82,12 @@
     "newAgents_other": "{{count}} new agents",
     "summary": "<b>{{agents}}</b> will be created with job descriptions, skills and permissions ready to go. You can edit them all later and assign the unit to any projects you like.",
     "summaryWithUnits": "{{units}} and <b>{{agents}}</b> will be created with job descriptions, skills and permissions ready to go. You can edit them all later and assign the unit to any projects you like.",
-    "instantiated": "{{name}} set up · {{agents}}"
+    "instantiated": "{{name}} set up · {{agents}}",
+    "instantiatedToProject": "{{name}} set up · {{agents}} · added to {{project}}; the lead is waiting in the chat",
+    "instantiatedNotAssigned": "{{name}} set up · {{agents}}. Not added to {{project}}; you can add it in the project's Team section",
+    "addToProject": "Add to this project: <b>{{project}}</b>",
+    "addToProjectHint": "The team is assigned to this project only; its lead is ready to talk in the project's chat. Other projects don't change.",
+    "addToProjectOff": "The team is set up but not assigned to any project; this project's chat will have no lead to talk to."
   },
   "unit": {
     "nameRequired": "Name can't be empty",

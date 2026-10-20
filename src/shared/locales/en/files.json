@@ -99,6 +99,7 @@
     "drop": "Drop files"
   },
   "attach": {
+    "gone": "no longer available (deleted or out of reach); it won't be sent, you can remove it",
     "tooBig": "too large ({{size}}; max {{limit}})",
     "moreFiles_one": "+{{count}} file",
     "moreFiles_other": "+{{count}} files",

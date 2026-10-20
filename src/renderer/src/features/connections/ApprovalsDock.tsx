@@ -36,18 +36,18 @@ export function ApprovalsDock() {
   }
 
   return (
-    <div className="fixed bottom-9 left-3 z-50 w-[440px] space-y-2">
+    <div className="fixed bottom-9 left-3 z-[55] w-[440px] space-y-2">
       {approvals.map((a) => {
         const left = Math.max(0, Math.round((Date.parse(a.expiresAt) - Date.now()) / 1000))
         return (
           <div key={a.id} data-approval={a.id} className="card shadow-pop border-rose-500/40 bg-[#160d10] p-3 animate-fade-in">
-            <div className="flex items-center gap-2 text-[12.5px] font-semibold text-rose-200">
+            <div className="flex items-center gap-2 text-[13px] font-semibold text-rose-200">
               <ShieldAlert size={14} /> {a.operation === 'app' ? t('connections:approvals.appTitle') : t('connections:approvals.title')}
-              <span className="ml-auto font-mono text-[10.5px] font-normal text-rose-200/60">
+              <span className="ml-auto font-mono text-[11px] font-normal text-rose-200/60">
                 {Math.floor(left / 60)}:{String(left % 60).padStart(2, '0')}
               </span>
             </div>
-            <div className="mt-1 text-[12px] text-zinc-300">
+            <div className="mt-1 text-[13px] text-zinc-300">
               <b className="text-zinc-100">{a.agentName}</b>
               {a.taskKey ? ` (${a.taskKey})` : ''} → <b className="text-zinc-100">{a.connectionName}</b> ·{' '}
               {a.operation === 'app' ? (
@@ -58,7 +58,7 @@ export function ApprovalsDock() {
                 </>
               )}
             </div>
-            <pre className="mt-1.5 max-h-32 overflow-auto whitespace-pre-wrap rounded bg-black/40 px-2 py-1.5 font-mono text-[11px] text-zinc-200">{a.detail}</pre>
+            <pre className="mt-1.5 max-h-32 overflow-auto whitespace-pre-wrap rounded bg-black/40 px-2 py-1.5 font-mono text-[12px] text-zinc-200">{a.detail}</pre>
             <div className="mt-2 flex justify-end gap-2">
               <button className="btn-ghost h-7" disabled={busy === a.id} onClick={() => void resolve(a.id, false)}>
                 {t('actions.reject')}

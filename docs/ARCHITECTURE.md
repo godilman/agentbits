@@ -161,7 +161,11 @@ agentbits/
   (§5) → `registerIpc()` → `orchestrator.init()` → `startMaintenance()` (log saklama, §9a) → `startFiles()` (`<veri>/tmp` temizlenir, "processing"
   kalmış dosyalar yeniden işlenir, §9c) → `createWindow()`. Ana pencere uygulama dışına `will-navigate`'i engeller. Geliştirmede renderer URL'si
   `127.0.0.1:5173`'tür; bağlanamazsa `loadDevServer()` 15 kez (2 sn arayla) dener, olmazsa Türkçe sorun
-  giderme sayfası gösterir. Kapanışta (`before-quit`): `stopMaintenance()`,
+  giderme sayfası gösterir. **Kapatma uyarısı (Paket 1B):** pencere kapatılırken ya da `before-quit`'te yarıda kalacak iş
+  varsa (`orchestrator.workSummary()` çalışma / sohbet yanıtı + inceleme sayıları + `listApprovals()`) yerel
+  `dialog.showMessageBoxSync` sayıları söyler; varsayılan ve Esc "Çalışmaya devam et" (iş sürer), "bir daha sorma" yok;
+  metin `core/quitGuard.ts` `quitWarning()`. macOS'ta pencereyi kapatmak uygulamayı kapatmaz (yalnız Cmd+Q sorar);
+  geri yükleme `app.exit` ile soruyu atlar. Kapanışta (`before-quit`): `stopMaintenance()`,
   `rejectAllApprovals()`, `stopBridge()`, `orchestrator.shutdown()`, `terminals.killAll()`, `closeDb()`.
 - **Pencere ve oturum sertleştirmesi:** ana pencere `sandbox: true`, `contextIsolation: true`, `nodeIntegration: false`
   (preload yalnızca `electron` kullanır, CJS paketlenir). `hardenSessions()`: varsayılan oturumda yalnızca pano / tam ekran
@@ -256,7 +260,8 @@ Organizasyon ve proje metotları (kurallar `src/main/ipc.ts`'de zorlanır):
 - `units:addMember(unitId, agentId, title?)` (varsa yalnızca unvanı günceller) / `units:removeMember` (lider
   çıkarılırsa birimin lideri temizlenir).
 - `templates:list()` → `TeamTemplate[]` (önizleme ağacı, ajan/birim sayıları);
-  `templates:instantiate(templateId, { parentId?, name? })` → `{ unitId, agentIds }`.
+  `templates:instantiate(templateId, { parentId?, name?, projectId? })` → `{ unitId, agentIds }` (`projectId`: yeni takım o
+  projeye de eklenir — `projectsRepo.addUnit`; proje yok / arşivliyse hiçbir şey kurulmadan hata).
 - `share:export({type: 'unit'|'agent', id})` → kaydetme penceresi, `.agentbits` (JSON) yazar, yol ya da null;
   `share:preview({type:'file'} | {type:'url', url})` → main dosya seçtirir ya da GitHub'dan indirir (`skills/source.ts` →
   `githubFetch`, 25 MB), `parseSharePackage` (`shared/share.ts`, güvenilmeyen girdi: sınırlar, ref'ler, tek kök, döngü yok,
@@ -356,7 +361,13 @@ kullanıcı ekibini Kılavuz'la (`features/guide/GuideDrawer.tsx`) kendisi kurar
 Müdür Kaya; alt takımlar Ürün & Katalog, Pazarlama, Müşteri Hizmetleri, Operasyon & Lojistik, Teknoloji; toplam
 10 ajan). `instantiateTemplate` birimleri (varsayılan: kökün altına) ve **yeni** ajanları oluşturur (ad
 çakışırsa benzersizleştirilir; iş tanımı, yetenekler, izin ön ayarı `readonly / developer / full` — **hepsinde
-`requireApproval` açık**), birim liderlerini atar.
+`requireApproval` açık**), birim liderlerini atar. **Proje bağlamı (2026-10-19, Paket 2):** şablon proje içinden açılınca
+(`showOrg('templates', projectId)` → store `templateFor`: sohbet / ofis / proje ekibi boş durumları, Kılavuz) onay penceresinde
+hedef proje adıyla işaretli "Bu projeye ekle" kutusu çıkar; işaretliyse takım yalnız o projeye eklenir ve projenin sohbeti açılır,
+kaldırılırsa sonuç "projeye eklenmedi" der. Organizasyon görünümünden açılınca hiçbir projeye dokunulmaz. Sohbetin boş
+durumu nedeni ayırır (`data-state`): `team` takım atanmadı (mevcut takım varsa "Takım ekle"), `empty` takımda ajan yok,
+`off` bütün üyeler kapalı. Sağlayıcı formu CLI için kurulu / bulunamadı açıklaması ve açık "Demo ile dene" düğmesi gösterir
+(bulunamadığında ve test başarısızken); seçili sağlayıcı sessizce değişmez.
 
 ## 6. Orkestratör (`src/main/core/orchestrator.ts`)
 
@@ -390,9 +401,14 @@ mesajların yazılacağı proje kanalını belirler. Bellek içi durum:
 6. `setInterval(tick, 1500)`.
 
 ### 6.2 Zamanlama — `tick()`
-`globalPaused` değilse, `settings.onboarded && settings.autopilot` ise ve en az bir aktif proje varsa:
+`globalPaused` değilse, `settings.onboarded && settings.autopilot` ise ve **bu oturumda işi başlatılmış** en az bir aktif
+proje varsa (Paket 1B: `workStarted`, yalnız bellekte — uygulama ya da proje açmak iş başlatmaz; proje üstündeki
+"Bu projede çalışmayı başlat" `projects:startWork` ile ekler, `init()` boşaltır, bekletilen görevleri serbest bırakmaz;
+`orchestrator:state.startedProjects`. Önceki oturumdan kalan `in_review` görevler de `init`'te kuyruğa girmez,
+`deferredReviews`'a alınır; başlatma o projenin bekletilmemiş olanlarını `queueReview`'a verir (`queueReview` listeden
+düşer, kullanıcının "İncelemeyi yeniden dene"si kapıdan bağımsız). Elle "Şimdi başlat" bu kapıdan bağımsızdır):
 organizasyon lideri olmayan (`!isLead`), `enabled`, `status === 'idle'` ve `busy` olmayan her ajan için
-`tasksRepo.nextFor(agentId, blocked, assignedIn = activeProjectIds(), unassignedIn = workable)` çağrılır.
+`tasksRepo.nextFor(agentId, blocked, assignedIn = başlatılmış aktif projeler, unassignedIn = workable)` çağrılır.
 `workable` = ajanın üyesi olduğu aktif projelerden **lideri olmadıkları** (`memberProjectIds` − `projectLead`).
 Yani ajana atanmış görevler tüm aktif projelerden, atanmamış görevler yalnızca üyesi olup lideri olmadığı
 projelerden alınır (önce atanmış, sonra öncelik DESC, `sort_order` ASC). Arşivlenmiş projelerde otopilot çalışmaz.
@@ -417,7 +433,18 @@ projelerden alınır (önce atanmış, sonra öncelik DESC, `sort_order` ASC). A
   içinde: hazırlıkta atılan hata çalışmayı "başarısız" kapatır, `active` / `busy` temizlenir. Sağlayıcı her bölümden önce
   `ar.stopped`'a bakar: hazırlık sırasında gelen "Durdur" yeni `AbortController` ile ezilmez.
 - Çalışan görev panoda başka sütuna taşınırsa `tasks:move` önce `stopTaskAndWait` ile çalışmanın gerçekten bitmesini bekler
-  (iptal temizliği görevi `todo` yazar), sonra kullanıcının seçtiği durumu yazar; birleştirme ondan sonra başlar.
+  (iptal temizliği görevi `todo` yazar), sonra kullanıcının seçtiği durumu yazar. Arayüz Bitti'ye taşımadan önce sorar
+  (`features/tasks/DoneGuard.tsx`). Durdurma, görev akışına "hiçbir şey geri alınmadı, değişiklikler şurada" notu yazar
+  (`leftChangesNote`: çalışma kopyası + dal / proje klasörü / klasörsüz projede ajanın çalıştığı klasör; tek sefer).
+- **Elle Bitti (Paket 1B):** `stopTaskAndWait` false dönerse ya da görev bu arada silindiyse `tasks:move` hiçbir şey
+  yazmaz, `tasks:changed` yayıp hata fırlatır (`main:errors.stopNotConfirmed`). Sonra `completedBy = 'user'`, `release` (bekletme kalkar), tek
+  "elle tamamladın, lider incelemesi yok, değişiklikler şurada" notu (Bitti için durdurulan çalışmanın durdurma notu
+  yazılmaz: `stopTaskAndWait(id, _, forDone)`). **Hiçbir şey kendiliğinden birleşmez**: worktree'de değişiklikler kopyada
+  kalır, kart "Birleştirme bekliyor" der, bağımlı görevler `unmergedDone` yüzünden bekler; "Değişiklikleri incele ve
+  birleştir" önce önizleme (`tasks:changes`), sonra ayrı karar (`tasks:merge(id, basis)`) getirir. `taskChanges` görev
+  çalışmıyorken kopyada `git add -A` + `write-tree` yapar (commit'lenmemiş değişiklikler ve yeni dosyalar görünür;
+  `basis` = ağaç kimliği); `finishTaskBranch(id, basis)` commit sonrası `HEAD^{tree}` ≠ `basis` ise birleştirmez
+  (`changedSinceShown`). Başarısız birleştirmenin nedeni `finishTaskBranch`'in dönüşüdür; `tasks:merge` onu hata olarak verir. Lider onayı ve yarış kararı `completedBy = 'lead'`.
 
 ### 6.4 Yürütme — `execute(runId, task, agent)`
 1. Ajan `working` (not: görev anahtarı). Sağlayıcı: ajanın `providerId`'si → varsayılan sağlayıcı →
@@ -440,15 +467,25 @@ projelerden alınır (önce atanmış, sonra öncelik DESC, `sort_order` ASC). A
    (`break`, "☕ Kahve molası", 8–16 sn sonra `idle`); `reviewByLead` açıksa `queueReview()`.
 7. **Durdurma** (`AbortedError` veya sinyal): run `cancelled` ("Kullanıcı durdurdu"), görev `todo` +
    `blocked`, ajan `idle`.
-8. **Hata:** run `failed`, görev `todo`. `explainError()` hatayı Türkçe, eyleme dönük metne çevirir:
+8. **Hata:** run `failed` (hata metni sırlardan arındırılır), görev `todo` ve **ilk hatada bekletilir** (2026-10-19,
+   Paket 1A): soğuma bitince, ajan boşa çıkınca ya da yeniden açılışta otopilot onu almaz; yalnız kullanıcının açık
+   "Yeniden dene / Şimdi başlat"ı (`startTask` → `release`) kaldırır. Görev akışına tek bir açıklama yazılır (`postOnce`:
+   ne oldu, iş ne durumda, ne yapabilirsin + "Ayrıntı:" satırı). `explainError()` → `{ auth, text, full }`: `text` kısa
+   açıklama (kart, "Bana ihtiyaç var", bekletme nedeni), `full` + teknik satır (akış, sohbet, rapor, Prompt oluşturucu);
+   tür `shared/runErrors.ts` `runErrorKind` (kimlik / zaman aşımı / ağ / aşırı yük / çıkış kodu / diğer). Yeniden
+   başlatılan çalışmanın istemine, son girişim gerçekten çalıştıysa (`logsRepo.runStarted`: görev istemi gitti mi;
+   yalnız onay bekleyip düşen sayılmaz) `## Previous attempt` bölümü eklenir (`previousAttempt`) — idempotentlik
+   garantisi değildir; garanti, otomatik tekrarın olmamasıdır:
    - **Kimlik hatası** (`AUTH_RE`: `authentication_error`, `access token has expired`, `invalid api key`,
-     `not logged in`, `401` …): ajan `error` ("Oturum / anahtar geçersiz") ve `authFailure()` →
+     `not logged in`, `401` …): ajan `error` ("Oturum / anahtar geçersiz"), görev bekletilir (`held.authFailed`),
+     çalışma `active`'ten çıkarılır (yoksa `pauseAll` "failed" kaydını "paused"a çevirirdi) ve `authFailure()` →
      **tüm ekip duraklatılır** (`pauseAll`), dakikada en fazla bir kez etkilenen projenin `#general`'ine mesaj + hata toast'u
      (Claude için `claude auth login`, Codex için `codex login`, API için anahtarı yenileme önerisi).
      Kullanıcı üst bardaki **"Devam et"** (`resumeAll`) ile devam eder; bu, `error` durumundaki ajanları
      `idle`'a çeker.
-   - **Diğer hatalar:** `failCounts` artar (2. hatada görev `blocked`), `#general`'e "⚠️ … hata aldı",
-     ajan `error` ve 45 sn sonra (`ERROR_COOLDOWN_MS`) `idle`.
+   - **Diğer hatalar:** `failCounts` artar (bekletme nedeninde sayı), `#general`'e "⚠️ … hata aldı",
+     ajan `error` ve 45 sn sonra (`ERROR_COOLDOWN_MS`) `idle` — görev bekletildiği için yeniden alınmaz.
+   - **Yalıtım hatası** (`IsolationError`) ve **durdurma / limit** kendi nedenleriyle bekletilir (değişmedi).
 9. `finally`: `active`/`busy` temizlenir, `tasks:changed` + `runs:changed`.
 
 ### 6.5 Duraklat / devam / durdur
@@ -459,7 +496,9 @@ projelerden alınır (önce atanmış, sonra öncelik DESC, `sort_order` ASC). A
 - `stopRun` → onay bekliyorsa ret; değilse `controller.abort()`. CLI süreçleri Windows'ta
   `taskkill /T /F`, diğerlerinde `SIGTERM` ile sonlandırılır.
 - `stopTask(taskId)` — görev Kanban'da `in_progress` dışına sürüklenince ya da silinince çağrılır.
-- `pauseAll` / `resumeAll` — tüm aktif çalışmalar + `globalPaused` (tick durur).
+- `pauseAll` / `resumeAll` — tüm aktif çalışmalar + `globalPaused` (tick durur). Arayüzdeki ipucu dürüst: yeni görev
+  başlamaz, ajanlar bir sonraki adımda bekler; o an çalışan komut / program işini bitirebilir, sohbet yanıtları ve
+  incelemeler sürer; bir çalışmayı bitirmek için durdurulmalı.
 - `resetRuntime()` — veri sıfırlamadan önce (§9a): bekleyen onayları reddeder, aktif çalışmaları iptal eder,
   durum zamanlayıcılarını, `blocked`, `failCounts` ve `reviewChain`'i sıfırlar (tick çalışmaya devam eder).
 - `tasks:move` ile `in_progress`'e bırakılan görev önce eski durumuna döndürülür, sonra `startTask` çalışır.
@@ -526,7 +565,23 @@ transkriptleri de budar.
   `getStats` token sayıları artık `token_usage`'dan gelir.
 
 ### 6.6 İnceleme kuyruğu — `queueReview()` / `review()`
-İncelemeler `reviewChain` üzerinden **tek tek** çalışır. İnceleyen **proje lideridir** (`projectLead(task.projectId)`).
+İncelemeler `reviewChain` üzerinden **tek tek** çalışır; aynı görev için kuyrukta ya da çalışmakta olan ikinci bir
+inceleme açılmaz (`reviewing`), o sırada gelen istek kaybolmaz, bitince "tekrar bak" olarak işlenir (`reviewAgain`);
+bir kuyruk adımı bitince kuyrukta / çalışmakta olmayan **bütün** işaretli görevler kuyruğa alınır (yarışta karşılaştırma
+bir taraftan başlayıp öbür tarafı bayat bulabilir; partneri zaten kuyruktaki taraf ayrıca alınmaz).
+Bir inceleme değerlendirdiği **çalışma kimliğine ve görev girdilerine** bağlıdır (`reviewBasis`): sonuç geldiğinde (onay,
+ret, belirsiz ya da hata) görev artık incelemede değilse, daha yeni bir çalışma varsa ya da başlık / açıklama / kabul
+kriterleri değiştiyse sonuç atılır ve güncel hâl incelenir (`staleReview`). Yarışta iki çalışmaya birden bağlıdır. Aynı
+çalışma ikinci kez modele gönderilmez (`reviewedRun`; `retryReview` temizler). İnceleyen **proje lideridir** (`projectLead(task.projectId)`; yalnız etkin bir ajan
+döner, yoksa ilk etkin üyeye düşer).
+
+**Karar kullanıcıya kalınca (Paket 1A).** Şu durumlarda görev `in_review`'da kalır, `undecided` + `undecidedWhy`
+(neden) olur, "Bana ihtiyaç var"da ve kartta görünür ve akışa bir not yazılır (aynı not tekrar yazılmaz — açılışta
+incelemeler yeniden kuyruğa girer): inceleme çağrısı hata verdi (ağ / zaman aşımı / 429 / 5xx; kimlik hatası ayrıca
+`authFailure`), incelemeyi yapabilecek etkin kimse yok, incelenecek çalışan raporu yok, karar anlaşılamadı; yarış
+değerlendirmesinde de aynısı (iki görev için). İnceleme iptal edildiyse (proje durdurma / kapanış) hata sayılmaz.
+Yarışta partneri beklemek hata değildir. `tasks:retryReview(id)` → `retryReview()`: görev `in_review` ve inceleyen
+varsa yalnız incelemeyi kuyruğa alır (çalışan yeniden çalışmaz), zaten kuyruktaysa `'pending'` döner.
 Görev hâlâ `in_review` ise ve lider aktifse:
 lider `working` ("İnceleme · TA-x"), `reviewSystem` + `reviewPrompt` (çıktının ilk 12 000 karakteri)
 `mode: 'review'` ile çalıştırılır. Yanıt `{"approved": bool, "note": "..."}` JSON'u olarak `parseReview` ile
@@ -599,9 +654,10 @@ Bağımlılar asıl göreve bağlı kalır; `mergeBlockers()` kaybedeni, kazanan
   transkript + görev akışında ⚠️. Claude Code `Edit/MultiEdit/Write/NotebookEdit`, Demo `Edit/Write` bildirir.
 - **Worktree (`project.isolation = 'worktree'`):** CLI çalışmasından önce `prepareWorktree()` → `isRepoRoot` +
   `ensureWorktree(<veri>/worktrees/<proje>/<görev>, agentbits/<anahtar>)`; `cwd` kopyadır, prompt'a "Your working copy".
-  Başarıda `commitWorktree()` (yazar = ajan). Görev `done` olunca (`queueReview` onayı ya da `tasks:move`) `finishTaskBranch()`
+  Başarıda `commitWorktree()` (yazar = ajan). Lider görevi onaylayınca (`queueReview`) ya da kullanıcı "Değişiklikleri incele
+  ve birleştir" deyince (`tasks:merge`; elle Bitti birleştirmez, Paket 1B) `finishTaskBranch()`
   → `mergeIntoRoot` (`--no-ff`): `merged` → kopya + dal silinir, kökte `recordWorkspaceChanges`; `dirty` → bekler
-  (`tasks:mergePending`, `tasks:merge` = "Şimdi birleştir"); `conflict` → `bringRootIn` (çakışma işaretleri kopyada) + görev
+  (`tasks:mergePending`, `tasks:merge` = "Değişiklikleri incele ve birleştir"); `conflict` → `bringRootIn` (çakışma işaretleri kopyada) + görev
   `todo` ve `reviewNote` ile ajana döner. Her şey `serialized(repo)` ile sıralı; git çağrıları boş `core.hooksPath` ile.
   Hata → uyarı + ortak klasörde devam (çalışma düşmez). Görev / proje silinince kopyalar silinir.
 
@@ -687,7 +743,7 @@ interface ProviderAdapter {
 | `openai` | `openai.ts` | `POST /v1/chat/completions`, `stream_options.include_usage`; `max_completion_tokens` 8000/2000. Test: `GET /v1/models`. Ajanın aracı varsa yerel `tool_calls` döngüsü (en fazla 16 tur). Maliyet hesaplanmaz. Bitiş: `finish_reason` yoksa ya da akışta `error` gelirse hata; `length` ya da tur sınırı görev / incelemede **hata**, sohbette metin + "kesildi" notu (`cutShort`). | Dosya sistemi/kabuk yok; yalnızca Agentbits araçları: bağlantı (§9b) + dosya ekleri (§9c) |
 | `claude-cli` | `claudeCli.ts` | `claude -p` headless, stream-json; prompt **stdin**'den (`system + "\n\n---\n\n" + prompt`). Test: `--version` + `claude auth status` (çıkış ≠ 0 → "giriş yapılmamış"). | İzin matrisine göre (aşağıda) |
 | `codex-cli` | `codexCli.ts` | `codex exec --skip-git-repo-check --sandbox <mod> [-m model] -`; prompt stdin'den; stdout satırları çıktı olur. Yalnızca toplam token ("tokens used: N"), maliyet yok. Test: `--version`. Ajanın Agentbits aracı (uygulama) varsa aynı MCP köprüsü `-c mcp_servers.agentbits.*` ile verilir (§9f). | Sandbox moduna göre; Agentbits araçları yalnızca uygulaması olan ajana (köprü üzerinden) |
-| `mock` | `mock.ts` | Demo: sohbette isteği cümlelere bölüp ajan atar (`assigneeFor`: havuz = `ctx.team` (proje üyeleri, lider hariç), önce yetenek / iş tanımı kelimesi eşleşmesi, sonra rol anahtar kelimeleri `front/back/test/devops`, sonra sırayla) ve ```` ```tasks ```` bloğu üretir; görevde 6–9 sahte araç adımı (Read/Grep/Edit/Write/Bash) ve rapor; incelemede %85 onay. | Sahte (dosyaya dokunmaz) |
+| `mock` | `mock.ts` | Demo (yalnız simülasyon, hiçbir araç çağırmaz — `ctx.callTool` kullanılmaz, `onFileWritten` bildirilmez): sohbette isteği `demoParts` ile yalnız cümle sonlarından bölüp ajan atar (`assigneeFor`: havuz = `ctx.team` (proje üyeleri, lider hariç), önce yetenek / iş tanımı kelimesi eşleşmesi, sonra rol anahtar kelimeleri `front/back/test/devops`, sonra sırayla) ve ```` ```tasks ```` bloğu üretir; görevde 6–9 "Simülasyon · …" log adımı ve ilk satırı "bu bir simülasyon" olan rapor; incelemede %85 onay, not "Simülasyon değerlendirmesi" ile başlar. Kısa mesaj iş fiili içeriyorsa görevdir (`demoIsWork`). Görev kartı / ayrıntı `orchestrator:state.simulatedWork` / `simulatedReview` (`usageRepo.simulatedTasks('task' | 'review')`: son çalışmadan beri o modda `provider = 'mock'` kullanım satırı) — çalışma ve inceleme ayrı etiketlenir. | Sahte (dosyaya, bağlantıya, uygulamaya dokunmaz) |
 
 Sağlayıcı fabrikası `getAdapter(kind)`; `canAct(kind)` yalnızca `claude-cli`, `codex-cli`, `mock` için true
 (onay akışını belirler). CLI yolu: `provider.cliPath` ya da `which('claude'|'codex')` (Windows'ta `where`;
@@ -966,7 +1022,6 @@ Ajan (sağlayıcı)                      main süreç
 ──────────────────                    ───────────────────────────────────────────────────────────────
 Claude Code ── stdio MCP ──► mcp-connections.js ──HTTP 127.0.0.1 + Bearer <çalışma token'ı>──► bridge.ts
 Anthropic / OpenAI ── yerel tool-use döngüsü (en fazla 16 tur) ─────────────────────────────────► runTool
-Demo ── aynı yol (gerçek çağrılar) ─────────────────────────────────────────────────────────────► runTool
                                                                                                    │
             service.ts: yetki (deny-all) → sınıflandırma → Production onayı → denetim → drivers.ts │
                          → transkript satırları 🔌 / 🖥 / ⛔ / ↳ → "untrusted content" etiketli sonuç ◄┘
@@ -994,8 +1049,7 @@ Demo ── aynı yol (gerçek çağrılar) ────────────
   kullanım kaydı). Araçlar yalnızca ajanın en az bir bağlantısı varsa sunulur.
 - **Codex CLI:** bağlantı aracı yok (prompt bunu söyler). Uygulama (MCP) izni olan ajanlara köprü sunucusu `-c` ile verilir;
   sunucu bağlantı araçlarını da listeler ama izin yine köprüde denetlenir (§9f).
-- **Demo:** görev veri/sunucu hakkındaysa **gerçek çağrılar** yapar (liste, şema, `SELECT … LIMIT 5`, veri değiştirme
-  istenirse zararsız 0 satırlık `UPDATE`, SSH'ta `uptime` / `df`) — izinler, onaylar ve denetim demoda görünür.
+- **Demo:** bağlantı aracı çağırmaz (2026-10-19, Paket 2; önce gerçek `SELECT` / 0 satırlık `UPDATE` / `uptime` deniyordu).
 - Araç sonuçları "untrusted content" olarak etiketlenir; prompt verideki talimatlara uyulmamasını söyler.
 
 **Güvenlik sınırları (dürüst).**
@@ -1070,7 +1124,7 @@ fazla 25) listelenir.
   **OpenAI:** ilk turda `image_url` parçaları; `file_read` görselleri ayrı kullanıcı turu olarak (tool mesajları yalnızca
   metin); PDF yerel gönderilmez. Sohbette API sağlayıcıları dosya okuma fonksiyonlarını alır. **Codex:** `nativePaths` →
   `<veri>/tmp/run-<id>` geçici kopyalar, `--image <kopya>` (belgelenmiş bayrak; yalnızca sahte codex ile test edildi),
-  çalışma sonunda silinir; araç yok. **Demo:** görsel yok; araçları aynı yoldan kullanır.
+  çalışma sonunda silinir; araç yok. **Demo:** görsel yok; dosya aracı çağırmaz.
 
 **Üretilen dosyalar.** `file_save` kayıtları (`origin = 'agent'`); `fsWrite` izinli CLI ajanlarında başarılı çalışmadan
 sonra `recordWorkspaceChanges` proje klasörünü tarar (mtime ≥ çalışma başlangıcı; `.git`, `node_modules`, `dist`,
@@ -1154,12 +1208,11 @@ yedek silinince/dönünce GC tekrar çalışır.
   ulaşır (kök birim = herkes). `skillsForAgent()` her skill için nereden geldiğini (`via`) döner; devre dışı skill kimseye gitmez.
 - **Çalışma anında** (`service.ts`, orkestratör görev + sohbet):
   - Prompt'a `## Skills` bölümü (ad + açıklama, en çok 40) — ajan önce skill'in işe uyup uymadığına karar verir.
-  - `skill_read({ name, path? })` aracı: Anthropic / OpenAI API (yerel araç), Claude Code (MCP köprüsü) ve Demo.
+  - `skill_read({ name, path? })` aracı: Anthropic / OpenAI API (yerel araç) ve Claude Code (MCP köprüsü); Demo okumaz.
     Atanmamış skill ve skill dışına çıkan yol reddedilir.
   - **Codex:** araç yerine `<veri>/tmp/skills/<runKey>/<ad>/` altına çalışma başına kopyalar yazılır, prompt `SKILL.md`
     yollarını verir; çalışma bitince silinir. **Claude Code** + terminal izni olan ajana betikli skill'lerin kopya klasörü de
     verilir (betikleri çalıştırabilsin). Kopyaları düzenlemek kurulu skill'i değiştirmez.
-  - Demo: görev metniyle en çok kelime paylaşan atanmış skill'i `skill_read` ile okur ve raporda "Kullanılan skill'ler" yazar.
 - **UI:** Organizasyon → Skill'ler (liste + arama, ayrıntı: SKILL.md önizleme, dosya listesi, atama kartı, düzenle, kaynaktan
   güncelle, devre dışı bırak, sil — satır içi onay), "Skill ekle" modalı (GitHub / klasör / .zip / .md / yeni yaz; önizleme ve
   seçim), ajan düzenleyicide "Skill'ler" bölümü. Olay `skills:changed`.
@@ -1204,8 +1257,7 @@ asla doğrudan bağlanmaz — her çağrı Agentbits'in yetki / onay / denetim k
   (`--mcp-config --strict-mcp-config`); sohbette de köprü açılır (dosya, skill ya da uygulama varsa). Codex → yalnızca
   uygulaması olan ajana köprü `-c mcp_servers.agentbits.command|args|env`, `default_tools_approval_mode="approve"`
   (izni köprü denetler; `codex exec` istemi yanıtlayamaz), `startup_timeout_sec=30`, `tool_timeout_sec=900`; token
-  hata ayıklama logunda maskelenir. Demo → görev metni uygulamanın adını geçiyorsa basit argümanlı bir `auto` aracı,
-  değişiklik isteniyorsa bir `approve` aracı dener (onay paneli gösterilir) ve raporda "Kullanılan uygulamalar" yazar.
+  hata ayıklama logunda maskelenir. Demo uygulama aracı çağırmaz (2026-10-19, Paket 2).
 - **İçe aktarma:** `apps:import` yaygın JSON biçimini okur (`parseMcpConfig`: `mcpServers` / `servers` / iç nesne / README'den
   kopyalanmış tek `"ad": {…}` çifti; `command`+`args`+`env` ya da `url`/`serverUrl`+`headers`). "Claude Desktop'tan al"
   `claude_desktop_config.json`'u okur (Windows `%APPDATA%\Claude\`, macOS `~/Library/Application Support/Claude/`, Linux
@@ -1343,6 +1395,73 @@ bölmeleri, Office ajan listesi/detayı ve Ekip satırlarında (`components/comm
 - **Seçici kuralı:** seçicide yeni dizi/nesne üretmeyin (`filter`, `map`, `{...}`) — ham dilimi seçip
   `useMemo` ile türetin (ör. `NewTaskModal`). Aksi halde sonsuz render döngüsü olur.
 - Optimistik güncelleme örneği: Kanban sürükle-bırakta `useAppStore.setState({ tasks: ... })` sonra `tasks:move`.
+  Reddedilirse (Paket 1B / 3) hata toast'u + `tasks:changed` ile gerçek durum; görev ayrıntısında `tasks:update` reddi
+  alanları kayıtlı değere döndürür ve görevleri yeniden yükler.
+- **Mesaj taslakları (Paket 3):** `lib/drafts.ts` ayrı küçük zustand deposu (`useDrafts`, anahtar proje + kanal), açılışta
+  `drafts:list` (liste gelene kadar düzenlemeler alan bazında tutulur — metin, eklenen / kaldırılan ekler — ve
+  kaydedilmez; gelince birleştirilip kaydedilir; hata → toast + 5 sn sonra aynı yoldan yeniden), `textRev` hiç
+  tekrarlanmayan tek sayaçtan, yazarken
+  400 ms gruplanmış `drafts:save` (kaldırma hemen; pencere kapanırken bekleyenler gönderilir, garanti değil). Gönderim
+  `draftSnapshot` ile başladığı anahtar + `textRev`'i alır, başarıda `clearSent` yalnız değişmemiş metni ve gönderilen ek
+  kimliklerini temizler (o anda ekrandaki kanala dokunmaz). `useAttachments(pid, channel)` taslak modunda: kanal / proje değişince ekleri silmez, taslaktan geri yükler,
+  biten yüklemeleri taslağa yazar (yalnız taslaktan geri yüklenmiş listeyi; kanal değiştikten sonra biten yükleme kendi
+  taslağına düşer), taslaktan çıkarılan ekleri listeden düşer, `files:byIds`'te
+  bulunmayan eki "artık yok" yapar. Görev oluşturma ve terminal kompozitörü eski davranışta (çıkınca yüklemeyi siler).
+  `drafts:save` main'de proje, kanal biçimi (`general | agent:<id> | task:<id>`), 100 000 karakter ve ek sayısını denetler.
+- **Sonuç ve kanıt (Paket 4):** `core/evidence.ts` `runEvidence(runId)` son çalışmanın gerçekte ne yaptığını raporu değil
+  kaydı okuyarak çıkarır: sağlayıcı = `token_usage` (mode task); yalnız `claude-cli` araç kaydı verir (`tool` logu
+  `Bash …` / `Edit|Write …` + aynı `meta.toolUseId`'li `↳` sonuç logu — ayrıştırıcı çıktısız sonucu da `↳ ✓` diye yazar;
+  `error` seviyesi = hata, yoksa "kaydedilmedi"). Run'ın **tüm** araç / sonuç / ret satırları okunur (pencere yok);
+  sayımlar tam ve listeden bağımsız (`commandCount`, `fileCount`), hatalar listede korunur (20'ye kadar; fazlası
+  `failedNotListed`), son 30 komut eklenir; dosya başına `written` (en az bir deneme başarılı; sonraki hata geri almaz)
+  ve `last` (son deneme; ret yalnız başarısız denemeye yazılır), liste önce yazılanlar;
+  kayıt hiç yoksa `recordMissing`. Ekip farkındalığı (`onFileWritten`) da yalnız başarılı yazma sonucunda;
+  retler = `meta.denied` (Claude Code `permission_denials`) + `audit_log` `result = 'denied'` (`run_id`). Demo (`mock`) =
+  simülasyon, kanıt yok. `reviewOfRun([taskId, raceOf])` = çalışmadan sonraki `token_usage` mode review (kim, Demo mu);
+  yarış tek kullanım kaydını asıl görevde tutar, B onu oradan bulur (`review.race`). İnceleme istemine
+  `evidenceSection(evidence, diff)` eklenir (worktree'de `changesOf` dosyaları + ilk 8 000 karakter diff); `reviewSystem`
+  raporun işçinin anlatımı olduğunu söyler. `tasks:result` = kanıt + inceleme + worktree değişiklik özeti (`merged` =
+  `!pendingMerge`). Arayüz: `features/tasks/TaskResult.tsx`. `racePrompt` B'nin kopyası düzenlendiyse onun girdilerini ekler.
+- **Tip ölçeği (Paket 5A eki):** renderer'da yalnız 10 / 11 / 12 / 13 / 15 / 18 / 22 px (`text-[Npx]`; satır yüksekliği
+  miras 1,5, sıkı yerlerde `leading-*`). Boyut metnin işlevine göre: 10 yalnız kısa sayı rozeti; 11 zaman, kimlik / anahtar,
+  yol, boyut, kısayol, alan altı ipucu; 12 durum, rol, etiket, çip, alan etiketi, küçük kontrol yazısı, başlık altı
+  açıklama, satır içi hata / uyarı ("Onay bekliyor", "Hata", "Karar sende" en az 12); 13 normal metin, liste adı, mesaj,
+  paragraf, boş durum, uyarı kutusu, form alanı, panel içi kart başlığı (kalın); 15 panel / modal / görünüm başlığı;
+  18 sayfa / Ayarlar bölüm başlığı, büyük sayı; 22 karşılama. Piksel yazı ve çizimler kapsam dışı. Büyüyen metin
+  küçültülmez: satır `flex-wrap`, sabit genişlik yerine `min-w-*`. Kural listesi `tests/renderer/typeScale.test.ts`'te
+  denetlenir (işlev seçimi incelemeyle).
+- **Sistem bildirimleri (Paket 5B):** tek giriş `main/notify.ts` `notifyUser(UserEvent)`; çağıranlar canlı olay
+  kaynakları: `orchestrator.reply()` (tamamlanmış, görünür metni olan yanıt; lider #general'de, ajan `agent:<id>`'de),
+  çalıştırma onayı (`awaiting_approval`), `connections/service.ts` `waitForApproval` (bağlantı ve uygulama onayı),
+  `hold(taskId, reason, notify)` (zorunlu üçüncü parametre: `{ why, event }` ya da kullanıcı kaynaklıysa `null`),
+  `needsUser`, `finishAndNotify` (lider onayı / yarış kazananı → `finishTaskBranch` → birleşme durumu). Açılış
+  (`init`) çağırmaz; `startNotifications(win, createWindow)` pencere kurulunca başlatır (`createWindow`: macOS'ta kapalı pencereyi tıklamada yeniden açmak için). Zamanlama saf çekirdekte
+  (`shared/notify.ts` `createNotifier`, 10 sn pencere, monoton saat, olay anahtarı = `run:<id>:held|approval`, `review:…`,
+  `approval:<id>`, `reply:<id>`, `race:…`; gösterilmeden önce `stillPending`). Odak (`isFocused` ve küçültülmemiş / görünür, herhangi
+  bir pencere) ve `settings.notifications` hem olay anında hem gösterim anında denetlenir; pencere `focus` ve ayarın
+  kapanması `clear()` + `flashFrame(false)`. İki pencere: onay / karar sende ile yanıtlar ayrı (yanıt onayı geciktirmez). Görev çubuğu yalnız onay ya da karar sende varsa yanıp söner (yanıt ve bitişte değil) ve `Notification.isSupported()`'tan bağımsızdır; son 20 bildirim nesnesi tutulur (Windows bildirim merkezinden geç tıklama)
+  (Windows'un bildirimi gösterip göstermediği bilinemez). Gösterim hatası yakalanır, akışa sızmaz. Tıklama →
+  `emit({ type: 'navigate', target })` → renderer `lib/notifyNav.ts` `planNav` (yalnız ekran: proje + görev /
+  sohbet / pano; silinmiş / arşivlenmiş proje, silinmiş görev / ajan ya da sonuçlanmış onay toast ile söylenir; açık yeni görev / proje diyaloğu varken proje değişmez; işleyici `applyNav`). Pencere yokken tıklama (macOS): yer `pendingNav`'da tutulur, renderer `loadAll` sonunda `notify:takePending` ile alır. Olay anahtarı inceleme / yarış denemesi başına (`review:<task>:<uuid>`, `race:<a>:<b>:<uuid>`). Kilit ekranına giden adlar `redactSecrets` + `clip` (yön / denetim karakterleri atılır). Metinler `main:notify.*`.
+- **Katmanlar ve dar pencere (Paket 5A):** `components/common/Layer.ts` `useLayer(open, onClose, ref, { trap })` — tek
+  yakalama aşamalı Escape dinleyicisi yığının en üstünü kapatır; açan öğe `focusin` geçmişinden (autoFocus alanından
+  önceki) alınır ve kapanınca odak ona döner; `trap` Tab'ı içeride tutar. `Modal`, `SettingsPanel`, açılır menüler bunu
+  kullanır; katman hâlâ ekrandaysa ve odak içindeyse (Kılavuz yan panele dönünce) odak geri çekilmez. Yerleşim kararı
+  `lib/layout.ts` `fitLayout(innerWidth, kayıtlı genişlik, Kılavuz açık)` (test: `tests/renderer/layout.test.ts`):
+  Kılavuz, pano (4 × 230 + boşluk + dolgu = 988) yanında sığdığı sürece (gerekirse sol panel katlanarak) yan panel;
+  sığmıyorsa içeriğin üstünde açılır ve sol panel onun için katlanmaz. `Sidebar` kararı `useGuideOverlay` ile yayar
+  (proje yoksa sol panel yok → yan panel). Katlanınca `Rail` (48 px ikon şeridi; açılan panel `absolute`, App'in
+  `relative` kapsayıcısında, içeriği daraltmaz, `useLayer`). Kılavuz iki kipte de aynı DOM öğesidir (yalnız sınıf ve
+  `role` değişir: `complementary` ↔ `dialog` + `aria-modal` + odak tuzağı), bu yüzden geçişte açık sekme, adım ve
+  kaydırma konumu korunur. Üst çubuk ve bölüm sekmeleri 960 CSS px altında (dar pencere ya da büyütme) yalnız ikon
+  gösterir (ad `sr-only` + ipucu). Renk: `zinc-500` yazı tonu `tailwind.config.js`'te `#8b8b93`'e çekildi (Tailwind'in
+  `#71717a`'sı panel zeminlerinde 3,4–4,1:1, küçük yazı için 4,5'in altında); kullanıcının seçtiği birim rengi yazıya
+  değil ikona / noktaya verilir. `lib/feed.ts` `dedupeFeed` (canlı sohbette tek olay tek satır: yalnız ana sürecin aynı olaya verdiği ortak `meta.event` kimliğiyle — `orchestrator.ts` `sameEvent`; metin, gönderen ya da görev anahtarı tahmini yok). Katman yığını görsel sırayı izler: `openLayer` her katmanın kökteki z-index'ini okur (`levelOf`, en dıştaki z), üstünde boyanan katmanların altına girer; alttaki bir katman açılırken odak almaz, kapanırken / katman olmaktan çıkarken odağı geri çekmez; üstteki kapanınca alttaki diyalog odağı alır (test `tests/renderer/layer.test.ts`, sahte DOM `stubs/dom.ts`), `lib/format.ts` `shownStatus`.
+- **Renderer mantık testleri:** `npm run test:renderer` → `scripts/renderer-tests.mjs` her `tests/renderer/*.test.ts`'i esbuild
+  ile ayrı paketler (`@/lib/api`, `@/store/useAppStore`, `@/i18n` → `tests/renderer/stubs/*`; diğer `@/` gerçek kaynak) ve
+  Node'da ayrı süreçte çalıştırır (modül durumu temiz). React çizimi yok. CI'da.
+- **Sona yapışan listeler (Paket 3):** `components/common/Stick.tsx` `useStickToBottom(signal, reset)` + `JumpToNew`
+  (sohbet, görev akışı / logları, sol panel canlı sohbet). Terminal bölmesi kendi eşdeğerini kullanır.
 
 ### 10.3 Markdown
 `lib/markdown.tsx` bağımlılıksız küçük bir renderer'dır (başlık, liste, kod bloğu, tablo, kalın/italik/kod,

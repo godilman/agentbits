@@ -113,15 +113,15 @@ export function AuditList({ connectionId }: { connectionId?: string }) {
       </div>
       {error && <div className="mb-3 text-[12px] text-rose-300">{error}</div>}
       <div className="card overflow-hidden">
-        <table className="w-full table-fixed text-[12px] text-zinc-300">
-          <thead className="border-b border-line text-[10.5px] uppercase tracking-wider text-zinc-500">
+        <table className="w-full table-fixed text-[13px] text-zinc-300">
+          <thead className="border-b border-line text-[12px] uppercase tracking-wider text-zinc-500">
             <tr>
               <th className="w-[118px] px-3 py-2 text-left font-medium">{t('connections:audit.columns.time')}</th>
               <th className="w-[130px] px-2 py-2 text-left font-medium">{t('connections:audit.columns.who')}</th>
               {!connectionId && <th className="w-[150px] px-2 py-2 text-left font-medium">{t('connections:audit.columns.connection')}</th>}
-              <th className="w-[64px] px-2 py-2 text-left font-medium">{t('connections:audit.columns.task')}</th>
+              <th className="w-[72px] px-2 py-2 text-left font-medium">{t('connections:audit.columns.task')}</th>
               <th className="px-2 py-2 text-left font-medium">{t('connections:audit.columns.action')}</th>
-              <th className="w-[96px] px-3 py-2 text-left font-medium">{t('connections:audit.columns.result')}</th>
+              <th className="w-[112px] px-3 py-2 text-left font-medium">{t('connections:audit.columns.result')}</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-line">
@@ -144,12 +144,12 @@ export function AuditList({ connectionId }: { connectionId?: string }) {
                   <td className="px-2 py-1.5 font-mono text-[11px] text-zinc-400">{task?.key ?? '—'}</td>
                   <td className="px-2 py-1.5">
                     <div className="text-zinc-300">{actionLabel(e.action)}</div>
-                    {e.detail && <div className={cn('font-mono text-[11px] text-zinc-500', open ? 'whitespace-pre-wrap break-words' : 'truncate')}>{e.detail}</div>}
-                    {e.message && <div className={cn('text-[11px]', e.result === 'ok' ? 'text-zinc-500' : 'text-amber-200/80', !open && 'truncate')}>{e.message}</div>}
+                    {e.detail && <div className={cn('font-mono text-[12px] text-zinc-500', open ? 'whitespace-pre-wrap break-words' : 'truncate')}>{e.detail}</div>}
+                    {e.message && <div className={cn('text-[12px]', e.result === 'ok' ? 'text-zinc-500' : 'text-amber-200/80', !open && 'truncate')}>{e.message}</div>}
                   </td>
                   <td className="px-3 py-1.5">
-                    <span className={cn('rounded px-1.5 py-px text-[10.5px]', RESULT_CLS[e.result])}>{t(RESULT_LABEL[e.result])}</span>
-                    {e.durationMs !== null && <div className="mt-0.5 text-[10px] text-zinc-500">{e.durationMs} ms</div>}
+                    <span className={cn('rounded px-1.5 py-px text-[12px]', RESULT_CLS[e.result])}>{t(RESULT_LABEL[e.result])}</span>
+                    {e.durationMs !== null && <div className="mt-0.5 text-[11px] text-zinc-500">{e.durationMs} ms</div>}
                   </td>
                 </tr>
               )

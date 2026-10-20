@@ -71,21 +71,21 @@ export function UnitEditor({ unit, autoFocusName, onCreateChild }: { unit: OrgUn
             <meta.icon size={20} />
           </div>
           <div className="min-w-0 flex-1">
-            <div className="flex items-center gap-1 truncate text-[11.5px] text-zinc-500">
+            <div className="flex items-center gap-1 truncate text-[12px] text-zinc-500">
               {path.slice(0, -1).map((p) => (
                 <span key={p.id} className="flex items-center gap-1">
                   <button className="hover:text-zinc-300" onClick={() => selectUnit(p.id)}>
                     {p.name}
                   </button>
-                  <ChevronRight size={11} className="text-zinc-700" />
+                  <ChevronRight size={11} className="text-zinc-500" />
                 </span>
               ))}
               <span className="text-zinc-400">{meta.label}</span>
             </div>
-            <h2 className="truncate text-[16px] font-semibold text-zinc-100">{unit.name}</h2>
+            <h2 className="truncate text-[15px] font-semibold text-zinc-100">{unit.name}</h2>
           </div>
           <SavedIndicator saved={saved} />
-          <span className="shrink-0 rounded-md border border-line bg-surface px-2 py-1 text-[11.5px] text-zinc-400">
+          <span className="shrink-0 rounded-md border border-line bg-surface px-2 py-1 text-[12px] text-zinc-400">
             <Trans i18nKey="org:unit.agentCount" count={deepCount} components={{ n: <span className="font-mono text-zinc-200" /> }} />
           </span>
         </div>
@@ -99,17 +99,17 @@ export function UnitEditor({ unit, autoFocusName, onCreateChild }: { unit: OrgUn
               <input
                 autoFocus={autoFocusName}
                 onFocus={(e) => autoFocusName && e.target.select()}
-                className={cn('input', nameError && 'border-rose-500/60')}
+                className={cn('input', nameError && 'border-rose-500')}
                 value={form.name}
                 onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
                 onBlur={() => blur('name')}
                 onKeyDown={(e) => e.key === 'Enter' && (e.target as HTMLInputElement).blur()}
               />
-              {nameError && <div className="mt-1 text-[11.5px] text-rose-400">{nameError}</div>}
+              {nameError && <div className="mt-1 text-[12px] text-rose-400">{nameError}</div>}
             </Field>
             <Field label={t('org:unit.fields.kind')}>
               {isRoot ? (
-                <div className="flex h-8 items-center text-[12.5px] text-zinc-400">{t('org:unit.fields.rootKind')}</div>
+                <div className="flex h-8 items-center text-[13px] text-zinc-400">{t('org:unit.fields.rootKind')}</div>
               ) : (
                 <div className="flex h-8 items-center">
                   <Segmented value={unit.kind} options={CHILD_KINDS.map((k) => ({ value: k, label: KIND_META[k].label }))} onChange={(k) => void save({ kind: k })} />
@@ -184,13 +184,13 @@ export function UnitEditor({ unit, autoFocusName, onCreateChild }: { unit: OrgUn
           title={t('org:unit.subUnits.title')}
           desc={t('org:unit.subUnits.desc')}
           action={
-            <button className="btn-ghost h-6 shrink-0 text-[11.5px]" onClick={() => onCreateChild(unit.id)}>
+            <button className="btn-ghost h-6 shrink-0 text-[12px]" onClick={() => onCreateChild(unit.id)}>
               <Plus size={12} /> {t('org:unit.subUnits.add')}
             </button>
           }
         >
           {children.length === 0 ? (
-            <div className="text-[12px] text-zinc-600">{t('org:unit.subUnits.none')}</div>
+            <div className="text-[13px] text-zinc-500">{t('org:unit.subUnits.none')}</div>
           ) : (
             <div className="-my-1 divide-y divide-line-soft">
               {children.map((c) => {
@@ -199,10 +199,10 @@ export function UnitEditor({ unit, autoFocusName, onCreateChild }: { unit: OrgUn
                 return (
                   <button key={c.id} onClick={() => selectUnit(c.id)} className="group flex w-full items-center gap-3 py-2 text-left">
                     <Icon size={14} style={{ color: c.color }} />
-                    <span className="flex-1 truncate text-[12.5px] text-zinc-200 group-hover:text-white">{c.name}</span>
-                    <span className="text-[11px] text-zinc-600">{KIND_META[c.kind].label}</span>
-                    <span className="w-14 text-right font-mono text-[11px] text-zinc-500">{t('org:counts.agents', { count })}</span>
-                    <ChevronRight size={13} className="text-zinc-700 group-hover:text-zinc-400" />
+                    <span className="flex-1 truncate text-[13px] text-zinc-200 group-hover:text-white">{c.name}</span>
+                    <span className="text-[12px] text-zinc-500">{KIND_META[c.kind].label}</span>
+                    <span className="min-w-14 text-right font-mono text-[12px] text-zinc-500">{t('org:counts.agents', { count })}</span>
+                    <ChevronRight size={13} className="text-zinc-500 group-hover:text-zinc-400" />
                   </button>
                 )
               })}
@@ -264,17 +264,17 @@ function MembersCard({
       }
       action={
         <div className="flex shrink-0 gap-1">
-          <button className="btn-ghost h-6 text-[11.5px]" onClick={onCreate}>
+          <button className="btn-ghost h-6 text-[12px]" onClick={onCreate}>
             <Plus size={12} /> {t('org:unit.members.createAgent')}
           </button>
-          <button className="btn-outline h-6 text-[11.5px]" onClick={onAdd}>
+          <button className="btn-outline h-6 text-[12px]" onClick={onAdd}>
             <UserPlus size={12} /> {t('org:unit.members.add')}
           </button>
         </div>
       }
     >
       {members.length === 0 ? (
-        <div className="rounded-md border border-dashed border-line px-4 py-5 text-center text-[12px] text-zinc-500">
+        <div className="rounded-md border border-dashed border-line px-4 py-5 text-center text-[13px] text-zinc-500">
           {t('org:unit.members.empty')}
         </div>
       ) : (
@@ -324,13 +324,13 @@ function MemberRow({
       <PixelAvatar agent={agent} size={32} showStatus className={!agent.enabled ? 'opacity-50 grayscale' : ''} />
       <button className="min-w-0 flex-1 text-left" onClick={onOpen} title={t('org:unit.member.openProfile')}>
         <div className="flex items-center gap-1.5">
-          <span className="truncate text-[12.5px] font-medium text-zinc-100 hover:text-white">{agent.name}</span>
-          <span className="truncate text-[11.5px] text-zinc-500">{agent.role}</span>
+          <span className="truncate text-[13px] font-medium text-zinc-100 hover:text-white">{agent.name}</span>
+          <span className="truncate text-[12px] text-zinc-500">{agent.role}</span>
         </div>
-        <div className="truncate text-[11px] text-zinc-600">{others.length ? t('org:unit.member.alsoIn', { units: others.join(', ') }) : t('org:unit.member.onlyHere')}</div>
+        <div className="truncate text-[12px] text-zinc-500">{others.length ? t('org:unit.member.alsoIn', { units: others.join(', ') }) : t('org:unit.member.onlyHere')}</div>
       </button>
       <input
-        className="input h-7 w-[190px] text-[12px]"
+        className="input h-7 w-[190px] text-[13px]"
         placeholder={t('org:unit.member.titlePlaceholder')}
         value={draft}
         onChange={(e) => setDraft(e.target.value)}
@@ -367,20 +367,20 @@ function ProjectsCard({ unit, run }: { unit: OrgUnit; run: (fn: () => Promise<un
   return (
     <Section icon={FolderKanban} title={t('org:unit.projects.title')} desc={t('org:unit.projects.desc')}>
       {used.length === 0 ? (
-        <div className="text-[12px] text-zinc-600">{t('org:unit.projects.none')}</div>
+        <div className="text-[13px] text-zinc-500">{t('org:unit.projects.none')}</div>
       ) : (
         <div className="flex flex-wrap gap-1.5">
           {used.map(({ project: p, direct }) => (
-            <span key={p.id} className="inline-flex h-7 items-center rounded-md border border-line bg-surface-2 text-[12px]">
+            <span key={p.id} className="inline-flex h-7 items-center rounded-md border border-line bg-surface-2 text-[13px]">
               <button className="flex h-full items-center gap-1.5 pl-2.5 pr-2 text-zinc-200 hover:text-white" onClick={() => openProject(p.id)} title={t('org:unit.projects.open')}>
                 <span className="h-2 w-2 rounded-full" style={{ background: p.color }} />
                 {p.name}
-                {!direct && <span className="text-[10.5px] text-zinc-600">{t('org:unit.projects.inherited')}</span>}
-                {p.status === 'archived' && <span className="text-[10.5px] text-zinc-600">{t('org:unit.projects.archived')}</span>}
+                {!direct && <span className="text-[12px] text-zinc-500">{t('org:unit.projects.inherited')}</span>}
+                {p.status === 'archived' && <span className="text-[12px] text-zinc-500">{t('org:unit.projects.archived')}</span>}
               </button>
               {direct && (
                 <button
-                  className="flex h-full items-center border-l border-line px-1.5 text-zinc-600 hover:text-rose-400"
+                  className="flex h-full items-center border-l border-line px-1.5 text-zinc-500 hover:text-rose-400"
                   title={t('org:unit.projects.removeFrom')}
                   onClick={() => void run(() => call('projects:save', { unitIds: p.unitIds.filter((id) => id !== unit.id) }, p.id))}
                 >
@@ -393,7 +393,7 @@ function ProjectsCard({ unit, run }: { unit: OrgUnit; run: (fn: () => Promise<un
       )}
       <div className="mt-3">
         <select
-          className="input h-7 w-auto min-w-[240px] text-[12px]"
+          className="input h-7 w-auto min-w-[240px] text-[13px]"
           value=""
           disabled={addable.length === 0}
           onChange={(e) => {

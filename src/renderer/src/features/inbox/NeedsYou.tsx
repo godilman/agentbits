@@ -3,6 +3,7 @@ import { AlertTriangle, BellRing, Brain, GitMerge, KeyRound, PauseCircle, Shield
 import { useTranslation } from 'react-i18next'
 import { cn } from '@/lib/format'
 import { useAppStore } from '@/store/useAppStore'
+import { useLayer } from '@/components/common/Layer'
 
 interface Item {
   id: string
@@ -35,16 +36,10 @@ export function NeedsYouButton() {
     const close = (e: MouseEvent): void => {
       if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false)
     }
-    const esc = (e: KeyboardEvent): void => {
-      if (e.key === 'Escape') setOpen(false)
-    }
     window.addEventListener('mousedown', close)
-    window.addEventListener('keydown', esc)
-    return () => {
-      window.removeEventListener('mousedown', close)
-      window.removeEventListener('keydown', esc)
-    }
+    return () => window.removeEventListener('mousedown', close)
   }, [open])
+  useLayer(open, () => setOpen(false), ref) // Escape closes only this (the top) layer; focus goes back
 
   const items = useMemo<Item[]>(() => {
     const byId = new Map(tasks.map((x) => [x.id, x]))
@@ -61,7 +56,16 @@ export function NeedsYouButton() {
       out.push({ id: `run-${r.id}`, icon: KeyRound, tone: 'text-amber-300', title: t('layout:needsYou.runApproval', { agent }), detail: label(r.taskId), taskId: r.taskId, projectId: r.projectId })
     }
     for (const id of waits.undecided) {
-      out.push({ id: `un-${id}`, icon: UserCheck, tone: 'text-violet-300', title: t('layout:needsYou.undecided'), detail: label(id), taskId: id, projectId: byId.get(id)?.projectId ?? null })
+      const why = waits.undecidedWhy[id]
+      out.push({
+        id: `un-${id}`,
+        icon: UserCheck,
+        tone: 'text-violet-300',
+        title: why ? t('layout:needsYou.reviewIssue', { reason: why }) : t('layout:needsYou.undecided'),
+        detail: label(id),
+        taskId: id,
+        projectId: byId.get(id)?.projectId ?? null
+      })
     }
     if (!reviewByLead) {
       for (const x of tasks.filter((x) => x.status === 'in_review' && !waits.undecided.includes(x.id))) {
@@ -120,25 +124,25 @@ export function NeedsYouButton() {
         )}
       >
         <BellRing size={13} />
-        <span className="hidden min-[1100px]:inline">{t('layout:needsYou.button')}</span>
-        {items.length > 0 && <span className="rounded bg-rose-500/80 px-1 text-[10.5px] font-semibold text-white">{items.length}</span>}
+        <span className="max-[1100px]:sr-only">{t('layout:needsYou.button')}</span>
+        {items.length > 0 && <span className="rounded bg-rose-500/80 px-1 text-[10px] font-semibold text-white">{items.length}</span>}
       </button>
       {open && (
         <div className="card shadow-pop absolute right-0 top-9 z-50 w-[420px] overflow-hidden">
           <div className="border-b border-line-soft px-4 py-2.5">
             <div className="text-[13px] font-semibold text-zinc-100">{t('layout:needsYou.title')}</div>
-            <div className="text-[11.5px] text-zinc-400">{t('layout:needsYou.desc')}</div>
+            <div className="text-[12px] text-zinc-400">{t('layout:needsYou.desc')}</div>
           </div>
           {items.length === 0 ? (
-            <div className="px-4 py-6 text-center text-[12px] text-zinc-400">{t('layout:needsYou.empty')}</div>
+            <div className="px-4 py-6 text-center text-[13px] text-zinc-400">{t('layout:needsYou.empty')}</div>
           ) : (
             <div className="max-h-[60vh] divide-y divide-line-soft overflow-y-auto">
               {items.map((it) => (
                 <button key={it.id} onClick={() => go(it)} className="flex w-full items-start gap-2.5 px-4 py-2.5 text-left hover:bg-white/[0.04]">
                   <it.icon size={14} className={cn('mt-0.5 shrink-0', it.tone)} />
                   <div className="min-w-0">
-                    <div className="text-[12.5px] leading-snug text-zinc-200">{it.title}</div>
-                    {it.detail && <div className="truncate text-[11.5px] text-zinc-400">{it.detail}</div>}
+                    <div className="text-[13px] leading-snug text-zinc-200">{it.title}</div>
+                    {it.detail && <div className="truncate text-[12px] text-zinc-400">{it.detail}</div>}
                   </div>
                 </button>
               ))}

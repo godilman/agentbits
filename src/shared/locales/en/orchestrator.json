@@ -74,10 +74,13 @@
     "tasksPlanned_other": "📋 {{count}} tasks planned:",
     "unassigned": "unassigned",
     "reviewUnclear": "{{key}}: the review gave no clear verdict (approved: true / false); waiting for the user",
-    "leadNote": "🎯 Lead {{lead}} → {{key}}: {{text}}"
+    "leadNote": "🎯 Lead {{lead}} → {{key}}: {{text}}",
+    "reviewRetried": "Review of {{key}} retried by you",
+    "reviewStale": "Review of {{key}} dropped: a newer run or changed task details — reviewing the current state",
+    "workStarted": "Work started in this project for this session"
   },
   "chat": {
-    "awaitingApproval": "🔐 {{agent}} is waiting for approval on {{key}} ({{caps}} access).",
+    "awaitingApproval": "🔐 {{agent}} is waiting for approval for {{key}} ({{caps}} access). Nothing is done until you approve: approve or decline it under \"Running work\" on the left; to stop being asked, turn off the agent's \"Require approval\".",
     "taskStarted": "{{agent}} started the task.",
     "emptyOutput": "(empty output)",
     "taskDone": "{{key}} is done, sent for review: “{{title}}”",
@@ -113,7 +116,10 @@
     "leadNotesUnknown": "⚠️ No such task in this project, note not delivered: {{keys}}",
     "limitStopped": "⏱ {{agent}} · {{key}}: {{reason}}",
     "handedToTwin": "↔ {{key}} handed from {{from}} (busy) to {{to}}, same role and skills",
-    "fileConflict": "⚠️ {{path}} is also being changed by {{other}} ({{key}}) right now — check each other's changes."
+    "fileConflict": "⚠️ {{path}} is also being changed by {{other}} ({{key}}) right now — check each other's changes.",
+    "taskFailedHeld": "⚠️ {{agent}} couldn't finish this task: {{text}}\nThe task waits in To do and won't start again on its own: the attempt may have changed files or other systems before it stopped. Check what it left behind, then press “Try again” (the agent is told about the earlier attempt and checks first), or edit or delete the task.",
+    "reviewNeedsYou": "⚠️ {{reason}}\nThe worker's report is kept and the task stays in review. You can retry just the review (the worker doesn't run again), or decide yourself: move it to Done, or back to To do with a note.",
+    "workNotStarted": "The tasks are ready but won't start yet: work in this project hasn't been started in this session. Press “Start work in this project” at the top."
   },
   "errors": {
     "noFolder": "No folder selected for “{{project}}”. CLI agents can touch files, so choose a folder in the project settings.",
@@ -129,7 +135,9 @@
     "attachmentOtherProject": "An attachment belongs to another project",
     "agentWorking": "{{name}} is working right now; send the instruction as a redirect or queue it",
     "agentNotWorking": "{{name}} is not working on a task right now; send it as a new task",
-    "stillRunning": "Some work did not stop in time (a long database / server call or app tool may still be running). Nothing was deleted — wait a moment and try again."
+    "stillRunning": "Some work did not stop in time (a long database / server call or app tool may still be running). Nothing was deleted — wait a moment and try again.",
+    "retryReviewNotInReview": "{{key}} isn't in review, so there is no review to retry.",
+    "retryReviewNoLead": "This project has no active lead to review the task. Assign or turn on a lead first, or decide yourself."
   },
   "result": {
     "taskCreated": "{{key}} created and {{agent}} started",
@@ -239,10 +247,11 @@
     "noChanges": "🌿 No file changes to commit on {{branch}}",
     "commitFailed": "Could not commit the changes in the working copy: {{error}}",
     "merged": "🔀 {{key}}: branch {{branch}} merged into the project folder.",
-    "dirty": "⏸ {{key}}: the project folder has uncommitted changes, so {{branch}} was not merged. Commit or stash them, then use “Merge now” in the task.",
+    "dirty": "⏸ {{key}}: the project folder has uncommitted changes, so {{branch}} was not merged. Commit or stash them, then use “Review changes and merge” in the task.",
     "conflict": "⚠️ {{key}}: merging {{branch}} conflicts with the project ({{files}}). The task went back to its agent to resolve the conflicts in its working copy.",
     "conflictNote": "Merging this task into the project hit conflicts in: {{files}}. The project's latest state was merged into your branch; resolve the conflict markers (<<<<<<< ======= >>>>>>>) in those files so both changes work together, then finish with your report.",
     "mergeFailed": "⚠️ {{key}}: merging {{branch}} failed: {{error}}",
+    "changedSinceShown": "{{key}}: the task's working copy changed after you looked at it, so nothing was merged. Look at the changes again.",
     "uncommittedKept": "the working copy still has changes that could not be committed, so it was kept"
   },
   "race": {
@@ -263,11 +272,36 @@
     "stopped": "Stopped by you",
     "notApproved": "You didn't approve the run",
     "agentDisabled": "Its agent was turned off before the run started",
-    "failed": "Failed {{count}} times: {{error}}",
     "revisionLimit": "Sent back {{count}} times by the lead",
-    "commitFailed": "The agent's changes could not be committed in its working copy (e.g. a git signing setting). They are kept there; fix git and start the task again."
+    "commitFailed": "The agent's changes could not be committed in its working copy (e.g. a git signing setting). They are kept there; fix git and start the task again.",
+    "authFailed": "The provider login isn't valid — sign in again, then restart it",
+    "failed_one": "Failed: {{error}}",
+    "failed_other": "Failed {{count}} times: {{error}}"
   },
   "review": {
     "unmet": "Acceptance criteria not met: {{list}}"
+  },
+  "errorKinds": {
+    "timeout": "{{provider}} didn't answer in time. Try again later; if it keeps happening, check the connection or the limits in Settings.",
+    "network": "Couldn't reach {{provider}} (network). Check the internet connection, VPN or proxy, then try again.",
+    "overloaded": "{{provider}} is busy or limiting requests right now. Wait a few minutes and try again.",
+    "exit": "The {{provider}} program stopped with an error. The agent terminal shows what it printed."
+  },
+  "reviewIssue": {
+    "noLead": "Nobody in this project can review it (no active lead or member)",
+    "noReport": "There is no worker report to review",
+    "failed": "The lead's review couldn't finish: {{error}}",
+    "unclear": "{{lead}}'s review had no clear verdict"
+  },
+  "errorDetail": "Details: {{detail}}",
+  "changesWhere": {
+    "worktree": "in the task's working copy (branch {{branch}}), not merged into the project",
+    "folder": "in the project folder ({{folder}})",
+    "noFolder": "in the folder the agent worked in ({{folder}}; this project has no folder of its own)"
+  },
+  "changesLeft": {
+    "stopped": "⏹ Stopped. Nothing was undone: what the agent changed so far is {{where}}. Look at it before you start the task again.",
+    "limit": "⏹ Stopped by a run limit. Nothing was undone: what the agent changed so far is {{where}}. Look at it before you start the task again.",
+    "manualDone": "✔ You marked it done, without the lead's review. Its changes are {{where}}."
   }
 }

@@ -126,7 +126,9 @@ export function reviewSystem(lead: Agent, criteria = 0): string {
     criteria
       ? `{"approved": true|false, "note": "one or two sentences of feedback in the task's language", "criteria": [{"met": true|false, "note": "short reason"}, ...]}\n` +
         `"criteria" has exactly ${criteria} entries, one per acceptance criterion, in order. Approve only if every criterion is met.`
-      : '{"approved": true|false, "note": "one or two sentences of feedback in the task\'s language"}'
+      : '{"approved": true|false, "note": "one or two sentences of feedback in the task\'s language"}',
+    'The work report is the worker\'s own account. When an "Evidence from the tool record" section is given, it shows what really ran and changed; ' +
+      'a claim in the report (e.g. "tests pass") that the record does not back is unverified — say so in the note.'
   ].join('\n')
 }
 
@@ -145,11 +147,22 @@ export function raceSystem(lead: Agent, criteria = 0): string {
   ].join('\n')
 }
 
-export function racePrompt(task: Task, a: { agent: Agent; label: string; output: string }, b: { agent: Agent; label: string; output: string }): string {
+export function racePrompt(
+  task: Task,
+  a: { agent: Agent; label: string; output: string },
+  b: { agent: Agent; label: string; output: string; task?: Task }
+): string {
   const one = (tag: string, x: typeof a): string => `## Attempt ${tag} by ${x.agent.name} (${x.label})\n${x.output.slice(0, 10_000)}`
   const criteria = acceptanceList(task.acceptance)
   const crit = criteria.length ? `\n\n## Acceptance criteria\n${criteria.map((c, i) => `${i + 1}. ${c}`).join('\n')}` : ''
-  return [`## Task\n${task.key}: ${task.title}\n${task.description}${crit}`, one('A', a), one('B', b)].join('\n\n')
+  // B works from its own copy of the task; if it was edited after the copy was made, the lead sees what B was given.
+  const bt = b.task
+  const bGiven =
+    bt && (bt.title !== task.title || bt.description !== task.description || bt.acceptance !== task.acceptance)
+      ? `\n\n### Attempt B was given these task details (its copy was edited)\n${bt.title}\n${bt.description}` +
+        (acceptanceList(bt.acceptance).length ? `\nAcceptance criteria:\n${acceptanceList(bt.acceptance).map((c, i) => `${i + 1}. ${c}`).join('\n')}` : '')
+      : ''
+  return [`## Task\n${task.key}: ${task.title}\n${task.description}${crit}`, one('A', a), one('B', b) + bGiven].join('\n\n')
 }
 
 export function reviewPrompt(task: Task, agent: Agent, output: string): string {

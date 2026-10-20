@@ -109,7 +109,7 @@ export function FilePreviewModal() {
           <span className="truncate" data-testid="file-preview-title">
             {f?.name ?? t('files:preview.fallbackTitle')}
           </span>
-          {f && <span className="font-mono text-[10.5px] font-normal text-zinc-500">{fileRef(f.id)}</span>}
+          {f && <span className="font-mono text-[11px] font-normal text-zinc-500">{fileRef(f.id)}</span>}
         </span>
       }
       footer={
@@ -157,16 +157,16 @@ export function FilePreviewModal() {
         )
       }
     >
-      {error && <div className="mb-3 rounded border border-rose-500/30 bg-rose-500/10 px-3 py-2 text-[12px] text-rose-200">{error}</div>}
+      {error && <div className="mb-3 rounded border border-rose-500/30 bg-rose-500/10 px-3 py-2 text-[13px] text-rose-200">{error}</div>}
       {!f ? (
         !error && (
-          <div className="flex items-center gap-2 py-10 text-[12px] text-zinc-400">
+          <div className="flex items-center gap-2 py-10 text-[13px] text-zinc-400">
             <Loader2 size={14} className="animate-spin" /> {t('status.loading')}
           </div>
         )
       ) : (
         <div className="space-y-3">
-          <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-[11.5px] text-zinc-400">
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-[11px] text-zinc-400">
             <span>{KIND_LABEL[f.kind]}</span>
             <span>{formatBytes(f.size)}</span>
             {f.pages && <span>{f.kind === 'pptx' ? t('files:meta.slides', { count: f.pages }) : t('files:meta.pages', { count: f.pages })}</span>}
@@ -181,21 +181,21 @@ export function FilePreviewModal() {
               {creator ? ` · ${creator.name}` : f.createdByType === 'user' ? ` · ${t('files:you')}` : ''} · {timeAgo(f.createdAt)}
             </span>
             {f.relPath && <span className="font-mono">{f.relPath}</span>}
-            <span className={cn(f.status === 'failed' ? 'text-rose-300' : f.status === 'ready' ? 'text-emerald-300' : 'text-amber-300')}>{STATUS_LABEL[f.status]}</span>
+            <span className={cn('text-[12px]', f.status === 'failed' ? 'text-rose-300' : f.status === 'ready' ? 'text-emerald-300' : 'text-amber-300')}>{STATUS_LABEL[f.status]}</span>
           </div>
 
           {f.statusMessage && (
-            <div className={cn('flex gap-2 rounded border px-3 py-2 text-[12px]', f.status === 'failed' ? 'border-rose-500/30 bg-rose-500/10 text-rose-200' : 'border-line bg-surface-2 text-zinc-300')}>
+            <div className={cn('flex gap-2 rounded border px-3 py-2 text-[13px]', f.status === 'failed' ? 'border-rose-500/30 bg-rose-500/10 text-rose-200' : 'border-line bg-surface-2 text-zinc-300')}>
               <TriangleAlert size={14} className="mt-0.5 shrink-0" /> {f.statusMessage}
             </div>
           )}
           {f.suspicious.length > 0 && (
-            <div className="rounded border border-amber-500/30 bg-amber-500/[0.07] px-3 py-2 text-[12px] text-amber-100" data-testid="file-suspicious">
+            <div className="rounded border border-amber-500/30 bg-amber-500/[0.07] px-3 py-2 text-[13px] text-amber-100" data-testid="file-suspicious">
               <div className="mb-1 flex items-center gap-1.5 font-medium">
                 <ShieldAlert size={14} /> {t('files:preview.suspiciousTitle')}
               </div>
               <div className="text-amber-200/80">{t('files:preview.suspiciousBody')}</div>
-              <ul className="mt-1 list-disc pl-5 font-mono text-[11px] text-amber-200/90">
+              <ul className="mt-1 list-disc pl-5 font-mono text-[12px] text-amber-200/90">
                 {f.suspicious.map((l, i) => (
                   <li key={i} className="break-all">
                     {l}
@@ -204,9 +204,9 @@ export function FilePreviewModal() {
               </ul>
             </div>
           )}
-          {f.warnings.length > 0 && <div className="text-[11.5px] text-zinc-500">{f.warnings.join(' · ')}</div>}
+          {f.warnings.length > 0 && <div className="text-[12px] text-zinc-500">{f.warnings.join(' · ')}</div>}
           {!f.hasOriginal && f.origin !== 'workspace' && (
-            <div className="text-[11.5px] text-amber-300">{t('files:preview.noOriginal')}</div>
+            <div className="text-[12px] text-amber-300">{t('files:preview.noOriginal')}</div>
           )}
 
           <Segmented<Section>
@@ -222,10 +222,10 @@ export function FilePreviewModal() {
           {section === 'content' && pv && (
             <div className="space-y-2">
               {pv.imageDataUrl && <img src={pv.imageDataUrl} alt={f.name} className="max-h-[55vh] max-w-full rounded border border-line object-contain" />}
-              {f.kind === 'image' && !pv.imageDataUrl && <div className="text-[12px] text-zinc-500">{t('files:preview.imageUnavailable')}</div>}
+              {f.kind === 'image' && !pv.imageDataUrl && <div className="text-[13px] text-zinc-500">{t('files:preview.imageUnavailable')}</div>}
               {pv.chunks.map((c) => (
                 <div key={c.idx} id={`file-part-${c.idx}`} className={cn('rounded border border-line', target.part === c.idx && 'border-accent/60')}>
-                  <div className="flex items-center justify-between border-b border-line bg-white/[0.02] px-2.5 py-1 text-[10.5px] text-zinc-400">
+                  <div className="flex items-center justify-between border-b border-line bg-white/[0.02] px-2.5 py-1 text-[11px] text-zinc-400">
                     <span>{t('files:preview.partHeader', { n: c.idx + 1, total: pv.total, label: c.label })}</span>
                     <span>{t('files:preview.chars', { count: c.text.length, n: c.text.length.toLocaleString(locale()) })}</span>
                   </div>
@@ -233,7 +233,7 @@ export function FilePreviewModal() {
                 </div>
               ))}
               {pv.total > PAGE && (
-                <div className="flex items-center justify-center gap-2 text-[11.5px] text-zinc-400">
+                <div className="flex items-center justify-center gap-2 text-[12px] text-zinc-400">
                   <button className="icon-btn" disabled={offset === 0} onClick={() => setOffset(Math.max(0, offset - PAGE))}>
                     <ChevronLeft size={14} />
                   </button>
@@ -243,9 +243,9 @@ export function FilePreviewModal() {
                   </button>
                 </div>
               )}
-              {!pv.chunks.length && f.kind !== 'image' && f.status !== 'processing' && <div className="py-6 text-center text-[12px] text-zinc-500">{t('files:preview.noText')}</div>}
+              {!pv.chunks.length && f.kind !== 'image' && f.status !== 'processing' && <div className="py-6 text-center text-[13px] text-zinc-500">{t('files:preview.noText')}</div>}
               {f.status === 'processing' && (
-                <div className="flex items-center gap-2 py-6 text-[12px] text-zinc-400">
+                <div className="flex items-center gap-2 py-6 text-[13px] text-zinc-400">
                   <Loader2 size={14} className="animate-spin" /> {t('files:preview.extracting')}
                 </div>
               )}
@@ -253,14 +253,14 @@ export function FilePreviewModal() {
           )}
 
           {section === 'access' && (
-            <div className="space-y-3 text-[12px]" data-testid="file-access">
+            <div className="space-y-3 text-[13px]" data-testid="file-access">
               <p className="text-zinc-400">
                 <Trans t={t} i18nKey="files:preview.access.intro" components={{ b: <b className="text-zinc-200" /> }} />
               </p>
               <label className="flex items-center justify-between rounded border border-line bg-surface-2 px-3 py-2">
                 <span>
                   <span className="text-zinc-200">{t('files:preview.access.shareAll')}</span>
-                  <span className="block text-[11px] text-zinc-500">{t('files:preview.access.teamCount', { project: project?.name ?? t('files:view.projectFallback'), count: team.length })}</span>
+                  <span className="block text-[12px] text-zinc-500">{t('files:preview.access.teamCount', { project: project?.name ?? t('files:view.projectFallback'), count: team.length })}</span>
                 </span>
                 <Toggle checked={f.projectShared} onChange={(v) => void run(() => call('files:setProjectShared', f.id, v))} />
               </label>
@@ -269,7 +269,7 @@ export function FilePreviewModal() {
                   <label key={a.id} className={cn('flex items-center gap-2.5 px-3 py-1.5', f.projectShared && 'opacity-60')}>
                     <PixelAvatar agent={a} size={20} />
                     <span className="min-w-0 flex-1">
-                      <span className="text-zinc-200">{a.name}</span> <span className="text-[11px] text-zinc-500">{a.role}</span>
+                      <span className="text-zinc-200">{a.name}</span> <span className="text-[12px] text-zinc-500">{a.role}</span>
                     </span>
                     <Toggle size="sm" checked={f.projectShared || access.has(a.id)} disabled={f.projectShared} onChange={(v) => void run(() => call('files:setAccess', f.id, a.id, v))} />
                   </label>
@@ -277,7 +277,7 @@ export function FilePreviewModal() {
                 {!team.length && <div className="px-3 py-2 text-zinc-500">{t('files:preview.access.noAgents')}</div>}
               </div>
               {taskLinks.length > 0 && (
-                <div className="text-[11.5px] text-zinc-400">
+                <div className="text-[12px] text-zinc-400">
                   {t('files:preview.access.viaTasks', { tasks: taskLinks.map((l) => l.label).join(' · ') })}
                 </div>
               )}
@@ -285,12 +285,12 @@ export function FilePreviewModal() {
           )}
 
           {section === 'usage' && (
-            <div className="divide-y divide-line rounded border border-line text-[12px]">
+            <div className="divide-y divide-line rounded border border-line text-[13px]">
               {(detail?.links ?? []).map((l, i) => (
                 <div key={i} className="flex items-center gap-2 px-3 py-1.5">
-                  <span className={cn('w-[104px] shrink-0 text-[11px]', l.role === 'generated' ? 'text-emerald-300' : l.role === 'read' ? 'text-sky-300' : 'text-zinc-400')}>{ROLE_LABEL[l.role]}</span>
+                  <span className={cn('min-w-[104px] shrink-0 text-[12px]', l.role === 'generated' ? 'text-emerald-300' : l.role === 'read' ? 'text-sky-300' : 'text-zinc-400')}>{ROLE_LABEL[l.role]}</span>
                   <span className="min-w-0 flex-1 truncate text-zinc-200">{l.label}</span>
-                  <span className="shrink-0 text-[10.5px] text-zinc-500">{timeAgo(l.createdAt)}</span>
+                  <span className="shrink-0 text-[11px] text-zinc-500">{timeAgo(l.createdAt)}</span>
                 </div>
               ))}
               {!detail?.links.length && <div className="px-3 py-2 text-zinc-500">{t('files:preview.neverUsed')}</div>}
@@ -309,7 +309,7 @@ function ChunkBody({ text, tabular }: { text: string; tabular: boolean }) {
     const [head, ...body] = rows
     return (
       <div className="selectable max-h-[46vh] overflow-auto">
-        <table className="w-full border-collapse font-mono text-[11px]">
+        <table className="w-full border-collapse font-mono text-[12px]">
           <thead className="sticky top-0 bg-[#141417]">
             <tr>
               {head.map((h, i) => (
@@ -334,5 +334,5 @@ function ChunkBody({ text, tabular }: { text: string; tabular: boolean }) {
       </div>
     )
   }
-  return <pre className="selectable max-h-[46vh] overflow-auto whitespace-pre-wrap break-words px-2.5 py-2 font-mono text-[11.5px] leading-relaxed text-zinc-300">{text}</pre>
+  return <pre className="selectable max-h-[46vh] overflow-auto whitespace-pre-wrap break-words px-2.5 py-2 font-mono text-[12px] leading-relaxed text-zinc-300">{text}</pre>
 }

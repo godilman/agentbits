@@ -38,7 +38,7 @@ export function useStartGuard(): [(taskId: string, taskKey: string, go: (force: 
         </>
       }
     >
-      <p className="text-[12.5px] leading-relaxed text-zinc-300">{ask && t('tasks:startGuard.body', { key: ask.key, keys: ask.waits.join(', ') })}</p>
+      <p className="text-[13px] leading-relaxed text-zinc-300">{ask && t('tasks:startGuard.body', { key: ask.key, keys: ask.waits.join(', ') })}</p>
     </Modal>
   )
   return [guard, modal]

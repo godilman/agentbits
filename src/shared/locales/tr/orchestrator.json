@@ -74,10 +74,13 @@
     "tasksPlanned_other": "📋 {{count}} görev planlandı:",
     "unassigned": "atanmadı",
     "reviewUnclear": "{{key}}: incelemede net bir karar yok (approved: true / false); kullanıcı bekleniyor",
-    "leadNote": "🎯 Lider {{lead}} → {{key}}: {{text}}"
+    "leadNote": "🎯 Lider {{lead}} → {{key}}: {{text}}",
+    "reviewRetried": "{{key}} incelemesini yeniden denettin",
+    "reviewStale": "{{key}} incelemesi atıldı: daha yeni bir çalışma ya da değişen görev bilgileri var — güncel hâl inceleniyor",
+    "workStarted": "Bu oturumda bu projede çalışma başlatıldı"
   },
   "chat": {
-    "awaitingApproval": "🔐 {{agent}}, {{key}} için onay bekliyor ({{caps}} erişimi).",
+    "awaitingApproval": "🔐 {{agent}}, {{key}} için onay bekliyor ({{caps}} erişimi). Onaylanana kadar hiçbir şey yapılmaz: sol paneldeki \"Çalışan işler\" bölümünden onayla ya da reddet; sormaması için ajanın \"Onay iste\" ayarını kapat.",
     "taskStarted": "{{agent}} göreve başladı.",
     "emptyOutput": "(boş çıktı)",
     "taskDone": "{{key}} bitti, incelemeye gönderdim: “{{title}}”",
@@ -106,14 +109,17 @@
     "decisionsAdded_other": "🧭 {{count}} karar önerisi Kararlar sekmesine eklendi.",
     "replyFailed": "⚠️ {{agent}} cevap veremedi: {{text}}",
     "interruptedHeld": "⏸ Bu görev Agentbits kapanırken yarıda kaldı. İşin bir kısmını yapmış olabileceği için kendiliğinden yeniden başlatılmaz — hazır olduğunda yeniden başlat.",
-    "reviewUnclear": "⚠ {{lead}} incelemesinde net bir karar vermedi. Görev incelemede kalıyor: onayla (Tamamlandı'ya taşı) ya da kendin geri gönder.",
+    "reviewUnclear": "⚠ {{lead}} incelemesinde net bir karar vermedi. Görev incelemede kalıyor: onayla (Bitti'ye taşı) ya da kendin geri gönder.",
     "revisionLimit": "⏸ {{count}} kez geri gönderildi. Görev artık yeniden çalışmak yerine seni bekliyor — inceleme notlarına bakıp hazır olduğunda başlat.",
     "leadNotesSent_one": "🎯 {{keys}} görevine not eklendi.",
     "leadNotesSent_other": "🎯 {{count}} göreve not eklendi: {{keys}}.",
     "leadNotesUnknown": "⚠️ Bu projede böyle bir görev yok, not iletilmedi: {{keys}}",
     "limitStopped": "⏱ {{agent}} · {{key}}: {{reason}}",
     "handedToTwin": "↔ {{key}}, {{from}} meşgul olduğu için aynı rol ve yeteneklerdeki {{to}} ajanına devredildi",
-    "fileConflict": "⚠️ {{path}} şu anda {{other}} ({{key}}) tarafından da değiştiriliyor; değişiklikleri birbirine karşı kontrol edin."
+    "fileConflict": "⚠️ {{path}} şu anda {{other}} ({{key}}) tarafından da değiştiriliyor; değişiklikleri birbirine karşı kontrol edin.",
+    "taskFailedHeld": "⚠️ {{agent}} bu görevi bitiremedi: {{text}}\nGörev Yapılacak'ta bekliyor ve kendiliğinden yeniden başlamayacak: deneme durmadan önce dosyaları ya da başka sistemleri değiştirmiş olabilir. Geride ne bıraktığına bak, sonra “Yeniden dene”ye bas (ajana önceki denemeyi anlatırız, önce durumu kontrol eder) ya da görevi düzenle veya sil.",
+    "reviewNeedsYou": "⚠️ {{reason}}\nÇalışanın raporu duruyor ve görev incelemede kalıyor. Yalnız incelemeyi yeniden deneyebilirsin (çalışan yeniden çalışmaz) ya da kendin karar verebilirsin: Bitti'ye taşı ya da notla Yapılacak'a geri gönder.",
+    "workNotStarted": "Görevler hazır ama henüz başlamayacak: bu oturumda bu projede çalışma başlatılmadı. Üstteki “Bu projede çalışmayı başlat”a bas."
   },
   "errors": {
     "noFolder": "“{{project}}” için klasör seçilmedi. CLI ajanları dosyalara dokunabildiği için proje ayarlarından bir klasör seçin.",
@@ -129,7 +135,9 @@
     "attachmentOtherProject": "Ek başka bir projeye ait",
     "agentWorking": "{{name}} şu an çalışıyor; talimatı yönlendirme ya da sıra olarak gönderin",
     "agentNotWorking": "{{name}} şu an bir görev üzerinde çalışmıyor; yeni görev olarak gönderin",
-    "stillRunning": "Bazı işler zamanında durmadı (uzun bir veritabanı / sunucu çağrısı ya da uygulama aracı hâlâ sürüyor olabilir). Hiçbir şey silinmedi — biraz bekleyip yeniden dene."
+    "stillRunning": "Bazı işler zamanında durmadı (uzun bir veritabanı / sunucu çağrısı ya da uygulama aracı hâlâ sürüyor olabilir). Hiçbir şey silinmedi — biraz bekleyip yeniden dene.",
+    "retryReviewNotInReview": "{{key}} incelemede değil; yeniden denenecek bir inceleme yok.",
+    "retryReviewNoLead": "Bu projede görevi inceleyecek etkin bir lider yok. Önce bir lider ata ya da aç, ya da kendin karar ver."
   },
   "result": {
     "taskCreated": "{{key}} oluşturuldu ve {{agent}} başlatıldı",
@@ -239,10 +247,11 @@
     "noChanges": "🌿 {{branch}} dalında commit'lenecek dosya değişikliği yok",
     "commitFailed": "Çalışma kopyasındaki değişiklikler commit'lenemedi: {{error}}",
     "merged": "🔀 {{key}}: {{branch}} dalı proje klasörüne birleştirildi.",
-    "dirty": "⏸ {{key}}: proje klasöründe commit'lenmemiş değişiklikler olduğu için {{branch}} birleştirilmedi. Onları commit'le ya da stash'le, sonra görevde “Şimdi birleştir”e bas.",
+    "dirty": "⏸ {{key}}: proje klasöründe commit'lenmemiş değişiklikler olduğu için {{branch}} birleştirilmedi. Onları commit'le ya da stash'le, sonra görevde “Değişiklikleri incele ve birleştir”e bas.",
     "conflict": "⚠️ {{key}}: {{branch}} dalı projeyle çakışıyor ({{files}}). Görev, çakışmaları kendi çalışma kopyasında çözmesi için ajanına geri döndü.",
     "conflictNote": "Bu görevi projeye birleştirirken şu dosyalarda çakışma çıktı: {{files}}. Projenin son hâli senin dalına alındı; bu dosyalardaki çakışma işaretlerini (<<<<<<< ======= >>>>>>>) iki değişiklik birlikte çalışacak şekilde çöz, sonra raporunla bitir.",
     "mergeFailed": "⚠️ {{key}}: {{branch}} birleştirilemedi: {{error}}",
+    "changedSinceShown": "{{key}}: görevin çalışma kopyası sen baktıktan sonra değişti, bu yüzden hiçbir şey birleştirilmedi. Değişikliklere yeniden bak.",
     "uncommittedKept": "çalışma kopyasında commit edilemeyen değişiklikler var, bu yüzden kopya silinmedi"
   },
   "race": {
@@ -263,11 +272,36 @@
     "stopped": "Sen durdurdun",
     "notApproved": "Çalışmayı onaylamadın",
     "agentDisabled": "Çalışma başlamadan ajanı kapatıldı",
-    "failed": "{{count}} kez hata verdi: {{error}}",
     "revisionLimit": "Lider {{count}} kez geri gönderdi",
-    "commitFailed": "Ajanın değişiklikleri çalışma kopyasında commit edilemedi (ör. git imzalama ayarı). Değişiklikler orada duruyor; git'i düzeltip görevi yeniden başlat."
+    "commitFailed": "Ajanın değişiklikleri çalışma kopyasında commit edilemedi (ör. git imzalama ayarı). Değişiklikler orada duruyor; git'i düzeltip görevi yeniden başlat.",
+    "authFailed": "Sağlayıcı girişi geçersiz — yeniden giriş yap, sonra yeniden başlat",
+    "failed_one": "Hata verdi: {{error}}",
+    "failed_other": "{{count}} kez hata verdi: {{error}}"
   },
   "review": {
     "unmet": "Karşılanmayan kabul kriterleri: {{list}}"
+  },
+  "errorKinds": {
+    "timeout": "{{provider}} zamanında yanıt vermedi. Biraz sonra yeniden dene; sürerse bağlantıyı ya da Ayarlar'daki sınırları kontrol et.",
+    "network": "{{provider}}'a ulaşılamadı (ağ). İnternet bağlantısını, VPN'i ya da proxy'yi kontrol edip yeniden dene.",
+    "overloaded": "{{provider}} şu an yoğun ya da istekleri sınırlıyor. Birkaç dakika bekleyip yeniden dene.",
+    "exit": "{{provider}} programı hatayla kapandı. Ajan terminalinde ne yazdırdığı görünüyor."
+  },
+  "reviewIssue": {
+    "noLead": "Projede bunu inceleyebilecek kimse yok (etkin lider ya da üye yok)",
+    "noReport": "İncelenecek çalışan raporu yok",
+    "failed": "Lider incelemesi tamamlanamadı: {{error}}",
+    "unclear": "{{lead}} incelemesinde net bir karar vermedi"
+  },
+  "errorDetail": "Ayrıntı: {{detail}}",
+  "changesWhere": {
+    "worktree": "görevin çalışma kopyasında ({{branch}} dalı), projeye birleştirilmeden",
+    "folder": "proje klasöründe ({{folder}})",
+    "noFolder": "ajanın çalıştığı klasörde ({{folder}}; bu projenin kendi klasörü yok)"
+  },
+  "changesLeft": {
+    "stopped": "⏹ Durduruldu. Hiçbir şey geri alınmadı: ajanın o ana kadar yaptığı değişiklikler {{where}} duruyor. Görevi yeniden başlatmadan önce bir bak.",
+    "limit": "⏹ Çalışma sınırına takılıp durdu. Hiçbir şey geri alınmadı: ajanın o ana kadar yaptığı değişiklikler {{where}} duruyor. Görevi yeniden başlatmadan önce bir bak.",
+    "manualDone": "✔ Görevi sen elle tamamladın, lider incelemesi olmadan. Değişiklikleri {{where}} duruyor."
   }
 }

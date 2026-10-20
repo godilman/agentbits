@@ -142,21 +142,32 @@ export interface TaskChanges {
   /** Unified diff, cut at 200 000 characters. */
   diff: string
   truncated: boolean
+  /** The copy's whole content (git tree id, uncommitted edits included) when it was read; '' while its run works. The
+   *  merge checks it, so it never merges something other than what was shown. */
+  basis: string
 }
 
 /**
  * What a task changed, from git: while its working copy exists, the copy against where it branched off (uncommitted
  * edits included); once merged, the merge commit "Merge <key>: …" in the project folder. Null when git has nothing.
  */
-export async function taskChanges(root: string, wtDir: string | null, key: string, env: GitEnv): Promise<TaskChanges | null> {
+export async function taskChanges(root: string, wtDir: string | null, key: string, env: GitEnv, stage = true): Promise<TaskChanges | null> {
   let cwd = root
   let range: string[]
+  let basis = ''
   if (wtDir && existsSync(wtDir)) {
     const head = await git(root, ['rev-parse', 'HEAD'], env)
     const base = head.ok ? await git(wtDir, ['merge-base', 'HEAD', head.out], env) : head
     if (!base.ok) return null
     cwd = wtDir
     range = [base.out]
+    // Uncommitted edits and new files a stopped run left are shown too (the merge commits them): staged in the copy's
+    // own index, exactly as the merge's commit does. Not while its agent works there (its git could find the index locked).
+    if (stage) {
+      await git(wtDir, ['add', '-A'], env)
+      const tree = await git(wtDir, ['write-tree'], env)
+      if (tree.ok) basis = tree.out
+    }
   } else {
     const c = await git(root, ['log', '--merges', '-n', '1', '--format=%H', `--grep=^Merge ${key}:`], env)
     if (!c.ok || !c.out) return null
@@ -173,7 +184,7 @@ export async function taskChanges(root: string, wtDir: string | null, key: strin
     })
   const patch = await git(cwd, ['diff', '--no-color', ...range], env)
   const full = patch.ok ? patch.out : ''
-  return { files, diff: full.slice(0, 200_000), truncated: full.length > 200_000 }
+  return { files, diff: full.slice(0, 200_000), truncated: full.length > 200_000, basis }
 }
 
 /** No uncommitted or untracked changes in a working copy (a failed check counts as not clean). */

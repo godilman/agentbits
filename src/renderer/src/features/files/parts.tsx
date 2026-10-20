@@ -66,7 +66,7 @@ export function FileChip({ file, fallback, onRemove, className }: { file?: FileR
   return (
     <span
       className={cn(
-        'group inline-flex max-w-[260px] items-center gap-1.5 rounded-md border border-line bg-surface-2 py-1 pl-1.5 pr-1.5 text-left text-[11.5px] text-zinc-200 hover:border-zinc-600',
+        'group inline-flex max-w-[260px] items-center gap-1.5 rounded-md border border-line bg-surface-2 py-1 pl-1.5 pr-1.5 text-left text-[12px] text-zinc-200 hover:border-zinc-600',
         className
       )}
       title={file ? `${name}\n${meta(file)}${note ? `\n${note.text}` : ''}` : name}
@@ -74,11 +74,11 @@ export function FileChip({ file, fallback, onRemove, className }: { file?: FileR
       <button className="flex min-w-0 items-center gap-1.5" onClick={() => id && openFile(id)} disabled={!id} data-testid="file-chip">
         {file?.status === 'processing' ? <Loader2 size={13} className="shrink-0 animate-spin text-zinc-400" /> : <FileIcon kind={kind} size={13} className="shrink-0" />}
         <span className="truncate">{name}</span>
-        {file && <span className="shrink-0 text-[10px] text-zinc-500">{formatBytes(file.size)}</span>}
+        {file && <span className="shrink-0 text-[11px] text-zinc-500">{formatBytes(file.size)}</span>}
         {note && note.tone !== 'muted' && (
           note.tone === 'error' ? <AlertTriangle size={11} className="shrink-0 text-rose-300" /> : <ShieldAlert size={11} className="shrink-0 text-amber-300" />
         )}
-        {file && !file.hasOriginal && file.origin !== 'workspace' && <span className="shrink-0 text-[10px] text-zinc-500">{t('files:parts.noOriginal')}</span>}
+        {file && !file.hasOriginal && file.origin !== 'workspace' && <span className="shrink-0 text-[12px] text-zinc-500">{t('files:parts.noOriginal')}</span>}
       </button>
       {onRemove && (
         <button className="ml-0.5 rounded p-0.5 text-zinc-500 hover:bg-white/10 hover:text-zinc-200" onClick={onRemove} title={t('actions.remove')}>
@@ -98,12 +98,12 @@ export function AttachmentTray({ items, records, onRemove }: { items: PendingFil
         const rec = i.fileId ? records.get(i.fileId) : undefined
         if (i.error) {
           return (
-            <span key={i.key} className="inline-flex max-w-[320px] items-center gap-1.5 rounded-md border border-rose-500/30 bg-rose-500/[0.07] px-1.5 py-1 text-[11.5px] text-rose-200" title={i.error}>
+            <span key={i.key} className="inline-flex max-w-[320px] items-center gap-1.5 rounded-md border border-rose-500/30 bg-rose-500/[0.07] px-1.5 py-1 text-[12px] text-rose-200" title={i.error}>
               <AlertTriangle size={12} className="shrink-0" />
               <span className="truncate">
                 {i.name}: {i.error}
               </span>
-              <button className="rounded p-0.5 hover:bg-white/10" onClick={() => onRemove(i.key)}>
+              <button className="rounded p-0.5 hover:bg-white/10" onClick={() => onRemove(i.key)} title={t('actions.remove')}>
                 <X size={11} />
               </button>
             </span>
@@ -111,7 +111,7 @@ export function AttachmentTray({ items, records, onRemove }: { items: PendingFil
         }
         if (!i.fileId) {
           return (
-            <span key={i.key} className="inline-flex items-center gap-1.5 rounded-md border border-line bg-surface-2 px-1.5 py-1 text-[11.5px] text-zinc-400">
+            <span key={i.key} className="inline-flex items-center gap-1.5 rounded-md border border-line bg-surface-2 px-1.5 py-1 text-[12px] text-zinc-400">
               <Loader2 size={12} className="animate-spin" /> {i.name}
             </span>
           )
@@ -134,7 +134,7 @@ export function AttachButton({ onClick, disabled, className, label }: { onClick:
       data-testid="attach-button"
     >
       <Paperclip size={14} />
-      {label && <span className="ml-1 text-[11.5px]">{label}</span>}
+      {label && <span className="ml-1 text-[12px]">{label}</span>}
     </button>
   )
 }
@@ -145,7 +145,7 @@ export function DropOverlay({ show, label }: { show: boolean; label?: string }) 
   if (!show) return null
   return (
     <div className="pointer-events-none absolute inset-1 z-30 flex items-center justify-center rounded-lg border-2 border-dashed border-accent/60 bg-accent/[0.08] backdrop-blur-[1px]">
-      <div className="flex items-center gap-2 rounded-md bg-black/60 px-3 py-2 text-[12.5px] text-indigo-100">
+      <div className="flex items-center gap-2 rounded-md bg-black/60 px-3 py-2 text-[13px] text-indigo-100">
         <Upload size={15} /> {label ?? t('files:parts.drop')}
       </div>
     </div>

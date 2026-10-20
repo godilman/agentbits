@@ -31,7 +31,7 @@ export interface RunContext {
   onSession?: (sessionId: string) => void
   /** A file the agent wrote (as the provider names it; may be absolute) — team awareness / conflict warnings. */
   onFileWritten?: (path: string) => void
-  /** Connection tools the agent may call (API providers: native function calling; demo: simulated use). */
+  /** Tools the agent may call (API providers: native function calling). The Demo provider never calls them. */
   tools?: { name: string; description: string; inputSchema: Record<string, unknown> }[]
   callTool?: (name: string, args: Record<string, unknown>) => Promise<{ text: string; isError: boolean; images?: { mime: string; data: string }[] }>
   /** Images / scanned PDFs for the first user turn (API providers with vision). */

@@ -1,13 +1,13 @@
 import type { Agent, ProviderTestResult } from '@shared/types'
-import { demoKind, type DemoKind } from '@shared/demoKind'
+import { demoIsWork, demoKind, demoParts, type DemoKind } from '@shared/demoKind'
 import { agentsRepo } from '../db/repos'
 import { t } from '../i18n'
 import { sleep, type ProviderAdapter, type RunContext, type RunResult } from './types'
 
 /**
- * Demo provider. Simulates realistic agent behaviour (tool calls, progress,
- * planning, reviews) without any API key, so the office, kanban and chat are
- * fully alive on first launch.
+ * Demo provider. Simulates agent behaviour (progress, planning, reviews) without any API key, so the office, kanban
+ * and chat are alive on first launch. A simulation only: it never calls a tool (no connection, SSH, app, file or
+ * skill call — `ctx.callTool` is not used), and everything it reports says so.
  */
 
 const rand = (a: number, b: number): number => a + Math.random() * (b - a)
@@ -152,21 +152,16 @@ function chatReplyText(ctx: RunContext): string {
     const notes = keys.map((task) => ({ task, text: msg.slice(0, 1000) }))
     return `${t('demo:chat.noteSent', { count: keys.length, keys: keys.join(', ') })}\n\n\`\`\`message\n${JSON.stringify(notes, null, 2)}\n\`\`\``
   }
-  const words = msg.split(/\s+/).filter(Boolean)
-  const isQuestion = /\?\s*$/.test(msg) || words.length < 4
-  if (isQuestion) {
+  if (!demoIsWork(msg)) {
     return pick([t('demo:chat.idle.r1'), t('demo:chat.idle.r2'), t('demo:chat.idle.r3')])
   }
-  const parts = msg
-    .split(/(?:[.;\n]|,\s*(?:ve|ayrıca|sonra|and|also|then)\s+|\s+ve\s+ayrıca\s+|\s+and\s+also\s+)/i) // i18n-ignore
-    .map((s) => s.trim())
-    .filter((s) => s.split(/\s+/).length >= 3)
-    .slice(0, 4)
+  const parts = demoParts(msg)
   const load = new Map<string, number>()
   // "first …, then …": each step waits for the previous one (otherwise the parts run in parallel).
   const sequential = /\b(sonra|ardından|daha sonra|then|after that|afterwards)\b/i.test(msg) // i18n-ignore
   const items = (parts.length ? parts : [msg]).map((p, i) => ({
-    title: p.charAt(0).toUpperCase() + p.slice(1, 90),
+    // A file name or URL first ("math.js …") keeps its case.
+    title: (/^\S*[./]/.test(p) ? p.charAt(0) : p.charAt(0).toUpperCase()) + p.slice(1, 90),
     description: t('demo:chat.taskDescription', { request: msg.slice(0, 280), scope: p }),
     assignee: assigneeFor(p, i, ctx.team, ctx.agent.id, load),
     after: sequential && i > 0 ? [i] : undefined,
@@ -203,165 +198,6 @@ const KIND_PLAN: Record<DemoKind, { files: string[]; verbs: string[]; final?: st
   }
 }
 
-// Keywords in the task text (Turkish + English).
-const NEEDS_DATA = /veritaban|database|\bdb\b|sql|sorgu|query|tablo|table|stok|stock|inventory|sipari|order|müşteri|musteri|customer|rapor|report|sunucu|server|ssh|disk|log|servis|service/i // i18n-ignore
-const WANTS_CHANGE = /güncelle|guncelle|update|değiştir|degistir|change|modify|sil\b|delete|remove|ekle|\badd\b|insert/i // i18n-ignore
-
-/**
- * Demo provider + real connection tools: the decisions are scripted, but the calls
- * are real — they go through permissions, approvals and the audit log like any agent.
- */
-async function useConnections(ctx: RunContext, text: string): Promise<string[]> {
-  if (!ctx.callTool || !ctx.tools?.some((t) => t.name === 'connections_list') || !NEEDS_DATA.test(text)) return []
-  const notes: string[] = []
-  const listed = await ctx.callTool('connections_list', {})
-  let conns: { name: string; type: string; access: string }[] = []
-  try {
-    conns = JSON.parse(listed.text)
-  } catch {
-    return [t('demo:connections.none')]
-  }
-  for (const c of conns.slice(0, 2)) {
-    await ctx.checkpoint()
-    await sleep(600, ctx.signal)
-    if (c.type === 'ssh') {
-      for (const cmd of ['uptime', 'df -h']) {
-        const r = await ctx.callTool('ssh_exec', { connection: c.name, command: cmd })
-        notes.push(`${c.name} $ ${cmd} → ${r.isError ? t('demo:connections.error') : t('demo:connections.ok')}`)
-      }
-      continue
-    }
-    const schema = await ctx.callTool('db_schema', { connection: c.name })
-    const first = /^([^\s:]+):\s*([^\s,]+)/m.exec(schema.text)
-    if (schema.isError || !first) {
-      notes.push(t('demo:connections.schemaFailed', { name: c.name }))
-      continue
-    }
-    const [, table, col] = first
-    const q = await ctx.callTool('db_query', { connection: c.name, sql: `SELECT * FROM ${table} LIMIT 5` })
-    notes.push(t(q.isError ? 'demo:connections.sampleReadError' : 'demo:connections.sampleRead', { name: c.name, table }))
-    if (WANTS_CHANGE.test(text)) {
-      // A harmless change (0 rows) that still needs write access — shows the permission / approval path.
-      const u = await ctx.callTool('db_query', { connection: c.name, sql: `UPDATE ${table} SET ${col} = ${col} WHERE 1 = 0` })
-      notes.push(t('demo:connections.changeAttempt', { name: c.name, result: u.isError ? u.text.slice(0, 160) : t('demo:connections.allowed') }))
-    }
-  }
-  return notes
-}
-
-/**
- * Demo + real skills: picks the assigned skill whose name / description shares the most words with the task and
- * reads it with skill_read (transcript line, same access rules as a real agent).
- */
-async function useSkills(ctx: RunContext, text: string): Promise<string[]> {
-  if (!ctx.callTool || !ctx.tools?.some((x) => x.name === 'skill_read')) return []
-  const listed = [...ctx.system.matchAll(/^- \*\*([a-z0-9-]+)\*\*: (.*)$/gm)].map((m) => ({ name: m[1], desc: m[2] }))
-  if (!listed.length) return []
-  const words = new Set(norm(text).split(/[^\p{L}\p{N}]+/u).filter((w) => w.length >= 4))
-  const score = (s: { name: string; desc: string }): number =>
-    norm(`${s.name.replace(/-/g, ' ')} ${s.desc}`)
-      .split(/[^\p{L}\p{N}]+/u)
-      .filter((w) => w.length >= 4 && words.has(w)).length
-  const best = listed.map((s) => ({ s, n: score(s) })).sort((a, b) => b.n - a.n)[0]
-  if (!best || best.n === 0) return []
-  await ctx.checkpoint()
-  await sleep(400, ctx.signal)
-  const r = await ctx.callTool('skill_read', { name: best.s.name })
-  return [t(r.isError ? 'demo:skills.failed' : 'demo:skills.used', { name: best.s.name })]
-}
-
-/**
- * Demo + real apps (MCP): when the task names a connected app, calls one of its tools that runs without approval and
- * whose required arguments are simple (strings get the task title); if the task asks for a change, also tries one
- * tool that needs the user's approval — the request shows up in the approval dock like any agent's.
- */
-async function useApps(ctx: RunContext, text: string, title: string): Promise<string[]> {
-  if (!ctx.callTool || !ctx.tools?.some((x) => x.name.startsWith('app_'))) return []
-  const lower = text.toLocaleLowerCase()
-  const tools = ctx.tools
-    .filter((x) => x.name.startsWith('app_'))
-    .map((x) => ({ spec: x, app: /^\[App: ([^·\]]+?)(?: · |\])/.exec(x.description)?.[1]?.trim() ?? '', approve: x.description.includes('needs the user’s approval') }))
-    .filter((x) => x.app && lower.includes(x.app.toLocaleLowerCase()))
-  const argsFor = (schema: Record<string, unknown>): Record<string, unknown> | null => {
-    const props = (schema.properties ?? {}) as Record<string, { type?: string }>
-    const out: Record<string, unknown> = {}
-    for (const k of (schema.required as string[] | undefined) ?? []) {
-      const ty = props[k]?.type
-      if (ty === 'string') out[k] = title
-      else if (ty === 'number' || ty === 'integer') out[k] = 1
-      else if (ty === 'boolean') out[k] = false
-      else return null
-    }
-    return out
-  }
-  const notes: string[] = []
-  const pickTool = (approve: boolean) => tools.find((x) => x.approve === approve && argsFor(x.spec.inputSchema))
-  const chosen = [pickTool(false), WANTS_CHANGE.test(text) ? pickTool(true) : undefined].filter((x): x is NonNullable<typeof x> => !!x)
-  for (const c of chosen) {
-    await ctx.checkpoint()
-    await sleep(500, ctx.signal)
-    const r = await ctx.callTool(c.spec.name, argsFor(c.spec.inputSchema)!)
-    const tool = c.spec.name.split('__').pop() ?? c.spec.name
-    notes.push(t(r.isError ? 'demo:apps.failed' : 'demo:apps.used', { app: c.app, tool, error: r.text.slice(0, 160) }))
-  }
-  return notes
-}
-
-/**
- * Demo + real file tools: reads the task's attachments part by part (the same
- * permission checks and transcript lines as a real agent) and saves a summary
- * with file_save, so the whole attachment flow can be tried without a model.
- */
-async function useFiles(ctx: RunContext, taskKey: string): Promise<string[]> {
-  if (!ctx.callTool || !ctx.tools?.some((t) => t.name === 'files_list')) return []
-  const listed = await ctx.callTool('files_list', {})
-  let rows: { ref: string; name: string; type: string; image?: string; parts: number; status: string; note?: string; instructionLikeLines?: number; forThisTask?: boolean }[] = []
-  try {
-    rows = JSON.parse(listed.text)
-  } catch {
-    return []
-  }
-  const mine = rows.filter((r) => r.forThisTask)
-  const notes: string[] = []
-  for (const r of (mine.length ? mine : rows).slice(0, 4)) {
-    await ctx.checkpoint()
-    await sleep(500, ctx.signal)
-    // `image` (dimensions) is set only for images; `type` is a display label that depends on the language.
-    if (r.image !== undefined) {
-      const img = await ctx.callTool('file_read', { file: r.ref })
-      notes.push(t(img.isError ? 'demo:files.imageFailed' : 'demo:files.imageRead', { name: r.name }))
-      continue
-    }
-    if (!r.parts) {
-      notes.push(`${t('demo:files.noText', { name: r.name })}${r.note ? ` (${r.note})` : ''}`)
-      continue
-    }
-    const read = await ctx.callTool('file_read', { file: r.ref, part: 1 })
-    const body = read.text.replace(/^<<<FILE[^\n]*\n/, '').replace(/\n<<<END FILE[\s\S]*$/, '')
-    const gist = body
-      .split('\n')
-      .map((l) => l.replace(/^\[[^\]]+\]$/, '').trim())
-      .filter(Boolean)
-      .slice(0, 3)
-      .join(' / ')
-      .slice(0, 220)
-    notes.push(t('demo:files.partsSummary', { name: r.name, type: r.type, count: r.parts, gist: read.isError ? read.text.slice(0, 160) : gist }))
-    if (r.parts > 2) {
-      await ctx.callTool('file_read', { file: r.ref, part: r.parts })
-      notes.push(`  - ${t('demo:files.firstAndLast', { parts: r.parts })}`)
-    }
-    if (r.instructionLikeLines) notes.push(`  - ${t('demo:files.instructionLike', { name: r.name, count: r.instructionLikeLines })}`)
-  }
-  if (notes.length && ctx.tools.some((t) => t.name === 'file_save')) {
-    const saved = await ctx.callTool('file_save', {
-      name: t('demo:files.summaryFileName', { key: taskKey.toLowerCase() || t('demo:files.summaryFileFallback') }),
-      content: `# ${t('demo:files.summaryTitle', { key: taskKey })}\n\n${notes.map((n) => (n.startsWith('  ') ? n : `- ${n}`)).join('\n')}\n`
-    })
-    notes.push(saved.isError ? t('demo:files.summaryFailed', { error: saved.text }) : t('demo:files.summarySaved'))
-  }
-  return notes
-}
-
 async function taskWork(ctx: RunContext): Promise<string> {
   // A continuation after a direct user instruction: the original task prompt is in history.
   const original = ctx.history?.find((h) => h.role === 'user')?.content ?? ctx.prompt
@@ -380,10 +216,6 @@ async function taskWork(ctx: RunContext): Promise<string> {
   ctx.onUsage?.({ input: ctxTokens, output: 0, cacheRead: 0, cacheWrite: Math.round(ctxTokens * 0.8), costUsd: 0 })
   if (instruction) ctx.onLog('info', t('demo:task.logInstruction', { text: instruction.slice(0, 160) }))
   else ctx.onLog('info', t('demo:task.logAnalyzing', { title }))
-  const connectionNotes = await useConnections(ctx, `${original}\n${instruction ?? ''}`)
-  const fileNotes = instruction ? [] : await useFiles(ctx, original.match(/## Task\s+(\S+):/)?.[1] ?? '')
-  const skillNotes = instruction ? [] : await useSkills(ctx, original)
-  const appNotes = instruction ? [] : await useApps(ctx, original, title)
   for (let i = 0; i < steps; i++) {
     await ctx.checkpoint()
     await sleep(rand(1400, 3200), ctx.signal)
@@ -392,31 +224,26 @@ async function taskWork(ctx: RunContext): Promise<string> {
     const last = i === steps - 1
     const action = last ? 'final' : i < 2 ? plan.verbs[0] : pick(plan.verbs)
     if (action === 'final') {
-      if (plan.final) ctx.onLog('tool', plan.final)
+      if (plan.final) ctx.onLog('tool', t('demo:task.simulatedStep', { step: plan.final }))
       await sleep(900, ctx.signal)
-      ctx.onLog('output', t(`demo:kinds.${kind}.final`, { count: Math.round(rand(8, 40)) }))
+      ctx.onLog('output', t(`demo:kinds.${kind}.final`))
     } else {
+      // Example names only: nothing is read, written or searched (and no file is reported as written).
       const target = action === 'Grep' ? '"TODO|FIXME"' : action === 'WebSearch' ? JSON.stringify(title.slice(0, 60)) : file
-      ctx.onLog('tool', `${action} ${target}`)
-      if (action === 'Edit' || action === 'Write') {
-        touched.push(file)
-        ctx.onFileWritten?.(file)
-      }
+      ctx.onLog('tool', t('demo:task.simulatedStep', { step: `${action} ${target}` }))
+      if (action === 'Edit' || action === 'Write') touched.push(file)
     }
     ctx.onProgress(Math.round(((i + 1) / steps) * 92))
   }
   const files = [...new Set(touched)]
   const summary =
+    `> ${t('demo:report.simulated')}\n\n` +
     `## ${t('demo:report.summary')}\n${t('demo:report.completed', { title })}\n\n` +
-    (connectionNotes.length ? `## ${t('demo:report.connections')}\n${connectionNotes.map((n) => `- ${n}`).join('\n')}\n\n` : '') +
-    (appNotes.length ? `## ${t('demo:report.apps')}\n${appNotes.map((n) => `- ${n}`).join('\n')}\n\n` : '') +
-    (skillNotes.length ? `## ${t('demo:report.skills')}\n${skillNotes.map((n) => `- ${n}`).join('\n')}\n\n` : '') +
-    (fileNotes.length ? `## ${t('demo:report.files')}\n${fileNotes.map((n) => (n.startsWith('  ') ? n : `- ${n}`)).join('\n')}\n\n` : '') +
     (instruction
       ? `## ${t('demo:report.instruction')}\n> ${instruction.slice(0, 400)}\n\n${t('demo:report.instructionApplied')}\n\n`
       : '') +
     `## ${t('demo:report.done')}\n${(['done1', 'done2', 'done3'] as const).map((n) => `- ${t(`demo:kinds.${kind}.${n}`)}`).join('\n')}\n\n` +
-    `## ${t(kind === 'code' ? 'demo:report.changedFiles' : 'demo:report.deliverables')}\n${files.length ? files.map((f) => `- \`${f}\``).join('\n') : `- ${t('demo:report.reviewOnly')}`}\n\n` +
+    `## ${t('demo:report.exampleFiles')}\n${files.length ? files.map((f) => `- \`${f}\``).join('\n') : `- ${t('demo:report.reviewOnly')}`}\n\n` +
     `## ${t('demo:report.notes')}\n- ${t('demo:report.demoNote')}`
   await stream(ctx, summary)
   return summary
@@ -469,7 +296,7 @@ export const mockAdapter: ProviderAdapter = {
       const n = Number(/have exactly (\d+) entries each/.exec(ctx.system)?.[1] ?? 0)
       const winner = Math.random() < 0.5 ? 'A' : 'B'
       const check = (won: boolean): { met: boolean; note: string }[] => Array.from({ length: n }, (_, i) => ({ met: won || i > 0, note: '' }))
-      text = JSON.stringify({ winner, note: t('demo:review.race'), ...(n ? { criteriaA: check(winner === 'A'), criteriaB: check(winner === 'B') } : {}) })
+      text = JSON.stringify({ winner, note: `${t('demo:review.simulated')} ${t('demo:review.race')}`, ...(n ? { criteriaA: check(winner === 'A'), criteriaB: check(winner === 'B') } : {}) })
     } else if (ctx.mode === 'review') {
       await sleep(rand(1500, 3000), ctx.signal)
       const approved = Math.random() < 0.85
@@ -479,9 +306,12 @@ export const mockAdapter: ProviderAdapter = {
       text = JSON.stringify({
         approved,
         ...(n ? { criteria: Array.from({ length: n }, (_, i) => ({ met: approved || i > 0, note: '' })) } : {}),
-        note: approved
-          ? pick([t('demo:review.approved.r1'), t('demo:review.approved.r2'), t('demo:review.approved.r3')])
-          : pick([t(`demo:kinds.${kind}.rejected1`), t(`demo:kinds.${kind}.rejected2`)])
+        // Never reads like a real check: nothing was run or verified.
+        note: `${t('demo:review.simulated')} ${
+          approved
+            ? pick([t('demo:review.approved.r1'), t('demo:review.approved.r2'), t('demo:review.approved.r3')])
+            : pick([t(`demo:kinds.${kind}.rejected1`), t(`demo:kinds.${kind}.rejected2`)])
+        }`
       })
     } else {
       text = await taskWork(ctx)

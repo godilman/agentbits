@@ -256,30 +256,30 @@ export function ProjectModal() {
             )}
           </div>
           {folderError && (
-            <div className="mt-1.5 flex items-start gap-1.5 text-[11.5px] text-rose-300">
+            <div className="mt-1.5 flex items-start gap-1.5 text-[12px] text-rose-300">
               <TriangleAlert size={12} className="mt-px shrink-0" />
               {folderError}
             </div>
           )}
           {cli && !form.rootPath ? (
-            <div className="mt-1.5 flex items-start gap-1.5 text-[11.5px] text-amber-300/90">
+            <div className="mt-1.5 flex items-start gap-1.5 text-[12px] text-amber-300/90">
               <TriangleAlert size={12} className="mt-px shrink-0" />
               {t('project:modal.folderRequired', { provider: defaultProvider?.label })}
             </div>
           ) : (
-            <div className="mt-1.5 text-[11.5px] text-zinc-500">{t('project:modal.folderHint')}</div>
+            <div className="mt-1.5 text-[11px] text-zinc-500">{t('project:modal.folderHint')}</div>
           )}
           <div className="mt-3 flex items-start gap-3 rounded-md border border-line bg-surface-2/60 px-3 py-2.5">
             <div className="min-w-0 flex-1">
-              <div className="text-[12.5px] text-zinc-200">{t('project:modal.worktree.title')}</div>
-              <div className="mt-0.5 text-[11.5px] text-zinc-400">{t('project:modal.worktree.desc')}</div>
+              <div className="text-[13px] text-zinc-200">{t('project:modal.worktree.title')}</div>
+              <div className="mt-0.5 text-[12px] text-zinc-400">{t('project:modal.worktree.desc')}</div>
             </div>
             <Toggle checked={form.worktree} onChange={(v) => set('worktree', v)} />
           </div>
           <div className="mt-2 flex items-start gap-3 rounded-md border border-line bg-surface-2/60 px-3 py-2.5">
             <div className="min-w-0 flex-1">
-              <div className="text-[12.5px] text-zinc-200">{t('project:modal.projectMemory.title')}</div>
-              <div className="mt-0.5 text-[11.5px] text-zinc-400">{t('project:modal.projectMemory.desc')}</div>
+              <div className="text-[13px] text-zinc-200">{t('project:modal.projectMemory.title')}</div>
+              <div className="mt-0.5 text-[12px] text-zinc-400">{t('project:modal.projectMemory.desc')}</div>
             </div>
             <Toggle checked={form.projectMemory} onChange={(v) => set('projectMemory', v)} />
           </div>
@@ -291,7 +291,7 @@ export function ProjectModal() {
             <span className="text-[11px] text-zinc-500">{t('project:modal.teamsHint')}</span>
           </div>
           <div className="max-h-[220px] overflow-y-auto rounded-md border border-line bg-surface-2/60 py-1">
-            {tree.length === 0 && <div className="px-3 py-3 text-[12px] text-zinc-400">{t('project:modal.noUnits')}</div>}
+            {tree.length === 0 && <div className="px-3 py-3 text-[13px] text-zinc-400">{t('project:modal.noUnits')}</div>}
             {tree.map(({ unit, depth }) => {
               const checked = form.unitIds.includes(unit.id)
               const inc = implied.has(unit.id)
@@ -314,10 +314,10 @@ export function ProjectModal() {
                     {(checked || inc) && <Check size={11} />}
                   </span>
                   <Icon size={13} className="shrink-0" style={{ color: unit.color }} />
-                  <span className={cn('truncate text-[12.5px]', checked ? 'text-zinc-100' : inc ? 'text-zinc-400' : 'text-zinc-300')}>{unit.name}</span>
-                  {unit.kind !== 'organization' && <span className="shrink-0 text-[10.5px] text-zinc-500">{KIND_META[unit.kind].label.toLocaleLowerCase(locale())}</span>}
-                  {inc && <span className="shrink-0 rounded bg-indigo-500/10 px-1 text-[10px] text-indigo-300">{t('project:modal.included')}</span>}
-                  <span className="ml-auto shrink-0 font-mono text-[10.5px] text-zinc-500">{count > 0 ? t('project:people', { count }) : ''}</span>
+                  <span className={cn('min-w-0 truncate text-[13px]', checked ? 'text-zinc-100' : inc ? 'text-zinc-400' : 'text-zinc-300')}>{unit.name}</span>
+                  {unit.kind !== 'organization' && <span className="shrink-0 text-[12px] text-zinc-500">{KIND_META[unit.kind].label.toLocaleLowerCase(locale())}</span>}
+                  {inc && <span className="shrink-0 rounded bg-indigo-500/10 px-1 text-[12px] text-indigo-300">{t('project:modal.included')}</span>}
+                  <span className="ml-auto shrink-0 font-mono text-[11px] text-zinc-500">{count > 0 ? t('project:people', { count }) : ''}</span>
                 </button>
               )
             })}
@@ -351,7 +351,7 @@ export function ProjectModal() {
               </option>
             ))}
           </select>
-          <div className="mt-1.5 text-[11.5px] text-zinc-500">{t('project:modal.leadHint')}</div>
+          <div className="mt-1.5 text-[11px] text-zinc-500">{t('project:modal.leadHint')}</div>
         </div>
 
         {editing && project && (
@@ -360,7 +360,7 @@ export function ProjectModal() {
               <Archive size={15} className="text-zinc-400" />
               <div className="flex-1">
                 <div className="text-[13px] text-zinc-200">{t('project:modal.archive')}</div>
-                <div className="text-[11.5px] text-zinc-400">{t('project:modal.archiveHint')}</div>
+                <div className="text-[12px] text-zinc-400">{t('project:modal.archiveHint')}</div>
               </div>
               <Toggle checked={form.archived} onChange={(v) => set('archived', v)} />
             </div>
@@ -368,7 +368,7 @@ export function ProjectModal() {
               <Database size={15} className="text-zinc-400" />
               <div className="flex-1">
                 <div className="text-[13px] text-zinc-200">{t('project:modal.clearData')}</div>
-                <div className="text-[11.5px] text-zinc-400">{t('project:modal.clearDataHint')}</div>
+                <div className="text-[12px] text-zinc-400">{t('project:modal.clearDataHint')}</div>
               </div>
               <button
                 className="btn-outline h-7"
@@ -385,10 +385,10 @@ export function ProjectModal() {
             {canDelete ? (
               confirmDelete ? (
                 <div className="rounded-md border border-rose-500/30 bg-rose-500/[0.06] p-3" ref={(el) => el?.scrollIntoView({ block: 'nearest' })}>
-                  <div className="text-[12.5px] text-rose-200">
+                  <div className="text-[13px] text-rose-200">
                     <Trans i18nKey="project:modal.deleteConfirm" values={{ name: project.name }} components={{ b: <span className="font-semibold" /> }} />
                   </div>
-                  <div className="mt-1 text-[11.5px] text-rose-200/70">
+                  <div className="mt-1 text-[12px] text-rose-200/70">
                     {t('project:modal.deleteDetail')} <span className="font-semibold text-zinc-200">{t('project:modal.deleteKeepsFolder')}</span>
                     {project.isDefault && ` ${t('project:modal.deleteDefaultNote')}`}
                   </div>
@@ -406,7 +406,7 @@ export function ProjectModal() {
                   <Trash2 size={15} className="text-rose-400/80" />
                   <div className="flex-1">
                     <div className="text-[13px] text-zinc-200">{t('project:modal.deleteTitle')}</div>
-                    <div className="text-[11.5px] text-zinc-400">{t('project:modal.deleteHint')}</div>
+                    <div className="text-[12px] text-zinc-400">{t('project:modal.deleteHint')}</div>
                   </div>
                   <button className="btn-danger h-7 border border-rose-500/30" onClick={() => setConfirmDelete(true)}>
                     {t('actions.deleteEllipsis')}
@@ -414,14 +414,14 @@ export function ProjectModal() {
                 </div>
               )
             ) : (
-              <div className="flex items-center gap-2 text-[11.5px] text-zinc-500">
+              <div className="flex items-center gap-2 text-[12px] text-zinc-500">
                 <Info size={12} /> {t('project:modal.cannotDelete')}
               </div>
             )}
           </div>
         )}
 
-        {error && <div className="rounded-md border border-rose-500/30 bg-rose-500/10 px-3 py-2 text-[12px] text-rose-200">{error}</div>}
+        {error && <div className="rounded-md border border-rose-500/30 bg-rose-500/10 px-3 py-2 text-[13px] text-rose-200">{error}</div>}
       </div>
     </Modal>
   )

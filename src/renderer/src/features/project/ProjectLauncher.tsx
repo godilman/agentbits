@@ -264,7 +264,7 @@ export function ProjectLauncher() {
         }}
       >
         {firstRun && (
-          <p className="mb-3 text-[12.5px] text-zinc-400">
+          <p className="mb-3 text-[13px] text-zinc-400">
             {t('project:launcher.firstRun')}
           </p>
         )}
@@ -295,7 +295,7 @@ export function ProjectLauncher() {
                   <Search size={12} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-zinc-500" />
                   <input
                     ref={searchRef}
-                    className="input h-7 pl-7 text-[12px]"
+                    className="input h-7 pl-7 text-[13px]"
                     placeholder={t('project:launcher.searchPlaceholder')}
                     value={query}
                     onChange={(e) => setQuery(e.target.value)}
@@ -316,12 +316,12 @@ export function ProjectLauncher() {
                   onOpenNow={() => void submit([p.id])}
                 />
               ))}
-              {shownActive.length === 0 && <div className="px-2 py-3 text-[12px] text-zinc-500">{t('project:launcher.noMatch')}</div>}
+              {shownActive.length === 0 && <div className="px-2 py-3 text-[13px] text-zinc-500">{t('project:launcher.noMatch')}</div>}
             </div>
             {archived.length > 0 && (
               <div className="mt-3">
                 <button
-                  className="flex items-center gap-1.5 px-1 text-[11.5px] text-zinc-400 hover:text-zinc-200"
+                  className="flex items-center gap-1.5 px-1 text-[12px] text-zinc-400 hover:text-zinc-200"
                   onClick={() => setShowArchived((v) => !v)}
                 >
                   <ChevronRight size={12} className={cn('transition-transform', showArchived && 'rotate-90')} />
@@ -382,7 +382,7 @@ function ActionCard({
       </span>
       <span className="min-w-0">
         <span className="block text-[13px] font-medium text-zinc-100">{title}</span>
-        <span className="block text-[11.5px] leading-snug text-zinc-400">{desc}</span>
+        <span className="block text-[12px] leading-snug text-zinc-400">{desc}</span>
       </span>
     </button>
   )
@@ -392,11 +392,11 @@ function FolderBadge({ folder }: { folder: FolderStatus | undefined }) {
   const { t } = useTranslation()
   if (folder === 'missing')
     return (
-      <span className="flex shrink-0 items-center gap-1 rounded bg-amber-500/10 px-1.5 py-px text-[10.5px] text-amber-300" title={t('project:launcher.folderMissingTitle')}>
+      <span className="flex shrink-0 items-center gap-1 rounded bg-amber-500/10 px-1.5 py-px text-[12px] text-amber-300" title={t('project:launcher.folderMissingTitle')}>
         <TriangleAlert size={10} /> {t('project:launcher.folderMissing')}
       </span>
     )
-  if (folder === 'unset') return <span className="shrink-0 text-[10.5px] text-zinc-500">{t('project:launcher.folderUnset')}</span>
+  if (folder === 'unset') return <span className="shrink-0 text-[12px] text-zinc-500">{t('project:launcher.folderUnset')}</span>
   return null
 }
 
@@ -450,15 +450,15 @@ function LauncherRow({
       <span className={cn('h-2.5 w-2.5 shrink-0 rounded-full', archived && 'opacity-50')} style={{ background: project.color }} />
       <div className="min-w-0 flex-1">
         <div className="flex items-center gap-2">
-          <span className={cn('truncate text-[13px]', archived ? 'text-zinc-400' : 'text-zinc-100')}>{project.name}</span>
-          {isOpen && <span className="shrink-0 rounded bg-white/5 px-1.5 text-[10px] text-zinc-400">{t('project:launcher.open')}</span>}
+          <span className={cn('min-w-0 truncate text-[13px]', archived ? 'text-zinc-400' : 'text-zinc-100')}>{project.name}</span>
+          {isOpen && <span className="shrink-0 rounded bg-white/5 px-1.5 text-[12px] text-zinc-400">{t('project:launcher.open')}</span>}
           {running > 0 && (
-            <span className="flex shrink-0 items-center gap-1 rounded bg-emerald-500/15 px-1.5 text-[10px] text-emerald-300">
+            <span className="flex shrink-0 items-center gap-1 rounded bg-emerald-500/15 px-1.5 text-[12px] text-emerald-300">
               <span className="h-1 w-1 animate-pulse rounded-full bg-emerald-400" /> {t('project:launcher.running', { count: running })}
             </span>
           )}
         </div>
-        <div className="truncate font-mono text-[10.5px] text-zinc-500" title={project.rootPath}>
+        <div className="truncate font-mono text-[11px] text-zinc-500" title={project.rootPath}>
           {project.rootPath ? shortPath(project.rootPath, 60) : '—'}
         </div>
       </div>
@@ -501,7 +501,7 @@ export function ProjectHome() {
         <div className="mb-6 flex flex-col items-center text-center">
           <Logo size={40} />
           <h1 className="mt-3 text-[18px] font-semibold text-zinc-100">{t('project:home.title')}</h1>
-          <p className="mt-1 text-[12.5px] text-zinc-400">{t('project:home.subtitle')}</p>
+          <p className="mt-1 text-[13px] text-zinc-400">{t('project:home.subtitle')}</p>
         </div>
         <div className="mb-6 grid grid-cols-3 gap-2">
           <button className="btn-primary h-9 justify-center" onClick={openLauncher} disabled={!active.length}>
@@ -527,7 +527,7 @@ export function ProjectHome() {
                   <span className="h-2.5 w-2.5 shrink-0 rounded-full" style={{ background: p.color }} />
                   <div className="min-w-0 flex-1">
                     <div className="truncate text-[13px] text-zinc-100">{p.name}</div>
-                    <div className="truncate font-mono text-[10.5px] text-zinc-500">{p.rootPath ? shortPath(p.rootPath, 56) : t('project:launcher.folderUnset')}</div>
+                    <div className="truncate font-mono text-[11px] text-zinc-500">{p.rootPath ? shortPath(p.rootPath, 56) : t('project:launcher.folderUnset')}</div>
                   </div>
                   <FolderBadge folder={status[p.id] === 'unset' ? undefined : status[p.id]} />
                   <span className="shrink-0 text-[11px] text-zinc-500">{openedAgo(p.lastOpenedAt)}</span>
@@ -536,7 +536,7 @@ export function ProjectHome() {
             </div>
           </>
         )}
-        <div className="mt-5 text-center text-[11.5px] text-zinc-500">
+        <div className="mt-5 text-center text-[12px] text-zinc-500">
           <button className="hover:text-zinc-300 hover:underline" onClick={() => showOrg()}>
             {t('project:home.goToOrg')}
           </button>

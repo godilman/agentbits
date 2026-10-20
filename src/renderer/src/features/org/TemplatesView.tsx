@@ -21,7 +21,7 @@ export function TemplatesView() {
       <div className="mx-auto max-w-[1180px] px-8 py-6">
         <div className="mb-5 flex items-center gap-3 rounded-lg border border-line bg-surface px-4 py-3">
           <Recycle size={16} className="shrink-0 text-emerald-400" />
-          <div className="flex-1 text-[12.5px] leading-snug text-zinc-400">
+          <div className="flex-1 text-[13px] leading-snug text-zinc-400">
             <span className="text-zinc-200">{t('org:templates.intro.lead')}</span> {t('org:templates.intro.body')}
           </div>
           <button className="btn-ghost shrink-0" onClick={() => showOrg('teams')}>
@@ -59,21 +59,22 @@ function TemplateCard({ template: tpl, onUse }: { template: TeamTemplate; onUse:
           <meta.icon size={17} />
         </div>
         <div className="min-w-0 flex-1">
-          <div className="text-[13.5px] font-semibold text-zinc-100">{tpl.name}</div>
-          <div className="mt-0.5 flex items-center gap-1.5 text-[11px] text-zinc-500">
-            <span style={{ color: tpl.color }}>{meta.label}</span>
-            <span className="text-zinc-700">·</span>
+          <div className="text-[13px] font-semibold text-zinc-100">{tpl.name}</div>
+          <div className="mt-0.5 flex flex-wrap items-center gap-1.5 text-[12px] text-zinc-500">
+            <span className="h-1.5 w-1.5 shrink-0 rounded-full" style={{ background: tpl.color }} />
+            <span>{meta.label}</span>
+            <span className="text-zinc-500">·</span>
             {tpl.unitCount > 1 && (
               <>
                 <span>{t('org:counts.units', { count: tpl.unitCount })}</span>
-                <span className="text-zinc-700">·</span>
+                <span className="text-zinc-500">·</span>
               </>
             )}
             <span>{t('org:counts.agents', { count: tpl.agentCount })}</span>
           </div>
         </div>
       </div>
-      <p className="px-4 text-[12px] leading-relaxed text-zinc-400">{tpl.description}</p>
+      <p className="px-4 text-[13px] leading-relaxed text-zinc-400">{tpl.description}</p>
       <div className="mx-4 mt-3 max-h-[220px] overflow-y-auto rounded-md border border-line-soft bg-black/20 px-3 py-2">
         <PreviewNode node={tpl.tree} depth={0} />
       </div>
@@ -90,16 +91,16 @@ function PreviewNode({ node, depth }: { node: TemplateNodePreview; depth: number
   const Icon = KIND_META[node.kind].icon
   return (
     <div className={depth ? 'mt-1.5 border-l border-line pl-3' : ''}>
-      <div className="flex items-center gap-1.5 text-[11.5px] font-medium text-zinc-300">
+      <div className="flex items-center gap-1.5 text-[12px] font-medium text-zinc-300">
         <Icon size={11} className="text-zinc-500" /> {node.name}
       </div>
       {node.agents.length > 0 && (
         <div className="mt-0.5 space-y-px pl-[17px]">
           {node.agents.map((a) => (
-            <div key={a.name} className="flex items-center gap-1.5 text-[11px]">
+            <div key={a.name} className="flex items-center gap-1.5 text-[12px]">
               <span className={a.lead ? 'text-zinc-200' : 'text-zinc-400'}>{a.name}</span>
               {a.lead && <Star size={9} className="fill-amber-300 text-amber-300" />}
-              <span className="truncate text-zinc-600">{a.role}</span>
+              <span className="truncate text-zinc-500">{a.role}</span>
             </div>
           ))}
         </div>
@@ -117,6 +118,10 @@ function InstantiateModal({ template, onClose }: { template: TeamTemplate | null
   const toast = useAppStore((s) => s.toast)
   const selectUnit = useAppStore((s) => s.selectUnit)
   const showOrg = useAppStore((s) => s.showOrg)
+  // Opened from inside a project: offer to add the new team to it (ticked; the project is named). From the
+  // organization: no project is touched.
+  const target = useAppStore((s) => (s.templateFor ? s.projects.find((p) => p.id === s.templateFor && p.status === 'active') : undefined))
+  const [toProject, setToProject] = useState(true)
   const [name, setName] = useState('')
   const [parentId, setParentId] = useState('')
   const [busy, setBusy] = useState(false)
@@ -126,6 +131,7 @@ function InstantiateModal({ template, onClose }: { template: TeamTemplate | null
     if (!template) return
     setName(template.name)
     setParentId(rootUnit(useAppStore.getState().units)?.id ?? '')
+    setToProject(true)
     setBusy(false)
   }, [template])
 
@@ -133,11 +139,20 @@ function InstantiateModal({ template, onClose }: { template: TeamTemplate | null
     if (!template || busy) return
     setBusy(true)
     try {
-      const r = await call('templates:instantiate', template.id, { parentId: parentId || null, name: name.trim() || template.name })
-      toast('success', t('org:templates.instantiated', { name: name.trim() || template.name, agents: t('org:templates.newAgents', { count: r.agentIds.length }) }))
+      const assign = !!target && toProject
+      const r = await call('templates:instantiate', template.id, { parentId: parentId || null, name: name.trim() || template.name, ...(assign ? { projectId: target.id } : {}) })
+      const vars = { name: name.trim() || template.name, agents: t('org:templates.newAgents', { count: r.agentIds.length }), project: target?.name ?? '' }
+      onClose()
+      if (assign) {
+        // Straight back to the project's chat: the new lead is ready for the first message.
+        toast('success', t('org:templates.instantiatedToProject', vars))
+        useAppStore.getState().openProject(target.id)
+        useAppStore.getState().setTab('chat')
+        return
+      }
+      toast(target ? 'info' : 'success', t(target ? 'org:templates.instantiatedNotAssigned' : 'org:templates.instantiated', vars))
       selectUnit(r.unitId)
       showOrg('teams')
-      onClose()
     } catch (e) {
       toast('error', apiError(e))
       setBusy(false)
@@ -175,7 +190,16 @@ function InstantiateModal({ template, onClose }: { template: TeamTemplate | null
               ))}
             </select>
           </Field>
-          <div className="rounded-md border border-line bg-surface-2/60 px-3 py-2.5 text-[12px] leading-relaxed text-zinc-400">
+          {target && (
+            <label className="flex items-start gap-2 rounded-md border border-indigo-500/30 bg-indigo-500/[0.06] px-3 py-2.5 text-[13px] text-zinc-200" data-testid="template-to-project">
+              <input type="checkbox" className="mt-0.5" checked={toProject} onChange={(e) => setToProject(e.target.checked)} />
+              <span>
+                <Trans i18nKey="org:templates.addToProject" values={{ project: target.name }} components={{ b: <span className="font-semibold text-zinc-50" /> }} />
+                <span className="mt-0.5 block text-[11px] text-zinc-400">{t(toProject ? 'org:templates.addToProjectHint' : 'org:templates.addToProjectOff')}</span>
+              </span>
+            </label>
+          )}
+          <div className="rounded-md border border-line bg-surface-2/60 px-3 py-2.5 text-[13px] leading-relaxed text-zinc-400">
             <Trans
               i18nKey={template.unitCount > 1 ? 'org:templates.summaryWithUnits' : 'org:templates.summary'}
               values={{

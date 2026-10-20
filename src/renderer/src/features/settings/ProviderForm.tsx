@@ -79,6 +79,27 @@ export function ProviderForm({ onSaved, compactCards = false, initialKind = 'cla
 
   const detectedPath = kind === 'claude-cli' ? detected?.claude : kind === 'codex-cli' ? detected?.codex : null
 
+  // "Try with Demo": only when the user picks it (the chosen provider is never swapped silently).
+  const tryDemo = async (): Promise<void> => {
+    setBusy(true)
+    setResult(null)
+    try {
+      const p = await call('providers:save', { kind: 'mock', model: DEFAULT_MODEL.mock, isDefault: true })
+      onSaved(p)
+    } catch (e) {
+      setResult({ ok: false, message: (e as Error).message })
+    } finally {
+      setBusy(false)
+    }
+  }
+  const demoButton = (
+    <button className="btn-outline h-7 shrink-0 text-[12px]" disabled={busy} onClick={() => void tryDemo()} data-testid="try-demo">
+      {t('settings:providers.form.tryDemo')}
+    </button>
+  )
+  // Installed / not found / sign-in: what the CLI needs before it can work.
+  const cliMissing = meta.cli && detected !== null && !detectedPath && !cliPath.trim()
+
   const save = async (): Promise<void> => {
     setBusy(true)
     setResult(null)
@@ -123,11 +144,11 @@ export function ProviderForm({ onSaved, compactCards = false, initialKind = 'cla
           >
             <div className="flex items-center gap-2">
               <KindIcon kind={k.kind} />
-              <span className="text-[12.5px] font-medium text-zinc-100">{k.title}</span>
+              <span className="text-[13px] font-medium text-zinc-100">{k.title}</span>
             </div>
-            {!compactCards && <div className="mt-1.5 text-[11.5px] leading-snug text-zinc-400">{k.desc}</div>}
+            {!compactCards && <div className="mt-1.5 text-[12px] leading-snug text-zinc-400">{k.desc}</div>}
             {(k.kind === 'claude-cli' || k.kind === 'codex-cli') && detected && (
-              <div className={cn('mt-1.5 text-[10.5px]', (k.kind === 'claude-cli' ? detected.claude : detected.codex) ? 'text-emerald-400' : 'text-zinc-400')}>
+              <div className={cn('mt-1.5 text-[12px]', (k.kind === 'claude-cli' ? detected.claude : detected.codex) ? 'text-emerald-400' : 'text-zinc-400')}>
                 {(k.kind === 'claude-cli' ? detected.claude : detected.codex) ? t('settings:providers.form.installed') : t('settings:providers.form.notFound')}
               </div>
             )}
@@ -136,6 +157,16 @@ export function ProviderForm({ onSaved, compactCards = false, initialKind = 'cla
       </div>
 
       {compactCards && <div className="text-[12px] leading-relaxed text-zinc-400">{meta.desc}</div>}
+
+      {meta.cli && detected !== null && (
+        <div
+          className={cn('flex items-center gap-3 rounded-md border px-3 py-2 text-[13px] leading-relaxed', cliMissing ? 'border-amber-500/25 bg-amber-500/[0.06] text-amber-100' : 'border-line bg-surface-2/60 text-zinc-300')}
+          data-testid="cli-status"
+        >
+          <span className="min-w-0 flex-1">{t(cliMissing ? 'settings:providers.form.cliMissing' : 'settings:providers.form.cliInstalled', { name: meta.title })}</span>
+          {cliMissing && demoButton}
+        </div>
+      )}
 
       <div className="grid grid-cols-2 gap-3">
         {kind === 'openai' && (
@@ -150,13 +181,13 @@ export function ProviderForm({ onSaved, compactCards = false, initialKind = 'cla
             </select>
             {endpoint === 'custom' && (
               <input
-                className={cn('input mt-1.5 font-mono text-[12px]', urlError && 'border-rose-500/50')}
+                className={cn('input mt-1.5 font-mono text-[13px]', urlError && 'border-rose-500')}
                 value={customUrl}
                 onChange={(e) => setCustomUrl(e.target.value)}
                 placeholder="https://…/v1"
               />
             )}
-            {urlError && endpoint === 'custom' && customUrl.trim() && <div className="mt-1 text-[11px] text-rose-300">{urlError}</div>}
+            {urlError && endpoint === 'custom' && customUrl.trim() && <div className="mt-1 text-[12px] text-rose-300">{urlError}</div>}
             <div className="mt-1 text-[11px] text-zinc-400">{t(`settings:providers.endpoint.hints.${endpoint}`)}</div>
           </div>
         )}
@@ -166,7 +197,7 @@ export function ProviderForm({ onSaved, compactCards = false, initialKind = 'cla
             <input
               id="provider-api-key"
               type="password"
-              className={cn('input font-mono', showApiKeyError && 'border-rose-500/50 focus:border-rose-500/70')}
+              className={cn('input font-mono', showApiKeyError && 'border-rose-500 focus:border-rose-300')}
               value={apiKey}
               onChange={(e) => setApiKey(e.target.value)}
               onBlur={() => setApiKeyTouched(true)}
@@ -176,7 +207,7 @@ export function ProviderForm({ onSaved, compactCards = false, initialKind = 'cla
               autoFocus
             />
             {showApiKeyError && (
-              <div id="provider-api-key-error" role="alert" className="mt-1 text-[11px] text-rose-300">
+              <div id="provider-api-key-error" role="alert" className="mt-1 text-[12px] text-rose-300">
                 {apiKeyError}
               </div>
             )}
@@ -186,7 +217,7 @@ export function ProviderForm({ onSaved, compactCards = false, initialKind = 'cla
         {meta.cli && (
           <div className="col-span-2">
             <label className="label">{t('settings:providers.form.cliPath')}</label>
-            <input className="input font-mono text-[12px]" value={cliPath} onChange={(e) => setCliPath(e.target.value)} placeholder={detectedPath ?? (kind === 'claude-cli' ? 'claude' : 'codex')} />
+            <input className="input font-mono text-[13px]" value={cliPath} onChange={(e) => setCliPath(e.target.value)} placeholder={detectedPath ?? (kind === 'claude-cli' ? 'claude' : 'codex')} />
             <div className="mt-1 text-[11px] text-zinc-400">
               {kind === 'claude-cli'
                 ? t('settings:providers.form.claudeLogin')
@@ -211,8 +242,14 @@ export function ProviderForm({ onSaved, compactCards = false, initialKind = 'cla
       </div>
 
       {result && (
-        <div className={cn('rounded-md border px-3 py-2 text-[12px]', result.ok ? 'border-emerald-500/25 bg-emerald-500/[0.06] text-emerald-200' : 'border-rose-500/25 bg-rose-500/[0.06] text-rose-200')}>
+        <div className={cn('rounded-md border px-3 py-2 text-[13px]', result.ok ? 'border-emerald-500/25 bg-emerald-500/[0.06] text-emerald-200' : 'border-rose-500/25 bg-rose-500/[0.06] text-rose-200')}>
           {result.message}
+          {!result.ok && kind !== 'mock' && (
+            <div className="mt-2 flex items-center gap-3 border-t border-rose-500/20 pt-2 text-zinc-300">
+              <span className="min-w-0 flex-1">{t('settings:providers.form.demoInstead')}</span>
+              {demoButton}
+            </div>
+          )}
         </div>
       )}
 

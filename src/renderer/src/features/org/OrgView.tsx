@@ -54,12 +54,12 @@ export function OrgView() {
 
   return (
     <div className="flex h-full flex-col">
-      <header className="flex h-12 shrink-0 items-center gap-5 border-b border-line px-5">
+      <header className="flex min-h-12 shrink-0 flex-wrap items-center gap-x-5 gap-y-2 border-b border-line px-5 py-2">
         <div className="flex min-w-0 items-center gap-2.5">
           <Network size={16} className="shrink-0 text-indigo-300" />
           <div className="min-w-0 leading-tight">
-            <div className="text-[13.5px] font-semibold text-zinc-100">{t('org:view.title')}</div>
-            <div className="truncate text-[11px] text-zinc-500">
+            <div className="text-[15px] font-semibold text-zinc-100">{t('org:view.title')}</div>
+            <div className="truncate text-[12px] text-zinc-500">
               {t('org:view.subtitle', { units: t('org:counts.units', { count: unitCount }), agents: t('org:counts.agents', { count: agentCount }) })}
             </div>
           </div>

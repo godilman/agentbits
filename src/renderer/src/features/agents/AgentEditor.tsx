@@ -104,17 +104,17 @@ export function AgentEditor({ agent }: { agent: Agent }) {
           <PixelAvatar agent={agent} size={44} showStatus className={!agent.enabled ? 'opacity-50 grayscale' : ''} />
           <div className="min-w-0 flex-1">
             <div className="flex items-center gap-2">
-              <h2 className="truncate text-[16px] font-semibold text-zinc-100">{agent.name}</h2>
+              <h2 className="truncate text-[15px] font-semibold text-zinc-100">{agent.name}</h2>
               {agent.isLead && (
-                <span className="rounded bg-indigo-500/15 px-1.5 py-px text-[10px] font-semibold uppercase tracking-wide text-indigo-300">{t('agents:editor.badges.lead')}</span>
+                <span className="rounded bg-indigo-500/15 px-1.5 py-px text-[12px] font-semibold uppercase tracking-wide text-indigo-300">{t('agents:editor.badges.lead')}</span>
               )}
-              {!agent.enabled && <span className="rounded bg-white/5 px-1.5 py-px text-[10px] font-medium text-zinc-400">{t('agents:editor.badges.inactive')}</span>}
+              {!agent.enabled && <span className="rounded bg-white/5 px-1.5 py-px text-[12px] font-medium text-zinc-400">{t('agents:editor.badges.inactive')}</span>}
             </div>
-            <div className="truncate text-[12.5px] text-zinc-400">{agent.role || t('agents:editor.noRole')}</div>
+            <div className="truncate text-[12px] text-zinc-400">{agent.role || t('agents:editor.noRole')}</div>
           </div>
           <span
             className={cn(
-              'flex items-center gap-1 text-[11.5px] text-emerald-400 transition-opacity duration-300',
+              'flex items-center gap-1 text-[12px] text-emerald-400 transition-opacity duration-300',
               saved ? 'opacity-100' : 'opacity-0'
             )}
             aria-live="polite"
@@ -136,7 +136,7 @@ export function AgentEditor({ agent }: { agent: Agent }) {
                 <PixelAvatar agent={agent} size={92} />
               </div>
               <button
-                className="btn-ghost h-6 text-[11.5px]"
+                className="btn-ghost h-6 text-[12px]"
                 title={t('agents:editor.identity.randomLook')}
                 onClick={() => void save(randomLook(agents.filter((a) => a.id !== agent.id)))}
               >
@@ -146,8 +146,8 @@ export function AgentEditor({ agent }: { agent: Agent }) {
             <div className="min-w-0 flex-1 space-y-4">
               <div className="grid grid-cols-2 gap-3">
                 <Field label={t('agents:fields.name')}>
-                  <input className={cn('input', nameError && 'border-rose-500/60 focus:border-rose-500/60 focus:ring-rose-500/15')} {...text('name')} />
-                  {nameError && <div className="mt-1 text-[11.5px] text-rose-400">{nameError}</div>}
+                  <input className={cn('input', nameError && 'border-rose-500 focus:border-rose-300 focus:ring-rose-500/15')} {...text('name')} />
+                  {nameError && <div className="mt-1 text-[12px] text-rose-400">{nameError}</div>}
                 </Field>
                 <Field label={t('agents:fields.role')}>
                   <input className="input" placeholder={t('agents:editor.identity.rolePlaceholder')} {...text('role')} />
@@ -261,8 +261,8 @@ function ToggleRow({ title, desc, checked, disabled, onChange }: { title: string
   return (
     <label className={cn('flex items-start gap-3 rounded-md px-1 py-1', disabled ? 'cursor-default' : 'cursor-pointer')}>
       <div className="min-w-0 flex-1">
-        <div className="text-[12.5px] font-medium text-zinc-200">{title}</div>
-        <div className="text-[11.5px] leading-snug text-zinc-400">{desc}</div>
+        <div className="text-[13px] font-medium text-zinc-200">{title}</div>
+        <div className="text-[12px] leading-snug text-zinc-400">{desc}</div>
       </div>
       <Toggle checked={checked} disabled={disabled} onChange={onChange} />
     </label>
@@ -317,31 +317,31 @@ function StatusCard({ agent }: { agent: Agent }) {
   const meta = STATUS_META[agent.status]
 
   return (
-    <section className="card grid grid-cols-[minmax(0,1.4fr)_minmax(0,2fr)_repeat(3,minmax(0,0.6fr))] divide-x divide-line-soft">
+    <section className="card grid grid-cols-[repeat(auto-fit,minmax(8rem,1fr))] divide-x divide-line-soft">
       <Cell label={t('agents:editor.status.label')}>
         <div className={cn('flex items-center gap-1.5 text-[13px] font-medium', meta.text)}>
           <span className={cn('h-1.5 w-1.5 rounded-full', meta.dot, agent.status === 'working' && 'animate-pulse')} />
           {meta.label}
         </div>
-        <div className="mt-0.5 truncate text-[11.5px] text-zinc-400">{agent.statusNote || '—'}</div>
+        <div className="mt-0.5 truncate text-[12px] text-zinc-400">{agent.statusNote || '—'}</div>
       </Cell>
       <Cell label={t('agents:editor.status.current')}>
         {task && run ? (
           <>
-            <div className="truncate text-[12.5px] text-zinc-200">
+            <div className="truncate text-[13px] text-zinc-200">
               <span className="font-mono text-zinc-400">{task.key}</span> {task.title}
             </div>
             {run.status === 'awaiting_approval' ? (
-              <div className="mt-1 text-[11.5px] text-amber-300">{t('agents:editor.status.awaitingApproval')}</div>
+              <div className="mt-1 text-[12px] text-amber-300">{t('agents:editor.status.awaitingApproval')}</div>
             ) : (
               <div className="mt-1.5 flex items-center gap-2">
                 <ProgressBar value={task.progress} tone={run.status === 'paused' ? 'amber' : 'emerald'} />
-                <span className="font-mono text-[10.5px] text-zinc-400">{task.progress}%</span>
+                <span className="font-mono text-[11px] text-zinc-400">{task.progress}%</span>
               </div>
             )}
           </>
         ) : (
-          <div className="text-[12.5px] text-zinc-400">{t('agents:editor.status.idle')}</div>
+          <div className="text-[12px] text-zinc-400">{t('agents:editor.status.idle')}</div>
         )}
       </Cell>
       <Stat label={t('agents:editor.status.queued')} value={counts.todo} />
@@ -354,7 +354,7 @@ function StatusCard({ agent }: { agent: Agent }) {
 function Cell({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div className="min-w-0 px-4 py-3">
-      <div className="mb-1 text-[10.5px] uppercase tracking-wide text-zinc-400">{label}</div>
+      <div className="mb-1 text-[12px] uppercase tracking-wide text-zinc-400">{label}</div>
       {children}
     </div>
   )
@@ -363,7 +363,7 @@ function Cell({ label, children }: { label: string; children: React.ReactNode })
 function Stat({ label, value }: { label: string; value: number }) {
   return (
     <Cell label={label}>
-      <div className="font-mono text-[17px] leading-tight text-zinc-100">{value}</div>
+      <div className="font-mono text-[18px] leading-tight text-zinc-100">{value}</div>
     </Cell>
   )
 }
@@ -383,13 +383,13 @@ function PermissionsCard({ agent, onSave }: { agent: Agent; onSave: (patch: Perm
       title={t('agents:editor.permissions.title')}
       desc={t('agents:editor.permissions.desc')}
       action={
-        <button className="btn-ghost h-6 shrink-0 text-[11.5px]" onClick={() => openSettings('permissions')}>
+        <button className="btn-ghost h-6 shrink-0 text-[12px]" onClick={() => openSettings('permissions')}>
           {t('agents:editor.permissions.matrix')}
         </button>
       }
     >
       {!perms ? (
-        <div className="text-[12px] text-zinc-400">{t('agents:editor.permissions.loading')}</div>
+        <div className="text-[13px] text-zinc-400">{t('agents:editor.permissions.loading')}</div>
       ) : (
         <>
           <div className="-my-1 divide-y divide-line-soft">
@@ -404,11 +404,11 @@ function PermissionsCard({ agent, onSave }: { agent: Agent; onSave: (patch: Perm
                   <p.icon size={14} />
                 </div>
                 <div className="min-w-0 flex-1">
-                  <div className="flex items-baseline gap-2">
-                    <span className="text-[12.5px] font-medium text-zinc-200">{p.label}</span>
-                    <span className="font-mono text-[10.5px] text-zinc-400">{p.hint}</span>
+                  <div className="flex flex-wrap items-baseline gap-x-2">
+                    <span className="text-[13px] font-medium text-zinc-200">{p.label}</span>
+                    <span className="font-mono text-[11px] text-zinc-400">{p.hint}</span>
                   </div>
-                  <div className="text-[11.5px] text-zinc-400">{p.desc}</div>
+                  <div className="text-[12px] text-zinc-400">{p.desc}</div>
                 </div>
                 <Toggle checked={perms[p.key]} onChange={(v) => void onSave({ [p.key]: v })} />
               </label>
@@ -418,8 +418,8 @@ function PermissionsCard({ agent, onSave }: { agent: Agent; onSave: (patch: Perm
           <div className="mt-4 rounded-md border border-line-soft bg-surface-2/50 p-3">
             <div className="mb-1 flex items-center justify-between gap-3">
               <div>
-                <div className="text-[12.5px] font-medium text-zinc-200">{t('agents:editor.permissions.extraFolders')}</div>
-                <div className="text-[11.5px] text-zinc-400">
+                <div className="text-[13px] font-medium text-zinc-200">{t('agents:editor.permissions.extraFolders')}</div>
+                <div className="text-[12px] text-zinc-400">
                   <Trans
                     i18nKey="agents:editor.permissions.extraFoldersDesc"
                     values={{ path: workspace || t('agents:editor.permissions.notSelected') }}
@@ -438,7 +438,7 @@ function PermissionsCard({ agent, onSave }: { agent: Agent; onSave: (patch: Perm
               </button>
             </div>
             {perms.allowedPaths.map((path) => (
-              <div key={path} className="flex items-center gap-2 border-t border-line-soft py-1.5 font-mono text-[11.5px] text-zinc-400 first-of-type:mt-2">
+              <div key={path} className="flex items-center gap-2 border-t border-line-soft py-1.5 font-mono text-[11px] text-zinc-400 first-of-type:mt-2">
                 <FolderOpen size={12} className="shrink-0 text-zinc-400" />
                 <span className="selectable flex-1 truncate">{path}</span>
                 <button className="icon-btn hover:text-rose-400" title={t('actions.remove')} onClick={() => void onSave({ allowedPaths: perms.allowedPaths.filter((x) => x !== path) })}>

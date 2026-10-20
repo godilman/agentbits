@@ -309,7 +309,7 @@ export function MemoryGraphView() {
         <div className="relative">
           <Search size={12} className="absolute left-2 top-1/2 -translate-y-1/2 text-zinc-400" />
           <input
-            className="input h-7 w-52 pl-7 text-[12px]"
+            className="input h-7 w-52 pl-7 text-[13px]"
             placeholder={t('org:memory.graphSearch')}
             value={query}
             onChange={(e) => setQuery(e.target.value)}
@@ -320,7 +320,7 @@ export function MemoryGraphView() {
             key={ty}
             onClick={() => setHidden((h) => (h.has(ty) ? new Set([...h].filter((x) => x !== ty)) : new Set([...h, ty])))}
             className={cn(
-              'flex h-7 items-center gap-1.5 rounded-md border px-2 text-[11.5px]',
+              'flex h-7 items-center gap-1.5 rounded-md border px-2 text-[12px]',
               hidden.has(ty) ? 'border-line text-zinc-500 line-through' : 'border-line bg-surface-2 text-zinc-200'
             )}
           >
@@ -339,7 +339,7 @@ export function MemoryGraphView() {
       </div>
 
       {graph && graph.nodes.length === 0 && (
-        <div className="absolute inset-0 flex items-center justify-center p-8 text-center text-[12.5px] text-zinc-400">{t('org:memory.graphEmpty')}</div>
+        <div className="absolute inset-0 flex items-center justify-center p-8 pt-16 text-center text-[13px] text-zinc-400">{t('org:memory.graphEmpty')}</div>
       )}
 
       {sel && (
@@ -352,13 +352,13 @@ export function MemoryGraphView() {
               <X size={13} />
             </button>
           </div>
-          <div className="min-h-0 flex-1 space-y-3 overflow-y-auto px-3 py-2.5 text-[12.5px]">
+          <div className="min-h-0 flex-1 space-y-3 overflow-y-auto px-3 py-2.5 text-[13px]">
             {editing && sel.type === 'memory' ? (
               <MemoryEditor memory={{ id: sel.id.slice(7), content: sel.text ?? sel.label, topics: sel.topics ?? [] }} onDone={() => setEditing(false)} />
             ) : (
               <div className="selectable leading-relaxed text-zinc-100">{sel.type === 'you' ? t('org:memory.youDesc') : sel.text ?? sel.label}</div>
             )}
-            {sel.faded && <div className="rounded bg-rose-500/10 px-2 py-1 text-[11.5px] text-rose-300">{t('org:memory.supersededDesc')}</div>}
+            {sel.faded && <div className="rounded bg-rose-500/10 px-2 py-1 text-[12px] text-rose-300">{t('org:memory.supersededDesc')}</div>}
             {sel.topics && sel.topics.length > 0 && <TopicChips topics={sel.topics} />}
             {sel.type === 'memory' && !editing && (
               <div className="flex gap-1.5">
@@ -377,13 +377,13 @@ export function MemoryGraphView() {
               </div>
             )}
             <div>
-              <div className="mb-1 text-[11px] font-medium uppercase tracking-wide text-zinc-500">{t('org:memory.links', { count: links.length })}</div>
+              <div className="mb-1 text-[12px] font-medium uppercase tracking-wide text-zinc-500">{t('org:memory.links', { count: links.length })}</div>
               <ul className="space-y-0.5">
                 {links.map((l, i) => (
                   <li key={i}>
                     <button className="flex w-full items-start gap-1.5 rounded px-1 py-0.5 text-left hover:bg-white/[0.05]" onClick={() => setSelected(l.other.id)}>
                       <span className="mt-1 h-2 w-2 shrink-0 rounded-full" style={{ background: TYPE_COLOR[l.other.type] }} />
-                      <span className="shrink-0 text-[11px] text-zinc-500">{t(`org:memory.edge.${l.kind}${l.out ? '' : 'In'}`)}</span>
+                      <span className="shrink-0 text-[12px] text-zinc-500">{t(`org:memory.edge.${l.kind}${l.out ? '' : 'In'}`)}</span>
                       <span className="min-w-0 truncate text-zinc-300">{l.other.type === 'you' ? t('org:memory.you') : l.other.label}</span>
                     </button>
                   </li>

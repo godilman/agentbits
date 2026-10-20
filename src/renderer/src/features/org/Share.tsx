@@ -116,7 +116,7 @@ export function ImportModal({ open, onClose }: { open: boolean; onClose: () => v
     >
       {!preview ? (
         <div className="space-y-4">
-          <p className="text-[12.5px] leading-relaxed text-zinc-400">{t('org:share.import.intro')}</p>
+          <p className="text-[13px] leading-relaxed text-zinc-400">{t('org:share.import.intro')}</p>
           <button className="btn-outline w-full justify-center" disabled={busy} onClick={() => void load({ type: 'file' })}>
             <FileUp size={13} /> {t('org:share.import.pickFile')}
           </button>
@@ -136,11 +136,11 @@ export function ImportModal({ open, onClose }: { open: boolean; onClose: () => v
           </Field>
         </div>
       ) : (
-        <div className="space-y-4 text-[12.5px]">
-          <div className="text-[11.5px] text-zinc-500">
+        <div className="space-y-4 text-[13px]">
+          <div className="text-[11px] text-zinc-500">
             {t('org:share.import.meta', { source: preview.sourceLabel, version: preview.appVersion || '?', date: preview.exportedAt.slice(0, 10) })}
           </div>
-          <div className="flex gap-2 rounded-md border border-amber-500/30 bg-amber-500/5 px-3 py-2.5 text-[12px] leading-relaxed text-amber-200/90">
+          <div className="flex gap-2 rounded-md border border-amber-500/30 bg-amber-500/5 px-3 py-2.5 text-[13px] leading-relaxed text-amber-200/90">
             <ShieldCheck size={14} className="mt-0.5 shrink-0" />
             <span>{t('org:share.import.trust')}</span>
           </div>
@@ -182,11 +182,11 @@ export function ImportModal({ open, onClose }: { open: boolean; onClose: () => v
                       </span>
                     )}
                   </summary>
-                  <div className="mt-2 space-y-2 text-[12px] text-zinc-400">
+                  <div className="mt-2 space-y-2 text-[13px] text-zinc-400">
                     {a.suspicious.length > 0 && (
                       <ul className="list-disc space-y-0.5 pl-5 text-amber-200/90">
                         {a.suspicious.map((s, i) => (
-                          <li key={i} className="font-mono text-[11px]">
+                          <li key={i} className="font-mono text-[12px]">
                             {s}
                           </li>
                         ))}
@@ -207,12 +207,12 @@ export function ImportModal({ open, onClose }: { open: boolean; onClose: () => v
                       {PERMS.map((k) => (
                         <span
                           key={k}
-                          className={cn('rounded px-1.5 py-0.5 text-[11px]', a.requested[k] ? 'bg-emerald-500/10 text-emerald-300' : 'bg-zinc-500/10 text-zinc-500 line-through')}
+                          className={cn('rounded px-1.5 py-0.5 text-[12px]', a.requested[k] ? 'bg-emerald-500/10 text-emerald-300' : 'bg-zinc-500/10 text-zinc-500 line-through')}
                         >
                           {t(`agents:perms.${k}.label`)}
                         </span>
                       ))}
-                      <span className="rounded bg-sky-500/10 px-1.5 py-0.5 text-[11px] text-sky-300">{t('agents:perms.requireApproval.label')}</span>
+                      <span className="rounded bg-sky-500/10 px-1.5 py-0.5 text-[12px] text-sky-300">{t('agents:perms.requireApproval.label')}</span>
                     </div>
                     {a.needs.length > 0 && <div className="text-amber-200/80">{t('org:share.import.needs', { names: a.needs.join(', ') })}</div>}
                   </div>
@@ -257,7 +257,7 @@ export function ImportModal({ open, onClose }: { open: boolean; onClose: () => v
 function Block({ label, text }: { label: string; text: string }) {
   return (
     <div>
-      <div className="text-[11px] uppercase tracking-wide text-zinc-500">{label}</div>
+      <div className="text-[12px] uppercase tracking-wide text-zinc-500">{label}</div>
       <div className="max-h-48 overflow-y-auto whitespace-pre-wrap rounded border border-line-soft bg-black/20 px-2 py-1.5 text-zinc-300">{text}</div>
     </div>
   )

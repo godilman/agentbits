@@ -37,10 +37,10 @@ export function AppsView() {
         <div className="space-y-3 border-b border-line p-4">
           <div className="flex items-center gap-2">
             <Blocks size={15} className="text-indigo-300" />
-            <div className="flex-1 text-[13.5px] font-semibold text-zinc-100">{t('apps:title')}</div>
+            <div className="flex-1 text-[15px] font-semibold text-zinc-100">{t('apps:title')}</div>
             {addMenu}
           </div>
-          <p className="text-[11.5px] leading-relaxed text-zinc-400">{t('apps:intro')}</p>
+          <p className="text-[12px] leading-relaxed text-zinc-400">{t('apps:intro')}</p>
         </div>
         <div className="min-h-0 flex-1 overflow-y-auto p-2">
           {apps.map((a) => (
@@ -55,13 +55,13 @@ export function AppsView() {
             >
               <div className="flex items-center gap-1.5">
                 <StatusDot app={a} />
-                <span className={cn('truncate text-[12.5px] font-medium', a.enabled ? 'text-zinc-100' : 'text-zinc-500')}>{a.name}</span>
-                <span className="ml-auto shrink-0 rounded bg-zinc-700/50 px-1 text-[9.5px] font-medium uppercase tracking-wide text-zinc-400">
+                <span className={cn('truncate text-[13px] font-medium', a.enabled ? 'text-zinc-100' : 'text-zinc-500')}>{a.name}</span>
+                <span className="ml-auto shrink-0 rounded bg-zinc-700/50 px-1 text-[12px] font-medium uppercase tracking-wide text-zinc-400">
                   {t(a.transport === 'stdio' ? 'apps:kind.stdio' : 'apps:kind.http')}
                 </span>
               </div>
-              {a.description && <div className="mt-0.5 line-clamp-2 text-[11.5px] leading-snug text-zinc-400">{a.description}</div>}
-              <div className="mt-1 text-[10.5px] text-zinc-500">
+              {a.description && <div className="mt-0.5 line-clamp-2 text-[12px] leading-snug text-zinc-400">{a.description}</div>}
+              <div className="mt-1 text-[12px] text-zinc-500">
                 {statusText(a)} · {t('apps:toolCount', { count: a.tools.length })} · {a.agentIds.length ? t('apps:agentCount', { count: a.agentIds.length }) : t('apps:noAgents')}
               </div>
             </button>
@@ -128,7 +128,7 @@ function AddMenu({ onPick }: { onPick: (k: AddKind) => void }) {
       {open && (
         <div className="card shadow-pop absolute right-0 top-8 z-30 w-[250px] p-1">
           {items.map(({ k, icon: Icon, label }) => (
-            <button key={k} className="flex w-full items-center gap-2 rounded-md px-2.5 py-2 text-left text-[12.5px] text-zinc-200 hover:bg-surface-2" onClick={() => {
+            <button key={k} className="flex w-full items-center gap-2 rounded-md px-2.5 py-2 text-left text-[13px] text-zinc-200 hover:bg-surface-2" onClick={() => {
                 setOpen(false)
                 onPick(k)
               }}
@@ -219,11 +219,11 @@ function AppPanel({ app, onDeleted }: { app: AppServer; onDeleted: () => void })
         </div>
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2">
-            <h2 className="truncate text-[16px] font-semibold text-zinc-100">{app.name}</h2>
+            <h2 className="truncate text-[15px] font-semibold text-zinc-100">{app.name}</h2>
             <StatusDot app={app} />
-            <span className="text-[11.5px] text-zinc-400">{statusText(app)}</span>
+            <span className="text-[12px] text-zinc-400">{statusText(app)}</span>
           </div>
-          {app.description && <p className="mt-1 text-[12.5px] leading-relaxed text-zinc-300">{app.description}</p>}
+          {app.description && <p className="mt-1 text-[13px] leading-relaxed text-zinc-300">{app.description}</p>}
           <div className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-zinc-500">
             <span className="max-w-[520px] truncate font-mono text-zinc-400" title={app.transport === 'stdio' ? [app.command, ...app.args].join(' ') : app.url}>
               {app.transport === 'stdio' ? [app.command, ...app.args].join(' ') : app.url}
@@ -260,7 +260,7 @@ function AppPanel({ app, onDeleted }: { app: AppServer; onDeleted: () => void })
       </div>
 
       {confirm && (
-        <div className="flex items-center gap-3 rounded-lg border border-rose-500/30 bg-rose-500/[0.06] px-4 py-3 text-[12.5px] text-rose-200">
+        <div className="flex items-center gap-3 rounded-lg border border-rose-500/30 bg-rose-500/[0.06] px-4 py-3 text-[13px] text-rose-200">
           <span className="flex-1">{t('apps:detail.deleteConfirm', { name: app.name })}</span>
           <button className="btn-ghost h-7" onClick={() => setConfirm(false)}>
             {t('actions.cancel')}
@@ -272,7 +272,7 @@ function AppPanel({ app, onDeleted }: { app: AppServer; onDeleted: () => void })
       )}
 
       {app.lastOk === false && app.lastMessage && (
-        <div className="whitespace-pre-wrap break-words rounded-lg border border-rose-500/30 bg-rose-500/[0.06] px-4 py-3 font-mono text-[11.5px] text-rose-200" data-testid="app-error">
+        <div className="whitespace-pre-wrap break-words rounded-lg border border-rose-500/30 bg-rose-500/[0.06] px-4 py-3 font-mono text-[12px] text-rose-200" data-testid="app-error">
           {app.lastMessage}
         </div>
       )}
@@ -310,26 +310,26 @@ function ToolsTab({ app }: { app: AppServer }) {
   const setPolicy = (tool: string, p: ToolPolicy, def: ToolPolicy): void => {
     void call('apps:setPolicy', app.id, tool, p === def ? null : p).catch((e) => toast('error', apiError(e)))
   }
-  if (!app.tools.length) return <div className="card px-5 py-6 text-[12.5px] text-zinc-500">{t('apps:tools.none')}</div>
+  if (!app.tools.length) return <div className="card px-5 py-6 text-[13px] text-zinc-500">{t('apps:tools.none')}</div>
   return (
     <section className="card" data-testid="app-tools">
-      <p className="border-b border-line-soft px-4 py-2.5 text-[11.5px] leading-snug text-zinc-400">{t('apps:tools.policyHint')}</p>
+      <p className="border-b border-line-soft px-4 py-2.5 text-[12px] leading-snug text-zinc-400">{t('apps:tools.policyHint')}</p>
       <ul className="divide-y divide-line-soft">
         {app.tools.map((tool) => {
           const def = defaultPolicy(tool)
           const cur = policyOf(app, tool)
           return (
-            <li key={tool.name} className="flex items-start gap-3 px-4 py-2.5" data-testid={`app-tool-${tool.name}`}>
-              <div className="min-w-0 flex-1">
+            <li key={tool.name} className="flex flex-wrap items-start gap-x-3 gap-y-2 px-4 py-2.5" data-testid={`app-tool-${tool.name}`}>
+              <div className="min-w-[12rem] flex-1">
                 <div className="flex flex-wrap items-center gap-1.5">
-                  <span className="font-mono text-[12.5px] text-zinc-100">{tool.name}</span>
-                  {tool.readOnly && <span className="rounded bg-emerald-500/15 px-1 text-[10px] text-emerald-300">{t('apps:tools.readOnly')}</span>}
-                  {tool.destructive && <span className="rounded bg-rose-500/15 px-1 text-[10px] text-rose-300">{t('apps:tools.destructive')}</span>}
+                  <span className="font-mono text-[13px] text-zinc-100">{tool.name}</span>
+                  {tool.readOnly && <span className="rounded bg-emerald-500/15 px-1 text-[12px] text-emerald-300">{t('apps:tools.readOnly')}</span>}
+                  {tool.destructive && <span className="rounded bg-rose-500/15 px-1 text-[12px] text-rose-300">{t('apps:tools.destructive')}</span>}
                 </div>
-                {(tool.description || tool.title) && <div className="mt-0.5 line-clamp-2 text-[11.5px] text-zinc-400">{tool.description || tool.title}</div>}
+                {(tool.description || tool.title) && <div className="mt-0.5 line-clamp-2 text-[12px] text-zinc-400">{tool.description || tool.title}</div>}
               </div>
               <select
-                className={cn('input h-7 w-[236px] shrink-0 text-[12px]', cur === 'block' ? 'text-zinc-500' : cur === 'auto' ? 'text-emerald-200' : 'text-amber-200')}
+                className={cn('input h-7 w-auto min-w-[236px] shrink-0 text-[13px]', cur === 'block' ? 'text-zinc-500' : cur === 'auto' ? 'text-emerald-200' : 'text-amber-200')}
                 value={cur}
                 onChange={(e) => setPolicy(tool.name, e.target.value as ToolPolicy, def)}
                 aria-label={t('apps:tools.policy')}
@@ -357,7 +357,7 @@ function AccessTab({ app }: { app: AppServer }) {
   return (
     <section className="card px-4 py-3.5" data-testid="app-access">
       <div className="flex items-start gap-3">
-        <p className="flex-1 text-[11.5px] leading-snug text-zinc-400">{t('apps:access.hint')}</p>
+        <p className="flex-1 text-[12px] leading-snug text-zinc-400">{t('apps:access.hint')}</p>
         {agents.length > 0 && (
           <div className="flex shrink-0 gap-1.5">
             <button className="btn-ghost h-7" onClick={() => void Promise.all(agents.filter((a) => !app.agentIds.includes(a.id)).map((a) => set(a.id, true)))}>
@@ -369,13 +369,13 @@ function AccessTab({ app }: { app: AppServer }) {
           </div>
         )}
       </div>
-      {agents.length === 0 && <div className="mt-3 text-[12px] text-zinc-500">{t('apps:access.none')}</div>}
+      {agents.length === 0 && <div className="mt-3 text-[13px] text-zinc-500">{t('apps:access.none')}</div>}
       <div className="mt-3 grid grid-cols-2 gap-1.5">
         {agents.map((a) => (
-          <label key={a.id} className="flex items-center gap-2.5 rounded-md border border-line px-3 py-2 text-[12.5px] text-zinc-200" data-testid={`app-access-${a.name}`}>
+          <label key={a.id} className="flex items-center gap-2.5 rounded-md border border-line px-3 py-2 text-[13px] text-zinc-200" data-testid={`app-access-${a.name}`}>
             <Toggle size="sm" checked={app.agentIds.includes(a.id)} onChange={(v) => void set(a.id, v)} />
             <span className="truncate">{a.name}</span>
-            <span className="ml-auto truncate text-[11px] text-zinc-500">{a.role}</span>
+            <span className="ml-auto truncate text-[12px] text-zinc-500">{a.role}</span>
           </label>
         ))}
       </div>
@@ -481,7 +481,7 @@ function FormFields({ f, set }: { f: FormState; set: (p: Partial<FormState>) => 
       </label>
       {f.transport === 'stdio' ? (
         <>
-          <div className="flex gap-2 rounded-md border border-amber-500/30 bg-amber-500/[0.06] px-3 py-2 text-[11.5px] leading-snug text-amber-100">
+          <div className="flex gap-2 rounded-md border border-amber-500/30 bg-amber-500/[0.06] px-3 py-2 text-[13px] leading-snug text-amber-100">
             <AlertTriangle size={13} className="mt-0.5 shrink-0 text-amber-300" /> {t('apps:form.stdioWarning')}
           </div>
           <div className="grid grid-cols-2 gap-3">
@@ -496,7 +496,7 @@ function FormFields({ f, set }: { f: FormState; set: (p: Partial<FormState>) => 
           </div>
           <label className="block">
             <span className="label">{t('apps:form.args')}</span>
-            <textarea className="input h-20 resize-none font-mono text-[12px]" value={f.args} placeholder={t('apps:form.argsPlaceholder')} onChange={(e) => set({ args: e.target.value })} data-testid="app-form-args" />
+            <textarea className="input h-20 resize-none font-mono text-[13px]" value={f.args} placeholder={t('apps:form.argsPlaceholder')} onChange={(e) => set({ args: e.target.value })} data-testid="app-form-args" />
           </label>
           <SecretRows title={t('apps:form.env')} hint={t('apps:form.envHint')} rows={f.env} onChange={(env) => set({ env })} testId="app-form-env" />
         </>
@@ -509,8 +509,8 @@ function FormFields({ f, set }: { f: FormState; set: (p: Partial<FormState>) => 
           <label className="flex items-start gap-2.5">
             <Toggle checked={f.oauth} onChange={(oauth) => set({ oauth })} />
             <span>
-              <span className="block text-[12.5px] text-zinc-200">{t('apps:form.oauth')}</span>
-              <span className="block text-[11.5px] text-zinc-500">{t('apps:form.oauthHint')}</span>
+              <span className="block text-[13px] text-zinc-200">{t('apps:form.oauth')}</span>
+              <span className="block text-[12px] text-zinc-500">{t('apps:form.oauthHint')}</span>
             </span>
           </label>
           <SecretRows title={t('apps:form.headers')} hint={t('apps:form.headersHint')} rows={f.headers} onChange={(headers) => set({ headers })} testId="app-form-headers" />
@@ -527,7 +527,7 @@ function SecretRows({ title, hint, rows, onChange, testId }: { title: string; hi
     <div data-testid={testId}>
       <div className="flex items-center gap-2">
         <span className="label mb-0 flex-1">{title}</span>
-        <button className="btn-ghost h-6 text-[11.5px]" onClick={() => onChange([...rows, { key: '', value: '', stored: false }])}>
+        <button className="btn-ghost h-6 text-[12px]" onClick={() => onChange([...rows, { key: '', value: '', stored: false }])}>
           <Plus size={11} /> {t('apps:form.addRow')}
         </button>
       </div>
@@ -535,16 +535,16 @@ function SecretRows({ title, hint, rows, onChange, testId }: { title: string; hi
       <div className="space-y-1.5">
         {rows.map((r, i) => (
           <div key={i} className="flex gap-1.5">
-            <input className="input w-[38%] font-mono text-[12px]" placeholder={t('apps:form.key')} value={r.key} disabled={r.stored} onChange={(e) => update(i, { key: e.target.value })} />
+            <input className="input w-[38%] font-mono text-[13px]" placeholder={t('apps:form.key')} value={r.key} disabled={r.stored} onChange={(e) => update(i, { key: e.target.value })} />
             <input
-              className="input flex-1 font-mono text-[12px]"
+              className="input flex-1 font-mono text-[13px]"
               type="password"
               autoComplete="off"
               placeholder={r.stored ? t('apps:form.keep') : t('apps:form.value')}
               value={r.value}
               onChange={(e) => update(i, { value: e.target.value })}
             />
-            <button className="icon-btn h-8 w-8 shrink-0" onClick={() => onChange(rows.filter((_, j) => j !== i))}>
+            <button className="icon-btn h-8 w-8 shrink-0" onClick={() => onChange(rows.filter((_, j) => j !== i))} title={t('actions.remove')} aria-label={t('actions.remove')}>
               <X size={12} />
             </button>
           </div>
@@ -703,7 +703,7 @@ function ImportModal({ source, onClose, onDone }: { source: 'json' | 'claude-des
       {source === 'json' && !found && (
         <>
           <p className="mb-2 text-[12px] text-zinc-400">{t('apps:import.jsonHint')}</p>
-          <textarea className="input h-[240px] w-full resize-none font-mono text-[12px]" value={text} onChange={(e) => setText(e.target.value)} spellCheck={false} data-testid="apps-import-text" />
+          <textarea className="input h-[240px] w-full resize-none font-mono text-[13px]" value={text} onChange={(e) => setText(e.target.value)} spellCheck={false} data-testid="apps-import-text" />
         </>
       )}
       {found && (
@@ -727,18 +727,18 @@ function ImportModal({ source, onClose, onDone }: { source: 'json' | 'claude-des
                   }
                 />
                 <div className="min-w-0 flex-1">
-                  <div className="flex items-center gap-1.5 text-[12.5px] text-zinc-100">
+                  <div className="flex items-center gap-1.5 text-[13px] text-zinc-100">
                     {c.transport === 'stdio' ? <Terminal size={12} className="text-zinc-400" /> : <Globe size={12} className="text-zinc-400" />}
                     {c.name}
-                    {c.exists && <span className="text-[11px] text-zinc-500">— {t('apps:import.exists')}</span>}
+                    {c.exists && <span className="text-[12px] text-zinc-500">— {t('apps:import.exists')}</span>}
                   </div>
                   <div className="truncate font-mono text-[11px] text-zinc-500">{c.transport === 'stdio' ? [c.command, ...c.args].join(' ') : c.url}</div>
-                  {(c.env.length > 0 || c.headers.length > 0) && <div className="font-mono text-[10.5px] text-zinc-500">{[...c.env, ...c.headers].map((p) => p.key).join(', ')}</div>}
+                  {(c.env.length > 0 || c.headers.length > 0) && <div className="font-mono text-[11px] text-zinc-500">{[...c.env, ...c.headers].map((p) => p.key).join(', ')}</div>}
                 </div>
               </li>
             ))}
           </ul>
-          {found.some((c) => c.env.length || c.headers.length) && <p className="mt-2 text-[11px] text-zinc-500">{t('apps:import.secretsNote')}</p>}
+          {found.some((c) => c.env.length || c.headers.length) && <p className="mt-2 text-[12px] text-zinc-500">{t('apps:import.secretsNote')}</p>}
         </div>
       )}
       {error && <div className="mt-3 whitespace-pre-wrap text-[12px] text-rose-300" data-testid="apps-import-error">{error}</div>}

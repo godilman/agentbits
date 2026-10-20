@@ -1,6 +1,6 @@
 /** Agent CLI environment and settings validation (security review #03, #13, #18). Run: npm run test:unit */
 import assert from 'node:assert/strict'
-import { agentEnv, SettingsError, validateSettingsPatch } from '../src/shared/settingsRules.ts'
+import { agentEnv, DEFAULT_SETTINGS, SettingsError, validateSettingsPatch } from '../src/shared/settingsRules.ts'
 
 const parent = {
   Path: 'C:\\Windows',
@@ -41,6 +41,9 @@ const bad = (patch: unknown, code = 'invalid'): void =>
 bad(null)
 bad([])
 bad({ autopilot: 'yes' })
+bad({ notifications: 'off' })
+assert.deepEqual(validateSettingsPatch({ notifications: false }), { notifications: false })
+assert.equal(DEFAULT_SETTINGS.notifications, true, 'notifications are on by default (owner)')
 bad({ logRetentionDays: 'abc' })
 bad({ logRetentionDays: -1 })
 bad({ runMaxMinutes: 1.5 })

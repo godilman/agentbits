@@ -34,7 +34,7 @@ function ErrorFallback({ error, onRetry }: { error: Error; onRetry: () => void }
     <div className="flex h-full flex-col items-center justify-center gap-3 p-8 text-center">
       <AlertTriangle size={22} className="text-rose-400" />
       <div className="text-[13px] font-medium text-zinc-200">{t('layout:errorBoundary.title')}</div>
-      <pre className="selectable max-w-xl whitespace-pre-wrap rounded-md border border-line bg-surface p-3 text-left font-mono text-[11px] text-rose-200/80">
+      <pre className="selectable max-w-xl whitespace-pre-wrap rounded-md border border-line bg-surface p-3 text-left font-mono text-[12px] text-rose-200">
         {error.message}
       </pre>
       <button className="btn-outline" onClick={onRetry}>

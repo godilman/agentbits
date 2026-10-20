@@ -94,7 +94,9 @@
     "working": "Çalışıyor",
     "break": "Molada",
     "error": "Hata",
-    "offline": "Çevrimdışı"
+    "offline": "Çevrimdışı",
+    "awaitingApproval": "Onay bekliyor",
+    "paused": "Duraklatıldı"
   },
   "priority": {
     "low": "Düşük",

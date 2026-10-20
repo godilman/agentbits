@@ -1,4 +1,6 @@
 {
+  "draftsLoadFailed": "Saved drafts could not be loaded ({{error}}); trying again shortly. What you type meanwhile is kept.",
+  "newMessages": "New messages",
   "app": {
     "loadFailed": "Couldn't load data",
     "retry": "Try again",
@@ -45,7 +47,7 @@
     "organizationTitle": "Organization (Ctrl+O)",
     "newProject": "New project",
     "resumeAllTitle": "Resume all agents",
-    "pauseAllTitle": "Pause all agents",
+    "pauseAllTitle": "Pause all: no new task starts and running agents wait at their next step. A command or program already running can still finish its work, and chat replies and reviews go on. To end a run, stop it.",
     "resume": "Resume",
     "pauseAll": "Pause all",
     "settings": "Settings",
@@ -78,6 +80,7 @@
     "openProjectOf": "Open project {{name}}",
     "switchToProject": "Switch to project {{name}}",
     "awaitingApproval": "awaiting approval",
+    "awaitingHint": "Not started yet: nothing is done until you approve.",
     "paused": "paused",
     "working": "working",
     "resume": "Resume",
@@ -101,7 +104,10 @@
     "agent": "Agent",
     "typing": "{{name}} is typing",
     "placeholderLead": "Write to {{name}}… (describe the work)",
-    "placeholder": "Write a message…"
+    "placeholder": "Write a message…",
+    "railRunningWaiting_one": "Running work · {{count}} awaiting approval",
+    "railRunningWaiting_other": "Running work · {{count}} awaiting approval",
+    "panel": "Side panel"
   },
   "store": {
     "projectNotFound": "Project not found; it may have been deleted",
@@ -123,7 +129,8 @@
     "held": "On hold: {{reason}}",
     "heldNoReason": "On hold",
     "agentError": "{{agent}} stopped with an error",
-    "memory": "Something to remember"
+    "memory": "Something to remember",
+    "reviewIssue": "Your decision: {{reason}}"
   },
   "promptBuilder": {
     "button": "Prompt builder",
@@ -147,5 +154,14 @@
     "cliNote": "Claude Code keeps its own session files on this computer, outside Agentbits.",
     "noProviders": "No AI provider is set up yet.",
     "openProviders": "Open Settings → Providers"
+  },
+  "notifyNav": {
+    "projectGone": "The project this notification was about no longer exists.",
+    "taskGone": "The task this notification was about wasn't found (it may have been deleted); the project board is open.",
+    "approvalDone": "This approval is no longer waiting (answered or expired); the task is open.",
+    "projectArchived": "The project this notification was about is archived; restore it to open it.",
+    "agentGone": "The agent of this chat no longer exists; the project's general chat is open.",
+    "dialogOpen": "A dialog is open (a new task or project settings); to keep what you typed, the notification's place wasn't opened. Save or close it first.",
+    "settingsOpen": "Settings are open; to keep what you typed there (a provider form, for example), the notification's place wasn't opened. Save or close Settings first."
   }
 }
