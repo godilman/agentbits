@@ -307,14 +307,18 @@ async function main(): Promise<void> {
     await call('tasks:retryReview', tR.id)
     await until(() => undecided(tR.id), 'needs the user again')
     assert.match(why(tR.id), /in time/i)
-    // After a restart the review waits for the start (1B); started, it runs again and the same failure must not stack notes.
+    // After a restart it still waits for the user, with its reason (2026-10-20): starting the project's work doesn't
+    // review it again on its own; only the user's retry does, and the same failure doesn't stack notes.
     restart()
     o.reviewedRun.delete(tR.id) // a new process doesn't remember which run it reviewed
     const before = rCalls
-    await wait(100)
-    assert.equal(rCalls, before, 'not reviewed before the start')
+    assert.ok(undecided(tR.id), 'still "needs you" after the restart')
+    assert.match(why(tR.id), /in time/i, 'with the same reason')
     orchestrator.startProjectWork(p1.id)
-    await until(() => rCalls > before && !o.reviewing.has(tR.id) && undecided(tR.id), 'reviewed again after the start')
+    await wait(150)
+    assert.equal(rCalls, before, 'not reviewed again on its own')
+    await call('tasks:retryReview', tR.id)
+    await until(() => rCalls > before && !o.reviewing.has(tR.id) && undecided(tR.id), 'reviewed again on retry')
     const notes = thread(tR.id, p1.id).filter((m) => /retry just the review/.test(m.content))
     assert.equal(notes.length, 1, notes.map((n) => n.content).join(' | '))
     // The user decides: moving it out clears the mark.

@@ -181,6 +181,18 @@
     "filesNotListed_one": "… başarılı yazma kaydı olmayan {{count}} dosya daha listede yok; hepsi Loglar'da.",
     "filesNotListed_other": "… başarılı yazma kaydı olmayan {{count}} dosya daha listede yok; hepsi Loglar'da.",
     "failedNotListed_one": "Hata veren {{count}} komut daha listede yok; hepsi Loglar'da.",
-    "failedNotListed_other": "Hata veren {{count}} komut daha listede yok; hepsi Loglar'da."
+    "failedNotListed_other": "Hata veren {{count}} komut daha listede yok; hepsi Loglar'da.",
+    "read": "Ne okudu",
+    "readNone": "Dosya araçlarıyla okuma kaydı yok (kabuk komutları izlenmez)",
+    "readUnknown": "Bu sağlayıcı kendi okumalarını bildirmez; Agentbits üzerinden okuma kaydı yok",
+    "readSearches_one": "{{count}} arama (Grep / Glob)",
+    "readSearches_other": "{{count}} arama (Grep / Glob)",
+    "readGiven": "Talimatına eklenenler (tamamı, bir kısmı ya da yalnızca adı; hangisi bilinmiyor): {{files}}",
+    "readMemory_one": "Proje hafızası bir kez okundu: bağlamdır, güncel dosyaların ya da testlerin kanıtı değildir",
+    "readMemory_other": "Proje hafızası {{count}} kez okundu: bağlamdır, güncel dosyaların ya da testlerin kanıtı değildir",
+    "readUnconfirmed_one": "{{count}} okuma denemesi başarısız ya da sonucu kayıtsız (okundu sayılmadı)",
+    "readUnconfirmed_other": "{{count}} okuma denemesi başarısız ya da sonucu kayıtsız (okundu sayılmadı)",
+    "readOwnUnknown": "Bu sağlayıcı kendi okumalarını bildirmez; yalnız Agentbits üzerinden okunanlar listelenir.",
+    "shellMayRead": "Kabuk komutları da dosya okumuş olabilir; bu izlenmez."
   }
 }

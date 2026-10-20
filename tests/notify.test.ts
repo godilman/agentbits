@@ -127,8 +127,8 @@ assert.equal(NOTIFY_WINDOW_MS, 10_000, "the owner's window: 10 s")
   assert.equal(r.shown.length, 2)
 }
 // Text limits: user-perceived characters, nothing cut in half, whitespace folded.
-assert.equal(taskLabel({ key: 'TA-1', title: 'Short' }), 'TA-1 · Short')
-assert.equal(taskLabel({ key: 'TA-2', title: 'x'.repeat(80) }), `TA-2 · ${'x'.repeat(49)}…`)
+assert.equal(taskLabel({ key: 'TA-1', title: 'Short' }), 'Short · TA-1', 'the name first, the key last (owner, 2026-10-20)')
+assert.equal(taskLabel({ key: 'TA-2', title: 'x'.repeat(80) }), `${'x'.repeat(49)}… · TA-2`)
 assert.equal(clip('👩‍👩‍👧‍👦'.repeat(6), 4), '👩‍👩‍👧‍👦'.repeat(3) + '…', 'a family emoji stays whole')
 assert.equal(clip('İçerik düzeltmesi: ÇĞÖŞÜ ağaç', 12), 'İçerik düze…')
 assert.equal(clip('a\n\n  b', 10), 'a b')

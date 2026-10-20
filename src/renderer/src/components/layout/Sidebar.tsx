@@ -431,7 +431,13 @@ function LiveFeed() {
           const ch = channelLabel(m)
           if (m.senderType === 'system') {
             return (
-              <div key={m.id} className="rounded bg-white/[0.025] px-2 py-1 text-[12px] leading-snug text-zinc-400 animate-fade-in">
+              <div
+                key={m.id}
+                className={cn(
+                  'rounded px-2 py-1 text-[12px] leading-snug animate-fade-in',
+                  m.meta?.needsYou ? 'border border-amber-500/30 bg-amber-500/[0.06] text-zinc-200' : 'bg-white/[0.025] text-zinc-400'
+                )}
+              >
                 {m.content}
               </div>
             )

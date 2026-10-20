@@ -36,8 +36,19 @@ function topLevelObjects(text: string): string[] {
  * "not approved", "onaylanmadı", a missing field, an `approved` nested deeper, a key given twice or bozuk JSON never
  * approve. Several verdicts that disagree are no verdict. `valid: false` = no usable verdict: the task waits for the user.
  */
-export function parseReview(text: string): { approved: boolean; note: string; valid: boolean; criteria?: unknown } {
-  const verdicts: { approved: boolean; note: string; criteria?: unknown }[] = []
+export function parseReview(text: string): {
+  approved: boolean
+  note: string
+  valid: boolean
+  criteria?: unknown
+  /** The lead couldn't verify the work (couldn't see enough): never an approval, never a send-back — the user decides. */
+  unverifiable?: true
+  /** One plain sentence for the user (the `note` is the technical feedback for the worker). */
+  summary?: string
+} {
+  type V = { approved: boolean; note: string; criteria?: unknown; unverifiable: boolean; summary?: string }
+  const verdicts: V[] = []
+  const none = (note: string) => ({ approved: false, note: note.slice(0, 300), valid: false })
   for (const raw of topLevelObjects(text)) {
     let v: unknown
     try {
@@ -46,18 +57,35 @@ export function parseReview(text: string): { approved: boolean; note: string; va
       continue
     }
     if (!v || typeof v !== 'object' || Array.isArray(v)) continue
-    const o = v as { approved?: unknown; note?: unknown; criteria?: unknown }
-    if (typeof o.approved !== 'boolean') continue
+    const o = v as { approved?: unknown; note?: unknown; criteria?: unknown; unverifiable?: unknown; summary?: unknown }
+    const unverifiable = o.unverifiable === true
+    if (typeof o.approved !== 'boolean' && !unverifiable) continue
     // JSON.parse keeps the last of duplicate keys, and a nested "approved" could be mistaken for the verdict:
-    // a verdict object that mentions approved more than once is not a verdict.
-    if ((raw.match(/"approved"\s*:/g) ?? []).length !== 1) return { approved: false, note: text.trim().slice(0, 300), valid: false }
-    verdicts.push({ approved: o.approved, note: String(o.note ?? '').slice(0, 2000), criteria: o.criteria })
+    // a verdict object that mentions approved (or unverifiable) more than once is not a verdict.
+    const times = (key: string): number => (raw.match(new RegExp(`"${key}"\\s*:`, 'g')) ?? []).length
+    if (times('approved') > 1 || times('unverifiable') > 1 || (typeof o.approved === 'boolean' && times('approved') !== 1)) return none(text.trim())
+    // "Approved" and "couldn't verify" at once is no verdict.
+    if (unverifiable && o.approved === true) return none(text.trim())
+    verdicts.push({
+      approved: false,
+      ...(typeof o.approved === 'boolean' ? { approved: o.approved } : {}),
+      note: String(o.note ?? '').slice(0, 2000),
+      criteria: o.criteria,
+      unverifiable,
+      ...(typeof o.summary === 'string' && o.summary.trim() ? { summary: o.summary.trim().replace(/\s+/g, ' ').slice(0, 300) } : {})
+    })
   }
-  if (!verdicts.length || verdicts.some((x) => x.approved !== verdicts[0].approved)) {
-    return { approved: false, note: (verdicts.at(-1)?.note || text.trim()).slice(0, 300), valid: false }
-  }
+  const kind = (x: V): string => (x.unverifiable ? 'unverifiable' : String(x.approved))
+  if (!verdicts.length || verdicts.some((x) => kind(x) !== kind(verdicts[0]))) return none(verdicts.at(-1)?.note || text.trim())
   const last = verdicts[verdicts.length - 1]
-  return { approved: last.approved, note: last.note, valid: true, ...(last.criteria !== undefined ? { criteria: last.criteria } : {}) }
+  return {
+    approved: last.approved,
+    note: last.note,
+    valid: true,
+    ...(last.criteria !== undefined && !last.unverifiable ? { criteria: last.criteria } : {}),
+    ...(last.unverifiable ? { unverifiable: true as const } : {}),
+    ...(last.summary ? { summary: last.summary } : {})
+  }
 }
 
 /** A task's acceptance criteria as a list: one per line, list markers removed, at most 20. */

@@ -122,4 +122,4 @@ export function clip(s: string, max: number): string {
 }
 
 /** A task as it appears in a notification: key and a short title. */
-export const taskLabel = (task: { key: string; title: string }, max = 50): string => `${task.key} · ${clip(task.title, max)}`
+export const taskLabel = (task: { key: string; title: string }, max = 50): string => `${clip(task.title, max)} · ${task.key}`

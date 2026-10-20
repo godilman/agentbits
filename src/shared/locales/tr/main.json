@@ -489,7 +489,7 @@
     "runApproval": "{{task}} başlamak için onayını bekliyor — onayla ya da reddet",
     "connectionApprovalTask": "{{task}}: {{target}} için onayını bekliyor — onayla ya da reddet",
     "connectionApproval": "{{agent}}, {{target}} için onayını bekliyor — onayla ya da reddet",
-    "undecided": "{{task}}: inceleme karara bağlanamadı — karar sende",
+    "undecided": "{{task}}: senin kararını bekliyor — görev sayfasına bak",
     "held": {
       "failed": "{{task}} hata verip durdu — ne yapılacağına sen karar ver",
       "limit": "{{task}} çalışma sınırına takılıp durdu — ne yapılacağına sen karar ver",

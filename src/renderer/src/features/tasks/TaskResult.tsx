@@ -105,6 +105,27 @@ export function TaskResult({ task }: { task: Task }) {
         'result-changed'
       )}
       {row(
+        t('tasks:result.read'),
+        <div className="space-y-0.5">
+          {e.reads.filesTotal > 0 ? (
+            <div className="font-mono text-[12px]">
+              {e.reads.files.slice(0, 6).join(', ')}
+              {e.reads.filesTotal > 6 ? ` +${e.reads.filesTotal - 6}` : ''}
+            </div>
+          ) : (
+            // Searches alone are reads too: then no "nothing recorded" line.
+            !e.reads.searches && <div>{t(!e.toolRecord ? 'tasks:result.readUnknown' : e.recordMissing ? 'tasks:result.recordMissing' : 'tasks:result.readNone')}</div>
+          )}
+          {e.reads.unconfirmed > 0 && <div className="text-[12px] text-amber-200">{t('tasks:result.readUnconfirmed', { count: e.reads.unconfirmed })}</div>}
+          {e.reads.searches > 0 && <div className="text-[12px] text-zinc-400">{t('tasks:result.readSearches', { count: e.reads.searches })}</div>}
+          {e.reads.given.length > 0 && <div className="text-[12px] text-zinc-400">{t('tasks:result.readGiven', { files: list(e.reads.given) })}</div>}
+          {e.reads.memory > 0 && <div className="text-[12px] text-zinc-400">{t('tasks:result.readMemory', { count: e.reads.memory })}</div>}
+          {e.reads.filesTotal > 0 && !e.toolRecord && <div className="text-[11px] text-zinc-400">{t('tasks:result.readOwnUnknown')}</div>}
+          {e.toolRecord && n.total > 0 && <div className="text-[11px] text-zinc-400">{t('tasks:result.shellMayRead')}</div>}
+        </div>,
+        'result-read'
+      )}
+      {row(
         t('tasks:result.commands'),
         !e.toolRecord ? (
           <span className="text-amber-200/90">{t('tasks:result.commandsUnknown')}</span>

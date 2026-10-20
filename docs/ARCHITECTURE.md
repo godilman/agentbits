@@ -565,6 +565,15 @@ transkriptleri de budar.
   `getStats` token sayıları artık `token_usage`'dan gelir.
 
 ### 6.6 İnceleme kuyruğu — `queueReview()` / `review()`
+**2026-10-20 (ADR-033):** `review()` çalışanın ürettiği dosyalar `processing` iken `filesReady` ile en fazla `filesReadyMs`
+(30 sn) bekler; hazır değilse model çağrılmadan `needsUser(reviewIssue.filesNotReady)`. `parseReview` `unverifiable` ve
+`summary` alanlarını tanır; `unverifiable` → `needsUser(reviewIssue.unverifiable)` (kriter denetimi yok). Geri göndermede
+`rounds >= 2 && knownUnchanged(run)` ise görev incelemede kalır (`reviewIssue.notMoving`). `undecided` / `undecidedWhy`
+`settings` `orchestrator.undecided` ile kalıcı (`saveUndecided`, `clearUndecided`); açılışta bu görevler `deferredReviews`'a
+girmez. Genel sohbet durum satırları `say()` / `sayText()` (`orchestrator:say.*`, gönderen sistem, `meta.status` /
+`meta.needsYou`). `evidence.ts` `reads` (Read / Grep / Glob, `file_links` `read` / `given`, proje hafızası) ve
+`readLines`; `filesSection` `processing` dosyanın parçalarını koymaz (`pending`). Dosya okuma girişimleri `processFile`
++ `supersede` ile sıralı: yalnız en yeni girişim içerik / durum yazar (`tests/e2e/fileProcessing.e2e.ts`).
 İncelemeler `reviewChain` üzerinden **tek tek** çalışır; aynı görev için kuyrukta ya da çalışmakta olan ikinci bir
 inceleme açılmaz (`reviewing`), o sırada gelen istek kaybolmaz, bitince "tekrar bak" olarak işlenir (`reviewAgain`);
 bir kuyruk adımı bitince kuyrukta / çalışmakta olmayan **bütün** işaretli görevler kuyruğa alınır (yarışta karşılaştırma

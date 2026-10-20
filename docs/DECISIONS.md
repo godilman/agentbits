@@ -651,3 +651,27 @@ Durum değerleri: *Kabul edildi*, *Önerildi*, *Yerini aldı*, *Geri alındı*.
   bu yüzden eski sürümle yeni veriyi açmak desteklenmez.
 - **Elenen:** `electron-updater` + sha512 ile imzasız kurulum (sahibin kararı), macOS'ta imza doğrulamasını gevşetmek,
   Agentbits'e ait güncelleme sunucusu, Releases yerine site üzerinden kontrol (ikinci bir kaynak).
+
+## ADR-033 — İnceleme: kanıt yokluğu uydurma değildir; "doğrulayamadım" kullanıcıya düşer; sonuçsuz tekrar durur (2026-10-20)
+
+- **Bağlam:** Gerçek bir projede (Erkunt Mobil, TA-22/29/32/34) lider, dosya okuyan çalışmaları "No file tool was used"
+  kanıtıyla "uydurma" sayıp 4 tur geri gönderdi; bir turda dosyanın yeniden okunmakta olan eski parçalarını gördü.
+  İnceleme yalnız onay / geri gönderme diyebiliyordu. Ayrıntı: `/home/godilman/reports/agentbits-inceleme-dongusu-2026-10-20.md`.
+- **Karar (sahibin, 2026-10-20):**
+  - Kanıt okumaları da gösterir (Claude Code `Read`, Grep / Glob arama sayısı, Agentbits `file_read` her sağlayıcıda,
+    prompt'a eklenen dosyalar "tam, kısmi ya da yalnız adıyla"); proje hafızası okumaları bağlamdır, güncel dosyaların ya
+    da testlerin kanıtı değildir. Hiçbir dalda "hiç okunmadı / No file tool was used" yazılmaz.
+  - Yeniden okunmakta olan dosyanın eski parçaları hiçbir isteme girmez; inceleme çalışanın değiştirdiği dosyaları en
+    fazla 30 sn bekler, hâlâ hazır değilse model çağrılmaz, karar kullanıcıya düşer.
+  - İnceleme cevabına `"unverifiable": true`: onay da ret de değildir; mevcut "karar sende" (`needsUser`) yolu, çalışan
+    yeniden çalışmaz. Ayrı bir durum sistemi yok. "Karar sende" nedeni artık kalıcı (`settings` `orchestrator.undecided`):
+    yeniden açılışta korunur ve bu görevler kendiliğinden yeniden incelenmez; yalnız "İncelemeyi yeniden dene".
+  - Bir geri göndermeden sonraki çalışma (önceki çalışmanın geri gönderildiği bu oturumda biliniyorsa) kaydına göre *kesinlikle* hiçbir şey değiştirmediyse (Claude Code, kayıt tam, yazma
+    girişimi yok, kabuk komutu yok, üretilen dosya yok, yalnız Agentbits okuma araçları, bağlantı çağrısı yok) ve lider yine
+    geri gönderirse iş incelemede kalır, kullanıcıya düşer. Bilinmeyen hiçbir durum "değişmedi" sayılmaz; 4 tur üst sınırı kalır.
+  - Kullanıcıya görünen durum satırları sistem adına, görev adı önde, numara sonda; ne olduğunu, sırada ne olduğunu ve
+    kullanıcıdan bir şey beklenip beklenmediğini söyler. Liderin teknik notu görev sayfasında; genel sohbete liderin
+    `summary` cümlesi gider. Karar bekleyen satırlar sohbette okunur biçimde (`meta.needsYou`). Bildirim etiketi
+    "başlık · TA-32". Lider görev başlığını kullanıcının anlayacağı dille yazar, teknik ayrıntı açıklamada.
+- **Elenen:** ayrı kısa ad alanı (migration), ayrı "doğrulanamadı" durum sistemi, inceleme sonuçlarının serbest metinden
+  "aynı gerekçe" diye karşılaştırılması (sistem bilemez), kesik kanıtla otomatik ret / onay.

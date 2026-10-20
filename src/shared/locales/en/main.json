@@ -489,7 +489,7 @@
     "runApproval": "{{task}} is waiting for your approval to start — approve or reject",
     "connectionApprovalTask": "{{task}}: waiting for your approval for {{target}} — approve or reject",
     "connectionApproval": "{{agent}} is waiting for your approval for {{target}} — approve or reject",
-    "undecided": "{{task}}: the review couldn't reach a decision — it's your call",
+    "undecided": "{{task}}: waiting for your decision — see the task page",
     "held": {
       "failed": "{{task}} stopped with an error — decide what to do",
       "limit": "{{task}} stopped at a run limit — decide what to do",

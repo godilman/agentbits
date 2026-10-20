@@ -57,7 +57,7 @@
     "memoriesRecalled_other": "Hafızadan {{count}} kayıt hatırlandı",
     "redirected": "↪ Talimatla yönlendirildi ({{n}})",
     "applyingQueued": "↪ Sıradaki talimat(lar) uygulanıyor ({{n}})",
-    "completed": "■ Tamamlandı → incelemeye gönderildi ({{tokens}} token)",
+    "completed": "■ Çalışma bitti ({{tokens}} token)",
     "outputFiles": "📎 Üretilen dosyalar: {{names}}",
     "runStoppedToTodo": "■ Çalışma durduruldu (görev “Yapılacak”a döndü)",
     "userInstruction": "🧑 Kullanıcı → {{agent}}: {{text}}",
@@ -77,24 +77,21 @@
     "leadNote": "🎯 Lider {{lead}} → {{key}}: {{text}}",
     "reviewRetried": "{{key}} incelemesini yeniden denettin",
     "reviewStale": "{{key}} incelemesi atıldı: daha yeni bir çalışma ya da değişen görev bilgileri var — güncel hâl inceleniyor",
-    "workStarted": "Bu oturumda bu projede çalışma başlatıldı"
+    "workStarted": "Bu oturumda bu projede çalışma başlatıldı",
+    "reviewUnverifiable": "❔ {{key}} doğrulanamadı: {{note}}",
+    "filesNotReadyAtStart": "⚠ İş başladığında henüz hazır değildi (hâlâ okunuyordu): {{names}}"
   },
   "chat": {
     "awaitingApproval": "🔐 {{agent}}, {{key}} için onay bekliyor ({{caps}} erişimi). Onaylanana kadar hiçbir şey yapılmaz: sol paneldeki \"Çalışan işler\" bölümünden onayla ya da reddet; sormaması için ajanın \"Onay iste\" ayarını kapat.",
     "taskStarted": "{{agent}} göreve başladı.",
     "emptyOutput": "(boş çıktı)",
-    "taskDone": "{{key}} bitti, incelemeye gönderdim: “{{title}}”",
-    "filesSuffix_one": "📎 {{count}} dosya",
-    "filesSuffix_other": "📎 {{count}} dosya",
     "agentError": "⚠️ {{agent}}, {{key}} üzerinde hata aldı: {{text}}",
     "leadDirectTask": "🎯 Kullanıcı {{agent}} ajanına doğrudan görev verdi: {{key}} “{{title}}”",
     "queuedInstruction": "(sıradaki talimat) {{text}}",
     "leadQueued": "🎯 Kullanıcı {{agent}} ajanına {{key}} için talimat sıraya aldı: “{{text}}”",
     "leadRedirected": "🎯 Kullanıcı {{agent}} ajanını {{key}} üzerinde yönlendirdi: “{{text}}”",
     "approvedTask": "✅ Onaylandı. {{note}}",
-    "approvedGeneral": "✅ {{key}} onaylandı ({{worker}}). {{note}}",
     "revisionTask": "↩️ Revizyon gerekli: {{note}}",
-    "revisionGeneral": "↩️ {{key}} revizyona döndü ({{worker}}): {{note}}",
     "noteWithFiles_one": "Not ve {{count}} dosya görevle ilişkilendirildi; görevi yapan ajan bir sonraki çalışmada okuyabilir.",
     "noteWithFiles_other": "Not ve {{count}} dosya görevle ilişkilendirildi; görevi yapan ajan bir sonraki çalışmada okuyabilir.",
     "noteAdded": "Not görev bağlamına eklendi; ajan bir sonraki çalışmada dikkate alacak.",
@@ -246,11 +243,11 @@
     "committed": "🌿 Değişiklikler {{branch}} dalına commit'lendi",
     "noChanges": "🌿 {{branch}} dalında commit'lenecek dosya değişikliği yok",
     "commitFailed": "Çalışma kopyasındaki değişiklikler commit'lenemedi: {{error}}",
-    "merged": "🔀 {{key}}: {{branch}} dalı proje klasörüne birleştirildi.",
-    "dirty": "⏸ {{key}}: proje klasöründe commit'lenmemiş değişiklikler olduğu için {{branch}} birleştirilmedi. Onları commit'le ya da stash'le, sonra görevde “Değişiklikleri incele ve birleştir”e bas.",
-    "conflict": "⚠️ {{key}}: {{branch}} dalı projeyle çakışıyor ({{files}}). Görev, çakışmaları kendi çalışma kopyasında çözmesi için ajanına geri döndü.",
+    "merged": "🔀 “{{title}}”: {{branch}} dalı proje klasörüne birleştirildi. · {{key}}",
+    "dirty": "⏸ “{{title}}”: proje klasöründe commit'lenmemiş değişiklikler olduğu için {{branch}} birleştirilmedi. Onları commit'le ya da stash'le, sonra görevde “Değişiklikleri incele ve birleştir”e bas. · {{key}}",
+    "conflict": "⚠️ “{{title}}”: {{branch}} dalı projeyle çakışıyor ({{files}}). Görev, çakışmaları kendi çalışma kopyasında çözmesi için ajanına geri döndü. · {{key}}",
     "conflictNote": "Bu görevi projeye birleştirirken şu dosyalarda çakışma çıktı: {{files}}. Projenin son hâli senin dalına alındı; bu dosyalardaki çakışma işaretlerini (<<<<<<< ======= >>>>>>>) iki değişiklik birlikte çalışacak şekilde çöz, sonra raporunla bitir.",
-    "mergeFailed": "⚠️ {{key}}: {{branch}} birleştirilemedi: {{error}}",
+    "mergeFailed": "⚠️ “{{title}}”: {{branch}} birleştirilemedi: {{error}} · {{key}}",
     "changedSinceShown": "{{key}}: görevin çalışma kopyası sen baktıktan sonra değişti, bu yüzden hiçbir şey birleştirilmedi. Değişikliklere yeniden bak.",
     "uncommittedKept": "çalışma kopyasında commit edilemeyen değişiklikler var, bu yüzden kopya silinmedi"
   },
@@ -291,7 +288,10 @@
     "noLead": "Projede bunu inceleyebilecek kimse yok (etkin lider ya da üye yok)",
     "noReport": "İncelenecek çalışan raporu yok",
     "failed": "Lider incelemesi tamamlanamadı: {{error}}",
-    "unclear": "{{lead}} incelemesinde net bir karar vermedi"
+    "unclear": "{{lead}} incelemesinde net bir karar vermedi",
+    "filesNotReady": "İşin değiştirdiği bazı dosyalar henüz hazır değil ({{files}}: değişiklikten sonra hâlâ okunuyor), bu yüzden lider işi değerlendirmedi. Biraz sonra incelemeyi yeniden dene ya da kendin karar ver.",
+    "unverifiable": "{{lead}} işi doğrulayamadı: {{note}}",
+    "notMoving": "{{lead}} yine geri gönderdi ama son çalışmada kayda geçen bir değişiklik yok; kendiliğinden yeniden başlatılmadı."
   },
   "errorDetail": "Ayrıntı: {{detail}}",
   "changesWhere": {
@@ -303,5 +303,19 @@
     "stopped": "⏹ Durduruldu. Hiçbir şey geri alınmadı: ajanın o ana kadar yaptığı değişiklikler {{where}} duruyor. Görevi yeniden başlatmadan önce bir bak.",
     "limit": "⏹ Çalışma sınırına takılıp durdu. Hiçbir şey geri alınmadı: ajanın o ana kadar yaptığı değişiklikler {{where}} duruyor. Görevi yeniden başlatmadan önce bir bak.",
     "manualDone": "✔ Görevi sen elle tamamladın, lider incelemesi olmadan. Değişiklikleri {{where}} duruyor."
+  },
+  "say": {
+    "sentForReview": "{{worker}} “{{title}}” işini bitirdi; iş kontrol için lidere ({{lead}}) gönderildi. Senden bir şey beklenmiyor. · {{key}}",
+    "doneNoReview": "{{worker}} “{{title}}” işini bitirdi. Lider incelemesi kapalı, karar senin: Bitti'ye taşı ya da notla Yapılacak'a geri gönder. · {{key}}",
+    "doneNoLead": "{{worker}} “{{title}}” işini bitirdi. Projede inceleyecek lider yok, karar senin: Bitti'ye taşı ya da notla Yapılacak'a geri gönder. · {{key}}",
+    "commitFailed": "{{worker}} “{{title}}” işini bitirdi ama değişiklikler çalışma kopyasına kaydedilemedi, görev durdu. Nedeni görev sayfasında; düzeltip “{{retry}}” düğmesine bas. · {{key}}",
+    "approved": "{{lead}} “{{title}}” işini onayladı.{{summary}}{{changes}} · {{key}}",
+    "sentBack": "{{lead}} “{{title}}” işini geri gönderdi.{{summary}} Çalışan ({{worker}}) boşalınca yeniden çalışacak; şimdilik senden bir şey beklenmiyor. · {{key}}",
+    "sentBackWaits": "{{lead}} “{{title}}” işini geri gönderdi.{{summary}} Görev yeniden Yapılacak'ta; sen başlattığında çalışacak. · {{key}}",
+    "unverifiable": "{{lead}} “{{title}}” işini doğrulayamadı.{{summary}} Çalışan ({{worker}}) işi bitirdiğini bildirdi ama kontrol edilmedi. Karar senin: “{{retryReview}}” düğmesine bas, Bitti'ye taşı ya da notla Yapılacak'a geri gönder. · {{key}}",
+    "notMoving": "“{{title}}” ilerlemiyor: geri gönderildikten sonraki çalışmada kayda geçen bir değişiklik yok ve {{lead}} yine geri gönderdi. Kendiliğinden yeniden başlatılmayacak. Karar senin: görev sayfasında liderin notuna bak; “{{retryReview}}” ya da “{{rerunWorker}}” düğmesine bas, Bitti'ye taşı ya da notla Yapılacak'a geri gönder. · {{key}}",
+    "limit": "“{{title}}” {{count}} kez geri gönderildi; kendiliğinden yeniden başlatılmayacak. Karar senin: görev sayfasında liderin notuna bak, sonra “{{retry}}” düğmesine bas, görevi düzenle ya da Bitti'ye taşı. · {{key}}",
+    "decide": "“{{title}}” senin kararını bekliyor: {{reason}} · {{key}}",
+    "changesInFolder": " Değişiklikler proje klasöründe."
   }
 }

@@ -57,7 +57,7 @@
     "memoriesRecalled_other": "Recalled {{count}} memory entries",
     "redirected": "↪ Redirected by instruction ({{n}})",
     "applyingQueued": "↪ Applying queued instruction(s) ({{n}})",
-    "completed": "■ Done → sent for review ({{tokens}} tokens)",
+    "completed": "■ Run finished ({{tokens}} tokens)",
     "outputFiles": "📎 Files produced: {{names}}",
     "runStoppedToTodo": "■ Run stopped (task moved back to “To do”)",
     "userInstruction": "🧑 User → {{agent}}: {{text}}",
@@ -77,24 +77,21 @@
     "leadNote": "🎯 Lead {{lead}} → {{key}}: {{text}}",
     "reviewRetried": "Review of {{key}} retried by you",
     "reviewStale": "Review of {{key}} dropped: a newer run or changed task details — reviewing the current state",
-    "workStarted": "Work started in this project for this session"
+    "workStarted": "Work started in this project for this session",
+    "reviewUnverifiable": "❔ {{key}} couldn't be verified: {{note}}",
+    "filesNotReadyAtStart": "⚠ Not ready yet when the work started (still being read in): {{names}}"
   },
   "chat": {
     "awaitingApproval": "🔐 {{agent}} is waiting for approval for {{key}} ({{caps}} access). Nothing is done until you approve: approve or decline it under \"Running work\" on the left; to stop being asked, turn off the agent's \"Require approval\".",
     "taskStarted": "{{agent}} started the task.",
     "emptyOutput": "(empty output)",
-    "taskDone": "{{key}} is done, sent for review: “{{title}}”",
-    "filesSuffix_one": "📎 {{count}} file",
-    "filesSuffix_other": "📎 {{count}} files",
     "agentError": "⚠️ {{agent}} hit an error on {{key}}: {{text}}",
     "leadDirectTask": "🎯 The user gave {{agent}} a direct task: {{key}} “{{title}}”",
     "queuedInstruction": "(queued instruction) {{text}}",
     "leadQueued": "🎯 The user queued an instruction for {{agent}} on {{key}}: “{{text}}”",
     "leadRedirected": "🎯 The user redirected {{agent}} on {{key}}: “{{text}}”",
     "approvedTask": "✅ Approved. {{note}}",
-    "approvedGeneral": "✅ {{key}} approved ({{worker}}). {{note}}",
     "revisionTask": "↩️ Revision needed: {{note}}",
-    "revisionGeneral": "↩️ {{key}} sent back for revision ({{worker}}): {{note}}",
     "noteWithFiles_one": "Note and {{count}} file linked to the task; the agent working on it can read it in its next run.",
     "noteWithFiles_other": "Note and {{count}} files linked to the task; the agent working on it can read them in its next run.",
     "noteAdded": "Note added to the task context; the agent will take it into account in its next run.",
@@ -246,11 +243,11 @@
     "committed": "🌿 Changes committed to {{branch}}",
     "noChanges": "🌿 No file changes to commit on {{branch}}",
     "commitFailed": "Could not commit the changes in the working copy: {{error}}",
-    "merged": "🔀 {{key}}: branch {{branch}} merged into the project folder.",
-    "dirty": "⏸ {{key}}: the project folder has uncommitted changes, so {{branch}} was not merged. Commit or stash them, then use “Review changes and merge” in the task.",
-    "conflict": "⚠️ {{key}}: merging {{branch}} conflicts with the project ({{files}}). The task went back to its agent to resolve the conflicts in its working copy.",
+    "merged": "🔀 “{{title}}”: branch {{branch}} merged into the project folder. · {{key}}",
+    "dirty": "⏸ “{{title}}”: the project folder has uncommitted changes, so {{branch}} was not merged. Commit or stash them, then use “Review changes and merge” in the task. · {{key}}",
+    "conflict": "⚠️ “{{title}}”: merging {{branch}} conflicts with the project ({{files}}). The task went back to its agent to resolve the conflicts in its working copy. · {{key}}",
     "conflictNote": "Merging this task into the project hit conflicts in: {{files}}. The project's latest state was merged into your branch; resolve the conflict markers (<<<<<<< ======= >>>>>>>) in those files so both changes work together, then finish with your report.",
-    "mergeFailed": "⚠️ {{key}}: merging {{branch}} failed: {{error}}",
+    "mergeFailed": "⚠️ “{{title}}”: merging {{branch}} failed: {{error}} · {{key}}",
     "changedSinceShown": "{{key}}: the task's working copy changed after you looked at it, so nothing was merged. Look at the changes again.",
     "uncommittedKept": "the working copy still has changes that could not be committed, so it was kept"
   },
@@ -291,7 +288,10 @@
     "noLead": "Nobody in this project can review it (no active lead or member)",
     "noReport": "There is no worker report to review",
     "failed": "The lead's review couldn't finish: {{error}}",
-    "unclear": "{{lead}}'s review had no clear verdict"
+    "unclear": "{{lead}}'s review had no clear verdict",
+    "filesNotReady": "Some files changed by the work aren't ready yet ({{files}}: still being read in after the change), so the lead didn't judge it. Retry the review in a moment, or decide yourself.",
+    "unverifiable": "{{lead}} couldn't verify the work: {{note}}",
+    "notMoving": "{{lead}} sent it back again, but the last run recorded no change; it wasn't restarted on its own."
   },
   "errorDetail": "Details: {{detail}}",
   "changesWhere": {
@@ -303,5 +303,19 @@
     "stopped": "⏹ Stopped. Nothing was undone: what the agent changed so far is {{where}}. Look at it before you start the task again.",
     "limit": "⏹ Stopped by a run limit. Nothing was undone: what the agent changed so far is {{where}}. Look at it before you start the task again.",
     "manualDone": "✔ You marked it done, without the lead's review. Its changes are {{where}}."
+  },
+  "say": {
+    "sentForReview": "{{worker}} finished “{{title}}”; it has gone to the lead ({{lead}}) for review. Nothing needed from you. · {{key}}",
+    "doneNoReview": "{{worker}} finished “{{title}}”. Lead review is off, so it's your call: move it to Done or send it back to To do with a note. · {{key}}",
+    "doneNoLead": "{{worker}} finished “{{title}}”. There's no lead to review it, so it's your call: move it to Done or send it back to To do with a note. · {{key}}",
+    "commitFailed": "{{worker}} finished “{{title}}”, but the changes couldn't be committed in the task's copy, so the task stopped. The reason is on the task page; fix it, then press “{{retry}}”. · {{key}}",
+    "approved": "{{lead}} approved “{{title}}”.{{summary}}{{changes}} · {{key}}",
+    "sentBack": "{{lead}} sent “{{title}}” back.{{summary}} It runs again when {{worker}} is free; nothing needed from you for now. · {{key}}",
+    "sentBackWaits": "{{lead}} sent “{{title}}” back.{{summary}} It's in To do again and runs when you start it. · {{key}}",
+    "unverifiable": "{{lead}} couldn't verify “{{title}}”.{{summary}} {{worker}} reported it done, but it hasn't been checked. Your call: press “{{retryReview}}”, move it to Done, or send it back to To do with a note. · {{key}}",
+    "notMoving": "“{{title}}” isn't moving: the run after the send-back recorded no change and {{lead}} sent it back again. It won't restart on its own. Your call: check the lead's note on the task page, then press “{{retryReview}}” or “{{rerunWorker}}”, move it to Done, or send it back to To do with a note. · {{key}}",
+    "limit": "“{{title}}” was sent back {{count}} times; it won't restart on its own. Your call: check the lead's note on the task page, then press “{{retry}}”, edit the task, or move it to Done. · {{key}}",
+    "decide": "“{{title}}” is waiting for your decision: {{reason}} · {{key}}",
+    "changesInFolder": " The changes are in the project folder."
   }
 }

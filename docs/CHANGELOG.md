@@ -4,6 +4,67 @@
 > `## YYYY-MM-DD — kısa başlık`, ardından **Eklendi / Değişti / Düzeltildi / Kaldırıldı / Bilinen** maddeleri
 > ve ilgili dosyalar.
 
+## 2026-10-20 — v0.10.0: Dosya okuma: yalnız en güncel girişim yazar
+
+### Düzeltildi
+- Aynı dosya yeniden okunurken önceki okuma sonradan biterse sonucu yenisinin üzerine yazabiliyordu (başarı da hata da).
+  Her okuma girişimine bir sıra numarası verilir (`files/service.ts` `processFile`, `supersede`); yalnız en yenisi içerik
+  ve durum yazar, hem başarı hem hata yolunda. Boyut sınırı yüzünden okunmayan dosyada ve orijinali bulunamayan yarım
+  okumada da çalışan eski girişimler geçersiz olur.
+
+### Test
+- `tests/e2e/fileProcessing.e2e.ts` 6 adım: yeni sonuçtan sonra gelen eski başarı / eski hata; yeni hatadan sonra gelen
+  eski başarı; önce biten eski girişim yenisini engellemez; boyut yüzünden atlanan okuma; tek girişim eskisi gibi yazar.
+  Dört kasıtlı bozma (başarı koruması, hata koruması, boyut atlaması, temizlikte yenisinin kaydını silmek) yakalandı.
+
+## 2026-10-20 — v0.10.0: İnceleme döngüsü ve kullanıcı mesajları (ADR-033)
+
+Kaynak: Erkunt Mobil TA-22/29/32/34 kayıtlarının incelemesi (`/home/godilman/reports/agentbits-inceleme-dongusu-2026-10-20.md`)
+ve sahibin 5 kararı.
+
+### Düzeltildi
+- **Okumalar kanıta girmiyordu:** dosya okuyan çalışmalar için lidere "No file tool was used" deniyor, lider "uydurma"
+  diyordu. Kanıt artık okunan dosyaları (Claude Code `Read`, Agentbits `file_read` — her sağlayıcıda), Grep / Glob arama
+  sayısını, prompt'a eklenen dosyaları ("tam, kısmi ya da yalnız adıyla") ve proje hafızası okumalarını (bağlam, kanıt değil)
+  gösterir; bilinmeyen hiçbir şey "yapılmadı" diye yazılmaz. Sonuç kutusunda "Ne okudu".
+- **Eski dosya kopyası:** yeniden okunmakta olan dosyanın önceki sürümünün parçaları isteme giriyordu. Artık hiçbir isteme
+  girmez ("güncelleniyor, gösterilmedi"); inceleme bekler, olmazsa model çağrılmaz, karar kullanıcıya düşer. Araçsız istemde
+  "okuyabileceğin dosyalar" yerine "sana gösterilmeyen dosyalar".
+- **"Doğrulayamadım" yoktu:** lider artık `unverifiable` diyebilir; görev incelemede kalır, çalışan yeniden çalışmaz, karar
+  kullanıcıda. İstem: kanıt yokluğu uydurma değildir; yarışta da.
+- **Sonuçsuz tekrar:** geri göndermeden sonra kaydına göre kesinlikle hiçbir şey değiştirmeyen tur yine geri gönderilirse iş
+  durur (4. turu beklemez). Kabuk komutu, başka araç, başka sağlayıcı ya da eksik kayıt varsa durmaz.
+- **"Karar sende" yeniden açılışta kayboluyordu:** neden kalıcı; bu görevler kendiliğinden yeniden incelenmez
+  (önce açılışta yeniden inceleniyordu).
+- **Genel sohbet:** "TA-32 bitti, incelemeye gönderdim" ve liderin teknik notu yerine sistem adına sade satırlar: kim neyi
+  bitirdi, lidere mi gitti, onaylandı mı, geri mi döndü, doğrulanamadı mı, senden ne bekleniyor. Tur sınırında tek satır
+  (önce "seni bekliyor" yalnız görev kanalındaydı). Commit hatasında iki satır yerine bir. Karar bekleyen satırlar sohbette
+  ve canlı akışta belirgin. Birleştirme mesajlarında görev adı önde.
+- Bildirim etiketi "başlık · TA-32"; "karar sende" bildirimi nedenden bağımsız ("senin kararını bekliyor — görev sayfasına
+  bak"). Lider görev başlığını kullanıcının diliyle sade yazar. Terminal satırı "■ Çalışma bitti".
+
+### Doğrulama turunda düzeltilen (5 bağımsız denetçi, 2 tur)
+- Başarısız ya da sonucu kayıtsız `Read` "okundu" sayılıyordu → yalnız başarılı okuma sayılır, diğerleri ayrıca söylenir.
+- Diskte değişen dosyanın eski metni yeniden okuma başarısız olunca (ya da 15 MB üstünde) "güncel" kalıyordu, `file_search`
+  de eski metni buluyordu → değişiklik anında eski parçalar silinir; okunamazsa istem bunu açıkça söyler.
+- Görev eki hâlâ okunurken başlayan iş incelemede görünmüyordu → kayda geçer, kanıtta "iş başladığında hazır değildi".
+- Durma kuralı "2 başarılı çalışma"ya bakıyordu → yalnız önceki çalışma gerçekten geri gönderildiyse (oturum içi bilgi;
+  yeniden açılışta bilinmez → erken durmaz).
+- "Yeniden çalışacak" yalnız otopilot gerçekten alacaksa (duraklatma, kapalı ajan); onaydan dönen geri göndermede
+  "her şey tamam" özeti gösterilmez; onay satırında dosya sayısı yerine yalnız konum; seçenek adları "… düğmesine bas".
+- Sonuç kutusu: aramalar varken "okuma kaydı yok" demez; kendi okumalarını bildirmeyen sağlayıcı ve kabuk notu; tek "+N".
+
+### Test
+- `tests/e2e/reviewLoop.e2e.ts` 19 adım: gerçek örnekteki durumlar (okuma-only çalışma, Read/Grep/Glob, prompt'a eklenen
+  dosya, kayıt yok / kabuk, Codex; işlenmekte olan dosya, inceleme beklemesi, hazır olunca güncel içerik; genel sohbet
+  satırları; `unverifiable` + yeniden açılış; değişmeyen tur durur; kabuk / yazan araç durdurmaz; tur sınırı tek satır;
+  lider incelemesi kapalı). `review.test.ts` `unverifiable` / `summary`. Güncellenen: `failureReview` (yeniden açılışta karar
+  kullanıcıda kalır), `result` (kabuk satırı), `notify` (etiket sırası). 12 kasıtlı bozma yakalandı.
+
+### Bilinen
+- Liderin `unverifiable` seçeceği ve `summary` yazacağı gerçek Claude Code ile denenmedi (model davranışı).
+- "Projede lider yok" dalı e2e'de kurulamadı (lider yoksa herhangi bir etkin üye inceler); kod yolu tek satır.
+
 ## 2026-10-20 — v0.9.0: Yeni sürüm kontrolü; yükseltmeden önce yedek
 
 Sahibin kararı (ADR-032): imzalı paketler ve imzalı → imzalı gerçek geçiş testi olana dek uygulama yalnız kontrol edip

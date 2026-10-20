@@ -2,7 +2,7 @@ import { randomUUID } from 'crypto'
 import { assertRunFolder } from './folders'
 import { evidenceSection, runEvidence } from './evidence'
 import { app } from 'electron'
-import { intlLocale } from '@shared/i18n'
+import { intlLocale, languageName } from '@shared/i18n'
 import { allTranslations, currentLanguage, t } from '../i18n'
 import type { Agent, AgentInstruction, FileRecord, InstructionInput, LogLevel, Message, Project, Provider, Task, UsageDelta, UsageMode } from '@shared/types'
 import { resolveAfter, type LeadMessage } from '@shared/leadComms'
@@ -40,6 +40,7 @@ import { agentTools, runAgentTool } from '../agentTools'
 import { projectMemoryForReview, projectMemoryOn, projectMemoryPrompt } from '../projectMemory/service'
 import { notifyUser, type HoldKind, type MergeState } from '../notify'
 import { filesRepo } from '../files/repo'
+import { auditRepo } from '../connections/repo'
 import {
   filesSection,
   forgetRun,
@@ -180,6 +181,16 @@ const flatten = (md: string): string =>
 /** Settings rows outside AppSettings: autopilot holds and the global pause survive a restart. */
 const HELD_KEY = 'orchestrator.held'
 const HELD_WHY_KEY = 'orchestrator.heldWhy'
+/** Tasks in review that wait for the user, with why (the same "Needs you" after a restart; not reviewed again on their own). */
+const UNDECIDED_KEY = 'orchestrator.undecided'
+/** #general status lines (`orchestrator:say.*`). */
+type SayKey =
+  | 'sentForReview' | 'doneNoReview' | 'doneNoLead' | 'commitFailed' | 'approved' | 'sentBack' | 'sentBackWaits'
+  | 'unverifiable' | 'notMoving' | 'limit' | 'decide'
+/** Agentbits tools that only read (a run using only these, and no file tool / shell, changed nothing it knows of). */
+const READ_ONLY_TOOLS = /^mcp__agentbits__(file_read|file_search|files_list|project_memory_read|project_memory_search)( |$)/
+/** The lead's one-line summary as its own sentence (empty when there is none). */
+const sentence = (s?: string): string => (s ? ` ${/[.!?…]$/.test(s) ? s : `${s}.`}` : '')
 
 /** One event posted to #general and to task threads: the copies share `meta.event`, so the live feed shows it once
  *  (`lib/feed.ts` `dedupeFeed`). */
@@ -229,6 +240,8 @@ class Orchestrator {
   private stoppingForDone = new Set<string>()
   /** The run each task's last concluded review judged: the same run is not sent to the lead twice (retry clears it). */
   private reviewedRun = new Map<string, string>()
+  /** The run each task was last sent back for (this session only: unknown after a restart, so nothing stops early). */
+  private sentBackRun = new Map<string, string>()
   private failCounts = new Map<string, number>()
   /** Chat replies and reviews in flight (not task runs): stop / reset / project delete cancel and await them. */
   private aux = new Map<AbortController, { projectId: string | null; done: Promise<void> }>()
@@ -250,6 +263,10 @@ class Orchestrator {
     this.blocked = new Set(readJson<string[]>(HELD_KEY, []))
     this.heldWhy = new Map(Object.entries(readJson<Record<string, string>>(HELD_WHY_KEY, {})))
     this.globalPaused = readJson<boolean>(PAUSED_KEY, false)
+    const undecided = readJson<Record<string, string>>(UNDECIDED_KEY, {})
+    this.undecided = new Set(Object.keys(undecided).filter((id) => tasksRepo.get(id)?.status === 'in_review'))
+    this.undecidedWhy = new Map([...this.undecided].map((id) => [id, undecided[id]]))
+    this.saveUndecided()
     const stale = runsRepo.cancelStale()
     instructionsRepo.cancelStale()
     for (const task of tasksRepo.listAll()) {
@@ -268,7 +285,8 @@ class Orchestrator {
     if (stale) this.log({ level: 'warn', message: t('orchestrator:log.staleRunsCancelled', { count: stale }) })
     // Not reviewed until the user starts the project's work (an approval finishes and merges the task).
     if (settingsRepo.get().reviewByLead) {
-      for (const t of tasksRepo.listAll().filter((x) => x.status === 'in_review')) this.deferredReviews.add(t.id)
+      // A task already waiting for the user's decision stays with the user: only "Retry the review" asks the lead again.
+      for (const t of tasksRepo.listAll().filter((x) => x.status === 'in_review' && !this.undecided.has(x.id))) this.deferredReviews.add(t.id)
     }
     // Copies / branches left by tasks that are gone (also from older versions); task copies are made only after this.
     this.swept = this.sweepWorktrees()
@@ -301,10 +319,13 @@ class Orchestrator {
     this.blocked.clear()
     this.saveHeld()
     this.failCounts.clear()
+    this.undecided.clear()
     this.undecidedWhy.clear()
+    this.saveUndecided()
     this.reviewing.clear()
     this.reviewAgain.clear()
     this.reviewedRun.clear()
+    this.sentBackRun.clear()
     this.reviewChain = Promise.resolve()
   }
 
@@ -345,6 +366,19 @@ class Orchestrator {
   }
 
   /** A chat reply / review registered for cancellation; `end()` must be called when it is done. */
+  /** How long a review waits for the worker's changed files to be read in again before the user decides. */
+  private filesReadyMs = 30_000
+
+  /** Waits (at most `filesReadyMs`) until none of the files is being read in; returns the names still not ready. */
+  private async filesReady(ids: string[], signal: AbortSignal): Promise<string[]> {
+    const until = Date.now() + this.filesReadyMs
+    for (;;) {
+      const pending = filesRepo.byIds(ids).filter((f) => f.status === 'processing')
+      if (!pending.length || signal.aborted || Date.now() >= until) return pending.map((f) => f.name)
+      await new Promise((r) => setTimeout(r, 250))
+    }
+  }
+
   private auxStart(projectId: string | null): { signal: AbortSignal; end: () => void } {
     const controller = new AbortController()
     let finish!: () => void
@@ -393,12 +427,7 @@ class Orchestrator {
     simulatedWork: string[]
     simulatedReview: string[]
   } {
-    for (const id of [...this.undecided]) {
-      if (tasksRepo.get(id)?.status !== 'in_review') {
-        this.undecided.delete(id)
-        this.undecidedWhy.delete(id)
-      }
-    }
+    for (const id of [...this.undecided]) if (tasksRepo.get(id)?.status !== 'in_review') this.clearUndecided(id)
     return {
       paused: this.globalPaused,
       held: this.heldTasks(),
@@ -440,6 +469,39 @@ class Orchestrator {
       if (w.id !== t.id && (w.status !== 'done' || out.has(w.id))) out.add(t.id)
     }
     return out
+  }
+
+  /** A status line by the app: the task's name first, its key last. */
+  private sayText(task: Task, key: SayKey, vars: Record<string, unknown> = {}): string {
+    return t(`orchestrator:say.${key}`, { title: task.title, key: task.key, ...vars })
+  }
+
+  /** Posts a status line to #general (`needsYou`: the user has to decide; drawn as such). */
+  private say(task: Task, key: SayKey, vars: Record<string, unknown>, ev: { event: string }, needsYou = false): void {
+    this.post('general', 'system', null, this.sayText(task, key, vars), task.projectId, [], { ...ev, ...(needsYou ? { needsYou: true } : { status: true }) })
+  }
+
+  /**
+   * The run is known to have changed nothing: a complete Claude Code record with no write attempt, no shell command, no
+   * file produced, only Agentbits read tools, and no connection call. Anything else (other providers, a missing record,
+   * a shell command, any other tool) is unknown — never taken as "nothing changed".
+   */
+  private knownUnchanged(runId: string): boolean {
+    const e = runEvidence(runId)
+    if (!e || !e.toolRecord || e.recordMissing || e.simulated) return false
+    if (e.fileCount.total || e.commandCount.total || generatedFor(runId).length) return false
+    const tools = getDb().prepare("SELECT message FROM agent_logs WHERE run_id = ? AND level = 'tool' AND message LIKE 'mcp\\_%' ESCAPE '\\'").all(runId) as { message: string }[]
+    if (tools.some((r) => !READ_ONLY_TOOLS.test(r.message))) return false
+    return auditRepo.list({ runId, limit: 1 }).length === 0
+  }
+
+  private clearUndecided(id: string): void {
+    const had = this.undecided.delete(id)
+    if (this.undecidedWhy.delete(id) || had) this.saveUndecided()
+  }
+
+  private saveUndecided(): void {
+    writeJson(UNDECIDED_KEY, Object.fromEntries([...this.undecided].map((id) => [id, this.undecidedWhy.get(id) ?? ''])))
   }
 
   private saveHeld(): void {
@@ -665,10 +727,10 @@ class Orchestrator {
     const branch = branchFor(task.key)
     let problem: string | null = null
     const say = (what: 'merged' | 'dirty' | 'conflict' | 'mergeFailed', vars: Record<string, string> = {}): void => {
-      const text = t(`orchestrator:worktree.${what}`, { key: task.key, branch, files: '', error: '', ...vars })
+      const text = t(`orchestrator:worktree.${what}`, { key: task.key, title: task.title, branch, files: '', error: '', ...vars })
       if (what !== 'merged') problem = text
       const ev = sameEvent()
-      this.post('general', 'system', null, text, task.projectId, [], ev)
+      this.post('general', 'system', null, text, task.projectId, [], { ...ev, ...(what === 'dirty' || what === 'mergeFailed' ? { needsYou: true } : { status: true }) })
       this.post(`task:${task.id}`, 'system', null, text, task.projectId, [], ev)
     }
     try {
@@ -920,8 +982,7 @@ class Orchestrator {
     }
     this.release(task.id)
     // A new run: what was said about the previous one's review no longer applies.
-    this.undecided.delete(task.id)
-    this.undecidedWhy.delete(task.id)
+    this.clearUndecided(task.id)
     this.busy.add(agent.id)
     // Race mode: a first start of an ordinary task also hands a copy to a member on another provider / model.
     // Only with the lead's review on: the lead is the one who picks the winner.
@@ -1071,6 +1132,10 @@ class Orchestrator {
       })
       if (taskFiles.text) prompt += '\n\n' + taskFiles.text
       for (const f of taskFiles.given) filesRepo.link(f.id, 'run', runId, 'given')
+      // Attachments still being read in when the run starts: recorded, so the review knows the work began without them.
+      if (taskFiles.pending.length) {
+        this.log({ ...logCtx, level: 'warn', message: t('orchestrator:log.filesNotReadyAtStart', { names: taskFiles.pending.map((f) => f.name).join(', ') }), meta: { pendingFiles: taskFiles.pending.map((f) => f.name) } })
+      }
       if (toolsAvailable) {
         system +=
           '\n\n## Deliverable files\nTo hand over a document, report or table as a file, save it with the file_save tool (text formats); the user downloads it from Files. ' +
@@ -1321,7 +1386,7 @@ class Orchestrator {
         this.hold(task.id, why, { why: 'commit', event: `run:${runId}:held` })
         const ev = sameEvent()
         this.post(`task:${task.id}`, 'system', null, why, pid, [], ev)
-        this.post('general', 'system', null, `⚠️ ${task.key}: ${why}`, pid, [], ev)
+        this.say(task, 'commitFailed', { worker: agent.name, retry: t('tasks:drawer.retry') }, ev, true)
       }
       // Outputs: files saved with file_save, and (CLI agents) files changed in the project folder (worktree mode: after the merge).
       if ((provider.kind === 'claude-cli' || provider.kind === 'codex-cli') && perms.fsWrite && project?.rootPath && !wt) {
@@ -1332,16 +1397,12 @@ class Orchestrator {
       const body = stripBlocks(result.text) || t('orchestrator:chat.emptyOutput')
       const done = sameEvent()
       this.post(`task:${task.id}`, 'agent', agent.id, body, pid, outputs, done)
-      this.post(
-        'general',
-        'agent',
-        agent.id,
-        t('orchestrator:chat.taskDone', { key: task.key, title: task.title }) +
-          (outputs.length ? ` · ${t('orchestrator:chat.filesSuffix', { count: outputs.length })}` : ''),
-        pid,
-        [],
-        done
-      )
+      // #general: what happened and what comes next, by the app (a commit failure already said it above).
+      if (committed) {
+        const reviewLead = settingsRepo.get().reviewByLead ? projectLead(pid) : null
+        if (reviewLead) this.say(task, 'sentForReview', { worker: agent.name, lead: reviewLead.name }, done)
+        else this.say(task, settingsRepo.get().reviewByLead ? 'doneNoLead' : 'doneNoReview', { worker: agent.name }, done, true)
+      }
       memoryEngine.remember(`${task.key} “${task.title}” (${agent.name}): ${flatten(body).slice(0, 700)}`, 'summary', {
         agentId: agent.id,
         taskId: task.id,
@@ -2080,8 +2141,7 @@ class Orchestrator {
     if (this.reviewing.has(taskId)) return 'pending'
     const lead = projectLead(task.projectId)
     if (!lead) throw new Error(t('orchestrator:errors.retryReviewNoLead'))
-    this.undecided.delete(taskId)
-    this.undecidedWhy.delete(taskId)
+    this.clearUndecided(taskId)
     this.reviewedRun.delete(taskId)
     this.log({ agentId: lead.id, taskId, projectId: task.projectId, level: 'status', message: t('orchestrator:log.reviewRetried', { key: task.key }) })
     emit({ type: 'orchestrator:changed' })
@@ -2091,13 +2151,16 @@ class Orchestrator {
 
   /** A task in review that waits for the user: why (card, "Needs you") and one note in its thread. */
   /** `event`: the review (or race comparison) this comes from — one notification per review attempt. */
-  private needsUser(taskId: string, reason: string, event: string, note?: string): void {
+  /** `general`: the #general line (default: "waiting for your decision" with the reason; false: none). */
+  private needsUser(taskId: string, reason: string, event: string, note?: string, general?: string | false): void {
     const task = tasksRepo.get(taskId)
     if (!task || task.status !== 'in_review') return
     this.undecided.add(taskId)
     this.undecidedWhy.set(taskId, reason)
+    this.saveUndecided()
     // The same event id in the live feed: a race's two notes (one per attempt) show as one line there.
     this.postOnce(`task:${taskId}`, note ?? t('orchestrator:chat.reviewNeedsYou', { reason }), task.projectId, { event })
+    if (general !== false) this.postOnce('general', general ?? this.sayText(task, 'decide', { reason }), task.projectId, { event, needsYou: true })
     emit({ type: 'orchestrator:changed' })
     notifyUser({ kind: 'undecided', taskId, event, stillPending: () => this.undecided.has(taskId) && tasksRepo.get(taskId)?.status === 'in_review' })
   }
@@ -2118,7 +2181,7 @@ class Orchestrator {
     const pid = task.projectId
     if (task.status !== 'in_review') return
     // projectLead only returns an enabled agent (falling back to any enabled member): none = nobody can review.
-    if (!lead) return this.needsUser(taskId, t('orchestrator:reviewIssue.noLead'), event)
+    if (!lead) return this.needsUser(taskId, t('orchestrator:reviewIssue.noLead'), event, undefined, false)
     // Race mode: wait for the other attempt, then compare both; if it failed or was held, review this one alone.
     const partner = task.raceOf ? tasksRepo.get(task.raceOf) : tasksRepo.challengerOf(task.id)
     if (partner && !partner.raceResult && !task.raceResult) {
@@ -2144,6 +2207,16 @@ class Orchestrator {
     this.setStatus(lead.id, 'working', t('orchestrator:status.reviewing', { key: task.key }))
     const leadCtx = { agentId: lead.id, taskId, projectId: pid }
     const aux = this.auxStart(pid)
+    // The worker's changed files are read in again after its run: judge nothing until their current content is there.
+    // Still not ready → the user decides (no verdict on content the lead can't see).
+    const notReady = await this.filesReady(generatedFor(lastRun.id).map((f) => f.id), aux.signal)
+    if (notReady.length) {
+      aux.end()
+      this.setStatus(lead.id, 'idle')
+      if (aux.signal.aborted || this.staleReview(taskId, basis)) return
+      this.reviewedRun.set(taskId, lastRun.id)
+      return this.needsUser(taskId, t('orchestrator:reviewIssue.filesNotReady', { files: notReady.join(', ') }), event)
+    }
     // Files the worker produced are part of the work: inline what fits (the review has no tools).
     const produced = filesSection({
       agentId: lead.id,
@@ -2165,7 +2238,8 @@ class Orchestrator {
       (evidence && !evidence.simulated ? '\n\n' + evidenceSection(evidence, diff) : '')
     const criteria = acceptanceList(task.acceptance)
     const reviewMemory = projectMemoryForReview(pid, [task.title, task.description, task.acceptance].join('\n'))
-    const rSystem = reviewSystem(lead, criteria.length) + (reviewMemory ? '\n\n' + reviewMemory : '')
+    const ui = currentLanguage()
+    const rSystem = reviewSystem(lead, criteria.length, `${languageName(ui)} (${ui})`) + (reviewMemory ? '\n\n' + reviewMemory : '')
     this.log({
       ...leadCtx,
       level: 'prompt',
@@ -2194,6 +2268,14 @@ class Orchestrator {
       if (this.staleReview(taskId, basis)) return
       this.reviewedRun.set(taskId, lastRun.id)
       const verdict = parseReview(result.text)
+      // "I couldn't verify": not an approval, not a send-back; the user decides and the worker doesn't run again.
+      if (verdict.valid && verdict.unverifiable) {
+        this.log({ ...leadCtx, level: 'status', message: t('orchestrator:log.reviewUnverifiable', { key: task.key, note: verdict.note }) })
+        tasksRepo.update(taskId, { reviewNote: verdict.note })
+        const say = this.sayText(task, 'unverifiable', { lead: lead.name, worker: worker.name, summary: sentence(verdict.summary), retryReview: t('tasks:drawer.retryReview') })
+        this.needsUser(taskId, t('orchestrator:reviewIssue.unverifiable', { lead: lead.name, note: verdict.note }), event, undefined, say)
+        return
+      }
       // Acceptance criteria: each must be checked; an unmet one turns an approval into a revision.
       const check = criteria.length ? judgeCriteria(criteria, verdict.criteria) : []
       const valid = verdict.valid && check !== null
@@ -2237,18 +2319,39 @@ class Orchestrator {
         tasksRepo.update(taskId, { reviewNote: note })
         const ev = sameEvent()
         this.post(`task:${taskId}`, 'agent', lead.id, t('orchestrator:chat.approvedTask', { note }), pid, [], ev)
-        this.post('general', 'agent', lead.id, t('orchestrator:chat.approvedGeneral', { key: task.key, worker: worker.name, note }), pid, [], ev)
+        // Where the changes are, only when known: shared project folder files recorded for this run (worktree: the merge says it).
+        // (Only that they are there: earlier runs of the task may have changed other files too.)
+        const inFolder = getProject(pid)?.isolation !== 'worktree' && generatedFor(lastRun.id).some((f) => f.origin === 'workspace')
+        this.say(task, 'approved', { lead: lead.name, summary: sentence(verdict.summary), changes: inFolder ? t('orchestrator:say.changesInFolder') : '' }, ev)
       } else {
-        tasksRepo.update(taskId, { status: 'todo', progress: 0, reviewNote: note })
         const ev = sameEvent()
-        this.post(`task:${taskId}`, 'agent', lead.id, t('orchestrator:chat.revisionTask', { note }), pid, [], ev)
         // Endless review loops cost money: after a few rounds the task waits for the user.
         const rounds = runsRepo.list({ taskId, limit: MAX_REVIEW_ROUNDS + 1 }).filter((r) => r.status === 'succeeded').length
+        // Sent back again after a run that, as far as its record knows, changed nothing: running it once more wouldn't
+        // change the answer. It stays in review for the user (nothing unknown is taken as "nothing changed").
+        const before = runsRepo.list({ taskId, limit: MAX_REVIEW_ROUNDS + 1 }).filter((r) => r.status === 'succeeded' && r.id !== lastRun.id)[0]
+        if (before && this.sentBackRun.get(taskId) === before.id && this.knownUnchanged(lastRun.id)) {
+          tasksRepo.update(taskId, { reviewNote: note })
+          this.post(`task:${taskId}`, 'agent', lead.id, t('orchestrator:chat.revisionTask', { note }), pid, [], ev)
+          const say = this.sayText(task, 'notMoving', { lead: lead.name, retryReview: t('tasks:drawer.retryReview'), rerunWorker: t('tasks:drawer.rerunWorker') })
+          this.needsUser(taskId, t('orchestrator:reviewIssue.notMoving', { lead: lead.name }), event, undefined, say)
+          emit({ type: 'tasks:changed' })
+          return
+        }
+        tasksRepo.update(taskId, { status: 'todo', progress: 0, reviewNote: note })
+        this.sentBackRun.set(taskId, lastRun.id)
+        this.post(`task:${taskId}`, 'agent', lead.id, t('orchestrator:chat.revisionTask', { note }), pid, [], ev)
         if (rounds >= MAX_REVIEW_ROUNDS) {
           this.hold(taskId, t('orchestrator:held.revisionLimit', { count: rounds }), { why: 'revision', event })
           this.post(`task:${taskId}`, 'system', null, t('orchestrator:chat.revisionLimit', { count: rounds }), pid)
+          // One line in #general: the limit (not also "it runs again").
+          this.say(task, 'limit', { count: rounds, retry: t('tasks:drawer.retry') }, ev, true)
+        } else {
+          // "It runs again on its own" only when autopilot will really take it.
+          const runsAgain = settingsRepo.get().autopilot && this.workStarted.has(pid) && !this.globalPaused && worker.enabled && !worker.isLead
+          // An approval turned into a send-back by an unmet criterion: its summary ("all good") isn't shown.
+          this.say(task, runsAgain ? 'sentBack' : 'sentBackWaits', { lead: lead.name, worker: worker.name, summary: verdict.approved ? '' : sentence(verdict.summary) }, ev)
         }
-        this.post('general', 'agent', lead.id, t('orchestrator:chat.revisionGeneral', { key: task.key, worker: worker.name, note }), pid, [], ev)
         memoryEngine.remember(`Review feedback on ${task.key}: ${note}`, 'context', {
           agentId: worker.id,
           taskId,

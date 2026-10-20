@@ -125,7 +125,7 @@ async function main(): Promise<void> {
     assert.match(rv.prompt, /No successful write with file tools is recorded/)
     assert.doesNotMatch(rv.prompt, /No file was written/)
     assert.match(rv.prompt, /Not known whether written \(no result recorded\): src\/cart\.ts/)
-    assert.match(rv.prompt, /Shell commands may also have changed files/)
+    assert.match(rv.prompt, /Shell commands may also have read or changed files/)
     assert.match(rv.prompt, /Refused during the run[\s\S]*Bash rm -rf build/)
     assert.match(rv.system, /a claim in the report \(e\.g\. "tests pass"\) that the record does not back is unverified/)
   })
@@ -213,7 +213,7 @@ async function main(): Promise<void> {
     assert.match(pr, /No successful write recorded, every attempt FAILED: src\/b\.ts/)
     assert.match(pr, /No successful write recorded, refused: src\/c\.ts/)
     assert.match(pr, /Not known whether written \(no result recorded\): src\/d\.ts/)
-    assert.match(pr, /Shell commands may also have changed files; those are not tracked here/)
+    assert.match(pr, /Shell commands may also have read or changed files; that is not tracked here/)
   })
 
   await step('a failure early in a long run stays: counted, listed, and the rest is said to be left out', async () => {

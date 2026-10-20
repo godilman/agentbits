@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { Brain, Hash, Send, Sparkles } from 'lucide-react'
+import { Brain, CircleAlert, Hash, Info, Send, Sparkles } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { useResize } from '@/components/common/Resize'
 import type { I18nKey } from '@shared/i18n'
@@ -298,6 +298,23 @@ function MessageRow({ m, prev, files }: { m: Message; prev?: Message; files: Map
   const attached = messageFiles(m)
   const agents = useAppStore((s) => s.agents)
   const a = m.senderType === 'agent' ? agentById(agents, m.senderId) : undefined
+  // A task's status by the app (finished, approved, sent back) and what waits for the user's decision: read like a
+  // message, not a faint divider.
+  if (m.senderType === 'system' && (m.meta?.needsYou || m.meta?.status)) {
+    const decide = !!m.meta?.needsYou
+    return (
+      <div
+        data-testid={decide ? 'chat-needs-you' : 'chat-status'}
+        className={cn(
+          'flex items-start gap-2 rounded-md border px-3 py-2 text-[13px] leading-relaxed',
+          decide ? 'border-amber-500/30 bg-amber-500/[0.06] text-zinc-100' : 'border-line bg-white/[0.02] text-zinc-300'
+        )}
+      >
+        {decide ? <CircleAlert size={14} className="mt-0.5 shrink-0 text-amber-300" /> : <Info size={14} className="mt-0.5 shrink-0 text-zinc-400" />}
+        <span className="min-w-0">{m.content}</span>
+      </div>
+    )
+  }
   if (m.senderType === 'system') {
     return (
       <div className="flex items-center gap-3 text-[12px] text-zinc-400">

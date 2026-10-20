@@ -153,7 +153,7 @@ async function main(): Promise<void> {
     await until(() => forProject('Approvals').length === 1, 'the notification')
     const n = forProject('Approvals')[0]
     assert.equal(n.title, 'Approvals')
-    assert.equal(n.body, `${tApprove.key} · Update the stock table in the orders database is waiting for your approval to start — approve or reject`)
+    assert.equal(n.body, `Update the stock table in the orders database · ${tApprove.key} is waiting for your approval to start — approve or reject`)
     assert.equal(n.silent, false)
     assert.equal(flashes.at(-1), true)
   })
@@ -198,7 +198,7 @@ async function main(): Promise<void> {
     await call('tasks:start', tFail.id)
     await until(() => forProject('Failures').length === 1, 'the failure')
     const f = forProject('Failures')[0]
-    assert.match(f.body, new RegExp(`^${tFail.key} · fails twice stopped with an error — decide what to do$`))
+    assert.match(f.body, new RegExp(`^fails twice · ${tFail.key} stopped with an error — decide what to do$`))
     assert.doesNotMatch(f.body, RAW)
   })
 
@@ -234,7 +234,7 @@ async function main(): Promise<void> {
     const g = forProject('Finished')
     assert.equal(g.length, 1)
     assert.equal(g[0].title, 'Finished — 2 tasks approved by the lead')
-    assert.equal(g[0].body, `${a.key} · first to finish is done (approved by the lead)\n${b.key} · second to finish is done (approved by the lead)`)
+    assert.equal(g[0].body, `first to finish · ${a.key} is done (approved by the lead)\nsecond to finish · ${b.key} is done (approved by the lead)`)
     assert.equal(g[0].silent, true)
     assert.ok(!flashes.slice(flashesBefore).includes(true), 'finished work does not flash the taskbar')
     noteOf('Finished').handlers.click()
@@ -257,7 +257,7 @@ async function main(): Promise<void> {
     await wait(WINDOW + 300)
     const r = forProject('Race')
     assert.equal(r.length, 1)
-    assert.equal(r[0].body, `${a.key} · race A won the race (${b.key} closed)`)
+    assert.equal(r[0].body, `race A · ${a.key} won the race (${b.key} closed)`)
     review = async () => '{"approved": true, "note": "ok"}'
   })
 
@@ -289,7 +289,7 @@ async function main(): Promise<void> {
     assert.equal(g.length, 1)
     assert.equal(
       g[0].body,
-      `${merged.key} · merges cleanly is done (approved by the lead) and merged into the project\n${waits.key} · merge has to wait was approved by the lead; the merge is waiting — review the changes and merge\n${unchanged.key} · changed nothing is done (approved by the lead)`
+      `merges cleanly · ${merged.key} is done (approved by the lead) and merged into the project\nmerge has to wait · ${waits.key} was approved by the lead; the merge is waiting — review the changes and merge\nchanged nothing · ${unchanged.key} is done (approved by the lead)`
     )
   })
 
@@ -365,7 +365,7 @@ async function main(): Promise<void> {
     idle()
     await call('tasks:start', r.id)
     await until(() => forProject('Review').length === 1, 'the undecided review')
-    assert.equal(forProject('Review')[0].body, `${r.key} · review twice: the review couldn't reach a decision — it's your call`)
+    assert.equal(forProject('Review')[0].body, `review twice · ${r.key}: waiting for your decision — see the task page`)
     await call('tasks:retryReview', r.id)
     await until(() => !o.reviewing.has(r.id) && orchestrator.state().undecided.includes(r.id), 'the retried review decided (unclear again)')
     // d) a race the lead can't decide: one event for both attempts.
@@ -407,7 +407,7 @@ async function main(): Promise<void> {
     // f) a connection approval for a task: the task says who; the click goes to the task with that approval.
     const ta = task(P.taskApproval.id, 'reads the orders database')
     const apId = askApproval(P.taskApproval.id, ta.id, 'Orders DB')
-    assert.equal(forProject('TaskApproval')[0].body, `${ta.key} · reads the orders database: waiting for your approval for Orders DB — approve or reject`)
+    assert.equal(forProject('TaskApproval')[0].body, `reads the orders database · ${ta.key}: waiting for your approval for Orders DB — approve or reject`)
     const taskApprovalNote = noteOf('TaskApproval') // clicked after the window (a click brings the user back: it clears the rest)
     // g) a project deleted before its group is due: nothing for it.
     askApproval(P.deleted.id, null, 'Deleted first')
@@ -417,7 +417,7 @@ async function main(): Promise<void> {
     await wait(WINDOW + 300)
     assert.equal(forProject('NoSupport').length, 0, 'a) nothing constructed when unsupported')
     assert.equal(forProject('Review').length, 2, 'c) the retried review is a new event')
-    assert.match(forProject('Review')[1].body, /couldn't reach a decision/)
+    assert.match(forProject('Review')[1].body, /waiting for your decision/)
     assert.equal(forProject('RaceUnclear').length, 1, 'd) one notification for the race')
     assert.equal(forProject('RaceFail').length, 1, 'd2) one notification for the failed comparison')
     const mixed = forProject('Mixed')
@@ -428,7 +428,7 @@ async function main(): Promise<void> {
     assert.equal(lines[0], '2 approvals · 2 decisions for you')
     assert.equal(lines[1], `${dev.name} is waiting for your approval for Mixed DB 1 — approve or reject`)
     assert.equal(lines[2], `${dev.name} is waiting for your approval for Mixed DB 2 — approve or reject`)
-    assert.equal(lines[3], `${m1.key} · mixed one: the review couldn't reach a decision — it's your call`)
+    assert.equal(lines[3], `mixed one · ${m1.key}: waiting for your decision — see the task page`)
     assert.equal(lines[4], '+1 more')
     assert.equal(forProject('Deleted').length, 1, 'g) the collected one for a deleted project is not shown')
     // d3) the same race compared again (retried): a new event, not silenced by the first.
@@ -493,7 +493,7 @@ async function main(): Promise<void> {
     notifyUser({ kind: 'undecided', taskId: t.id, event: 'long', stillPending: () => true })
     const n = forProject('Çok Uzun')[0]
     assert.equal(n.title, 'Çok Uzun Adlı E-Ticaret Yeniden Tasarım…')
-    assert.equal(n.body, `${t.key} · ${'Ö'.repeat(48)}${family}…: the review couldn't reach a decision — it's your call`)
+    assert.equal(n.body, `${'Ö'.repeat(48)}${family}… · ${t.key}: waiting for your decision — see the task page`)
     assert.ok((n.title + n.body).isWellFormed(), 'no broken surrogate pair')
   })
 

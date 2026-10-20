@@ -90,6 +90,8 @@ export function leadSystem(lead: Agent, team: Agent[], board: Task[], memory: st
     '  work in parallel, preferring the one with fewer open tasks, instead of queuing everything on one of them.',
     '  Emit them in ONE fenced block exactly like:',
     '```tasks\n[{"title": "...", "description": "...", "assignee": "<team member name>", "priority": 1}]\n```',
+    '  "title": a short, plain name of the work in the user\'s language, as the user would say it (at most 60 characters,',
+    '  no file paths, code names, function or key names). Technical details (files, keys, steps) go in "description".',
     '  priority: 0 low, 1 normal, 2 high, 3 urgent.',
     '  Order: independent tasks run in parallel. When a task needs the result of another, add "after": [1, "TA-3"]',
     '  (1-based positions of EARLIER tasks in the same block, or keys of existing tasks). It starts once those are done,',
@@ -119,16 +121,29 @@ export function leadPrompt(history: Message[], names: Record<string, string>, us
   return `## Conversation so far\n${h || '(empty)'}\n\n## User message\n${userMessage}`
 }
 
-export function reviewSystem(lead: Agent, criteria = 0): string {
+/** Not proof is not fabrication: what the lead may conclude from evidence that is missing (review and race). */
+const MISSING_EVIDENCE =
+  'A missing record is not proof of anything: never call a report fabricated, invented or hallucinated because the record ' +
+  "doesn't show something (shell commands, other tools and earlier runs aren't all recorded). Only say it is wrong when the " +
+  'evidence or the files you were shown contradict it.'
+
+export function reviewSystem(lead: Agent, criteria = 0, userLanguage = 'English'): string {
   return [
     `You are ${lead.name}, reviewing a teammate's work as ${lead.role}.`,
     'Decide whether the work satisfies the task. Respond with ONLY a JSON object:',
     criteria
-      ? `{"approved": true|false, "note": "one or two sentences of feedback in the task's language", "criteria": [{"met": true|false, "note": "short reason"}, ...]}\n` +
+      ? `{"approved": true|false, "note": "one or two sentences of feedback for the worker, in the task's language", "summary": "one plain sentence for the user", "criteria": [{"met": true|false, "note": "short reason"}, ...]}\n` +
         `"criteria" has exactly ${criteria} entries, one per acceptance criterion, in order. Approve only if every criterion is met.`
-      : '{"approved": true|false, "note": "one or two sentences of feedback in the task\'s language"}',
+      : '{"approved": true|false, "note": "one or two sentences of feedback for the worker, in the task\'s language", "summary": "one plain sentence for the user"}',
     'The work report is the worker\'s own account. When an "Evidence from the tool record" section is given, it shows what really ran and changed; ' +
-      'a claim in the report (e.g. "tests pass") that the record does not back is unverified — say so in the note.'
+      'a claim in the report (e.g. "tests pass") that the record does not back is unverified — say so in the note.',
+    'If you cannot decide because you could not see enough (a file not shown or not ready, no evidence for what matters), ' +
+      'do not approve and do not send it back: answer {"approved": false, "unverifiable": true, "note": "what you could not verify and why", "summary": "…"} ' +
+      '(no "criteria" then). The user decides; the worker does not run again. If the evidence or the files you saw show that something ' +
+      'is missing or wrong, answer "approved": false.',
+    MISSING_EVIDENCE,
+    `"summary": one short, plain sentence in ${userLanguage} for the person who gave the task: what you found, without file paths, ` +
+      'code names or tool names; it never decides anything.'
   ].join('\n')
 }
 
@@ -138,6 +153,7 @@ export function raceSystem(lead: Agent, criteria = 0): string {
     `You are ${lead.name}, comparing two independent attempts at the same task by different team members (race mode).`,
     'Judge correctness first, then completeness and quality; the reports are their own account of the work.',
     'If neither attempt does the task, the winner is "none": both go back.',
+    MISSING_EVIDENCE,
     criteria
       ? 'Respond with ONLY a JSON object: {"winner": "A" | "B" | "none", "note": "one or two sentences on why, in the task\'s language", ' +
         '"criteriaA": [{"met": true|false, "note": "short reason"}, ...], "criteriaB": [...]}\n' +

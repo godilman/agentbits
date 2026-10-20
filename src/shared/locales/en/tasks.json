@@ -181,6 +181,18 @@
     "filesNotListed_one": "… {{count}} more file without a recorded successful write is not listed; all are in Logs.",
     "filesNotListed_other": "… {{count}} more files without a recorded successful write are not listed; all are in Logs.",
     "failedNotListed_one": "{{count}} more failed command is not listed; all are in Logs.",
-    "failedNotListed_other": "{{count}} more failed commands are not listed; all are in Logs."
+    "failedNotListed_other": "{{count}} more failed commands are not listed; all are in Logs.",
+    "read": "What it read",
+    "readNone": "No file read is recorded with file tools (shell commands aren't tracked)",
+    "readUnknown": "This provider doesn't report its own reads; none through Agentbits is recorded",
+    "readSearches_one": "{{count}} search (Grep / Glob)",
+    "readSearches_other": "{{count}} searches (Grep / Glob)",
+    "readGiven": "Attached to its instructions (in full, in part or only by name; which one isn't known): {{files}}",
+    "readMemory_one": "Project memory read once: context, not proof about the current files or tests",
+    "readMemory_other": "Project memory read {{count}} times: context, not proof about the current files or tests",
+    "readUnconfirmed_one": "{{count}} read attempt failed or has no recorded result (not counted as read)",
+    "readUnconfirmed_other": "{{count}} read attempts failed or have no recorded result (not counted as read)",
+    "readOwnUnknown": "This provider's own reads aren't reported; only reads through Agentbits are listed.",
+    "shellMayRead": "Shell commands may have read files too; that isn't tracked."
   }
 }

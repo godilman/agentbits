@@ -206,6 +206,13 @@ export interface RunEvidence {
   fileWrites: { path: string; written: boolean; last: 'ok' | 'error' | 'refused' | 'unknown' }[]
   /** All files of the run (not only the ones listed). */
   fileCount: { total: number; written: number; notWritten: number; notListed: number; writtenNotListed: number }
+  /**
+   * What the run read. `files`: read with Claude Code's Read (its result worked) or through Agentbits (`file_read`; every
+   * provider), a shortened list of `filesTotal`; `unconfirmed`: Read calls that failed or have no recorded result; `searches`: Claude Code Grep / Glob calls (patterns, not files); `given`: files
+   * attached to its prompt (in full, in part or only named); `notReady`: task attachments still being read in when the run started; `memory`: project memory reads — context, not evidence
+   * about the current files or tests. Shell commands may read too (not tracked). Never "nothing was read" from absence.
+   */
+  reads: { files: string[]; filesTotal: number; unconfirmed: number; searches: number; given: string[]; memory: number; notReady: string[] }
   /** Refused: a tool the agent wasn't allowed to use, a connection call that was denied. */
   denied: string[]
   /** The report was longer than what the lead's review reads. */

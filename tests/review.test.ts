@@ -59,4 +59,19 @@ assert.equal(judgeCriteria(crit, undefined), null)
 assert.equal(judgeCriteria(crit, [{ met: true }]), null)
 assert.equal(judgeCriteria(crit, [{ met: true }, { met: 'yes' }]), null)
 assert.deepEqual(judgeCriteria([], undefined), null)
+// "I couldn't verify" (2026-10-20): its own outcome — never an approval, never a send-back; the user decides.
+{
+  const u = parseReview('{"approved": false, "unverifiable": true, "note": "parts 5–8 were not shown", "summary": "Atlas couldn\'t see the whole file."}')
+  assert.deepEqual(u, { approved: false, note: 'parts 5–8 were not shown', valid: true, unverifiable: true, summary: "Atlas couldn't see the whole file." })
+  assert.equal(parseReview('{"unverifiable": true, "note": "no access"}').unverifiable, true, 'without approved too')
+  assert.equal(parseReview('{"unverifiable": true, "note": "x", "criteria": [{"met": true}]}').criteria, undefined, 'no criteria check')
+  const bad = (text: string): void => assert.equal(parseReview(text).valid, false, text)
+  bad('{"approved": true, "unverifiable": true, "note": "x"}') // approved and unverified at once
+  bad('{"approved": false, "unverifiable": true, "unverifiable": true}') // key twice
+  bad('{"approved": false, "unverifiable": true, "x": {"unverifiable": true}}') // nested copy
+  bad('{"approved": false, "note": "a"} {"approved": false, "unverifiable": true, "note": "b"}') // disagreeing verdicts
+  assert.equal(parseReview('{"approved": false, "unverifiable": "yes"}').unverifiable, undefined, 'only a real boolean')
+  assert.equal(parseReview('{"approved": false, "unverifiable": false, "note": "n"}').unverifiable, undefined)
+  assert.deepEqual(parseReview('{"approved": false, "note": "n", "summary": "  "}'), { approved: false, note: 'n', valid: true }, 'empty summary dropped')
+}
 console.log('review: verdict and race verdict parsing ok')

@@ -11,6 +11,10 @@ import { auditRepo } from '../connections/repo'
  * Tests: `tests/e2e/result.e2e.ts`.
  */
 const WRITE_TOOLS = /^(Edit|MultiEdit|Write|NotebookEdit) (.+)$/
+/** Claude Code reads: `Read <path>`; Grep / Glob log their pattern (not a file); Agentbits project memory tools. */
+const READ_TOOL = /^Read (.+)$/
+const SEARCH_TOOL = /^(Grep|Glob)( |$)/
+const MEMORY_TOOL = /^mcp__agentbits__project_memory_(read|search)( |$)/
 const LATEST = 30
 const MAX_FAILED = 20
 const MAX_ITEMS = 40
@@ -85,6 +89,42 @@ export function runEvidence(runId: string): RunEvidence | null {
   const files = [...writes].map(([path, w]) => ({ path, ...w }))
   const listedFiles = [...files.filter((f) => f.written), ...files.filter((f) => !f.written)].slice(0, MAX_ITEMS)
   const writtenCount = files.filter((f) => f.written).length
+  // Reads: Claude Code's own (its record), and Agentbits file_read / attached files from the file links (every provider).
+  // Only a read whose result says it worked counts as read; a failed or unrecorded one is said as such.
+  const readPaths: string[] = []
+  let unconfirmed = 0
+  let searches = 0
+  let memory = 0
+  for (const l of logs) {
+    if (l.level !== 'tool' || !toolRecord) continue
+    const ok = results.get(typeof l.meta?.toolUseId === 'string' ? l.meta.toolUseId : '') === 'ok'
+    const r = READ_TOOL.exec(l.message)
+    if (r) {
+      if (ok) readPaths.push(r[1].trim())
+      else unconfirmed++
+    } else if (SEARCH_TOOL.test(l.message)) searches++
+    else if (MEMORY_TOOL.test(l.message) && ok) memory++
+  }
+  const linked = simulated
+    ? []
+    : (getDb()
+        .prepare(
+          `SELECT f.name, f.rel_path AS relPath, l.role FROM file_links l JOIN files f ON f.id = l.file_id
+            WHERE l.target_type = 'run' AND l.target_id = ? AND l.role IN ('read', 'given') ORDER BY l.created_at`
+        )
+        .all(runId) as { name: string; relPath: string | null; role: string }[])
+  const label = (f: { name: string; relPath: string | null }): string => f.relPath || f.name
+  // Task attachments that weren't read in yet when the run started (`orchestrator` logs them).
+  const notReady = [
+    ...new Set(
+      (getDb().prepare(`SELECT meta FROM agent_logs WHERE run_id = ? AND meta LIKE '%"pendingFiles"%'`).all(runId) as { meta: string }[]).flatMap(
+        (r) => (JSON.parse(r.meta) as { pendingFiles?: string[] }).pendingFiles ?? []
+      )
+    )
+  ]
+  for (const f of linked) if (f.role === 'read') readPaths.push(label(f))
+  const readFiles = [...new Set(readPaths)]
+  const given = [...new Set(linked.filter((f) => f.role === 'given').map(label))]
   for (const a of auditRepo.list({ runId, result: 'denied', limit: MAX_ITEMS })) denied.push(`${a.connectionName || a.action}: ${a.action} ${a.detail}`.trim())
   return {
     runId,
@@ -111,6 +151,7 @@ export function runEvidence(runId: string): RunEvidence | null {
       notListed: files.length - listedFiles.length,
       writtenNotListed: writtenCount - listedFiles.filter((f) => f.written).length
     },
+    reads: { files: readFiles.slice(0, MAX_ITEMS), filesTotal: readFiles.length, unconfirmed, searches, given: given.slice(0, MAX_ITEMS), memory, notReady },
     denied: denied.slice(0, MAX_ITEMS),
     reportCut: (run.output?.length ?? 0) > REVIEW_REPORT_CHARS
   }
@@ -133,6 +174,22 @@ export function reviewOfRun(taskIds: string[], runStartedAt: string): { agentId:
 }
 
 const MARK = { ok: 'finished', error: 'FAILED', unknown: 'result not recorded' } as const
+
+/** What the run read, as the review reads it. A missing record is never turned into "nothing was read". */
+function readLines(e: RunEvidence): string[] {
+  const r = e.reads
+  const out: string[] = []
+  const more = (total: number, shown: number): string => (total > shown ? ` (+${total - shown} more)` : '')
+  if (r.notReady.length) out.push(`- Not ready when the run started (still being read in; the worker may not have seen them): ${r.notReady.join(', ')}`)
+  if (r.given.length) out.push(`- Attached to the worker's prompt (${r.given.length}; in full, in part, or only named with a note to read it — not known which): ${r.given.join(', ')}`)
+  if (r.filesTotal) out.push(`- Files read (${r.filesTotal}): ${r.files.join(', ')}${more(r.filesTotal, r.files.length)}`)
+  if (r.unconfirmed) out.push(`- Read attempts that failed or have no recorded result: ${r.unconfirmed} (not counted as read)`)
+  if (r.searches) out.push(`- Searches with Grep / Glob: ${r.searches} (patterns, not files)`)
+  if (r.memory) out.push(`- Project memory read ${r.memory} time(s): context only, not evidence about the current files or tests.`)
+  if (!e.toolRecord) out.push(`- ${r.filesTotal || r.given.length ? 'Reads through Agentbits are listed above' : 'No read through Agentbits is recorded'}; this provider's own reads are not known.`)
+  else if (!e.recordMissing && !r.filesTotal && !r.searches) out.push('- No file read is recorded with file tools.')
+  return out
+}
 
 /** The evidence as the lead's review reads it (English, like the rest of the prompt). */
 export function evidenceSection(e: RunEvidence, diff: { files: string[]; text: string; cut: boolean } | null): string {
@@ -157,7 +214,7 @@ export function evidenceSection(e: RunEvidence, diff: { files: string[]; text: s
     const f = e.fileCount
     const written = e.fileWrites.filter((w) => w.written)
     const more = (k: number): string => (k ? ` (+${k} more not listed)` : '')
-    if (!f.written) lines.push(f.total ? '- No successful write with file tools is recorded (every attempt failed, was refused or has no recorded result).' : '- No file tool was used.')
+    if (!f.written) lines.push(f.total ? '- No successful write with file tools is recorded (every attempt failed, was refused or has no recorded result).' : '- No file write with file tools is recorded.')
     else lines.push(`- Written with file tools (${f.written}): ${written.map((w) => w.path).join(', ')}${more(f.writtenNotListed)}`)
     const after = written.filter((w) => w.last !== 'ok')
     if (after.length) lines.push(`- Written, but a later attempt ${after.map((w) => `on ${w.path} ${w.last === 'unknown' ? 'has no result' : w.last === 'refused' ? 'was refused' : 'FAILED'}`).join('; ')} (the earlier change stays).`)
@@ -166,8 +223,9 @@ export function evidenceSection(e: RunEvidence, diff: { files: string[]; text: s
     if (by('refused').length) lines.push(`- No successful write recorded, refused: ${by('refused').join(', ')}`)
     if (by('unknown').length) lines.push(`- Not known whether written (no result recorded): ${by('unknown').join(', ')}`)
     if (f.notListed > f.writtenNotListed) lines.push(`- … ${f.notListed - f.writtenNotListed} more files without a recorded successful write are not listed.`)
-    if (n.total) lines.push('- Shell commands may also have changed files; those are not tracked here (no git working copy).')
   }
+  lines.push(...readLines(e))
+  if (n.total) lines.push('- Shell commands may also have read or changed files; that is not tracked here.')
   if (e.denied.length) lines.push('- Refused during the run (the work may be incomplete):', ...e.denied.map((d) => `  - ${d}`))
   if (e.reportCut) lines.push(`- The report is longer than the ${REVIEW_REPORT_CHARS} characters shown above.`)
   return lines.join('\n')
