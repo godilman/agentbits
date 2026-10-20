@@ -53,6 +53,7 @@ export const DEFAULT_SETTINGS: AppSettings = {
   autopilot: true,
   reviewByLead: true,
   notifications: true,
+  autoUpdateCheck: true,
   logRetentionDays: 30,
   startupProjects: 'ask',
   language: 'auto',
@@ -106,6 +107,7 @@ export function validateSettingsPatch(patch: unknown): Partial<AppSettings> {
       case 'autopilot':
       case 'reviewByLead':
       case 'notifications':
+      case 'autoUpdateCheck':
       case 'shareWithTwins':
       case 'raceMode':
         out[k] = bool(k, v)

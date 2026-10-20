@@ -1,6 +1,7 @@
 import { app, BrowserWindow, dialog, session, shell } from 'electron'
-import { join } from 'path'
-import { openDb, closeDb } from './db'
+import { dirname, join } from 'path'
+import { DbStartError, backupsDir, getDbPath, openDb, closeDb } from './db'
+import { startUpdates, stopUpdates } from './update'
 import { startNotifications } from './notify'
 import { ensureOrgDefaults } from './core/org'
 import { dropUnboundOAuth, renameLegacyDefne, upgradePlainSecrets } from './core/legacy'
@@ -75,6 +76,8 @@ function hardenSessions(): void {
 let quitConfirmed = false
 /** before-quit seen: on macOS a window close only ends the app when quitting (otherwise work goes on). */
 let quitting = false
+/** The database didn't open (`showDbStartError`): quitting touches nothing that needs it. */
+let dbFailed = false
 
 /**
  * Closing would stop running tasks, cut off replies / reviews and turn down approvals: say so with the counts and let
@@ -184,11 +187,50 @@ async function loadDevServer(win: BrowserWindow, rawUrl: string): Promise<void> 
   void win.loadURL('data:text/html;charset=utf-8,' + encodeURIComponent(html))
 }
 
-app.whenReady().then(() => {
+/**
+ * The data couldn't be opened safely (a newer version's data, a failed backup or upgrade): say what happened, where the
+ * backup and the data are, and close. Never an empty profile in its place, never a reset.
+ */
+async function showDbStartError(e: unknown): Promise<void> {
+  applyLanguageSetting('auto') // settings live in the database
+  const err = e instanceof DbStartError ? e : null
+  const kind = err?.kind ?? 'open'
+  const detail = [
+    t(`main:dbStart.${kind}`, { found: err?.version.found ?? '?', latest: err?.version.latest ?? '?' }),
+    err?.backup ? t('main:dbStart.backupAt', { path: err.backup }) : '',
+    t('main:dbStart.dataAt', { path: getDbPath() }),
+    t(`main:dbStart.recover.${kind}`),
+    t('main:dbStart.error', { error: e instanceof Error ? e.message : String(e) })
+  ].filter(Boolean)
+  const choice = dialog.showMessageBoxSync({
+    type: 'error',
+    title: t('main:dbStart.title'),
+    message: t(`main:dbStart.message.${kind}`),
+    detail: detail.join('\n\n'),
+    buttons: [t('main:dbStart.openFolder'), t('main:dbStart.quit')],
+    defaultId: 1,
+    cancelId: 1,
+    noLink: true
+  })
+  if (choice === 0) await shell.openPath(err?.backup ? backupsDir() : dirname(getDbPath()))
+}
+
+app.whenReady().then(async () => {
   if (!gotLock) return
   if (isWin) app.setAppUserModelId('app.agentbits.desktop')
   hardenSessions()
-  openDb()
+  try {
+    openDb()
+  } catch (e) {
+    dbFailed = true
+    console.error('[agentbits] database not opened:', e)
+    try {
+      await showDbStartError(e)
+    } finally {
+      app.exit(1) // always: a process without a window would keep the single-instance lock
+    }
+    return
+  }
   applyLanguageSetting(settingsRepo.get().language)
   ensureOrgDefaults()
   renameLegacyDefne()
@@ -200,6 +242,7 @@ app.whenReady().then(() => {
   startMaintenance()
   startFiles()
   createWindow()
+  startUpdates()
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) createWindow()
   })
@@ -210,7 +253,7 @@ app.on('window-all-closed', () => {
 })
 
 app.on('before-quit', (e) => {
-  if (!gotLock) return
+  if (!gotLock || dbFailed) return
   quitting = true
   if (!confirmQuit(mainWindow)) {
     e.preventDefault()
@@ -218,6 +261,7 @@ app.on('before-quit', (e) => {
     return
   }
   stopMaintenance()
+  stopUpdates()
   rejectAllApprovals()
   stopBridge()
   void closeAllApps()

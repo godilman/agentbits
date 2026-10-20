@@ -1,16 +1,16 @@
 // Just enough of `electron` for the main process code under plain Node (tests/e2e). Secrets use the test-only
 // plain fallback (AGENTBITS_ALLOW_PLAIN_SECRETS=1, set by scripts/e2e.mjs).
 const noop = () => undefined
+// tests/e2e/notify.e2e.ts and update.e2e.ts drive these through globalThis.__e2e.
+const e2e = (globalThis.__e2e ??= { windows: [], shown: [], supported: true, failShow: false, opened: [] })
 const app = {
   getPath: () => process.env.AGENTBITS_DATA_DIR,
   getLocale: () => 'tr',
-  getVersion: () => '0.0.0-test',
+  getVersion: () => e2e.version ?? '0.0.0-test',
   getName: () => 'Agentbits',
   getAppPath: () => process.cwd(),
   isPackaged: false
 }
-// tests/e2e/notify.e2e.ts drives these through globalThis.__e2e: its fake windows and the notifications shown.
-const e2e = (globalThis.__e2e ??= { windows: [], shown: [], supported: true, failShow: false })
 class Notification {
   constructor(options) {
     this.options = options
@@ -28,6 +28,14 @@ class Notification {
   }
 }
 module.exports = new Proxy(
-  { app, BrowserWindow: { getAllWindows: () => e2e.windows }, Notification, safeStorage: { isEncryptionAvailable: () => false }, shell: {}, dialog: {} },
+  {
+    app,
+    BrowserWindow: { getAllWindows: () => e2e.windows },
+    Notification,
+    safeStorage: { isEncryptionAvailable: () => false },
+    shell: { openExternal: async (url) => void (e2e.opened ??= []).push(url) },
+    dialog: {},
+    net: { fetch: (...args) => (e2e.netFetch ? e2e.netFetch(...args) : Promise.reject(new Error('no network in tests'))) }
+  },
   { get: (t, k) => (k in t ? t[k] : new Proxy(noop, { get: () => noop })) }
 )

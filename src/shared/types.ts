@@ -460,6 +460,8 @@ export interface AppSettings {
   reviewByLead: boolean
   /** Operating-system notifications (and the taskbar flash) while no app window has focus (`main/notify.ts`). */
   notifications: boolean
+  /** Look for a newer published Agentbits version every 6 hours (packaged builds); only tells, never installs (`main/update.ts`). */
+  autoUpdateCheck: boolean
   /** Agent logs older than this are pruned automatically (0 = keep forever). */
   logRetentionDays: number
   /** On launch: 'ask' shows the project picker, 'restore' reopens the last open projects. */

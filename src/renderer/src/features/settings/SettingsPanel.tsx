@@ -513,6 +513,58 @@ function MemorySection() {
 
 /* ───────────────────────────── general ───────────────────────────── */
 
+/**
+ * Version and new-version check (`main/update.ts`): it only tells; installing is done from the official download page.
+ * A failed background check shows here only (no toasts).
+ */
+function UpdateRows({ auto, onAuto }: { auto: boolean; onAuto: (v: boolean) => void }) {
+  const { t } = useTranslation()
+  const state = useAppStore((s) => s.update)
+  const toast = useAppStore((s) => s.toast)
+  const autoRow = (
+    <Row title={t('settings:general.update.auto.title')} desc={t('settings:general.update.auto.desc')}>
+      <Toggle checked={auto} onChange={onAuto} />
+    </Row>
+  )
+  if (!state) return autoRow
+  const checking = state.status === 'checking'
+  const line =
+    state.status === 'available' || (state.status === 'checking' && state.latest)
+      ? t('settings:general.update.available', { version: state.latest })
+      : state.status === 'upToDate'
+        ? t('settings:general.update.upToDate')
+        : state.status === 'error'
+          ? t(`settings:general.update.error.${state.error ?? 'failed'}`)
+          : checking
+            ? t('settings:general.update.checking')
+            : ''
+  return (
+    <>
+      {autoRow}
+      <Row
+        title={t('settings:general.update.title', { version: state.current })}
+        desc={
+          <span role="status" className={cn(state.status === 'error' && 'text-amber-300', state.status === 'available' && 'text-emerald-300')}>
+            {line || t('settings:general.update.desc')}
+            {state.checkedAt && !checking ? ` · ${t('settings:general.update.checkedAt', { time: new Date(state.checkedAt).toLocaleString() })}` : ''}
+          </span>
+        }
+      >
+        <div className="flex items-center gap-2">
+          {state.latest && (
+            <button className="btn-primary h-7" onClick={() => call('update:openPage').catch((e) => toast('error', apiError(e)))}>
+              {t('settings:general.update.openPage')}
+            </button>
+          )}
+          <button className="btn-outline h-7" disabled={checking} onClick={() => call('update:check').catch((e) => toast('error', apiError(e)))}>
+            {checking ? t('settings:general.update.checking') : state.status === 'error' ? t('settings:general.update.retry') : t('settings:general.update.check')}
+          </button>
+        </div>
+      </Row>
+    </>
+  )
+}
+
 function GeneralSection() {
   const { t } = useTranslation()
   const settings = useAppStore((s) => s.settings)
@@ -583,6 +635,7 @@ function GeneralSection() {
         <Row title={t('settings:general.notifications.title')} desc={t('settings:general.notifications.desc')}>
           <Toggle checked={settings.notifications} onChange={(v) => update({ notifications: v })} />
         </Row>
+        <UpdateRows auto={settings.autoUpdateCheck} onAuto={(v) => update({ autoUpdateCheck: v })} />
         <Row title={t('settings:general.race.title')} desc={t('settings:general.race.desc')}>
           <Toggle checked={settings.raceMode} onChange={(v) => update({ raceMode: v })} />
         </Row>

@@ -31,7 +31,8 @@ const MIGRATIONS: { version: number; sql: string }[] = [ { version: 1, sql: `...
 ```
 
 - `migrate(db)` önce `schema_migrations` tablosunu oluşturur, `MAX(version)`'dan büyük her migration'ı
-  **kendi transaction'ında** çalıştırıp sürümünü kaydeder.
+  sırayla çalıştırıp sürümünü kaydeder; bekleyen adımların hepsi **tek transaction'dadır** (2026-10-20: hata olursa dosya
+  eski şemasında kalır). Migration'da transaction içinde çalışmayan ifade (VACUUM, bazı PRAGMA'lar) kullanılmaz.
 - **Yalnızca ekleyin.** Uygulanmış bir migration'ı (bugün: v1–v22) asla düzenlemeyin, silmeyin, yeniden
   numaralandırmayın — kullanıcı makinelerindeki DB'ler onu zaten çalıştırdı ve değişiklik oraya ulaşmaz.
 - Yeni değişiklik = dizinin sonuna `{ version: N+1, sql: ... }`. SQLite'ta tipik olarak
@@ -41,6 +42,12 @@ const MIGRATIONS: { version: number; sql: string }[] = [ { version: 1, sql: `...
 - Migration sonrası eşzamanlı güncellenecekler: `src/shared/types.ts` (tip), `repos.ts` (`mapX`, `save` /
   `update` sütun haritaları, INSERT) ve bu belge.
 - Başlangıç verisi yoktur; mevcut DB'lere veri eklemek gerekiyorsa bunu migration içinde yapın.
+- **Açılış (`db/index.ts` `openDb`, 2026-10-20, ADR-032):** `schemaVersion(db)` okunur. Bu sürümün bildiğinden
+  (`LATEST_SCHEMA`) büyükse açılmaz (`DbStartError('tooNew')`). Mevcut bir DB'de bekleyen migration varsa önce
+  `VACUUM INTO 'backups/agentbits-pre-migration-v<eski>-v<yeni>-<zaman>.db'` (tutarlı kopya; WAL dosyası kopyalanmaz);
+  yedek alınamazsa migration çalışmaz (`'backup'`). Migration hatası `'migrate'` (yedeğin yolu ile). `index.ts` hata
+  penceresi gösterip kapanır; boş profil açılmaz. Göç yedeklerinden en yeni 3'ü tutulur (`createBackup`'ın 10'luk
+  rotasyonu bunları saymaz). Saklama sınırı yalnız başarılı yükseltmeden sonra ve silinemeyen dosyada hata vermeden uygulanır.
 
 ### Migration geçmişi
 

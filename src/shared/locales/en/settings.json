@@ -153,6 +153,27 @@
     "notifications": {
       "title": "Notifications",
       "desc": "While the app window isn't in focus, shows a system notification for replies from the lead and agents you message directly, approvals waiting, tasks that need your decision or have stopped, and finished tasks; finished tasks are collected for 10 seconds into one notification. For approvals and tasks that need your decision or have stopped, the taskbar icon also flashes (not for replies or finished tasks). Turning this off stops both."
+    },
+    "update": {
+      "title": "Agentbits {{version}}",
+      "desc": "Checks for new versions; you install them from the download page.",
+      "auto": {
+        "title": "Check for new versions automatically",
+        "desc": "Looks for a newer published version a little after start-up and every 6 hours while the app is open (installed app only). It only tells you: nothing is downloaded or installed; you install from the official download page."
+      },
+      "check": "Check for updates",
+      "checking": "Checking…",
+      "retry": "Try again",
+      "upToDate": "You're up to date.",
+      "available": "Version {{version}} is available. Install it from the download page.",
+      "openPage": "Open download page",
+      "checkedAt": "last checked {{time}}",
+      "error": {
+        "offline": "Couldn't reach GitHub. Agentbits works as usual; try again later.",
+        "rateLimited": "GitHub is limiting requests right now; try again later.",
+        "badResponse": "GitHub's answer couldn't be read; try again later.",
+        "failed": "The check failed; try again later."
+      }
     }
   },
   "data": {

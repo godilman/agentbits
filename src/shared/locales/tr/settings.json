@@ -153,6 +153,27 @@
     "notifications": {
       "title": "Bildirimler",
       "desc": "Uygulama penceresi odakta değilken liderin ve doğrudan yazdığın ajanların yanıtları, onay bekleyenler, karar bekleyen ya da duran görevler ve biten görevler için sistem bildirimi gösterir; biten görevler 10 saniye toplanıp tek bildirimde gelir. Onay bekleyenlerde, karar bekleyen ya da duran görevlerde görev çubuğu simgesi de yanıp söner (yanıtlarda ve biten görevlerde değil). Kapatınca ikisi de durur."
+    },
+    "update": {
+      "title": "Agentbits {{version}}",
+      "desc": "Yeni sürümleri kontrol eder; kurulumu indirme sayfasından yapabilirsin.",
+      "auto": {
+        "title": "Yeni sürümleri otomatik kontrol et",
+        "desc": "Açılıştan kısa süre sonra ve uygulama açıkken 6 saatte bir yayımlanmış daha yeni bir sürüm arar (yalnız kurulu uygulamada). Yalnız haber verir: hiçbir şey indirilmez ya da kurulmaz; kurulumu resmî indirme sayfasından yaparsın."
+      },
+      "check": "Güncellemeleri kontrol et",
+      "checking": "Kontrol ediliyor…",
+      "retry": "Yeniden dene",
+      "upToDate": "Güncelsin.",
+      "available": "{{version}} sürümü çıktı. İndirme sayfasından kurabilirsin.",
+      "openPage": "İndirme sayfasını aç",
+      "checkedAt": "son kontrol {{time}}",
+      "error": {
+        "offline": "GitHub'a ulaşılamadı. Agentbits her zamanki gibi çalışır; sonra yeniden dene.",
+        "rateLimited": "GitHub şu an istekleri sınırlıyor; sonra yeniden dene.",
+        "badResponse": "GitHub'ın cevabı okunamadı; sonra yeniden dene.",
+        "failed": "Kontrol başarısız oldu; sonra yeniden dene."
+      }
     }
   },
   "data": {

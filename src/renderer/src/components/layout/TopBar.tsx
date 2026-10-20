@@ -83,7 +83,6 @@ function ProjectStrip() {
   const openIds = useAppStore((s) => s.openProjectIds)
   const activeRuns = useAppStore((s) => s.activeRuns)
   const paused = useAppStore((s) => s.orchestratorPaused)
-  const openSettings = useAppStore((s) => s.openSettings)
   const openProjectModal = useAppStore((s) => s.openProjectModal)
   const platform = window.agentbits?.platform
   const overlayRight = platform === 'win32' || platform === 'linux'
@@ -144,11 +143,24 @@ function ProjectStrip() {
           {paused ? <Play size={13} /> : <Pause size={13} />}
           <span className="max-[960px]:sr-only">{paused ? t('layout:topBar.resume') : t('layout:topBar.pauseAll')}</span>
         </button>
-        <button className="icon-btn h-7 w-7" onClick={() => openSettings()} title={t('layout:topBar.settings')}>
-          <Settings2 size={15} />
-        </button>
+        <SettingsButton />
       </div>
     </div>
+  )
+}
+
+/** Settings; a small dot (no toast, no pop-up) while a newer version is available, and the click opens General. */
+function SettingsButton() {
+  const { t } = useTranslation()
+  const openSettings = useAppStore((s) => s.openSettings)
+  // `latest` stays known while a later check runs or fails: the dot doesn't blink away every 6 hours.
+  const latest = useAppStore((s) => s.update?.latest)
+  const title = latest ? t('layout:topBar.updateAvailable', { version: latest }) : t('layout:topBar.settings')
+  return (
+    <button className="icon-btn relative h-7 w-7" onClick={() => openSettings(latest ? 'general' : undefined)} title={title} aria-label={title}>
+      <Settings2 size={15} />
+      {latest && <span className="absolute right-0.5 top-0.5 h-1.5 w-1.5 rounded-full bg-emerald-400" />}
+    </button>
   )
 }
 

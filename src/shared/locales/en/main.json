@@ -524,5 +524,29 @@
     "groupDone_other": "{{count}} tasks approved by the lead",
     "more_one": "+{{count}} more",
     "more_other": "+{{count}} more"
+  },
+  "dbStart": {
+    "title": "Agentbits can't open your data",
+    "message": {
+      "tooNew": "Your data was saved by a newer version of Agentbits.",
+      "backup": "Agentbits couldn't back up your data before upgrading it.",
+      "migrate": "Upgrading your data to this version failed.",
+      "open": "Agentbits couldn't open its database."
+    },
+    "tooNew": "The data is at schema version {{found}}; this version knows up to {{latest}}. Nothing was changed.",
+    "backup": "Without that backup the upgrade didn't run: your data is unchanged (schema version {{found}}).",
+    "migrate": "Your data was not reset or emptied, and it is still at schema version {{found}}: the upgrade to {{latest}} was rolled back as a whole.",
+    "open": "Nothing was reset or deleted.",
+    "backupAt": "Backup taken just before the upgrade: {{path}}",
+    "dataAt": "Data: {{path}}",
+    "recover": {
+      "tooNew": "Install the newer version of Agentbits again (or the version that saved this data).",
+      "backup": "Make room on the disk or check the data folder's permissions, then start Agentbits again.",
+      "migrate": "Keep the backup. To go back: close Agentbits, install the version you used before, then replace agentbits.db in the data folder with the backup file (rename it to agentbits.db). Please report the problem with the error below.",
+      "open": "Check that the data folder is reachable and no other program holds agentbits.db, then start Agentbits again."
+    },
+    "error": "Error: {{error}}",
+    "openFolder": "Open folder",
+    "quit": "Close"
   }
 }

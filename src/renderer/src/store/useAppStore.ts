@@ -27,6 +27,7 @@ import type {
 import { apiError, bridge, call } from '@/lib/api'
 import { t } from '@/i18n'
 import { applyNav } from '@/lib/notifyNav'
+import type { UpdateState } from '@shared/update'
 
 /** Sections inside a project tab. */
 export type Tab = 'chat' | 'office' | 'team' | 'terminal' | 'tasks' | 'files' | 'reports' | 'decisions' | 'browser'
@@ -70,6 +71,8 @@ type Resource =
 interface State {
   ready: boolean
   settings: AppSettings
+  /** New-version check (`main/update.ts`); null until loaded. */
+  update: UpdateState | null
   providers: Provider[]
   agents: Agent[]
   permissions: AgentPermissions[]
@@ -314,6 +317,7 @@ async function loadAll(): Promise<void> {
   })
   if (!unsubscribe) unsubscribe = bridge().on(handleEvent)
   // A notification clicked while there was no window (macOS): its place, once the app is ready to show it.
+  void call('update:status').then((update) => useAppStore.setState({ update }), () => undefined)
   void call('notify:takePending').then((target) => target && handleEvent({ type: 'navigate', target }), () => undefined)
   void useAppStore.getState().refresh('memory')
 }
@@ -332,6 +336,7 @@ const waitsOf = (o: { held: { taskId: string; reason: string }[]; unmerged: stri
 export const useAppStore = create<State>((set, get) => ({
   ready: false,
   settings: { ...DEFAULT_SETTINGS },
+  update: null,
   providers: [],
   agents: [],
   permissions: [],
@@ -639,6 +644,8 @@ function handleEvent(e: AppEvent): void {
       return schedule('reports')
     case 'settings:changed':
       return schedule('settings')
+    case 'update:changed':
+      return useAppStore.setState({ update: e.state })
     case 'navigate':
       // A clicked notification: open the place it was about (screens only — nothing starts or is approved).
       return applyNav(e.target, () => useAppStore.getState())

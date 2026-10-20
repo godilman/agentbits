@@ -3,7 +3,7 @@ import type Database from 'better-sqlite3'
 /**
  * Versioned migrations. Append new entries — never edit an applied one.
  */
-const MIGRATIONS: { version: number; sql: string }[] = [
+export const MIGRATIONS: { version: number; sql: string }[] = [
   {
     version: 1,
     sql: /* sql */ `
@@ -718,18 +718,25 @@ const MIGRATIONS: { version: number; sql: string }[] = [
 /** Newest schema version this build knows (backups from a newer build can't be restored). */
 export const LATEST_SCHEMA = MIGRATIONS[MIGRATIONS.length - 1].version
 
+/** The database's schema version (0 = new, empty file). */
+export function schemaVersion(db: Database.Database): number {
+  const has = db.prepare("SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = 'schema_migrations'").get()
+  return has ? ((db.prepare('SELECT MAX(version) AS v FROM schema_migrations').get() as { v: number | null }).v ?? 0) : 0
+}
+
 export function migrate(db: Database.Database): void {
   db.exec(`CREATE TABLE IF NOT EXISTS schema_migrations (
     version INTEGER PRIMARY KEY,
     applied_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ','now'))
   )`)
-  const current =
-    (db.prepare('SELECT MAX(version) AS v FROM schema_migrations').get() as { v: number | null }).v ?? 0
-  for (const m of MIGRATIONS) {
-    if (m.version <= current) continue
-    db.transaction(() => {
+  const current = schemaVersion(db)
+  // All pending steps in one transaction: a failure leaves the file at the version it had (the version its pre-upgrade
+  // backup has), never halfway. No migration may use a statement SQLite refuses inside a transaction (VACUUM, some PRAGMAs).
+  db.transaction(() => {
+    for (const m of MIGRATIONS) {
+      if (m.version <= current) continue
       db.exec(m.sql)
       db.prepare('INSERT INTO schema_migrations(version) VALUES (?)').run(m.version)
-    })()
-  }
+    }
+  })()
 }

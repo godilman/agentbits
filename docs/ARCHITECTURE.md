@@ -876,8 +876,9 @@ Ayarlar → **Veri yönetimi** (`features/settings/DataSection.tsx`) bu modülü
   Transkript satırları kaydedilmeden önce `logsRepo.add` içinde `redactSecrets` / `redactDeep` (`shared/redact.ts`) ile sır benzeri
   metinler (API anahtarları, token'lar, özel anahtarlar, URL'deki parolalar, `password=…`) maskelenir. `data:pruneLogs` elle
   uygular ve `messages:changed` yayınlar.
-- **Yedek:** `createBackup(label = 'yedek')` → `VACUUM INTO '<veri klasörü>/backups/agentbits-<label>-<zaman>.db'`;
-  en yeni 10 dosya tutulur. `deleteBackup` / `restoreBackup` adı `basename` ile doğrular (yol geçişi yok).
+- **Yedek:** `createBackup(label = 'yedek')` → `VACUUM INTO '<veri klasörü>/backups/agentbits-<label>-<zaman>.db'`
+  (zaman milisaniyeli: `VACUUM INTO` var olan dosyaya yazmaz); en yeni 10 dosya tutulur. Migration öncesi yedekler
+  (`agentbits-pre-migration-…`, `db/index.ts`, en yeni 3) bu sayıma girmez. `deleteBackup` / `restoreBackup` adı `basename` ile doğrular (yol geçişi yok).
 - **Geri yükleme:** `restoreBackup(name)` SQLite başlığını kontrol eder → kopyayı `agentbits.db.restore` olarak
   hazırlar → kopyayı doğrular (`verifyBackup`: salt-okunur açılış, `PRAGMA integrity_check = ok`, temel tablolar,
   `schema_migrations` sürümü bu sürümün bildiği en yeni sürümden (`LATEST_SCHEMA`) büyük değil; değilse kopya silinir ve
@@ -902,6 +903,16 @@ zincirini sıfırlar) ve bunların **bitmesini bekler** (`settled`, en fazla 60 
 - Renderer: `openSettings('data', projectId)` ilgili projeyi açık getirir (`dataFocusProjectId`); ProjectModal
   düzenleme modundaki "Hafızayı ve geçmişi temizle → Verileri yönet" bunu kullanır. Tehlikeli bölge, `SIFIRLA`
   kelimesi (İngilizcede `RESET`; seçili dile göre büyük/küçük harf duyarsız, `toLocaleUpperCase(locale())`) yazılmadan çalışmaz.
+
+## 9a-2. Yeni sürüm kontrolü (`src/main/update.ts`, `src/shared/update.ts`, ADR-032)
+
+Yalnız kontrol eder ve haber verir; indirme / kurulum yok. `createChecker` (saf, `tests/update.test.ts`): tek uçuşta
+kontrol (`check()` aynı sözü döndürür), durum `idle | checking | upToDate | available | error` (`offline`,
+`rateLimited`, `badResponse`, `failed`), `due()` son başlangıçtan 6 saat (duvar saati). `main/update.ts`: `net.fetch`
+sabit `releases/latest` adresine (`redirect: 'error'`, token yok); `startUpdates()` 30 sn sonra ve 10 dakikada bir
+`tick` (paketlenmiş + `autoUpdateCheck` + `due()`), `stopUpdates()` before-quit'te. IPC `update:status` / `update:check` /
+`update:openPage` (sayfa `releasePage(latest)` ile kurulur), olay `update:changed` → store `update`. Arayüz: Ayarlar →
+Genel'de `UpdateRows`, üst barda dişli düğmesinde nokta (`SettingsButton`). Arka plan hatası toast / bildirim üretmez.
 
 ## 9b. Bağlantılar ve güvenlik sınırları (Faz 2; `src/main/connections/`, ADR-018, ADR-019)
 

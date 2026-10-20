@@ -12,7 +12,7 @@
   <a href="https://github.com/godilman/agentbits/actions/workflows/ci.yml"><img alt="CI" src="https://github.com/godilman/agentbits/actions/workflows/ci.yml/badge.svg"></a>
   <img alt="Platform: Windows" src="https://img.shields.io/badge/platform-Windows-0078D6?logo=windows&logoColor=white">
   <img alt="macOS: deneysel" src="https://img.shields.io/badge/macOS-deneysel-555?logo=apple&logoColor=white">
-  <img alt="Sürüm 0.8.0" src="https://img.shields.io/badge/s%C3%BCr%C3%BCm-0.8.0-6366f1">
+  <img alt="Sürüm 0.9.0" src="https://img.shields.io/badge/s%C3%BCr%C3%BCm-0.9.0-6366f1">
   <a href="LICENSE"><img alt="Lisans: PolyForm Strict 1.0.0" src="https://img.shields.io/badge/lisans-PolyForm%20Strict%201.0.0-orange"></a>
   <a href="https://buymeacoffee.com/godilman"><img alt="Buy me a coffee" src="https://img.shields.io/badge/Buy%20me%20a%20coffee-%E2%98%95-FFDD00?logoColor=black"></a>
 </p>
@@ -278,9 +278,10 @@ Bir güvenlik açığı mı buldun? Lütfen gizli olarak bildir: [SECURITY.md](S
 
 ## Mevcut sınırlamalar
 
-Agentbits erken bir sürümdür (**v0.8.0**). Şunları yapmaz:
+Agentbits erken bir sürümdür (**v0.9.0**). Şunları yapmaz:
 
-- kendini güncellemek (yeni sürümü eskisinin üzerine kurarsın, verilerin korunur);
+- kendini güncellemek: yeni sürümleri kontrol edip haber verir, kurulumu indirme sayfasından yaparsın (eskisinin
+  üzerine; verilerin korunur ve yükseltme değiştirmeden önce yedeklenir);
 - Claude Code / Codex CLI'ı içermek ya da onlarda oturum açmak; yukarıdakiler dışında OpenAI uyumlu olmayan sağlayıcıları
   desteklemek;
 - API tabanlı ajanlara (Anthropic / OpenAI uyumlu) dosya düzenletmek ya da komut çalıştırtmak (bunun için CLI sağlayıcısı

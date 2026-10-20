@@ -71,7 +71,8 @@
     "noFolderTitle": "This project has no folder — CLI agents can't run",
     "noFolderChip": "No folder selected",
     "projectSettings": "Project settings",
-    "memory": "Memory"
+    "memory": "Memory",
+    "updateAvailable": "Version {{version}} is available — open Settings"
   },
   "sidebar": {
     "runningWork": "Running work",

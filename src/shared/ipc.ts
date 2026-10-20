@@ -4,6 +4,7 @@ import type { AppImportCandidate, AppServer, AppServerInput, AppTestResult, Tool
 import type { AgentSkill, Skill, SkillDetail, SkillPreview, SkillSourceInput, SkillTargetType } from './skills'
 import type { SharePreview } from './share'
 import type { NavTarget } from './notify'
+import type { UpdateState } from './update'
 import type {
   Agent,
   ProviderKind,
@@ -77,6 +78,10 @@ export interface Api {
   'settings:update': (patch: Partial<AppSettings>) => AppSettings
   'app:pickFolder': () => string | null
   'app:info': () => { version: string; dbPath: string; platform: string }
+  /** New-version check (`main/update.ts`): its state, a check now, and the official release page in the browser. */
+  'update:status': () => UpdateState
+  'update:check': () => UpdateState
+  'update:openPage': () => void
   /** Opens the developer's fixed support page (Buy Me a Coffee) in the system browser. */
   'app:openSupport': () => void
   /**
@@ -381,6 +386,7 @@ export type AppEvent =
   | { type: 'toast'; level: 'info' | 'success' | 'error'; text: string }
   /** A notification was clicked: open this place (`main/notify.ts`). */
   | { type: 'navigate'; target: NavTarget }
+  | { type: 'update:changed'; state: UpdateState }
 
 export interface PreloadBridge {
   invoke<M extends ApiMethod>(method: M, ...args: ApiArgs<M>): Promise<Awaited<ApiResult<M>>>

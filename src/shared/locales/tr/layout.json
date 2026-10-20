@@ -71,7 +71,8 @@
     "noFolderTitle": "Bu projenin klasörü yok — CLI ajanları çalışamaz",
     "noFolderChip": "Klasör seçilmedi",
     "projectSettings": "Proje ayarları",
-    "memory": "Hafıza"
+    "memory": "Hafıza",
+    "updateAvailable": "{{version}} sürümü çıktı — Ayarlar'ı aç"
   },
   "sidebar": {
     "runningWork": "Çalışan işler",

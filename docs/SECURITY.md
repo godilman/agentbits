@@ -52,6 +52,14 @@ Durum: ✅ düzeltildi · 🟡 kısmen / azaltıldı · 📄 bilinçli sınır, 
 | 26 | Sahte giriş ekranı | ✅ | Kaldırıldı | — |
 | 27 | Büyük veride UI / dosya kuyruğu | ✅ / 📄 | 2026-10-15: renderer her projenin yalnızca en yeni 200 bitmiş görevini tutar (`tasks:board`, "N eski görevi göster" ile tamamı), raporlar proje başına en yeni 300 ("Daha eski raporları göster"); dosya deposu **disk kotası** (varsayılan 5 GB, `filesQuotaMb`; proje klasöründeki dosyalar sayılmaz). 📄 Ayrıştırma kuyruğu en fazla 2 paralel iş çalıştırır, bekleyenler yalnızca küçük kapanışlardır (dosyalar diskte, kota sınırlar). Kararlar ve hafıza hâlâ tamamen yüklenir (küçük kayıtlar) | SQL bellekte SQLite ile |
 
+## Yeni sürüm kontrolü (2026-10-20, ADR-032)
+
+- Yalnız kontrol ve haber: uygulama hiçbir paket indirmez ya da kurmaz (imzasız / ad-hoc imzalı paketlerde imza
+  doğrulaması yapılamaz; sahibin kararı). Sabit adres (`api.github.com/repos/godilman/agentbits/releases/latest`), HTTPS,
+  yönlendirme izlenmez, token yok; kullanıcı ya da cevap adresi değiştiremez. Açılan sayfa doğrulanmış sürüm numarasından
+  kurulur (cevaptaki bağlantı kullanılmaz). Draft / prerelease / eski sürüm gösterilmez. GitHub'a giden tek bilgi
+  `User-Agent: Agentbits/<sürüm>` ve IP adresi; Ayarlar'dan kapatılabilir. `tests/update.test.ts`, `tests/e2e/update.e2e.ts`.
+
 ## Testler
 
 - `npm run test:unit` — SQL / SSH sınıflandırma (olumsuz örnekler dahil), dosya çıkarma, skill, MCP yapılandırma, inceleme

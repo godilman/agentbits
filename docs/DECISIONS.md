@@ -620,3 +620,34 @@ Durum değerleri: *Kabul edildi*, *Önerildi*, *Yerini aldı*, *Geri alındı*.
 - **İptal:** akış iptal sinyalini doğrudan dinler; sağlayıcının dönmesi beklenmez.
 - **Bedel:** Uzun yanıtta her güncelleme tüm metni taşır ve Markdown baştan çizilir (~10 ms / 30 000 karakter); gerekirse fark
   gönderme. Claude Code araç kullanırken ara açıklamalar akar ama son mesaj yalnız son yanıttır (balon değişebilir).
+
+## ADR-032 — Yeni sürüm: yalnız kontrol ve haber; kurulum resmî sayfadan. Yükseltmeden önce tutarlı yedek (2026-10-20)
+
+- **Bağlam:** Kullanıcı yeni sürümü siteden kendisi bulup kurmak zorundaydı. Paketler imzasız (Windows) ve ad-hoc imzalı
+  (macOS). `electron-updater` imzasız Windows paketini yalnız `latest.yml`'deki sha512 ile doğrular (GitHub hesabı ele
+  geçirilirse korumaz); macOS'un Squirrel.Mac'i Developer ID imzası olmadan güncellemeyi kurmaz, bunu aşmak imza
+  doğrulamasını kapatmak olurdu.
+- **Karar (sahibin, 2026-10-20):** İki platformda da uygulama yalnız **kontrol eder ve haber verir**; "İndirme sayfasını
+  aç" resmî GitHub Releases sayfasını açar. Uygulama içinden indirme ve kurulum yok. `electron-updater` eklenmedi;
+  sertifika tanımlanması tek başına hiçbir şeyi açmaz. Tam güncelleme, imzalı eski sürümden imzalı yeni sürüme gerçek
+  geçiş testi yapılıp sahip onaylayınca ayrı bir paket olarak gelir. İmza doğrulamasını kapatan bir yol eklenmez.
+- **Kontrol:** `main/update.ts` + `shared/update.ts`. Sabit adres `https://api.github.com/repos/godilman/agentbits/releases/latest`
+  (`net.fetch`, HTTPS, `redirect: 'error'`, token yok). Kabul: `draft === false`, `prerelease === false`, etiket tam
+  `vX.Y.Z`; yalnız çalışan sürümden yeni olan gösterilir (sürüm düşürme yok). Açılan sayfa cevabın bağlantısından değil,
+  doğrulanmış sürüm numarasından kurulur. Aynı anda tek kontrol (çift tık ve zamanlayıcı aynı isteği paylaşır).
+  Otomatik kontrol yalnız paketlenmiş uygulamada ve `autoUpdateCheck` (varsayılan açık) ile: açılıştan 30 sn sonra, sonra
+  en sık 6 saatte bir (duvar saati, son başlangıçtan; uykudan dönünce tek kontrol; başarısızlık da sayılır, deneme
+  yağmuru yok). Arka plan hatası toast / bildirim üretmez, yalnız Ayarlar'da görünür. GitHub'ın kimliksiz API sınırı (saatte
+  60) bu sıklıkta sorun değil.
+- **Veri:** Bekleyen migration varsa `openDb()` önce `VACUUM INTO` ile tutarlı yedek alır
+  (`backups/agentbits-pre-migration-v<eski>-v<yeni>-<zaman>.db`; açık WAL dosyası kopyalanmaz). Yedek alınamazsa migration
+  çalışmaz. Daha yeni bir sürümün verisi (şema > bilinen) açılmaz. Her durumda uygulama hata penceresi gösterip kapanır
+  (yedeğin ve verinin yeri, kurtarma yolu); boş profil açmaz, sıfırlamaz. Göç yedeklerinden en yeni 3'ü tutulur ve elle
+  alınan yedeklerin 10'luk sınırını doldurmaz.
+- **Kurtarma (gerçekte desteklenen):** otomatik geri alma yok. Bekleyen tüm migration adımları tek transaction'dadır; hata
+  olursa dosya eski şemasında kalır (göç yedeğiyle aynı sürüm). Göç yedeklerinin saklama sınırı yalnız başarılı yükseltmeden
+  sonra uygulanır (art arda başarısız açılışlar asıl yedeği silmez). Geri dönüş: uygulamayı kapat, önceki sürümü kur, veri klasöründeki `agentbits.db`'yi
+  göç yedeğiyle değiştir. Eski sürüm yeni şemayı açmayı reddeder (bu sürümden itibaren); daha önceki sürümler reddetmez,
+  bu yüzden eski sürümle yeni veriyi açmak desteklenmez.
+- **Elenen:** `electron-updater` + sha512 ile imzasız kurulum (sahibin kararı), macOS'ta imza doğrulamasını gevşetmek,
+  Agentbits'e ait güncelleme sunucusu, Releases yerine site üzerinden kontrol (ikinci bir kaynak).

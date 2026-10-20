@@ -524,5 +524,29 @@
     "groupDone_other": "{{count}} görevi lider onayladı",
     "more_one": "+{{count}} tane daha",
     "more_other": "+{{count}} tane daha"
+  },
+  "dbStart": {
+    "title": "Agentbits verilerini açamıyor",
+    "message": {
+      "tooNew": "Verilerin Agentbits'in daha yeni bir sürümüyle kaydedilmiş.",
+      "backup": "Agentbits verilerini yükseltmeden önce yedekleyemedi.",
+      "migrate": "Verilerin bu sürüme yükseltilemedi.",
+      "open": "Agentbits veritabanını açamadı."
+    },
+    "tooNew": "Verilerin şema sürümü: {{found}}; bu sürümün bildiği en yeni şema: {{latest}}. Hiçbir şey değiştirilmedi.",
+    "backup": "Yedek olmadan yükseltme çalıştırılmadı: verilerin değişmedi (şema sürümü: {{found}}).",
+    "migrate": "Verilerin sıfırlanmadı ya da boşaltılmadı; yükseltme ({{found}} → {{latest}}) bütünüyle geri alındı, veriler eski şemasında duruyor.",
+    "open": "Hiçbir şey sıfırlanmadı ya da silinmedi.",
+    "backupAt": "Yükseltmeden hemen önce alınan yedek: {{path}}",
+    "dataAt": "Veriler: {{path}}",
+    "recover": {
+      "tooNew": "Agentbits'in yeni sürümünü (bu verileri kaydeden sürümü) yeniden kur.",
+      "backup": "Diskte yer aç ya da veri klasörünün izinlerini kontrol et, sonra Agentbits'i yeniden başlat.",
+      "migrate": "Yedeği sakla. Geri dönmek için: Agentbits'i kapat, daha önce kullandığın sürümü kur, sonra veri klasöründeki agentbits.db'yi yedek dosyayla değiştir (adını agentbits.db yap). Lütfen sorunu aşağıdaki hatayla bildir.",
+      "open": "Veri klasörüne erişilebildiğini ve agentbits.db'yi başka bir programın tutmadığını kontrol et, sonra Agentbits'i yeniden başlat."
+    },
+    "error": "Hata: {{error}}",
+    "openFolder": "Klasörü aç",
+    "quit": "Kapat"
   }
 }

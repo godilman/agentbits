@@ -27,6 +27,7 @@ import { assertPathsAllowed, grantPaths } from './pathGrants'
 import { checkBaseUrl } from '@shared/endpoints'
 import { hasGithubToken, setGithubToken } from './skills/githubToken'
 import { takePendingNav } from './notify'
+import { checkForUpdate, openReleasePage, updateState } from './update'
 import { argsMatch } from '@shared/ipcSchema'
 import { instantiateTemplate, listTemplates } from './core/templates'
 import { buildPackage, importPackage, previewPackage } from './core/share'
@@ -139,6 +140,9 @@ export const handlers: Handlers = {
     return res.canceled ? null : res.filePaths[0] ?? null
   },
   'app:info': () => ({ version: app.getVersion(), dbPath: getDbPath(), platform: process.platform }),
+  'update:status': () => updateState(),
+  'update:check': () => checkForUpdate(),
+  'update:openPage': () => openReleasePage(),
   // Always the system browser; the payment page is never loaded inside the app.
   'app:openSupport': () => shell.openExternal(SUPPORT_URL),
   // Fixed address; only the kind and the rating come from the renderer.

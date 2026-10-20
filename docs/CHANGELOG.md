@@ -4,6 +4,52 @@
 > `## YYYY-MM-DD — kısa başlık`, ardından **Eklendi / Değişti / Düzeltildi / Kaldırıldı / Bilinen** maddeleri
 > ve ilgili dosyalar.
 
+## 2026-10-20 — v0.9.0: Yeni sürüm kontrolü; yükseltmeden önce yedek
+
+Sahibin kararı (ADR-032): imzalı paketler ve imzalı → imzalı gerçek geçiş testi olana dek uygulama yalnız kontrol edip
+haber verir; indirme ve kurulum resmî Releases sayfasından. `electron-updater` eklenmedi, yeni bağımlılık yok.
+
+### Eklendi
+- **Ayarlar → Genel:** "Yeni sürümleri otomatik kontrol et" (varsayılan açık, `autoUpdateCheck`), sürüm satırı, "Güncellemeleri
+  kontrol et" / "Kontrol ediliyor…" / "Güncelsin." / "X sürümü çıktı" + "İndirme sayfasını aç" / anlaşılır hata + "Yeniden dene".
+  Yeni sürüm varken üst bardaki dişli düğmesinde küçük bir nokta; tıklayınca Ayarlar → Genel.
+- **Kontrol** (`main/update.ts`, `shared/update.ts`): sabit GitHub adresi, HTTPS, token yok, yönlendirme yok; yalnız
+  yayımlanmış kararlı ve daha yeni sürüm; aynı anda tek istek; paketlenmiş uygulamada açılıştan 30 sn sonra ve en sık 6
+  saatte bir (uykudan dönünce tek kontrol); arka plan hatası sessiz (toast / bildirim yok), internet yokluğu uygulamayı etkilemez.
+- **Yükseltmeden önce yedek** (`db/index.ts`): bekleyen migration varsa `VACUUM INTO` ile `backups/agentbits-pre-migration-…`;
+  yedek alınamazsa migration çalışmaz. Daha yeni bir sürümün verisi açılmaz. Hata olursa ne olduğunu, yedeğin ve verinin
+  yerini, kurtarma yolunu söyleyen pencere + kapanış; boş profil ya da sıfırlama yok. Göç yedeklerinden en yeni 3'ü tutulur,
+  elle alınan yedeklerin 10'luk sınırına girmez.
+- **Migration tek transaction:** bekleyen tüm adımlar birlikte çalışır; hata olursa veri eski şemasında kalır (önce her adım
+  ayrıydı, çok adımlı yükseltme yarıda kalabiliyordu).
+
+### Düzeltildi
+- Aynı saniyede iki yedek (çift tıklama "Yedek al") ikincisinde "output file already exists" veriyordu: dosya adında milisaniye.
+
+### Test
+- `tests/update.test.ts` (sürüm ayrıştırma, sürüm düşürme yok, prerelease / draft reddi, sayfa adresi, tek uçuş, hata
+  türleri, 6 saat / uyku), `tests/e2e/update.e2e.ts` 5 adım (gerçek IPC: adres, token yok, `redirect: 'error'`, açılan sayfa,
+  çift tık), `tests/e2e/dbUpgrade.e2e.ts` 8 adım (yeni klasör, eski veri + yedek, yedek hatası, migration hatası, çok
+  adımlı geri alma + art arda hata, silinemeyen eski yedek, daha yeni veri, saklama). Kasıtlı 15 bozma (tekilleştirme, sürüm düşürme, prerelease, cevaptaki bağlantı, yönlendirme, yedek yok,
+  daha yeni veri, saklama sayısı, rotasyon, yutulan migration hatası, saat geri, adım adım transaction, hatada saklama,
+  silinemeyen dosyada durma, zaman aşımı) testlerde yakalandı.
+
+### İnceleme düzeltmeleri (bağımsız inceleme, aynı gün)
+- Art arda başarısız açılışlar göç yedeklerini döndürüp asıl yedeği silebiliyordu → tek transaction + saklama yalnız başarıdan sonra.
+- Eski göç yedeği silinemeyince (başka programda açık) başarılı yedek "alınamadı" sayılıyordu → saklama ayrı ve hatasız.
+- Yanıt vermeyen bağlantıda kontrol sonsuza dek "Kontrol ediliyor…" kalıyordu → 15 sn zaman aşımı.
+- Disk dolunca yarım yedek dosyası listede kalıyordu → silinir.
+- Veri klasörü oluşturulamazsa hata penceresi boş yol ve yanlış klasör gösteriyordu; pencerede hata olursa süreç penceresiz
+  kalıp tek örnek kilidini tutabiliyordu; hata sırasında çıkış DB'ye dokunabiliyordu → düzeltildi.
+- Saat geri alınınca otomatik kontrol duruyordu; bulunan sürümün noktası sonraki kontrolde kayboluyordu; durum yüklenemezse
+  otomatik kontrol anahtarı görünmüyordu; "internet yok mu?" metni yönlendirme hatasında da çıkıyordu → düzeltildi.
+
+### Bilinen / açık
+- Gerçek Windows / Mac'te denenmedi: Ayarlar'daki görünüm, hata penceresi, GitHub'a erişimi engelleyen kurumsal ağ.
+- Uygulama içinden indirme / kurulum, yeniden başlatmada taslakların doğrulanmış kaydı ve kapanış onayıyla birleşik
+  "Yeniden başlat ve güncelle" akışı imzalı paketlere kaldı (ADR-032).
+- v0.8.0 ve öncesi bu kontrolü içermez: bu özelliği getiren sürüm elle kurulur.
+
 ## 2026-10-20 — Belge temizliği (v0.8.0 sonrası, sürüm artırılmadı)
 
 - `release.yml` Windows ve macOS işlerinde `test:renderer` de çalışır (CI zaten çalıştırıyordu).

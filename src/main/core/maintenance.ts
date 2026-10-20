@@ -3,7 +3,7 @@ import { closeSync, copyFileSync, existsSync, mkdirSync, openSync, readdirSync, 
 import { basename, dirname, join } from 'path'
 import type { BackupInfo, DataPart, DataUsage, ProjectUsage, ResetMode } from '@shared/types'
 import Database from 'better-sqlite3'
-import { closeDb, getDb, getDbPath } from '../db'
+import { PRE_MIGRATION_PREFIX, backupsDir, closeDb, getDb, getDbPath } from '../db'
 import { LATEST_SCHEMA } from '../db/schema'
 import { memoriesRepo, projectsRepo, settingsRepo } from '../db/repos'
 import { emit } from '../events'
@@ -24,7 +24,6 @@ const MAX_BACKUPS = 10
 const DAY = 86_400_000
 
 const dataDir = (): string => dirname(getDbPath())
-const backupsDir = (): string => join(dataDir(), 'backups')
 const fileSize = (p: string): number => (existsSync(p) ? statSync(p).size : 0)
 const count = (sql: string, ...params: unknown[]): number => (getDb().prepare(sql).get(...params) as { c: number }).c
 
@@ -244,11 +243,14 @@ export function listBackups(): BackupInfo[] {
 export function createBackup(label = t('orchestrator:maintenance.backupLabel.manual')): BackupInfo {
   const dir = backupsDir()
   mkdirSync(dir, { recursive: true })
-  const stamp = new Date().toISOString().replace(/[:T]/g, '-').slice(0, 19)
+  const stamp = new Date().toISOString().replace(/[:.T]/g, '-').slice(0, 23) // ms: VACUUM INTO refuses an existing file
   const file = join(dir, `agentbits-${label}-${stamp}.db`)
   // VACUUM INTO writes a consistent, compact copy of the live database.
   getDb().exec(`VACUUM INTO '${file.replace(/'/g, "''")}'`)
-  const rotated = listBackups().slice(MAX_BACKUPS)
+  // Backups taken before a schema upgrade have their own limit (db/index.ts) and don't push these out.
+  const rotated = listBackups()
+    .filter((b) => !b.name.startsWith(PRE_MIGRATION_PREFIX))
+    .slice(MAX_BACKUPS)
   for (const old of rotated) unlinkSync(old.path)
   if (rotated.length) gcQuietly()
   const st = statSync(file)
