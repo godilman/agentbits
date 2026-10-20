@@ -170,6 +170,13 @@
       "sshOkKey": "SSH bağlantısı başarılı · sunucu anahtarı {{key}}",
       "ok": "Bağlantı başarılı",
       "okReadOnly": "Bağlantı başarılı · salt-okunur kullanıcı da doğrulandı"
+    },
+    "card": {
+      "forTask": "“{{title}}” sırasında {{agent}} onayını istiyor: {{target}} — {{what}}. Karar vermezsen istek {{minutes}} dakika sonra reddedilir. Ayrıntılar ve karar onay penceresinde. · {{key}}",
+      "noTask": "{{agent}} onayını istiyor: {{target}} — {{what}}. Karar vermezsen istek {{minutes}} dakika sonra reddedilir. Ayrıntılar ve karar onay penceresinde.",
+      "query": "bir SQL sorgusu ({{level}} erişimi gerekiyor)",
+      "exec": "bir SSH komutu ({{level}} erişimi gerekiyor)",
+      "app": "{{tool}} uygulama aracı"
     }
   },
   "files": {

@@ -584,9 +584,21 @@ kriterleri değiştiyse sonuç atılır ve güncel hâl incelenir (`staleReview`
 çalışma ikinci kez modele gönderilmez (`reviewedRun`; `retryReview` temizler). İnceleyen **proje lideridir** (`projectLead(task.projectId)`; yalnız etkin bir ajan
 döner, yoksa ilk etkin üyeye düşer).
 
+**"Bana ihtiyaç var" kartları (ADR-034).** `core/needsCards.ts`: `postCard` bekleme kartını #general'a ve görev
+başlığına (`meta.card` = `{kind, event, taskId, runId?, approvalId?, actions}`, `meta.event` paylaşılır) yazar;
+`resolveCards` / `endWait` beklemenin nasıl bittiğini her açık kopyaya `meta.resolution` olarak yazar ve
+`message:updated` yayınlar (yazılamazsa loglar; eylem tekrarlanmaz). Bekleme kimlikleri: `run:<id>:approval`
+(`approve`), `approval:<id>` (bağlantılar, `resolveApproval` / zaman aşımı / geri çekme), `run:<id>:held` (`hold` →
+`heldEvent`, kalıcı), inceleme `review:<görev>:<uuid>|<görev>` (`undecided` içinde kalıcı), `merge:<görev>:<uuid>`
+(`mergeEvent`, kalıcı; `state()` birleşen / taşınanı kapatır). `needs:act` → `orchestrator.act`: kart yetkili değil,
+bekleme haritalarından olayı, projeyi ve eylemi denetler, `approve` / `retryReview` / `startCheck` + `startTask`
+çağırır. Renderer `NeedsCard` beklemenin sürüp sürmediğini store'dan okur (`activeRuns`, `approvals`,
+`orchestratorWaits.waitEvents`); bağlantı onayında `focusApproval` ile `ApprovalsDock`'u, birleşmede `mergeReviewFor`
+ile önizlemeyi açar.
+
 **Karar kullanıcıya kalınca (Paket 1A).** Şu durumlarda görev `in_review`'da kalır, `undecided` + `undecidedWhy`
-(neden) olur, "Bana ihtiyaç var"da ve kartta görünür ve akışa bir not yazılır (aynı not tekrar yazılmaz — açılışta
-incelemeler yeniden kuyruğa girer): inceleme çağrısı hata verdi (ağ / zaman aşımı / 429 / 5xx; kimlik hatası ayrıca
+(neden) olur, "Bana ihtiyaç var"da ve kartta görünür ve akışa bir kart yazılır (her yeni bekleme yeni kart, öncekiler kapanır, ADR-034; açılışta
+kendiliğinden yeniden incelenmez, ADR-033): inceleme çağrısı hata verdi (ağ / zaman aşımı / 429 / 5xx; kimlik hatası ayrıca
 `authFailure`), incelemeyi yapabilecek etkin kimse yok, incelenecek çalışan raporu yok, karar anlaşılamadı; yarış
 değerlendirmesinde de aynısı (iki görev için). İnceleme iptal edildiyse (proje durdurma / kapanış) hata sayılmaz.
 Yarışta partneri beklemek hata değildir. `tasks:retryReview(id)` → `retryReview()`: görev `in_review` ve inceleyen

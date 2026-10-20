@@ -47,5 +47,27 @@
     "decision": "karar önerisi yazıyor…",
     "message": "ekibe not yazıyor…",
     "learn": "öğrendiğini not ediyor…"
+  },
+  "card": {
+    "openApproval": "Onay penceresinde aç",
+    "openTask": "Görevi aç",
+    "working": "Yapılıyor…",
+    "taken": "İstek alındı; bekleme bitince bu kart nasıl bittiğini gösterir.",
+    "gone": "Bu istek artık beklemiyor.",
+    "failed": "Yapılamadı: {{error}}",
+    "outcome": {
+      "approved": "✓ Onaylandı — çalışmanın başlamasına izin verildi.",
+      "rejected": "Reddedildi.",
+      "expired": "Süresi doldu; istek reddedildi.",
+      "withdrawn": "İstek düştü (çalışma durdu ya da ilgili bir izin, ajan, bağlantı veya uygulama değişti).",
+      "closed": "Bu bekleme sürerken Agentbits kapandı; istek sona erdi.",
+      "restarted": "Yeni bir çalışma açıldı (onay gerekiyorsa ayrıca sorulur).",
+      "reviewRequested": "İnceleme yeniden kuyruğa alındı; çalışan çalıştırılmadı.",
+      "moved": "Görev başka yerden değiştirildi; bu istek artık beklemiyor.",
+      "merged": "Projeye birleştirildi.",
+      "superseded": "Görev daha yeni bir nedenle yeniden bekliyor; güncel karta bak.",
+      "mergeGone": "Artık birleştirilmeyi bekleyen bir şey yok (birleştirilecek değişiklik yok, yalıtım kapatıldı ya da çalışma kopyası silindi).",
+      "allowed": "✓ Onaylandı — istenen işlem yapılabilir."
+    }
   }
 }

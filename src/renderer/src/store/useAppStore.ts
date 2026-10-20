@@ -114,7 +114,11 @@ interface State {
   auditVersion: number
   orchestratorPaused: boolean
   /** Held tasks → reason; done tasks not merged yet; reviews the lead left to the user. */
-  orchestratorWaits: { held: Record<string, string>; unmerged: string[]; undecided: string[]; undecidedWhy: Record<string, string>; startedProjects: string[]; deferredReviews: string[]; simulatedWork: string[]; simulatedReview: string[] }
+  orchestratorWaits: { held: Record<string, string>; unmerged: string[]; undecided: string[]; undecidedWhy: Record<string, string>; startedProjects: string[]; deferredReviews: string[]; simulatedWork: string[]; simulatedReview: string[]; waitEvents: string[] }
+  /** A "needs you" card asked to show this connection / app request in the approval panel. */
+  focusApproval: string | null
+  /** A "needs you" card asked to open the merge preview of this task. */
+  mergeReviewFor: string | null
   toasts: Toast[]
   memoryVersion: number
   memorySuggestions: MemorySuggestion[]
@@ -322,7 +326,7 @@ async function loadAll(): Promise<void> {
   void useAppStore.getState().refresh('memory')
 }
 
-const waitsOf = (o: { held: { taskId: string; reason: string }[]; unmerged: string[]; undecided: string[]; undecidedWhy: Record<string, string>; startedProjects: string[]; deferredReviews: string[]; simulatedWork: string[]; simulatedReview: string[] }): State['orchestratorWaits'] => ({
+const waitsOf = (o: { held: { taskId: string; reason: string }[]; unmerged: string[]; undecided: string[]; undecidedWhy: Record<string, string>; startedProjects: string[]; deferredReviews: string[]; simulatedWork: string[]; simulatedReview: string[]; waitEvents: string[] }): State['orchestratorWaits'] => ({
   held: Object.fromEntries(o.held.map((h) => [h.taskId, h.reason])),
   unmerged: o.unmerged,
   undecided: o.undecided,
@@ -330,7 +334,8 @@ const waitsOf = (o: { held: { taskId: string; reason: string }[]; unmerged: stri
   startedProjects: o.startedProjects,
   deferredReviews: o.deferredReviews,
   simulatedWork: o.simulatedWork,
-  simulatedReview: o.simulatedReview
+  simulatedReview: o.simulatedReview,
+  waitEvents: o.waitEvents
 })
 
 export const useAppStore = create<State>((set, get) => ({
@@ -372,7 +377,9 @@ export const useAppStore = create<State>((set, get) => ({
   approvals: [],
   auditVersion: 0,
   orchestratorPaused: false,
-  orchestratorWaits: { held: {}, unmerged: [], undecided: [], undecidedWhy: {}, startedProjects: [], deferredReviews: [], simulatedWork: [], simulatedReview: [] },
+  orchestratorWaits: { held: {}, unmerged: [], undecided: [], undecidedWhy: {}, startedProjects: [], deferredReviews: [], simulatedWork: [], simulatedReview: [], waitEvents: [] },
+  focusApproval: null,
+  mergeReviewFor: null,
   toasts: [],
   memoryVersion: 0,
   memorySuggestions: [],
@@ -660,6 +667,15 @@ function handleEvent(e: AppEvent): void {
     case 'memory:changed':
       useAppStore.setState({ memoryVersion: s.memoryVersion + 1 })
       return schedule('stats', 'memory')
+    case 'message:updated': {
+      // In place (a card closed): the list keeps its order and scroll position.
+      const m = e.message
+      const swap = (list: typeof s.feed): typeof s.feed => list.map((x) => (x.id === m.id ? m : x))
+      const key = channelKey(m.projectId, m.channel)
+      const channels = s.channels[key] ? { ...s.channels, [key]: swap(s.channels[key]) } : s.channels
+      useAppStore.setState({ feed: swap(s.feed), channels })
+      return
+    }
     case 'message:new': {
       const m = e.message
       if (s.feed.some((x) => x.id === m.id)) return

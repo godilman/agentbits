@@ -63,6 +63,7 @@ export const IPC_SCHEMA = {
   'tasks:delete': ['s'],
   'tasks:start': ['s', 'b?'],
   'tasks:retryReview': ['s'],
+  'needs:act': ['s', 's', 's'],
   'projects:startWork': ['s'],
   'tasks:waitingFor': ['s'],
   'promptBuilder:generate': ['s', 's', 's?'],

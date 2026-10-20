@@ -675,3 +675,35 @@ Durum değerleri: *Kabul edildi*, *Önerildi*, *Yerini aldı*, *Geri alındı*.
     "başlık · TA-32". Lider görev başlığını kullanıcının anlayacağı dille yazar, teknik ayrıntı açıklamada.
 - **Elenen:** ayrı kısa ad alanı (migration), ayrı "doğrulanamadı" durum sistemi, inceleme sonuçlarının serbest metinden
   "aynı gerekçe" diye karşılaştırılması (sistem bilemez), kesik kanıtla otomatik ret / onay.
+
+## ADR-034 — "Bana ihtiyaç var" sohbet kartları: mevcut bekleme kaynakları, ana süreç karar verir (2026-10-20)
+
+- **Bağlam:** Kullanıcıyı bekleyen işler (çalışma onayı, bağlantı / uygulama onayı, hata ya da sınırla bekletilen görev,
+  kararı kullanıcıya kalan inceleme, birleşmeyi bekleyen iş) sohbette yalnız düz metin satırıydı; ne beklendiği ve hangi
+  düğmenin nerede olduğu açık değildi.
+- **Karar (sahibin onayı, 2026-10-20):**
+  - Ayrı bir onay sistemi yok. Kart, mevcut bekleme kaynaklarının (`orchestrator.approvals`, bağlantıların `pending`'i,
+    `blocked` / `heldWhy`, `undecided`, `unmergedDone()`) sohbetteki yüzüdür. Her bekleme kendi olay kimliğiyle
+    (`run:<id>:approval`, `approval:<id>`, `run:<id>:held`, `review:<görev>:<uuid>|<görev>`, `merge:<görev>:<uuid>`)
+    #general'a ve görev başlığına yazılır (`meta.card`, `meta.event`; canlı akışta tek satır).
+  - Kart yetkili değildir: `needs:act(projectId, event, action)` → `orchestrator.act` beklemenin hâlâ o olay olduğunu, o
+    projeye ait olduğunu ve eylemin o bekleme türünde var olduğunu yeniden denetler, sonra panel / görev sayfasıyla aynı
+    işlemi çağırır (`approve`, `retryReview`, `startCheck` + `startTask`). İkinci tık (ya da aynı anda panel) bekleme
+    bulamaz, hiçbir şey yapmaz (`gone`).
+  - Bağlantı / uygulama onayında kartta Onayla / Reddet **yok**: kart onay panelini açar (hedef, işlem, seviye ve tam komut
+    orada). Sohbete "tamam" yazmak hiçbir şeyi onaylamaz.
+  - Bekleme bittiğinde nasıl bittiği tüm kopyalara yazılır (`meta.resolution`: onaylandı / reddedildi / süresi doldu / geri
+    çekildi / kapandı / yeniden başlatıldı / inceleme istendi / taşındı / birleşti / yerini yenisi aldı) ve
+    `message:updated` ile yerinde güncellenir. Kart düğmeye basıldı diye "bitti" demez ("alındı"); "onaylandı" ile "iş
+    başladı" ayrıdır. Sonuç kaydı yazılamazsa eylem geri alınmaz ya da tekrarlanmaz (bekleme zaten gitmiştir).
+  - Yeni bekleme her zaman yeni karttır; eski kart canlanmaz. Kalıcı bekleme kimlikleri (`orchestrator.heldEvent`,
+    `orchestrator.mergeEvent`, `orchestrator.undecided` içinde `event`) yeniden açılışta korunur; açılışta onay bekleyen
+    çalışmaların kartları "kapandı" olur.
+  - Çalışma onayı kartı ajanın gerçek yeteneklerini sağlayıcının kurallarıyla yazar (`capsOf`: Claude Code her izni,
+    Codex sandbox'ta her zaman komut ve ağı yalnız yazma izniyle, API sağlayıcıları disk / terminal yok; proje dışı
+    klasörler, bağlantılar seviyeleriyle, kullanılabilir uygulamalar, her zaman açık araçlar). Onay izinleri
+    genişletmez; onay anında liste yeniden hesaplanır, kart gösterdiğinden farklıysa onay geçmez (`capsChanged`).
+  - Bağlantı / uygulama onayının sonucu `allowed` ("istenen işlem yapılabilir"), çalışma onayınınki `approved`.
+    Birleşme beklemesi gerçek birleştirmeyle `merged`, başka yolla kapanırsa `mergeGone`.
+- **Elenen:** sohbette serbest metinle onay, bağlantı onayının karttan doğrudan verilmesi, ayrı kart tablosu (migration),
+  kartın kendi durumuna güvenmek.

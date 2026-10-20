@@ -47,5 +47,27 @@
     "decision": "writing a decision…",
     "message": "writing a note to the team…",
     "learn": "noting what it learned…"
+  },
+  "card": {
+    "openApproval": "Open in the approval panel",
+    "openTask": "Open the task",
+    "working": "Working…",
+    "taken": "Request taken; this card shows how it ends once the wait is over.",
+    "gone": "This request isn't waiting any more.",
+    "failed": "Couldn't do it: {{error}}",
+    "outcome": {
+      "approved": "✓ Approved — the run may start.",
+      "rejected": "Rejected.",
+      "expired": "Expired: the request was turned down.",
+      "withdrawn": "The request went away (the run stopped, or a related permission, agent, connection or app changed).",
+      "closed": "Agentbits closed while this waited; the request ended.",
+      "restarted": "A new run was created (if it needs approval, you'll be asked separately).",
+      "reviewRequested": "The review was queued again; the worker didn't run.",
+      "moved": "The task was changed elsewhere; this request isn't waiting any more.",
+      "merged": "Merged into the project.",
+      "superseded": "The task is waiting again for a newer reason; see the newer card.",
+      "mergeGone": "Nothing waits to be merged any more (no changes to merge, isolation turned off, or the working copy is gone).",
+      "allowed": "✓ Approved — the requested operation may run."
+    }
   }
 }

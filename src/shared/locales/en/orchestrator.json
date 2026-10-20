@@ -23,16 +23,23 @@
     "typing": "Typing…"
   },
   "caps": {
-    "fsWrite": "file write",
-    "terminal": "terminal",
-    "network": "network",
-    "read": "read"
+    "fsRead": "reading files",
+    "fsWrite": "writing files",
+    "terminal": "the terminal",
+    "network": "the network",
+    "browser": "the browser",
+    "connections": "connections: {{list}}",
+    "apps": "apps: {{list}}",
+    "terminalSandbox": "running commands in its sandbox (Codex always can)",
+    "extraDirs": "files outside the project: {{list}}",
+    "always": "saving to the project's files, and the project memory and skills when they're on"
   },
   "runs": {
     "notApproved": "Not approved",
     "agentDisabled": "The agent was turned off before the run started",
     "stopped": "Run stopped",
-    "stoppedByUser": "Stopped by the user"
+    "stoppedByUser": "Stopped by the user",
+    "capsChanged": "Its permissions, connections or apps changed while the run waited for approval"
   },
   "notes": {
     "addedToFirstPrompt": "Added to the first prompt",
@@ -82,10 +89,8 @@
     "filesNotReadyAtStart": "⚠ Not ready yet when the work started (still being read in): {{names}}"
   },
   "chat": {
-    "awaitingApproval": "🔐 {{agent}} is waiting for approval for {{key}} ({{caps}} access). Nothing is done until you approve: approve or decline it under \"Running work\" on the left; to stop being asked, turn off the agent's \"Require approval\".",
     "taskStarted": "{{agent}} started the task.",
     "emptyOutput": "(empty output)",
-    "agentError": "⚠️ {{agent}} hit an error on {{key}}: {{text}}",
     "leadDirectTask": "🎯 The user gave {{agent}} a direct task: {{key}} “{{title}}”",
     "queuedInstruction": "(queued instruction) {{text}}",
     "leadQueued": "🎯 The user queued an instruction for {{agent}} on {{key}}: “{{text}}”",
@@ -111,12 +116,13 @@
     "leadNotesSent_one": "🎯 Note added to {{keys}}.",
     "leadNotesSent_other": "🎯 Notes added to {{count}} tasks: {{keys}}.",
     "leadNotesUnknown": "⚠️ No such task in this project, note not delivered: {{keys}}",
-    "limitStopped": "⏱ {{agent}} · {{key}}: {{reason}}",
     "handedToTwin": "↔ {{key}} handed from {{from}} (busy) to {{to}}, same role and skills",
     "fileConflict": "⚠️ {{path}} is also being changed by {{other}} ({{key}}) right now — check each other's changes.",
     "taskFailedHeld": "⚠️ {{agent}} couldn't finish this task: {{text}}\nThe task waits in To do and won't start again on its own: the attempt may have changed files or other systems before it stopped. Check what it left behind, then press “Try again” (the agent is told about the earlier attempt and checks first), or edit or delete the task.",
     "reviewNeedsYou": "⚠️ {{reason}}\nThe worker's report is kept and the task stays in review. You can retry just the review (the worker doesn't run again), or decide yourself: move it to Done, or back to To do with a note.",
-    "workNotStarted": "The tasks are ready but won't start yet: work in this project hasn't been started in this session. Press “Start work in this project” at the top."
+    "workNotStarted": "The tasks are ready but won't start yet: work in this project hasn't been started in this session. Press “Start work in this project” at the top.",
+    "reviewNoReport": "⚠️ {{reason}}\nThe task stays in review. Reviewing again won't help without a report: “Run the worker again” does the work from the start (nothing the earlier attempt did is undone), or decide yourself: move it to Done, or back to To do with a note.",
+    "reviewNoLead": "⚠️ {{reason}}\nThe task stays in review. Turn on or add a lead (or a member who can review), then press “Retry the review” on the task, or decide yourself: move it to Done, or back to To do with a note."
   },
   "errors": {
     "noFolder": "No folder selected for “{{project}}”. CLI agents can touch files, so choose a folder in the project settings.",
@@ -134,7 +140,10 @@
     "agentNotWorking": "{{name}} is not working on a task right now; send it as a new task",
     "stillRunning": "Some work did not stop in time (a long database / server call or app tool may still be running). Nothing was deleted — wait a moment and try again.",
     "retryReviewNotInReview": "{{key}} isn't in review, so there is no review to retry.",
-    "retryReviewNoLead": "This project has no active lead to review the task. Assign or turn on a lead first, or decide yourself."
+    "retryReviewNoLead": "This project has no active lead to review the task. Assign or turn on a lead first, or decide yourself.",
+    "cardNotHere": "This request belongs to another project.",
+    "cardAction": "That isn't possible for this request any more.",
+    "reviewQueued": "A review of this task is already queued; it runs on its turn."
   },
   "result": {
     "taskCreated": "{{key}} created and {{agent}} started",
@@ -247,7 +256,7 @@
     "dirty": "⏸ “{{title}}”: the project folder has uncommitted changes, so {{branch}} was not merged. Commit or stash them, then use “Review changes and merge” in the task. · {{key}}",
     "conflict": "⚠️ “{{title}}”: merging {{branch}} conflicts with the project ({{files}}). The task went back to its agent to resolve the conflicts in its working copy. · {{key}}",
     "conflictNote": "Merging this task into the project hit conflicts in: {{files}}. The project's latest state was merged into your branch; resolve the conflict markers (<<<<<<< ======= >>>>>>>) in those files so both changes work together, then finish with your report.",
-    "mergeFailed": "⚠️ “{{title}}”: merging {{branch}} failed: {{error}} · {{key}}",
+    "mergeFailed": "⚠️ “{{title}}”: merging {{branch}} failed: {{error}}. Nothing was merged and it won't be retried on its own; fix the cause, then use “Review changes and merge” in the task. · {{key}}",
     "changedSinceShown": "{{key}}: the task's working copy changed after you looked at it, so nothing was merged. Look at the changes again.",
     "uncommittedKept": "the working copy still has changes that could not be committed, so it was kept"
   },
@@ -273,7 +282,8 @@
     "commitFailed": "The agent's changes could not be committed in its working copy (e.g. a git signing setting). They are kept there; fix git and start the task again.",
     "authFailed": "The provider login isn't valid — sign in again, then restart it",
     "failed_one": "Failed: {{error}}",
-    "failed_other": "Failed {{count}} times: {{error}}"
+    "failed_other": "Failed {{count}} times: {{error}}",
+    "capsChanged": "What the agent can use changed while it waited for your approval; start it again to see the current list"
   },
   "review": {
     "unmet": "Acceptance criteria not met: {{list}}"
@@ -316,6 +326,11 @@
     "notMoving": "“{{title}}” isn't moving: the run after the send-back recorded no change and {{lead}} sent it back again. It won't restart on its own. Your call: check the lead's note on the task page, then press “{{retryReview}}” or “{{rerunWorker}}”, move it to Done, or send it back to To do with a note. · {{key}}",
     "limit": "“{{title}}” was sent back {{count}} times; it won't restart on its own. Your call: check the lead's note on the task page, then press “{{retry}}”, edit the task, or move it to Done. · {{key}}",
     "decide": "“{{title}}” is waiting for your decision: {{reason}} · {{key}}",
-    "changesInFolder": " The changes are in the project folder."
+    "changesInFolder": " The changes are in the project folder.",
+    "runApproval": "“{{title}}” is waiting for your approval to start. {{worker}} will be able to use: {{caps}}. Approving doesn't widen these permissions; it only lets the run start. If you reject it, the work doesn't start and the task is held. · {{key}}",
+    "failed": "“{{title}}” stopped with an error: {{reason}} It won't restart on its own. “{{retry}}” runs the work again from the start; nothing the earlier attempt did is undone. · {{key}}",
+    "limitStopped": "“{{title}}” stopped at a limit: {{reason}} It won't restart on its own. “{{retry}}” runs the work again; nothing the earlier attempt did is undone. · {{key}}",
+    "isolation": "“{{title}}” couldn't start: {{reason}} It won't start on its own; fix it, then press “{{retry}}”. · {{key}}",
+    "auth": "“{{title}}” stopped because of the provider sign-in: {{reason}} Fix the sign-in first, then press “{{retry}}”; nothing the earlier attempt did is undone. · {{key}}"
   }
 }

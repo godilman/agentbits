@@ -781,6 +781,42 @@ export interface AuditEntry {
   durationMs: number | null
 }
 
+/**
+ * A "needs you" card in the project chat (`meta.card` of a system message, `main/core/needsCards.ts`). It names the
+ * wait by its event id; what may be done is checked again in the main process (`needs:act`), never taken from the card.
+ * `actions`: only what the app really offers for that wait.
+ */
+export type NeedsKind = 'runApproval' | 'connApproval' | 'held' | 'undecided' | 'merge'
+export type NeedsAction = 'approve' | 'reject' | 'retry' | 'retryReview' | 'rerunWorker' | 'reviewMerge' | 'openApproval' | 'openTask'
+export interface NeedsCard {
+  kind: NeedsKind
+  event: string
+  taskId: string | null
+  runId?: string
+  approvalId?: string
+  actions: NeedsAction[]
+}
+/** How a wait ended (written on every copy of its card, whatever ended it). */
+export type NeedsOutcome =
+  | 'approved' // a run approval: allowed to start (not "started")
+  | 'rejected'
+  | 'expired'
+  | 'withdrawn' // the request went away (permission changed, run stopped, agent turned off)
+  | 'closed' // Agentbits closed while it waited
+  | 'restarted' // a new run of the task was created (the worker starts / waits for approval)
+  | 'reviewRequested' // the lead's review was queued again (the worker doesn't run)
+  | 'moved' // the user moved or edited the task elsewhere
+  | 'merged'
+  | 'mergeGone' // nothing waits to be merged any more (no change, isolation off, working copy gone) — not "merged"
+  | 'allowed' // a connection / app request: the operation may run
+  | 'superseded' // the task is waiting again, for a newer reason (a new card)
+export interface NeedsResolution {
+  outcome: NeedsOutcome
+  at: string
+}
+/** `needs:act`: done (the request was taken), or the wait is gone (already decided / expired / superseded). */
+export type NeedsActResult = { result: 'done'; outcome: NeedsOutcome | null } | { result: 'gone'; outcome: NeedsOutcome | null }
+
 /** A destructive / data-changing operation on a production connection waiting for the user. */
 export interface ConnectionApproval {
   id: string

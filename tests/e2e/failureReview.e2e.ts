@@ -294,7 +294,7 @@ async function main(): Promise<void> {
     assert.ok(!undecided(tC.id))
   })
 
-  await step('C. a retry that fails again stays visible, without a second copy of the note', async () => {
+  await step('C. a retry that fails again stays visible: a new card each time, the earlier ones closed', async () => {
     let rk = ''
     let rCalls = 0
     review = async (ctx) => {
@@ -319,8 +319,13 @@ async function main(): Promise<void> {
     assert.equal(rCalls, before, 'not reviewed again on its own')
     await call('tasks:retryReview', tR.id)
     await until(() => rCalls > before && !o.reviewing.has(tR.id) && undecided(tR.id), 'reviewed again on retry')
+    // Each wait is its own card (2026-10-20, needs-you cards): the earlier ones are closed as "review requested",
+    // only the newest still waits — an old card is never revived.
     const notes = thread(tR.id, p1.id).filter((m) => /retry just the review/.test(m.content))
-    assert.equal(notes.length, 1, notes.map((n) => n.content).join(' | '))
+    assert.equal(notes.length, 3, notes.map((n) => n.content).join(' | '))
+    const ended = notes.map((n) => (n.meta?.resolution as { outcome: string } | undefined)?.outcome ?? null)
+    assert.deepEqual(ended, ['reviewRequested', 'reviewRequested', null])
+    assert.equal(new Set(notes.map((n) => (n.meta?.card as { event: string }).event)).size, 3)
     // The user decides: moving it out clears the mark.
     await call('tasks:move', tR.id, 'done')
     assert.ok(!undecided(tR.id))

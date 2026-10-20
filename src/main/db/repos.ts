@@ -781,6 +781,13 @@ export const messagesRepo = {
   get(id: string): Message | null {
     const r = getDb().prepare('SELECT * FROM messages WHERE id = ?').get(id) as Row | undefined
     return r ? mapMessage(r) : null
+  },
+  /** Merges fields into a message's meta (a card's resolution); returns the updated message. */
+  setMeta(id: string, patch: Record<string, unknown>): Message | null {
+    const m = this.get(id)
+    if (!m) return null
+    getDb().prepare('UPDATE messages SET meta = ? WHERE id = ?').run(JSON.stringify({ ...(m.meta ?? {}), ...patch }), id)
+    return this.get(id)
   }
 }
 

@@ -4,7 +4,7 @@ import { evidenceSection, runEvidence } from './evidence'
 import { app } from 'electron'
 import { intlLocale, languageName } from '@shared/i18n'
 import { allTranslations, currentLanguage, t } from '../i18n'
-import type { Agent, AgentInstruction, FileRecord, InstructionInput, LogLevel, Message, Project, Provider, Task, UsageDelta, UsageMode } from '@shared/types'
+import type { Agent, AgentInstruction, FileRecord, InstructionInput, LogLevel, Message, NeedsAction, NeedsActResult, NeedsCard, NeedsOutcome, Project, Provider, Task, UsageDelta, UsageMode } from '@shared/types'
 import { resolveAfter, type LeadMessage } from '@shared/leadComms'
 import { acceptanceList, judgeCriteria, parseRaceVerdict, pickRival } from '@shared/review'
 import { isTwin } from '@shared/org'
@@ -33,14 +33,16 @@ import { startReplyStream } from './replyStream'
 import { instructionsRepo, usageRepo } from '../db/usage'
 import { prepareMcp } from '../connections/bridge'
 import { materializeSkills, skillNamesFor, skillsForAgent, skillsPrompt } from '../skills/service'
-import { appToolsFor, appsPrompt } from '../apps/service'
+import { appToolsFor, appsPrompt, usableApps } from '../apps/service'
 import { connectionsFor, connectionsPrompt, rejectApprovalsForRun, type AgentCtx } from '../connections/service'
 import type { ToolSpec } from '../connections/tools'
 import { agentTools, runAgentTool } from '../agentTools'
 import { projectMemoryForReview, projectMemoryOn, projectMemoryPrompt } from '../projectMemory/service'
 import { notifyUser, type HoldKind, type MergeState } from '../notify'
 import { filesRepo } from '../files/repo'
-import { auditRepo } from '../connections/repo'
+import { auditRepo, connPermsRepo, connectionsRepo } from '../connections/repo'
+import { endWait, postCard } from './needsCards'
+import { levelLabel } from '@shared/connections'
 import {
   filesSection,
   forgetRun,
@@ -53,7 +55,7 @@ import {
   visionFor
 } from '../files/service'
 import { fileRef } from '@shared/files'
-import { AbortedError, getAdapter, type ProviderAdapter } from '../providers'
+import { AbortedError, canAct, getAdapter, type ProviderAdapter } from '../providers'
 import { getDb, getDbPath } from '../db'
 import { memoryEngine } from './memory'
 import { parseLearn } from '@shared/memoryGraph'
@@ -183,10 +185,13 @@ const HELD_KEY = 'orchestrator.held'
 const HELD_WHY_KEY = 'orchestrator.heldWhy'
 /** Tasks in review that wait for the user, with why (the same "Needs you" after a restart; not reviewed again on their own). */
 const UNDECIDED_KEY = 'orchestrator.undecided'
+/** The event (card) of each held task and of each task whose merge waits: a decision is checked against it. */
+const HELD_EVENT_KEY = 'orchestrator.heldEvent'
+const MERGE_EVENT_KEY = 'orchestrator.mergeEvent'
 /** #general status lines (`orchestrator:say.*`). */
 type SayKey =
   | 'sentForReview' | 'doneNoReview' | 'doneNoLead' | 'commitFailed' | 'approved' | 'sentBack' | 'sentBackWaits'
-  | 'unverifiable' | 'notMoving' | 'limit' | 'decide'
+  | 'unverifiable' | 'notMoving' | 'limit' | 'decide' | 'runApproval' | 'failed' | 'limitStopped' | 'isolation' | 'auth'
 /** Agentbits tools that only read (a run using only these, and no file tool / shell, changed nothing it knows of). */
 const READ_ONLY_TOOLS = /^mcp__agentbits__(file_read|file_search|files_list|project_memory_read|project_memory_search)( |$)/
 /** The lead's one-line summary as its own sentence (empty when there is none). */
@@ -225,6 +230,14 @@ class Orchestrator {
   private undecided = new Set<string>()
   /** Why a task in review waits for the user (review failed, no lead, no report, unclear verdict). */
   private undecidedWhy = new Map<string, string>()
+  /** The review attempt (event) each undecided task waits on; its card is the one that may act. */
+  private undecidedEvent = new Map<string, string>()
+  /** The hold (event) each held task waits on. */
+  private heldEvent = new Map<string, string>()
+  /** The merge wait (event) of a done task whose changes aren't merged. */
+  private mergeEvent = new Map<string, string>()
+  /** How a run approval was decided (approve / reject); missing = it went away otherwise (stopped, closed). */
+  private approvalDecided = new Map<string, boolean>()
   /** Reviews queued or running: one per task at a time. */
   private reviewing = new Set<string>()
   /** A review was asked for while one was queued or running: look again when it ends (the newest run may differ). */
@@ -263,10 +276,17 @@ class Orchestrator {
     this.blocked = new Set(readJson<string[]>(HELD_KEY, []))
     this.heldWhy = new Map(Object.entries(readJson<Record<string, string>>(HELD_WHY_KEY, {})))
     this.globalPaused = readJson<boolean>(PAUSED_KEY, false)
-    const undecided = readJson<Record<string, string>>(UNDECIDED_KEY, {})
+    // Older builds stored only the reason; now the reason and the waiting event (card) — both survive a restart.
+    const undecided = readJson<Record<string, string | { reason: string; event: string }>>(UNDECIDED_KEY, {})
+    const entry = (v: string | { reason: string; event: string }): { reason: string; event: string } => (typeof v === 'string' ? { reason: v, event: '' } : v)
     this.undecided = new Set(Object.keys(undecided).filter((id) => tasksRepo.get(id)?.status === 'in_review'))
-    this.undecidedWhy = new Map([...this.undecided].map((id) => [id, undecided[id]]))
+    this.undecidedWhy = new Map([...this.undecided].map((id) => [id, entry(undecided[id]).reason]))
+    this.undecidedEvent = new Map([...this.undecided].map((id) => [id, entry(undecided[id]).event]).filter(([, ev]) => ev) as [string, string][])
     this.saveUndecided()
+    this.heldEvent = new Map(Object.entries(readJson<Record<string, string>>(HELD_EVENT_KEY, {})))
+    this.mergeEvent = new Map(Object.entries(readJson<Record<string, string>>(MERGE_EVENT_KEY, {})))
+    // Run approvals live in memory: a run that waited for one when the app closed is cancelled below; its card says so.
+    for (const r of runsRepo.list({ activeOnly: true }).filter((x) => x.status === 'awaiting_approval')) endWait(r.projectId, `run:${r.id}:approval`, 'closed')
     const stale = runsRepo.cancelStale()
     instructionsRepo.cancelStale()
     for (const task of tasksRepo.listAll()) {
@@ -321,6 +341,7 @@ class Orchestrator {
     this.failCounts.clear()
     this.undecided.clear()
     this.undecidedWhy.clear()
+    this.undecidedEvent.clear()
     this.saveUndecided()
     this.reviewing.clear()
     this.reviewAgain.clear()
@@ -400,6 +421,11 @@ class Orchestrator {
   private hold(taskId: string, reason: string, notify: { why: HoldKind; event: string } | null): void {
     this.blocked.add(taskId)
     this.heldWhy.set(taskId, reason)
+    // A new hold is a new wait: an older card of this task says it was superseded (it never comes back to life).
+    const before = this.heldEvent.get(taskId)
+    if (before && before !== notify?.event) endWait(tasksRepo.get(taskId)?.projectId ?? null, before, 'superseded')
+    if (notify) this.heldEvent.set(taskId, notify.event)
+    else this.heldEvent.delete(taskId)
     this.saveHeld()
     if (notify) notifyUser({ kind: 'held', taskId, ...notify, stillPending: () => this.blocked.has(taskId) && this.heldWhy.get(taskId) === reason })
     // Race mode: an attempt waiting for this one in review is now reviewed on its own.
@@ -409,10 +435,15 @@ class Orchestrator {
   }
 
   /** The user put the task back in the queue (moved it / started it): autopilot may take it again. */
-  release(taskId: string): void {
+  release(taskId: string, outcome: NeedsOutcome = 'moved'): void {
     this.failCounts.delete(taskId)
     this.heldWhy.delete(taskId)
-    if (this.blocked.delete(taskId)) this.saveHeld()
+    const ev = this.heldEvent.get(taskId)
+    if (ev) {
+      this.heldEvent.delete(taskId)
+      endWait(tasksRepo.get(taskId)?.projectId ?? null, ev, outcome)
+    }
+    if (this.blocked.delete(taskId) || ev) this.saveHeld()
   }
 
   /** What the renderer shows: pause state and everything that waits for the user ("Needs you", card reasons). */
@@ -426,18 +457,26 @@ class Orchestrator {
     deferredReviews: string[]
     simulatedWork: string[]
     simulatedReview: string[]
+    waitEvents: string[]
   } {
-    for (const id of [...this.undecided]) if (tasksRepo.get(id)?.status !== 'in_review') this.clearUndecided(id)
+    for (const id of [...this.undecided]) if (tasksRepo.get(id)?.status !== 'in_review') this.clearUndecided(id, 'moved')
+    const unmerged = this.unmergedDone()
+    for (const id of [...this.mergeEvent.keys()]) if (!unmerged.has(id)) this.mergeDone(id, 'mergeGone') // a real merge closed it already ('merged')
     return {
       paused: this.globalPaused,
       held: this.heldTasks(),
-      unmerged: [...this.unmergedDone()],
+      unmerged: [...unmerged],
       undecided: [...this.undecided],
       undecidedWhy: Object.fromEntries([...this.undecidedWhy].filter(([id]) => this.undecided.has(id))),
       startedProjects: [...this.workStarted],
       deferredReviews: [...this.deferredReviews].filter((id) => tasksRepo.get(id)?.status === 'in_review'),
       simulatedWork: usageRepo.simulatedTasks('task'),
-      simulatedReview: usageRepo.simulatedTasks('review')
+      simulatedReview: usageRepo.simulatedTasks('review'),
+      waitEvents: [
+        ...[...this.undecided].map((id) => this.undecidedEvent.get(id)),
+        ...[...this.blocked].map((id) => this.heldEvent.get(id)),
+        ...[...this.mergeEvent.values()]
+      ].filter((x): x is string => !!x)
     }
   }
 
@@ -471,8 +510,46 @@ class Orchestrator {
     return out
   }
 
+  /** The card of a held task: "Try again" (a new run; nothing done is undone) and the task. */
+  private heldCard(task: Task, event: string, text: string, taskText: string): void {
+    postCard(task.projectId, task.id, text, { kind: 'held', event, taskId: task.id, actions: ['retry', 'openTask'] }, taskText)
+  }
+
+  /**
+   * What the agent will really be able to do in a task, in the user's words — from its permissions AND its provider
+   * (the same rules the adapters and `agentTools` apply): Claude Code honours each switch; Codex always runs commands in
+   * its sandbox, writes only with "write files" and reaches the network only then; API providers never touch the disk
+   * or a terminal. Always offered: saving files to the project's files, the project memory (when on), skills.
+   */
+  private capsOf(agent: Agent): string {
+    const p = permissionsRepo.get(agent.id)
+    const kind = this.providerFor(agent).provider.kind
+    const cli = canAct(kind)
+    const codex = kind === 'codex-cli'
+    const conns = connPermsRepo
+      .forAgent(agent.id)
+      .map((x) => ({ c: connectionsRepo.get(x.connectionId), level: x.level }))
+      .filter((x) => x.c && x.level !== 'none')
+      .map((x) => `${x.c!.name} (${levelLabel(x.level, currentLanguage())})`)
+    const apps = usableApps(agent.id).map((a) => a.name)
+    const parts = [
+      cli && p.fsRead && t('orchestrator:caps.fsRead'),
+      cli && p.fsWrite && t('orchestrator:caps.fsWrite'),
+      codex ? t('orchestrator:caps.terminalSandbox') : cli && p.terminal && t('orchestrator:caps.terminal'),
+      cli && p.network && (!codex || p.fsWrite) && t('orchestrator:caps.network'),
+      cli && !codex && p.allowedPaths.length && t('orchestrator:caps.extraDirs', { list: p.allowedPaths.join(', ') }),
+      p.browser && t('orchestrator:caps.browser'),
+      conns.length && t('orchestrator:caps.connections', { list: conns.join(', ') }),
+      apps.length && t('orchestrator:caps.apps', { list: apps.join(', ') })
+    ].filter(Boolean)
+    return [...parts, t('orchestrator:caps.always')].join(', ')
+  }
+
   /** A status line by the app: the task's name first, its key last. */
   private sayText(task: Task, key: SayKey, vars: Record<string, unknown> = {}): string {
+    // A reason (often an error's first line) is a sentence in the card: end it so the next one doesn't run into it.
+    const r = vars.reason
+    if (typeof r === 'string' && r && !/[.!?…:)]$/.test(r.trim())) vars = { ...vars, reason: `${r.trim()}.` }
     return t(`orchestrator:say.${key}`, { title: task.title, key: task.key, ...vars })
   }
 
@@ -495,21 +572,43 @@ class Orchestrator {
     return auditRepo.list({ runId, limit: 1 }).length === 0
   }
 
-  private clearUndecided(id: string): void {
+  /** A task's merge wait ended (merged, or the task left Done / was removed). */
+  private mergeDone(taskId: string, outcome: NeedsOutcome): void {
+    const ev = this.mergeEvent.get(taskId)
+    if (!ev) return
+    this.mergeEvent.delete(taskId)
+    this.saveMergeEvents()
+    endWait(tasksRepo.get(taskId)?.projectId ?? null, ev, outcome)
+  }
+
+  private saveMergeEvents(): void {
+    writeJson(MERGE_EVENT_KEY, Object.fromEntries(this.mergeEvent))
+    emit({ type: 'orchestrator:changed' })
+  }
+
+  private clearUndecided(id: string, outcome: NeedsOutcome = 'moved'): void {
     const had = this.undecided.delete(id)
+    const ev = this.undecidedEvent.get(id)
+    this.undecidedEvent.delete(id)
+    if (ev) endWait(tasksRepo.get(id)?.projectId ?? null, ev, outcome)
     if (this.undecidedWhy.delete(id) || had) this.saveUndecided()
   }
 
   private saveUndecided(): void {
-    writeJson(UNDECIDED_KEY, Object.fromEntries([...this.undecided].map((id) => [id, this.undecidedWhy.get(id) ?? ''])))
+    writeJson(
+      UNDECIDED_KEY,
+      Object.fromEntries([...this.undecided].map((id) => [id, { reason: this.undecidedWhy.get(id) ?? '', event: this.undecidedEvent.get(id) ?? '' }]))
+    )
   }
 
   private saveHeld(): void {
     const live = new Set(tasksRepo.listAll().map((x) => x.id))
     for (const id of [...this.blocked]) if (!live.has(id)) this.blocked.delete(id)
     for (const id of [...this.heldWhy.keys()]) if (!this.blocked.has(id)) this.heldWhy.delete(id)
+    for (const id of [...this.heldEvent.keys()]) if (!this.blocked.has(id)) this.heldEvent.delete(id)
     writeJson(HELD_KEY, [...this.blocked])
     writeJson(HELD_WHY_KEY, Object.fromEntries(this.heldWhy))
+    writeJson(HELD_EVENT_KEY, Object.fromEntries(this.heldEvent))
     emit({ type: 'orchestrator:changed' })
   }
 
@@ -727,10 +826,23 @@ class Orchestrator {
     const branch = branchFor(task.key)
     let problem: string | null = null
     const say = (what: 'merged' | 'dirty' | 'conflict' | 'mergeFailed', vars: Record<string, string> = {}): void => {
-      const text = t(`orchestrator:worktree.${what}`, { key: task.key, title: task.title, branch, files: '', error: '', ...vars })
+      // The error is a sentence inside the text (which ends it): no doubled full stop.
+      const error = (vars.error ?? '').trim().replace(/\.+$/, '')
+      const text = t(`orchestrator:worktree.${what}`, { key: task.key, title: task.title, branch, files: '', ...vars, error })
       if (what !== 'merged') problem = text
+      if (what === 'dirty' || what === 'mergeFailed') {
+        // The merge waits for the user: a card whose text says the real reason (uncommitted changes / the error).
+        const event = `merge:${task.id}:${randomUUID()}`
+        const before = this.mergeEvent.get(task.id)
+        if (before) endWait(task.projectId, before, 'superseded')
+        this.mergeEvent.set(task.id, event)
+        this.saveMergeEvents()
+        postCard(task.projectId, task.id, text, { kind: 'merge', event, taskId: task.id, actions: ['reviewMerge', 'openTask'] })
+        return
+      }
+      if (what === 'merged') this.mergeDone(task.id, 'merged')
       const ev = sameEvent()
-      this.post('general', 'system', null, text, task.projectId, [], { ...ev, ...(what === 'dirty' || what === 'mergeFailed' ? { needsYou: true } : { status: true }) })
+      this.post('general', 'system', null, text, task.projectId, [], { ...ev, status: true })
       this.post(`task:${task.id}`, 'system', null, text, task.projectId, [], ev)
     }
     try {
@@ -953,36 +1065,35 @@ class Orchestrator {
    * Starts a task: autopilot, "Start now" or a drag to "In progress". The same rules for every way in: the agent must be
    * on, and a task waiting for others starts only with `force` (the user said "start anyway").
    */
-  async startTask(taskId: string, agentId?: string, opts: { force?: boolean } = {}): Promise<void> {
-    if (this.closing) return
-    const task = tasksRepo.get(taskId)
-    if (!task || task.status === 'in_progress') return
-    const waits = opts.force ? [] : this.waitingFor(task.id)
-    if (waits.length) {
-      emit({ type: 'toast', level: 'error', text: t('orchestrator:toast.waitingFor', { key: task.key, keys: waits.join(', ') }) })
-      return
-    }
+  /** Why a task can't start now (shown as it is), or the agent that will run it. */
+  private startCheck(task: Task, agentId?: string, force = false): { agent: Agent } | { error: string } {
+    const waits = force ? [] : this.waitingFor(task.id)
+    if (waits.length) return { error: t('orchestrator:toast.waitingFor', { key: task.key, keys: waits.join(', ') }) }
     const agent =
       (agentId && agentsRepo.get(agentId)) ||
       (task.assigneeId && agentsRepo.get(task.assigneeId)) ||
       projectMembers(task.projectId).find(
         (a) => !a.isLead && a.enabled && a.status === 'idle' && !this.busy.has(a.id) && a.id !== projectLead(task.projectId)?.id
       )
-    if (!agent) {
-      emit({ type: 'toast', level: 'error', text: t('orchestrator:toast.noIdleAgent') })
+    if (!agent) return { error: t('orchestrator:toast.noIdleAgent') }
+    if (!agent.enabled) return { error: t('orchestrator:toast.agentDisabled', { name: agent.name }) }
+    if (this.busy.has(agent.id)) return { error: t('orchestrator:toast.agentBusy', { name: agent.name }) }
+    return { agent }
+  }
+
+  async startTask(taskId: string, agentId?: string, opts: { force?: boolean } = {}): Promise<void> {
+    if (this.closing) return
+    const task = tasksRepo.get(taskId)
+    if (!task || task.status === 'in_progress') return
+    const check = this.startCheck(task, agentId, opts.force)
+    if ('error' in check) {
+      emit({ type: 'toast', level: 'error', text: check.error })
       return
     }
-    if (!agent.enabled) {
-      emit({ type: 'toast', level: 'error', text: t('orchestrator:toast.agentDisabled', { name: agent.name }) })
-      return
-    }
-    if (this.busy.has(agent.id)) {
-      emit({ type: 'toast', level: 'error', text: t('orchestrator:toast.agentBusy', { name: agent.name }) })
-      return
-    }
-    this.release(task.id)
+    const { agent } = check
+    this.release(task.id, 'restarted')
     // A new run: what was said about the previous one's review no longer applies.
-    this.clearUndecided(task.id)
+    this.clearUndecided(task.id, 'restarted')
     this.busy.add(agent.id)
     // Race mode: a first start of an ordinary task also hands a copy to a member on another provider / model.
     // Only with the lead's review on: the lead is the one who picks the winner.
@@ -1002,30 +1113,38 @@ class Orchestrator {
 
     if (needApproval) {
       this.setStatus(agent.id, 'idle', t('orchestrator:status.awaitingApproval', { key: task.key }))
-      const caps = [perms.fsWrite && t('orchestrator:caps.fsWrite'), perms.terminal && t('orchestrator:caps.terminal'), perms.network && t('orchestrator:caps.network')]
-        .filter(Boolean)
-        .join(', ')
-      this.post(
-        'general',
-        'system',
-        null,
-        t('orchestrator:chat.awaitingApproval', { agent: agent.name, key: task.key, caps: caps || t('orchestrator:caps.read') }),
-        task.projectId
+      // What the agent will really be able to do (its current permissions; approving widens nothing).
+      const event = `run:${run.id}:approval`
+      const caps = this.capsOf(agent)
+      postCard(
+        task.projectId,
+        task.id,
+        this.sayText(task, 'runApproval', { worker: agent.name, caps }),
+        { kind: 'runApproval', event, taskId: task.id, runId: run.id, actions: ['reject', 'approve', 'openTask'] }
       )
       notifyUser({ kind: 'runApproval', taskId: task.id, runId: run.id, stillPending: () => this.approvals.has(run.id) })
       const ok = await new Promise<boolean>((resolve) => this.approvals.set(run.id, resolve))
       this.approvals.delete(run.id)
-      // Quitting: leave the run as it is; the next start marks it interrupted.
+      const decided = this.approvalDecided.get(run.id)
+      this.approvalDecided.delete(run.id)
+      // Quitting: leave the run as it is; the next start marks it interrupted (and closes the card).
       if (this.closing) return
       // Turned off while the run waited: the yes was for an agent that may no longer work.
-      const disabled = ok && !agentsRepo.get(agent.id)?.enabled
-      if (!ok || disabled) {
-        runsRepo.update(run.id, { status: 'cancelled', endedAt: nowIso(), error: t(disabled ? 'orchestrator:runs.agentDisabled' : 'orchestrator:runs.notApproved') })
+      const now = agentsRepo.get(agent.id)
+      const disabled = ok && !now?.enabled
+      // Its reach changed while it waited (a permission, connection, app or provider): the yes was for the list the
+      // card showed, so it doesn't count; the task is held and a new start shows the current list.
+      const changed = ok && !disabled && !!now && this.capsOf(now) !== caps
+      // "Approved" only says the run may start; whether it really starts shows in the task's own lines.
+      endWait(task.projectId, event, disabled || changed ? 'withdrawn' : decided === undefined ? 'withdrawn' : decided ? 'approved' : 'rejected')
+      if (!ok || disabled || changed) {
+        const why = disabled ? 'agentDisabled' : changed ? 'capsChanged' : 'notApproved'
+        runsRepo.update(run.id, { status: 'cancelled', endedAt: nowIso(), error: t(`orchestrator:runs.${why}`) })
         tasksRepo.update(task.id, { status: 'todo', progress: 0 })
-        this.hold(task.id, t(disabled ? 'orchestrator:held.agentDisabled' : 'orchestrator:held.notApproved'), null)
+        this.hold(task.id, t(`orchestrator:held.${why}`), null)
         this.busy.delete(agent.id)
         this.setStatus(agent.id, disabled ? 'offline' : 'idle')
-        this.log({ level: 'warn', message: disabled ? t('orchestrator:runs.agentDisabled') : t('orchestrator:log.runNotApproved'), runId: run.id, agentId: agent.id, taskId: task.id, projectId: task.projectId })
+        this.log({ level: 'warn', message: why === 'notApproved' ? t('orchestrator:log.runNotApproved') : t(`orchestrator:runs.${why}`), runId: run.id, agentId: agent.id, taskId: task.id, projectId: task.projectId })
         for (const q of instructionsRepo.queuedFor(run.id)) instructionsRepo.setStatus(q.id, 'cancelled', { note: t('orchestrator:log.runNotApproved') })
         emit({ type: 'tasks:changed' })
         emit({ type: 'runs:changed' })
@@ -1384,9 +1503,7 @@ class Orchestrator {
         tasksRepo.update(task.id, { status: 'todo', progress: 0 })
         const why = t('orchestrator:held.commitFailed')
         this.hold(task.id, why, { why: 'commit', event: `run:${runId}:held` })
-        const ev = sameEvent()
-        this.post(`task:${task.id}`, 'system', null, why, pid, [], ev)
-        this.say(task, 'commitFailed', { worker: agent.name, retry: t('tasks:drawer.retry') }, ev, true)
+        this.heldCard(task, `run:${runId}:held`, this.sayText(task, 'commitFailed', { worker: agent.name, retry: t('tasks:drawer.retry') }), why)
       }
       // Outputs: files saved with file_save, and (CLI agents) files changed in the project folder (worktree mode: after the merge).
       if ((provider.kind === 'claude-cli' || provider.kind === 'codex-cli') && perms.fsWrite && project?.rootPath && !wt) {
@@ -1475,9 +1592,7 @@ class Orchestrator {
         if (!this.stoppingForDone.has(task.id)) this.postOnce(`task:${task.id}`, this.leftChangesNote(task, ar.limitHit ? 'limit' : 'stopped'), pid)
         if (ar.limitHit) {
           this.log({ ...logCtx, level: 'warn', message: ar.limitHit })
-          const ev = sameEvent()
-          this.post('general', 'system', null, t('orchestrator:chat.limitStopped', { agent: agent.name, key: task.key, reason: ar.limitHit }), pid, [], ev)
-          this.post(`task:${task.id}`, 'system', null, ar.limitHit, pid, [], ev)
+          this.heldCard(task, `run:${runId}:held`, this.sayText(task, 'limitStopped', { reason: ar.limitHit, retry: t('tasks:drawer.retry') }), ar.limitHit)
         }
         this.setStatus(agent.id, 'idle')
       } else {
@@ -1495,16 +1610,14 @@ class Orchestrator {
         this.log({ ...logCtx, level: 'error', message: msg })
         if (e instanceof IsolationError) {
           this.hold(task.id, msg, { why: 'isolation', event: `run:${runId}:held` })
-          const ev = sameEvent()
-          this.post(`task:${task.id}`, 'system', null, `⚠️ ${msg}`, pid, [], ev)
-          this.post('general', 'system', null, `⚠️ ${task.key}: ${msg}`, pid, [], ev)
+          this.heldCard(task, `run:${runId}:held`, this.sayText(task, 'isolation', { reason: msg, retry: t('tasks:drawer.retry') }), `⚠️ ${msg}`)
           this.setStatus(agent.id, 'idle')
         } else if (auth) {
           // Credentials problem: not the task's fault and every agent will hit it — stop the loop. The task waits too:
           // resuming after a new login must not quietly redo a run that may have done part of its work.
           this.setStatus(agent.id, 'error', t('orchestrator:status.authInvalid'))
           this.hold(task.id, t('orchestrator:held.authFailed'), { why: 'auth', event: `run:${runId}:held` })
-          this.postOnce(`task:${task.id}`, t('orchestrator:chat.taskFailedHeld', { agent: agent.name, text: full }), pid)
+          this.heldCard(task, `run:${runId}:held`, this.sayText(task, 'auth', { reason: text, retry: t('tasks:drawer.retry') }), t('orchestrator:chat.taskFailedHeld', { agent: agent.name, text: full }))
           // This run is over: out of the active list before pausing everything, or its "failed" record turns "paused".
           this.active.delete(runId)
           this.authFailure(text, pid)
@@ -1514,9 +1627,7 @@ class Orchestrator {
           const fails = (this.failCounts.get(task.id) ?? 0) + 1
           this.failCounts.set(task.id, fails)
           this.hold(task.id, t('orchestrator:held.failed', { count: fails, error: text.slice(0, 200) }), { why: 'failed', event: `run:${runId}:held` })
-          const ev = sameEvent()
-          this.postOnce(`task:${task.id}`, t('orchestrator:chat.taskFailedHeld', { agent: agent.name, text: full }), pid, ev)
-          this.post('general', 'system', null, t('orchestrator:chat.agentError', { agent: agent.name, key: task.key, text }), pid, [], ev)
+          this.heldCard(task, `run:${runId}:held`, this.sayText(task, 'failed', { worker: agent.name, reason: text, retry: t('tasks:drawer.retry') }), t('orchestrator:chat.taskFailedHeld', { agent: agent.name, text: full }))
           this.setStatus(agent.id, 'error', text.slice(0, 120))
           this.setStatusLater(agent.id, ERROR_COOLDOWN_MS, 'error')
         }
@@ -1758,8 +1869,11 @@ class Orchestrator {
     const a = orig.assigneeId ? agentsRepo.get(orig.assigneeId) : null
     const b = chal.assigneeId ? agentsRepo.get(chal.assigneeId) : null
     if (!lead || !a || !b || !runA?.output || !runB?.output) {
-      const reason = lead ? t('orchestrator:reviewIssue.noReport') : t('orchestrator:reviewIssue.noLead')
-      for (const x of [orig, chal]) this.needsUser(x.id, reason, raceEvent)
+      const why = lead ? 'noReport' : 'noLead'
+      const reason = t(`orchestrator:reviewIssue.${why}`)
+      // No report: reviewing again can't help, only running the work again; no lead: nobody to retry with yet.
+      const note = t(`orchestrator:chat.review${why === 'noReport' ? 'NoReport' : 'NoLead'}`, { reason })
+      for (const x of [orig, chal]) this.needsUser(x.id, reason, raceEvent, note, undefined, why === 'noReport' ? ['rerunWorker', 'openTask'] : ['openTask'])
       return
     }
     const label = (x: Agent): string => {
@@ -2012,7 +2126,10 @@ class Orchestrator {
 
   stopRun(runId: string): void {
     const pending = this.approvals.get(runId)
-    if (pending) return pending(false)
+    if (pending) {
+      this.approvals.delete(runId)
+      return pending(false)
+    }
     const ar = this.active.get(runId)
     if (!ar) return
     ar.stopped = true
@@ -2022,8 +2139,15 @@ class Orchestrator {
     ar.waiters.splice(0).forEach((w) => w())
   }
 
-  approve(runId: string, ok: boolean): void {
-    this.approvals.get(runId)?.(ok)
+  /** The user's answer to a run approval. False when nothing waits for it any more (answered, stopped, closed). */
+  approve(runId: string, ok: boolean): boolean {
+    const resolve = this.approvals.get(runId)
+    if (!resolve) return false
+    // Gone at once: a second answer (another click, the panel and the chat at the same time) finds nothing.
+    this.approvals.delete(runId)
+    this.approvalDecided.set(runId, ok)
+    resolve(ok)
+    return true
   }
 
   /** Called when the user drags a running task out of "In progress". */
@@ -2133,6 +2257,41 @@ class Orchestrator {
     return { runs: this.active.size, replies: this.aux.size, approvals: this.approvals.size }
   }
 
+  /**
+   * A "needs you" card's action from the chat. The card is not trusted: the wait must still be this event, in this
+   * project, and the action one the app offers for that kind of wait. Then the same step as the run card / task page
+   * (approve, retry the review, start the task). A second click — or one in the panel meanwhile — finds the wait gone
+   * and does nothing again. An action that can't be done says why (an Error) and leaves the wait as it was.
+   */
+  act(projectId: string, event: string, action: NeedsAction): NeedsActResult {
+    const approval = /^run:(.+):approval$/.exec(event)
+    if (approval) {
+      const run = runsRepo.get(approval[1])
+      if (!run || run.projectId !== projectId) throw new Error(t('orchestrator:errors.cardNotHere'))
+      if (action !== 'approve' && action !== 'reject') throw new Error(t('orchestrator:errors.cardAction'))
+      return this.approve(run.id, action === 'approve')
+        ? { result: 'done', outcome: action === 'approve' ? 'approved' : 'rejected' }
+        : { result: 'gone', outcome: null }
+    }
+    const owner = (m: Map<string, string>): string | undefined => [...m].find(([, ev]) => ev === event)?.[0]
+    const undecided = owner(this.undecidedEvent)
+    const taskId = undecided ?? owner(this.heldEvent)
+    const task = taskId ? tasksRepo.get(taskId) : null
+    if (!task) return { result: 'gone', outcome: null }
+    if (task.projectId !== projectId) throw new Error(t('orchestrator:errors.cardNotHere'))
+    if (undecided && action === 'retryReview' && task.status === 'in_review' && this.undecided.has(task.id)) {
+      // Already queued (another trigger): nothing new was started, so not "taken".
+      if (this.retryReview(task.id) === 'pending') throw new Error(t('orchestrator:errors.reviewQueued'))
+      return { result: 'done', outcome: 'reviewRequested' }
+    }
+    const startable = undecided ? action === 'rerunWorker' && task.status === 'in_review' : action === 'retry' && this.blocked.has(task.id)
+    if (!startable) throw new Error(t('orchestrator:errors.cardAction'))
+    const check = this.startCheck(task)
+    if ('error' in check) throw new Error(check.error)
+    void this.startTask(task.id)
+    return { result: 'done', outcome: 'restarted' }
+  }
+
   /** The user asks the lead to review again (the worker is not run again). 'pending' = a review is already queued. */
   retryReview(taskId: string): 'queued' | 'pending' {
     const task = tasksRepo.get(taskId)
@@ -2141,7 +2300,7 @@ class Orchestrator {
     if (this.reviewing.has(taskId)) return 'pending'
     const lead = projectLead(task.projectId)
     if (!lead) throw new Error(t('orchestrator:errors.retryReviewNoLead'))
-    this.clearUndecided(taskId)
+    this.clearUndecided(taskId, 'reviewRequested')
     this.reviewedRun.delete(taskId)
     this.log({ agentId: lead.id, taskId, projectId: task.projectId, level: 'status', message: t('orchestrator:log.reviewRetried', { key: task.key }) })
     emit({ type: 'orchestrator:changed' })
@@ -2152,15 +2311,32 @@ class Orchestrator {
   /** A task in review that waits for the user: why (card, "Needs you") and one note in its thread. */
   /** `event`: the review (or race comparison) this comes from — one notification per review attempt. */
   /** `general`: the #general line (default: "waiting for your decision" with the reason; false: none). */
-  private needsUser(taskId: string, reason: string, event: string, note?: string, general?: string | false): void {
+  /** `actions`: what the card offers (default: retry the review when a lead can review, and the task). */
+  private needsUser(taskId: string, reason: string, event: string, note?: string, general?: string | false, actions?: NeedsAction[]): void {
     const task = tasksRepo.get(taskId)
     if (!task || task.status !== 'in_review') return
+    // One card per task and review attempt (a race's two attempts share the review event).
+    const cardEvent = `${event}|${taskId}`
+    if (this.undecidedEvent.get(taskId) === cardEvent) return // this attempt already said it
+    // Still waiting for the same reason (e.g. a race reviewed twice before anyone answered): the open card says it.
+    if (this.undecided.has(taskId) && this.undecidedWhy.get(taskId) === reason) return
+    const before = this.undecidedEvent.get(taskId)
+    if (before) endWait(task.projectId, before, 'superseded')
     this.undecided.add(taskId)
     this.undecidedWhy.set(taskId, reason)
+    this.undecidedEvent.set(taskId, cardEvent)
     this.saveUndecided()
+    const card: NeedsCard = {
+      kind: 'undecided',
+      event: cardEvent,
+      taskId,
+      actions: actions ?? (projectLead(task.projectId) ? ['retryReview', 'openTask'] : ['openTask'])
+    }
     // The same event id in the live feed: a race's two notes (one per attempt) show as one line there.
-    this.postOnce(`task:${taskId}`, note ?? t('orchestrator:chat.reviewNeedsYou', { reason }), task.projectId, { event })
-    if (general !== false) this.postOnce('general', general ?? this.sayText(task, 'decide', { reason }), task.projectId, { event, needsYou: true })
+    postCard(task.projectId, taskId, general || this.sayText(task, 'decide', { reason }), card, note ?? t('orchestrator:chat.reviewNeedsYou', { reason }), {
+      event,
+      general: general !== false
+    })
     emit({ type: 'orchestrator:changed' })
     notifyUser({ kind: 'undecided', taskId, event, stillPending: () => this.undecided.has(taskId) && tasksRepo.get(taskId)?.status === 'in_review' })
   }
@@ -2181,7 +2357,10 @@ class Orchestrator {
     const pid = task.projectId
     if (task.status !== 'in_review') return
     // projectLead only returns an enabled agent (falling back to any enabled member): none = nobody can review.
-    if (!lead) return this.needsUser(taskId, t('orchestrator:reviewIssue.noLead'), event, undefined, false)
+    if (!lead) {
+      const reason = t('orchestrator:reviewIssue.noLead')
+      return this.needsUser(taskId, reason, event, t('orchestrator:chat.reviewNoLead', { reason }), false)
+    }
     // Race mode: wait for the other attempt, then compare both; if it failed or was held, review this one alone.
     const partner = task.raceOf ? tasksRepo.get(task.raceOf) : tasksRepo.challengerOf(task.id)
     if (partner && !partner.raceResult && !task.raceResult) {
@@ -2198,7 +2377,10 @@ class Orchestrator {
     }
     const lastRun = runsRepo.list({ taskId, limit: 1 })[0]
     const worker = task.assigneeId ? agentsRepo.get(task.assigneeId) : null
-    if (!lastRun?.output || !worker) return this.needsUser(taskId, t('orchestrator:reviewIssue.noReport'), event)
+    if (!lastRun?.output || !worker) {
+      const reason = t('orchestrator:reviewIssue.noReport')
+      return this.needsUser(taskId, reason, event, t('orchestrator:chat.reviewNoReport', { reason }), undefined, ['rerunWorker', 'openTask'])
+    }
     // Already judged (a second request for the same run): its verdict stands; "retry the review" asks again.
     if (this.reviewedRun.get(taskId) === lastRun.id) return
     const basis = this.reviewBasis(task, lastRun.id)
@@ -2334,7 +2516,7 @@ class Orchestrator {
           tasksRepo.update(taskId, { reviewNote: note })
           this.post(`task:${taskId}`, 'agent', lead.id, t('orchestrator:chat.revisionTask', { note }), pid, [], ev)
           const say = this.sayText(task, 'notMoving', { lead: lead.name, retryReview: t('tasks:drawer.retryReview'), rerunWorker: t('tasks:drawer.rerunWorker') })
-          this.needsUser(taskId, t('orchestrator:reviewIssue.notMoving', { lead: lead.name }), event, undefined, say)
+          this.needsUser(taskId, t('orchestrator:reviewIssue.notMoving', { lead: lead.name }), event, undefined, say, ['retryReview', 'rerunWorker', 'openTask'])
           emit({ type: 'tasks:changed' })
           return
         }
@@ -2343,9 +2525,8 @@ class Orchestrator {
         this.post(`task:${taskId}`, 'agent', lead.id, t('orchestrator:chat.revisionTask', { note }), pid, [], ev)
         if (rounds >= MAX_REVIEW_ROUNDS) {
           this.hold(taskId, t('orchestrator:held.revisionLimit', { count: rounds }), { why: 'revision', event })
-          this.post(`task:${taskId}`, 'system', null, t('orchestrator:chat.revisionLimit', { count: rounds }), pid)
           // One line in #general: the limit (not also "it runs again").
-          this.say(task, 'limit', { count: rounds, retry: t('tasks:drawer.retry') }, ev, true)
+          this.heldCard(task, event, this.sayText(task, 'limit', { count: rounds, retry: t('tasks:drawer.retry') }), t('orchestrator:chat.revisionLimit', { count: rounds }))
         } else {
           // "It runs again on its own" only when autopilot will really take it.
           const runsAgain = settingsRepo.get().autopilot && this.workStarted.has(pid) && !this.globalPaused && worker.enabled && !worker.isLead

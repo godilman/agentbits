@@ -1,5 +1,5 @@
 import { randomUUID } from 'crypto'
-import type { AccessLevel, AuditResult, Connection, ConnectionApproval, ConnectionTestResult, SchemaInfo } from '@shared/types'
+import type { AccessLevel, AuditResult, Connection, ConnectionApproval, ConnectionTestResult, NeedsOutcome, SchemaInfo } from '@shared/types'
 import { atLeast, classifyCommand, classifySql, isDb, KIND_LABEL, ENV_LABEL, levelLabel, sshReasonText } from '@shared/connections'
 import { agentsRepo, tasksRepo } from '../db/repos'
 import { emit } from '../events'
@@ -14,6 +14,7 @@ import { fileRef, safeFileName } from '@shared/files'
 import { existsSync, mkdirSync, writeFileSync } from 'fs'
 import { join } from 'path'
 import { notifyUser } from '../notify'
+import { endWait, postCard } from '../core/needsCards'
 
 /**
  * Connection access for agents and the user. Every agent operation goes through
@@ -250,23 +251,25 @@ export function listApprovals(): ConnectionApproval[] {
   return [...pending.values()].map((p) => p.info).sort((a, b) => a.requestedAt.localeCompare(b.requestedAt))
 }
 
-export function resolveApproval(id: string, ok: boolean): void {
+/** `outcome`: how its card ends — the user's yes / no, or the request going away (`withdrawn`, `closed`). */
+export function resolveApproval(id: string, ok: boolean, outcome?: NeedsOutcome): void {
   const p = pending.get(id)
   if (!p) throw new Error(t('main:connections.errors.approvalNotFound'))
   clearTimeout(p.timer)
   pending.delete(id)
   p.resolve(ok)
   emit({ type: 'approvals:changed' })
+  endWait(p.info.projectId, `approval:${id}`, outcome ?? (ok ? 'allowed' : 'rejected'))
 }
 
 /** A stopped / redirected run must not leave the agent waiting on an approval. */
 export function rejectApprovalsForRun(runId: string): void {
-  for (const [id, p] of pending) if (p.runId === runId) resolveApproval(id, false)
+  for (const [id, p] of pending) if (p.runId === runId) resolveApproval(id, false, 'withdrawn')
 }
 
 /** Rejects every waiting request (factory reset / shutdown). */
 export function rejectAllApprovals(): void {
-  for (const id of [...pending.keys()]) resolveApproval(id, false)
+  for (const id of [...pending.keys()]) resolveApproval(id, false, 'closed')
 }
 
 /**
@@ -280,7 +283,7 @@ export function rejectApprovalsWhere(match: { connectionId?: string; agentId?: s
     if (!match.connectionId && !match.agentId) continue
     if (match.connectionId && p.info.connectionId !== match.connectionId) continue
     if (match.agentId && p.info.agentId !== match.agentId) continue
-    resolveApproval(id, false)
+    resolveApproval(id, false, 'withdrawn')
   }
 }
 
@@ -308,10 +311,27 @@ export function waitForApproval(ctx: AgentCtx, req: Omit<ConnectionApproval, 'id
     const timer = setTimeout(() => {
       pending.delete(id)
       emit({ type: 'approvals:changed' })
+      endWait(info.projectId, `approval:${id}`, 'expired')
       res(false)
     }, APPROVAL_TTL)
     pending.set(id, { runId: ctx.runId ?? null, info, resolve: res, timer })
     emit({ type: 'approvals:changed' })
+    // A card in the project chat that opens this request in the approval panel (the decision is only made there,
+    // where target, operation, level and the full command are shown).
+    if (info.projectId) {
+      const what =
+        req.operation === 'app'
+          ? t('main:connections.card.app', { tool: req.tool ?? '' })
+          : t(`main:connections.card.${req.operation}`, { level: levelLabel(req.needs) })
+      const vars = { agent: info.agentName, target: req.connectionName, what, minutes: Math.round(APPROVAL_TTL / 60_000), key: task?.key ?? '', title: task?.title ?? '' }
+      postCard(info.projectId, info.taskId, t(task ? 'main:connections.card.forTask' : 'main:connections.card.noTask', vars), {
+        kind: 'connApproval',
+        event: `approval:${id}`,
+        taskId: info.taskId,
+        approvalId: id,
+        actions: task ? ['openApproval', 'openTask'] : ['openApproval']
+      })
+    }
     if (info.projectId) notifyUser({ kind: 'connectionApproval', projectId: info.projectId, approvalId: id, taskId: info.taskId, agentName: info.agentName, target: req.connectionName, stillPending: () => pending.has(id) })
     emit({
       type: 'toast',

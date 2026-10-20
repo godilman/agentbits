@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { GitMerge, Play, Send, Square, Trash2, X } from 'lucide-react'
 import type { ApiArgs } from '@shared/ipc'
-import type { AgentLog, Run, TaskStatus } from '@shared/types'
+import type { AgentLog, NeedsOutcome, Run, TaskStatus } from '@shared/types'
 import { PixelAvatar } from '@/components/common/PixelAvatar'
 import { Modal, ProgressBar, Segmented } from '@/components/common/ui'
 import { useResize } from '@/components/common/Resize'
@@ -25,7 +25,7 @@ import { JumpToNew, useStickToBottom } from '@/components/common/Stick'
 type Pane = 'thread' | 'logs' | 'runs'
 
 export function TaskDrawer() {
-  const { t } = useTranslation(['common', 'tasks', 'org'])
+  const { t } = useTranslation(['common', 'tasks', 'org', 'chat'])
   const id = useAppStore((s) => s.selectedTaskId)
   // Only tasks of the active project open here (the selection is cleared on project switch anyway).
   const task = useAppStore((s) => s.tasks.find((x) => x.id === s.selectedTaskId && x.projectId === s.activeProjectId))
@@ -61,7 +61,8 @@ export function TaskDrawer() {
   const [width, widthHandle] = useResize('taskDrawer', 460, { min: 360, max: 1100, invert: true, className: 'absolute inset-y-0 left-0' })
   const [detailsMax, detailsHandle] = useResize('taskDrawerDetails', Math.round(window.innerHeight * 0.45), { min: 80, max: 2000, axis: 'y', measure: detailsRef })
   // Worktree mode: a done task whose branch still waits to be merged (e.g. uncommitted changes in the folder).
-  const [mergePending, setMergePending] = useState(false)
+  // null = not known yet (the check is still running).
+  const [mergePending, setMergePending] = useState<boolean | null>(null)
   const [merging, setMerging] = useState(false)
   // "Review changes and merge": the changes first; merging is a separate yes, bound to what was shown.
   const [mergeReview, setMergeReview] = useState(false)
@@ -70,11 +71,25 @@ export function TaskDrawer() {
   useEffect(() => {
     if (!id || !worktree || task?.status !== 'done') return setMergePending(false)
     let alive = true
-    void call('tasks:mergePending', id).then((v) => alive && setMergePending(v), () => undefined)
+    setMergePending(null)
+    void call('tasks:mergePending', id).then(
+      (v) => alive && setMergePending(v),
+      () => alive && setMergePending(false)
+    )
     return () => {
       alive = false
     }
   }, [id, worktree, task?.status, task?.updatedAt])
+  // A chat card's "Review changes and merge": the same preview as the button above (merging stays a separate yes).
+  const mergeReviewFor = useAppStore((s) => s.mergeReviewFor)
+  useEffect(() => {
+    if (!id || mergeReviewFor !== id || mergePending === null) return
+    // Used once, whatever the answer: nothing to merge any more must not open the preview later by itself.
+    useAppStore.setState({ mergeReviewFor: null })
+    if (!mergePending) return
+    setShown(undefined)
+    setMergeReview(true)
+  }, [id, mergeReviewFor, mergePending])
   const [dropped, setDropped] = useState<File[] | null>(null)
   const drop = useFileDrop((files) => setDropped(files), !!task)
 
@@ -380,12 +395,16 @@ export function TaskDrawer() {
             <div className="space-y-3">
               {thread.map((m) => {
                 const a = agentById(agents, m.senderId)
-                if (m.senderType === 'system')
+                if (m.senderType === 'system') {
+                  // A "needs you" card's copy: how it ended, the same as in the project chat.
+                  const ended = m.meta?.card ? (m.meta.resolution as { outcome: string } | undefined)?.outcome : undefined
                   return (
                     <div key={m.id} className="text-center text-[12px] text-zinc-400">
                       {m.content} · {clock(m.createdAt)}
+                      {ended && <div className="mt-0.5 text-zinc-300">{t(`chat:card.outcome.${ended as NeedsOutcome}`)}</div>}
                     </div>
                   )
+                }
                 return (
                   <div key={m.id} className="flex gap-2.5">
                     {m.senderType === 'user' ? (

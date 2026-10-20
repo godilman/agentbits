@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { ShieldAlert } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { LEVEL_LABEL } from '@shared/connections'
@@ -15,6 +15,16 @@ export function ApprovalsDock() {
   const toast = useAppStore((s) => s.toast)
   const [busy, setBusy] = useState<string | null>(null)
   const [, tick] = useState(0)
+  // A chat card asked to show a request here: bring it into view and give it focus (not to its approve button).
+  const focus = useAppStore((s) => s.focusApproval)
+  const root = useRef<HTMLDivElement>(null)
+  useEffect(() => {
+    if (!focus) return
+    const el = root.current?.querySelector<HTMLElement>(`[data-approval="${CSS.escape(focus)}"]`)
+    el?.scrollIntoView({ block: 'nearest' })
+    el?.focus()
+    useAppStore.setState({ focusApproval: null })
+  }, [focus, approvals])
   useEffect(() => {
     if (!approvals.length) return
     const timer = setInterval(() => tick((n) => n + 1), 1000)
@@ -36,11 +46,11 @@ export function ApprovalsDock() {
   }
 
   return (
-    <div className="fixed bottom-9 left-3 z-[55] w-[440px] space-y-2">
+    <div ref={root} className="fixed bottom-9 left-3 z-[55] w-[440px] space-y-2">
       {approvals.map((a) => {
         const left = Math.max(0, Math.round((Date.parse(a.expiresAt) - Date.now()) / 1000))
         return (
-          <div key={a.id} data-approval={a.id} className="card shadow-pop border-rose-500/40 bg-[#160d10] p-3 animate-fade-in">
+          <div key={a.id} data-approval={a.id} tabIndex={-1} className="card shadow-pop border-rose-500/40 bg-[#160d10] p-3 animate-fade-in focus:outline-none focus-visible:ring-2 focus-visible:ring-rose-400/60">
             <div className="flex items-center gap-2 text-[13px] font-semibold text-rose-200">
               <ShieldAlert size={14} /> {a.operation === 'app' ? t('connections:approvals.appTitle') : t('connections:approvals.title')}
               <span className="ml-auto font-mono text-[11px] font-normal text-rose-200/60">

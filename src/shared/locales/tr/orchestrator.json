@@ -23,16 +23,23 @@
     "typing": "Yazıyor…"
   },
   "caps": {
+    "fsRead": "dosya okuma",
     "fsWrite": "dosya yazma",
     "terminal": "terminal",
     "network": "ağ",
-    "read": "okuma"
+    "browser": "tarayıcı",
+    "connections": "bağlantılar: {{list}}",
+    "apps": "uygulamalar: {{list}}",
+    "terminalSandbox": "kendi sandbox'ında komut çalıştırma (Codex'te her zaman açık)",
+    "extraDirs": "proje dışındaki dosyalar: {{list}}",
+    "always": "projenin dosyalarına kaydetme, ayrıca (açıksa) proje hafızası ve skill'ler"
   },
   "runs": {
     "notApproved": "Onay verilmedi",
     "agentDisabled": "Çalışma başlamadan ajan kapatıldı",
     "stopped": "Çalışma durduruldu",
-    "stoppedByUser": "Kullanıcı durdurdu"
+    "stoppedByUser": "Kullanıcı durdurdu",
+    "capsChanged": "Çalışma onay beklerken ajanın izinleri, bağlantıları ya da uygulamaları değişti"
   },
   "notes": {
     "addedToFirstPrompt": "İlk prompta eklendi",
@@ -82,10 +89,8 @@
     "filesNotReadyAtStart": "⚠ İş başladığında henüz hazır değildi (hâlâ okunuyordu): {{names}}"
   },
   "chat": {
-    "awaitingApproval": "🔐 {{agent}}, {{key}} için onay bekliyor ({{caps}} erişimi). Onaylanana kadar hiçbir şey yapılmaz: sol paneldeki \"Çalışan işler\" bölümünden onayla ya da reddet; sormaması için ajanın \"Onay iste\" ayarını kapat.",
     "taskStarted": "{{agent}} göreve başladı.",
     "emptyOutput": "(boş çıktı)",
-    "agentError": "⚠️ {{agent}}, {{key}} üzerinde hata aldı: {{text}}",
     "leadDirectTask": "🎯 Kullanıcı {{agent}} ajanına doğrudan görev verdi: {{key}} “{{title}}”",
     "queuedInstruction": "(sıradaki talimat) {{text}}",
     "leadQueued": "🎯 Kullanıcı {{agent}} ajanına {{key}} için talimat sıraya aldı: “{{text}}”",
@@ -111,12 +116,13 @@
     "leadNotesSent_one": "🎯 {{keys}} görevine not eklendi.",
     "leadNotesSent_other": "🎯 {{count}} göreve not eklendi: {{keys}}.",
     "leadNotesUnknown": "⚠️ Bu projede böyle bir görev yok, not iletilmedi: {{keys}}",
-    "limitStopped": "⏱ {{agent}} · {{key}}: {{reason}}",
     "handedToTwin": "↔ {{key}}, {{from}} meşgul olduğu için aynı rol ve yeteneklerdeki {{to}} ajanına devredildi",
     "fileConflict": "⚠️ {{path}} şu anda {{other}} ({{key}}) tarafından da değiştiriliyor; değişiklikleri birbirine karşı kontrol edin.",
     "taskFailedHeld": "⚠️ {{agent}} bu görevi bitiremedi: {{text}}\nGörev Yapılacak'ta bekliyor ve kendiliğinden yeniden başlamayacak: deneme durmadan önce dosyaları ya da başka sistemleri değiştirmiş olabilir. Geride ne bıraktığına bak, sonra “Yeniden dene”ye bas (ajana önceki denemeyi anlatırız, önce durumu kontrol eder) ya da görevi düzenle veya sil.",
     "reviewNeedsYou": "⚠️ {{reason}}\nÇalışanın raporu duruyor ve görev incelemede kalıyor. Yalnız incelemeyi yeniden deneyebilirsin (çalışan yeniden çalışmaz) ya da kendin karar verebilirsin: Bitti'ye taşı ya da notla Yapılacak'a geri gönder.",
-    "workNotStarted": "Görevler hazır ama henüz başlamayacak: bu oturumda bu projede çalışma başlatılmadı. Üstteki “Bu projede çalışmayı başlat”a bas."
+    "workNotStarted": "Görevler hazır ama henüz başlamayacak: bu oturumda bu projede çalışma başlatılmadı. Üstteki “Bu projede çalışmayı başlat”a bas.",
+    "reviewNoReport": "⚠️ {{reason}}\nGörev incelemede kalıyor. Rapor olmadan yeniden incelemek işe yaramaz: “Çalışanı yeniden çalıştır” işi baştan yapar (önceki denemenin yaptıkları geri alınmaz) ya da kendin karar ver: Bitti'ye taşı ya da notla Yapılacak'a geri gönder.",
+    "reviewNoLead": "⚠️ {{reason}}\nGörev incelemede kalıyor. Bir lider aç ya da ekle (veya inceleyebilecek bir üye), sonra görevde “İncelemeyi yeniden dene”ye bas ya da kendin karar ver: Bitti'ye taşı ya da notla Yapılacak'a geri gönder."
   },
   "errors": {
     "noFolder": "“{{project}}” için klasör seçilmedi. CLI ajanları dosyalara dokunabildiği için proje ayarlarından bir klasör seçin.",
@@ -134,7 +140,10 @@
     "agentNotWorking": "{{name}} şu an bir görev üzerinde çalışmıyor; yeni görev olarak gönderin",
     "stillRunning": "Bazı işler zamanında durmadı (uzun bir veritabanı / sunucu çağrısı ya da uygulama aracı hâlâ sürüyor olabilir). Hiçbir şey silinmedi — biraz bekleyip yeniden dene.",
     "retryReviewNotInReview": "{{key}} incelemede değil; yeniden denenecek bir inceleme yok.",
-    "retryReviewNoLead": "Bu projede görevi inceleyecek etkin bir lider yok. Önce bir lider ata ya da aç, ya da kendin karar ver."
+    "retryReviewNoLead": "Bu projede görevi inceleyecek etkin bir lider yok. Önce bir lider ata ya da aç, ya da kendin karar ver.",
+    "cardNotHere": "Bu istek başka bir projeye ait.",
+    "cardAction": "Bu istek için bu işlem artık yapılamaz.",
+    "reviewQueued": "Bu görevin incelemesi zaten sırada; sırası gelince yapılacak."
   },
   "result": {
     "taskCreated": "{{key}} oluşturuldu ve {{agent}} başlatıldı",
@@ -247,7 +256,7 @@
     "dirty": "⏸ “{{title}}”: proje klasöründe commit'lenmemiş değişiklikler olduğu için {{branch}} birleştirilmedi. Onları commit'le ya da stash'le, sonra görevde “Değişiklikleri incele ve birleştir”e bas. · {{key}}",
     "conflict": "⚠️ “{{title}}”: {{branch}} dalı projeyle çakışıyor ({{files}}). Görev, çakışmaları kendi çalışma kopyasında çözmesi için ajanına geri döndü. · {{key}}",
     "conflictNote": "Bu görevi projeye birleştirirken şu dosyalarda çakışma çıktı: {{files}}. Projenin son hâli senin dalına alındı; bu dosyalardaki çakışma işaretlerini (<<<<<<< ======= >>>>>>>) iki değişiklik birlikte çalışacak şekilde çöz, sonra raporunla bitir.",
-    "mergeFailed": "⚠️ “{{title}}”: {{branch}} birleştirilemedi: {{error}} · {{key}}",
+    "mergeFailed": "⚠️ “{{title}}”: {{branch}} birleştirilemedi: {{error}}. Hiçbir şey birleştirilmedi ve kendiliğinden yeniden denenmeyecek; nedeni düzelt, sonra görevde “Değişiklikleri incele ve birleştir”e bas. · {{key}}",
     "changedSinceShown": "{{key}}: görevin çalışma kopyası sen baktıktan sonra değişti, bu yüzden hiçbir şey birleştirilmedi. Değişikliklere yeniden bak.",
     "uncommittedKept": "çalışma kopyasında commit edilemeyen değişiklikler var, bu yüzden kopya silinmedi"
   },
@@ -273,7 +282,8 @@
     "commitFailed": "Ajanın değişiklikleri çalışma kopyasında commit edilemedi (ör. git imzalama ayarı). Değişiklikler orada duruyor; git'i düzeltip görevi yeniden başlat.",
     "authFailed": "Sağlayıcı girişi geçersiz — yeniden giriş yap, sonra yeniden başlat",
     "failed_one": "Hata verdi: {{error}}",
-    "failed_other": "{{count}} kez hata verdi: {{error}}"
+    "failed_other": "{{count}} kez hata verdi: {{error}}",
+    "capsChanged": "Onayını beklerken ajanın kullanabildikleri değişti; güncel listeyi görmek için yeniden başlat"
   },
   "review": {
     "unmet": "Karşılanmayan kabul kriterleri: {{list}}"
@@ -316,6 +326,11 @@
     "notMoving": "“{{title}}” ilerlemiyor: geri gönderildikten sonraki çalışmada kayda geçen bir değişiklik yok ve {{lead}} yine geri gönderdi. Kendiliğinden yeniden başlatılmayacak. Karar senin: görev sayfasında liderin notuna bak; “{{retryReview}}” ya da “{{rerunWorker}}” düğmesine bas, Bitti'ye taşı ya da notla Yapılacak'a geri gönder. · {{key}}",
     "limit": "“{{title}}” {{count}} kez geri gönderildi; kendiliğinden yeniden başlatılmayacak. Karar senin: görev sayfasında liderin notuna bak, sonra “{{retry}}” düğmesine bas, görevi düzenle ya da Bitti'ye taşı. · {{key}}",
     "decide": "“{{title}}” senin kararını bekliyor: {{reason}} · {{key}}",
-    "changesInFolder": " Değişiklikler proje klasöründe."
+    "changesInFolder": " Değişiklikler proje klasöründe.",
+    "runApproval": "“{{title}}” başlamak için onayını bekliyor. {{worker}} bu işte şunları kullanabilecek: {{caps}}. Onay bu izinleri genişletmez, yalnız çalışmanın başlamasına izin verir. Reddedersen iş başlamaz ve görev bekletilir. · {{key}}",
+    "failed": "“{{title}}” hata verip durdu: {{reason}} Kendiliğinden yeniden başlamayacak. “{{retry}}” işi baştan çalıştırır; önceki denemenin yaptıkları geri alınmaz. · {{key}}",
+    "limitStopped": "“{{title}}” bir sınıra takılıp durdu: {{reason}} Kendiliğinden yeniden başlamayacak. “{{retry}}” işi yeniden çalıştırır; önceki denemenin yaptıkları geri alınmaz. · {{key}}",
+    "isolation": "“{{title}}” başlatılamadı: {{reason}} Kendiliğinden başlamayacak; sorunu düzeltip “{{retry}}” düğmesine bas. · {{key}}",
+    "auth": "“{{title}}” sağlayıcı oturumu yüzünden durdu: {{reason}} Önce oturumu düzelt, sonra “{{retry}}” düğmesine bas; önceki denemenin yaptıkları geri alınmaz. · {{key}}"
   }
 }

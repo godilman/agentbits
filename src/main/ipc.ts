@@ -308,6 +308,7 @@ export const handlers: Handlers = {
     void orchestrator.startTask(id, undefined, { force: force === true })
   },
   'tasks:retryReview': (id) => orchestrator.retryReview(id),
+  'needs:act': (projectId, event, action) => orchestrator.act(projectId, event, action),
   'tasks:waitingFor': (id) => orchestrator.waitingFor(id),
   'projects:startWork': (id) => orchestrator.startProjectWork(id),
   'promptBuilder:generate': (requestId, text, providerId) => generatePrompt(requestId, text, providerId),
@@ -318,7 +319,7 @@ export const handlers: Handlers = {
   'runs:pause': (id) => orchestrator.pauseRun(id),
   'runs:resume': (id) => orchestrator.resumeRun(id),
   'runs:stop': (id) => orchestrator.stopRun(id),
-  'runs:approve': (id, ok) => orchestrator.approve(id, ok),
+  'runs:approve': (id, ok) => void orchestrator.approve(id, ok),
   'logs:list': (opts) => logsRepo.list(opts),
   'agents:instruct': (input) => orchestrator.instruct(input),
 

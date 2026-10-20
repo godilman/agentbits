@@ -215,9 +215,14 @@ export async function runAppReadTool(ctx: AgentCtx, name: string, args: Record<s
   }
 }
 
+/** The agent's apps with at least one tool it may call (every tool blocked = not usable). */
+export function usableApps(agentId: string): AppServer[] {
+  return appsRepo.forAgent(agentId).filter((s) => s.tools.some((tl) => policyOf(s, tl) !== 'block'))
+}
+
 /** "## Apps" prompt section (only when the agent can call tools). */
 export function appsPrompt(agentId: string, toolsAvailable: boolean): string {
-  const apps = appsRepo.forAgent(agentId).filter((s) => s.tools.some((tl) => policyOf(s, tl) !== 'block'))
+  const apps = usableApps(agentId)
   if (!apps.length || !toolsAvailable) return ''
   const lines = apps.map((s) => {
     const prefix = agentToolName(s.name, 'x').slice(0, -1)

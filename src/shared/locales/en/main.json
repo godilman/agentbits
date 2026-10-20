@@ -170,6 +170,13 @@
       "sshOkKey": "SSH connection successful · server key {{key}}",
       "ok": "Connection successful",
       "okReadOnly": "Connection successful · read-only user verified too"
+    },
+    "card": {
+      "forTask": "During “{{title}}”, {{agent}} asks for your approval: {{target}} — {{what}}. If you don't decide, the request is turned down after {{minutes}} minutes. The details and the decision are in the approval panel. · {{key}}",
+      "noTask": "{{agent}} asks for your approval: {{target}} — {{what}}. If you don't decide, the request is turned down after {{minutes}} minutes. The details and the decision are in the approval panel.",
+      "query": "a SQL query (needs {{level}} access)",
+      "exec": "an SSH command (needs {{level}} access)",
+      "app": "the app tool {{tool}}"
     }
   },
   "files": {

@@ -3,7 +3,7 @@ import { Brain, CircleAlert, Hash, Info, Send, Sparkles } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { useResize } from '@/components/common/Resize'
 import type { I18nKey } from '@shared/i18n'
-import type { FileKind, FileRecord, FileShare, Message, RecalledMemory } from '@shared/types'
+import type { FileKind, FileRecord, FileShare, Message, NeedsCard as NeedsCardData, RecalledMemory } from '@shared/types'
 import { descendantIds } from '@shared/org'
 import { PixelAvatar } from '@/components/common/PixelAvatar'
 import { call } from '@/lib/api'
@@ -17,6 +17,7 @@ import { agentById, channelKey, useAppStore } from '@/store/useAppStore'
 import { useAttachments, useFileDrop, useFileRecords } from '@/features/files/hooks'
 import { AttachButton, AttachmentTray, DropOverlay, FileChip } from '@/features/files/parts'
 import { RecalledTrace, SuggestionRow } from '@/features/memory/parts'
+import { NeedsCard } from './NeedsCard'
 import { clearSent, draftSnapshot, setDraft as saveDraft, useDraft } from '@/lib/drafts'
 import { JumpToNew, useStickToBottom } from '@/components/common/Stick'
 
@@ -300,6 +301,7 @@ function MessageRow({ m, prev, files }: { m: Message; prev?: Message; files: Map
   const a = m.senderType === 'agent' ? agentById(agents, m.senderId) : undefined
   // A task's status by the app (finished, approved, sent back) and what waits for the user's decision: read like a
   // message, not a faint divider.
+  if (m.senderType === 'system' && m.meta?.card) return <NeedsCard m={m} card={m.meta.card as NeedsCardData} />
   if (m.senderType === 'system' && (m.meta?.needsYou || m.meta?.status)) {
     const decide = !!m.meta?.needsYou
     return (

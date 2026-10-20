@@ -4,6 +4,48 @@
 > `## YYYY-MM-DD — kısa başlık`, ardından **Eklendi / Değişti / Düzeltildi / Kaldırıldı / Bilinen** maddeleri
 > ve ilgili dosyalar.
 
+## 2026-10-20 — v0.11.0: "Bana ihtiyaç var" sohbet kartları (ADR-034)
+
+### Eklendi
+- Kullanıcıyı bekleyen her iş proje sohbetinde (ve görev başlığında) bir kart: görev adı önde, numara sonda; neden
+  beklediği, senden ne beklendiği ve yalnız uygulamanın gerçekten yapabildiği eylemler.
+  - **Çalışma onayı:** Reddet / Onayla / Görevi aç; ajanın gerçek yetenekleri sağlayıcıya göre yazılı (Claude Code
+    her izni uygular; Codex komutları her zaman kendi sandbox'ında çalıştırır, ağa yalnız yazma izniyle çıkar; API
+    sağlayıcıları diske ve terminale dokunmaz; proje dışı klasörler ve hepsi engelli olmayan uygulamalar; her zaman açık
+    olan dosyaya kaydetme / proje hafızası / skill'ler). Onay izinleri genişletmez; onay beklerken bu liste değişirse
+    (izin, bağlantı, uygulama, sağlayıcı) onay geçmez, görev "yeniden başlat" nedeniyle bekletilir.
+  - **Bağlantı / uygulama onayı:** "Onay penceresinde aç" (karar yalnız panelde, ayrıntılarla) / Görevi aç.
+  - **Hata / sınır / çalışma kopyası / kimlik hatasıyla bekletilen görev:** Yeniden dene (önceki denemenin yaptıkları geri
+    alınmaz) / Görevi aç.
+  - **Kararı sana kalan inceleme:** İncelemeyi yeniden dene (çalışan çalışmaz) ve / veya Çalışanı yeniden çalıştır.
+  - **Birleşmeyi bekleyen iş:** "Değişiklikleri incele ve birleştir" mevcut önizlemeyi açar; birleştirme hatası kartı
+    ne yapılacağını ve kendiliğinden yeniden denenmeyeceğini söyler. Birleşmeden kapanan bekleme "birleştirildi" demez
+    ("artık birleştirilmeyi bekleyen bir şey yok").
+  - Bağlantı / uygulama onayı onaylanınca "istenen işlem yapılabilir" (çalışma onayının "çalışmanın başlamasına izin
+    verildi"sinden ayrı). İnceleme zaten sıradaysa kart "alındı" demez, "zaten sırada" der. Rapor yokken ya da lider
+    yokken görev başlığındaki not doğru yolu söyler (çalışanı yeniden çalıştır / lider ekle).
+- Kart, bekleme bitince nasıl bittiğini gösterir (her kopyada, yerinde) ve karar düğmeleri kapanır; başka yerde
+  çözülmüş ya da süresi dolmuş istek açıkça söylenir. `needs:act` IPC, `message:updated` olayı,
+  `orchestrator:state().waitEvents`, `core/needsCards.ts`, `features/chat/NeedsCard.tsx`.
+
+### Değişti
+- Çalışma onayı ve hata satırları (`chat.awaitingApproval`, `chat.agentError`, `chat.limitStopped`) kartlara dönüştü
+  (`orchestrator:say.runApproval|failed|limitStopped|isolation|auth`). Aynı görevde yeniden düşen inceleme artık yeni bir
+  kart açar, öncekiler "inceleme istendi" olarak kapanır (eskiden tek not).
+
+### Test
+- `tests/e2e/needsCards.e2e.ts` 17 adım: sohbetten onay / ret; "tamam" onaylamaz; sohbet + panel aynı anda → bir kez;
+  başka proje reddedilir, karta sızmaz; başka yerde durdurulan / bilinmeyen istek; sonuç kaydı yazılamazsa yeniden tık
+  tekrarlamaz; yeniden açılış; onay beklerken ajan kapatıldı / yetenekleri değişti; sağlayıcıya göre yetenek metni;
+  bağlantı onayı ayrıntılarıyla panelde, panelden ret, uygulama aracı isteği, süresi dolan istek, durdurulan çalışmanın
+  isteği; hata kartı (eylem hatası kartı ve beklemeyi korur, yeniden açılıştan sonra da çalışır, yeni bekletme eskisinin
+  yerini alır); "İncelemeyi yeniden dene" çalışanı başlatmaz, yeni bekleme yeni kart, zaten sıradaysa "alındı" demez,
+  aynı neden tek kart; birleşme kartı (kirli klasör, yeniden deneme, yeniden açılış, yalıtım kapanınca "birleştirildi"
+  demez). 20 kasıtlı bozma yakalandı. `failureReview` C adımı yeni kurala göre güncellendi.
+- Gerçek renderer derlemesi + gerçek main (Node'da, izole Demo verisi, Electron'suz köprü) ile Playwright: 4 kart türü,
+  odak (tehlikeli düğmede değil), klavye, "Onay penceresinde aç" odağı, işlem hatası, onay → "alındı" → "Onaylandı",
+  inceleme yeniden deneme, sayfa yenileme, 960 / 550 CSS px (en küçük pencere %200) taşma yok, başka projede kart yok.
+
 ## 2026-10-20 — v0.10.0: Dosya okuma: yalnız en güncel girişim yazar
 
 ### Düzeltildi
