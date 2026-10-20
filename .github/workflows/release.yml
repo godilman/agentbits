@@ -33,6 +33,7 @@ jobs:
       - run: npm ci
       - run: npm run typecheck
       - run: npm run test:unit
+      - run: npm run test:renderer
       # Signing secrets are exported only when they exist (an empty CSC_LINK breaks electron-builder).
       - name: Signing certificate (only when the secret exists)
         shell: bash
@@ -73,6 +74,7 @@ jobs:
       - run: npm install --no-save --force @lydell/node-pty-darwin-x64@1.2.0-beta.15
       - run: npm run typecheck
       - run: npm run test:unit
+      - run: npm run test:renderer
       # Signing / notarization secrets are exported only when they exist (an empty CSC_LINK breaks electron-builder).
       - name: Signing certificate and notarization key (only when the secrets exist)
         env:

@@ -4,6 +4,14 @@
 > `## YYYY-MM-DD — kısa başlık`, ardından **Eklendi / Değişti / Düzeltildi / Kaldırıldı / Bilinen** maddeleri
 > ve ilgili dosyalar.
 
+## 2026-10-20 — Belge temizliği (v0.8.0 sonrası, sürüm artırılmadı)
+
+- `release.yml` Windows ve macOS işlerinde `test:renderer` de çalışır (CI zaten çalıştırıyordu).
+- FEATURES: tarih, test satırı (`test:renderer` / `test:e2e` var), macOS "gerçek Mac'te açıldı, her özellik denenmedi"
+  (PROJECT de); SECURITY "Testler" bölümü (e2e depoda ve CI'da); DEVELOPMENT CI ve test satırları.
+- README EN/TR: taslaklar, "Bu projede çalışmayı başlat", elle Bitti birleştirmez, ilk hatada bekletme, Sonuç kutusu,
+  kapatma uyarısı, klavye / dar pencere satırları.
+
 ## 2026-10-20 — v0.8.0: güvenli hata, dürüst Demo, taslaklar, sonuç kutusu, erişilebilirlik, sistem bildirimleri
 
 Sürüm 0.8.0; aşağıdaki Paket 1A–5B kayıtlarının hepsini içerir (her biri sahibin incelemesinden geçti). Migration v21

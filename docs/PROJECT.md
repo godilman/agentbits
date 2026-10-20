@@ -87,7 +87,7 @@ Sonradan eklenen hedefler:
   kullanan **Türkçe konuşan geliştirici**.
 - Birden fazla ajanı paralel çalıştırmak, ne yaptıklarını görmek ve yetkilerini sınırlamak isteyen kişi.
 - Birincil platform **Windows 10/11** (PowerShell, DPAPI, NSIS kurulum paketi); kaynaktan macOS/Linux'ta da çalışır.
-  macOS paketi henüz gerçek bir Mac'te denenmedi, Linux paketi yok.
+  macOS paketi gerçek bir Mac'te açıldı ama her özellik orada denenmedi; Linux paketi yok.
 - Tek kullanıcı, tek makine: bulut senkronizasyonu, ekip hesabı ve otomatik güncelleme yoktur. Bilinçli kapsam dışı
   kalanların tam listesi → [FEATURES.md §12](FEATURES.md#12-kapsam-dışı--agentbitsin-yapmadıkları).
 

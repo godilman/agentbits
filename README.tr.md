@@ -44,7 +44,8 @@ Hepsi tek pencerede, verilerin de kendi bilgisayarında kalır.
   Ürün Geliştirme, Pazarlama & İçerik, E-ticaret Şirketi); istersen sıfırdan da kurabilirsin.
 - **Lideri olan projeler.** Her proje bir klasör ve orada çalışan takımlardan oluşur. Liderle sohbet edersin, o da
   isteği panoda görevlere çevirir. Ekiple yalnızca lider konuşur: iş verir, üyelerin bitirdiklerini görür, onlara not
-  bırakır. Yanıtlar yazılırken görünür.
+  bırakır. Yanıtlar yazılırken görünür; gönderilmemiş mesajlar sohbet başına taslak olarak kalır. Projeyi açmak
+  kendiliğinden iş başlatmaz: *Bu projede çalışmayı başlat* dersin.
 - **Paralel yazılımcılar.** Bir ajanı ikizlere çoğaltırsın; lider işi aralarında paylaştırır, görevler birbirini
   bekleyebilir, kimin hangi dosyada çalıştığını herkes görür. İstersen her görev kendi git çalışma kopyasında çalışır ve
   onaylanınca birleştirilir; ajanlar birbirinin üzerine yazmaz.
@@ -55,16 +56,18 @@ Hepsi tek pencerede, verilerin de kendi bilgisayarında kalır.
 - **Canlı pikselli ofis.** Ajanlar çalışırken masalarında oturur, kahve molası verir, onay ya da hata rozetleri
   gösterir. Ne yaptığını görmek için bir ajana tıklaman yeter.
 - **Kanban panosu (Görevler).** Yapılacak → Devam eden → İncelemede → Bitti. Sürükle-bırak, görev başına akış, log ve
-  çalışmalar.
+  çalışmalar. Çalışan görevi Bitti'ye taşımak önce sorar, hiçbir şeyi kendiliğinden birleştirmez.
 - **Ajan terminalleri.** Her ajanın kalıcı bir dökümü olur: kendisine ne sorulduğu, hangi araçları kullandığı, kaç
   token harcadığı. Buradan ajanı yönlendirebilir, talimatı sıraya koyabilir ya da yeni görev verebilirsin. Gerçek
   etkileşimli kabuklar (PowerShell / bash) da var.
 - **Bana ihtiyaç var.** Üst barda, seni bekleyen her şeyin tek listesi: onaylar, birleştirilmemiş işler, liderin karar
-  veremediği incelemeler, nedeniyle bekletilen görevler. Kart, görevin neden ilerlemediğini söyler.
+  veremediği incelemeler, nedeniyle bekletilen görevler. Kart, görevin neden ilerlemediğini söyler. Hata veren görev
+  hemen bekletilir, nedeni sade dille yazılır; sen yeniden deneyene kadar başlamaz.
 - **Bildirimler.** Agentbits önde değilken yanıtları, onayları, seni bekleyen kararları ve biten işleri sistem
   bildirimiyle söyler (gruplanmış, bayatlamış olanlar düşer); tıklama yalnız ilgili yeri açar. Ayarlar → Genel → Bildirimler.
 - **Lider incelemesi, hafıza ve kararlar.** Biten iş liderin incelemesine gider; görevin kabul kriterleri varsa her biri
-  kontrol edilir, "Ne değişti?" dosyaları ve farkı gösterir. Kabul edilen kararlar ADR tarzında
+  kontrol edilir, "Ne değişti?" dosyaları ve farkı gösterir; her görevin **Sonuç** kutusu neyin çalıştığını, hangi
+  dosyaların değiştiğini ve kimin değerlendirdiğini gösterir. Kabul edilen kararlar ADR tarzında
   kaydedilir, kalıcı proje hafızası (SQLite FTS5) da bağlamı çalışmalar arasında korur. İsteğe bağlı anlamsal hafıza,
   sağlayıcının embedding'iyle notları anlamıyla da bulur (Ollama / LM Studio ile yerelde).
 - **Seni tanıyan hafıza.** Bir ajana nasıl çalışmayı sevdiğini söylersin, "Bunu öğrendim, kaydedeyim mi?" diye sorar;
@@ -89,8 +92,9 @@ Hepsi tek pencerede, verilerin de kendi bilgisayarında kalır.
 - **Raporlar.** Tamamlanan görevler, başarı oranı, ajan bazında performans, görev raporları, günlük rapor ve proje ve
   ajan bazında token kullanımı; ayrıca kendi cümlelerinle tarif ettiğin özel raporlar.
 - **Güvenlik sınırları.** Çalışma başına süre, token ve maliyet tavanı, CLI'lara geçen ortam değişkenlerinin denetlenmiş
-  listesi ve dökümlerde maskelenen sırlar.
-- **İki dil.** İngilizce ve Türkçe arayüz. Yeni çevirilere açığız.
+  listesi ve dökümlerde maskelenen sırlar. Yarıda kalacak iş varsa kapatırken sayılarıyla sorar.
+- **İki dil.** İngilizce ve Türkçe arayüz. Yeni çevirilere açığız. Klavyeyle rahat (görünür odak, Escape en üstteki
+  katmanı kapatır), dar pencerede de kullanılır.
 
 ## Nasıl çalışır?
 

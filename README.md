@@ -45,7 +45,8 @@ own computer.
   Software Team, Research & Analysis, Product Development, Marketing & Content, E-commerce Company), or start from scratch.
 - **Projects with a lead.** Each project is a folder plus the teams that work on it. You chat with the lead, and it
   turns the request into tasks on the board. Only the lead talks to the team: it hands out work, sees what members
-  finished and leaves them notes. Replies appear as they are written.
+  finished and leaves them notes. Replies appear as they are written, and unsent messages stay as drafts per chat.
+  Opening a project never starts work by itself: you press *Start work in this project*.
 - **Parallel developers.** Duplicate an agent into twins; the lead splits work between them, tasks can wait for each
   other, and everyone sees who is working on which files. Optionally each task works in its own git working copy and is
   merged when approved, so agents never overwrite each other.
@@ -56,15 +57,18 @@ own computer.
 - **Live pixel-art office.** Agents sit at their desks while they work, take coffee breaks, and show approval or
   error badges. Click an agent to see what it is doing.
 - **Kanban board.** To do → In progress → In review → Done, with drag and drop, per-task activity, logs and runs.
+  Moving a running task to Done asks first and never merges anything by itself.
 - **Agent terminals.** A persistent transcript for every agent: what it was asked, which tools it used, and token
   counts. You can redirect an agent, queue an instruction or give it a new task from there. Real interactive shells
   (PowerShell / bash) are available too.
 - **Needs you.** One list, in the top bar, of everything waiting for you: approvals, unmerged work, reviews the lead
-  couldn't decide, held tasks with their reason. Cards say why a task doesn't move.
+  couldn't decide, held tasks with their reason. Cards say why a task doesn't move. A failed task is held at once,
+  with a plain-language reason, until you retry it.
 - **Notifications.** When Agentbits isn't in front, the system tells you about replies, approvals, decisions waiting
   for you and finished work (grouped, never stale); a click only opens the right place. Settings → General → Notifications.
 - **Lead review, memory and decisions.** Finished work goes to the lead for review, checked against the task's acceptance
-  criteria when it has them; "What changed?" shows the files and the diff. Accepted decisions are stored as
+  criteria when it has them; "What changed?" shows the files and the diff, and each task's **Result** box shows what
+  ran, which files changed and who judged it. Accepted decisions are stored as
   ADR-style records, and a persistent project memory (SQLite FTS5) keeps context between runs. Optional semantic
   memory also finds notes by meaning, through your provider's embeddings (local with Ollama / LM Studio).
 - **Memory that knows you.** Tell an agent how you like to work and it asks "I learned this, shall I keep it?"; every
@@ -87,8 +91,9 @@ own computer.
 - **Reports.** Completed tasks, success rate, per-agent performance, task reports, a daily report and token usage
   per project and per agent, plus custom reports you describe in your own words.
 - **Safety limits.** Per-run time, token and cost caps, a reviewed list of environment variables passed to CLIs, and
-  secrets masked in transcripts.
-- **Two languages.** English and Turkish UI. New translations are welcome.
+  secrets masked in transcripts. Closing the app asks first if work would be cut off.
+- **Two languages.** English and Turkish UI. New translations are welcome. Keyboard-friendly (visible focus, Escape
+  closes the top layer) and usable in narrow windows.
 
 ## How it works
 

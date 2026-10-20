@@ -55,10 +55,11 @@ Durum: ✅ düzeltildi · 🟡 kısmen / azaltıldı · 📄 bilinçli sınır, 
 ## Testler
 
 - `npm run test:unit` — SQL / SSH sınıflandırma (olumsuz örnekler dahil), dosya çıkarma, skill, MCP yapılandırma, inceleme
-  kararı, çeviriler.
-- Uçtan uca (geliştirme makinesinde, sahte CLI'lar ve yerel test sunucularıyla — depoda değil): bağlantılar, onay
-  paneli, tek örnek, klasör reddi, yedek doğrulama, yeniden açılışta bekletme. Gerçek Claude Code / Codex CLI, MySQL,
-  SQL Server ve macOS ile denenmedi.
+  kararı, sır maskeleme, bildirim zamanlaması, çeviriler.
+- `npm run test:renderer` — renderer mantığı (taslaklar, katmanlar, bildirim tıklaması), tarayıcısız.
+- `npm run test:e2e` — depoda (`tests/e2e/`), CI'da: gerçek SQLite + SSH sunucusu, sahte MySQL / PostgreSQL, sahte
+  CLI'lar; bağlantı kuralları, onayın hedefe bağlılığı, orkestratör, bildirimler. Gerçek Claude Code / Codex CLI,
+  gerçek MySQL / SQL Server ve macOS ile uçtan uca denenmedi.
 
 ## Bilinçli sınırlar (kullanıcıya söylenenler)
 

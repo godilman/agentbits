@@ -1,7 +1,7 @@
 # Agentbits — Özellik Durumu
 
 > **Her değişiklikten sonra bu dosyayı güncelleyin** (bkz. [../CLAUDE.md](../CLAUDE.md)).
-> Son güncelleme: **2026-10-13** (Belgeler: kapsam denetimi — §11 Paketleme, §12 Kapsam dışı)
+> Son güncelleme: **2026-10-20** (v0.8.0: Paket 1A–5B; belge temizliği)
 
 Lejant: ✅ tamam · 🟡 kısmi · 🚧 geliştiriliyor · ⏳ planlı · — yok / kapsam dışı
 
@@ -365,8 +365,8 @@ yukarıdaki ⏳ satırları ve "Bilinen sorunlar"dır.
 | Yeni sürümün yerinde kurulması | ✅ | Sabit `appId` (`app.agentbits.desktop`): yeni exe eskisini değiştirir; her sürümde `package.json` → `version` artırılmalı; her kurulumda aynı kapsam seçilmeli |
 | Güncelleme ve kaldırmada kullanıcı verisinin korunması | ✅ | `%APPDATA%\Agentbits` (DB, yedekler, dosyalar) dokunulmaz (`deleteAppDataOnUninstall: false`); şema açılışta migrate edilir |
 | Otomatik güncelleme (uygulama içi denetim/indirme) | — | Yok (`electron-updater` yok; `publish` ayarı yalnızca ileride kullanılırsa) |
-| macOS DMG (arm64 + x64, ad-hoc imza) | 🟡 | `npm run dist:mac` yalnızca macOS'ta / Actions'ta; **henüz gerçek bir Mac'te derlenip denenmedi** |
-| GitHub Actions paket iş akışı (Windows + macOS; yalnızca elle, `release_tag` verilirse taslak Release) | 🟡 | `.github/workflows/release.yml` (typecheck + `test:unit` + paket). Release'e yalnızca exe, iki dmg ve `SHA256SUMS-*.txt` yüklenir (blockmap / `latest*.yml` / Mac zip yok, 2026-10-15). İki paket de CI'da derlenir (macOS paketi gerçek bir Mac'te hâlâ denenmedi) — macOS düşse de taslak Release Windows dosyalarıyla oluşur. Action'lar Node 24 sürümlerinde (checkout/setup-node/upload-artifact v7, download-artifact v8) |
+| macOS DMG (arm64 + x64, ad-hoc imza) | 🟡 | `npm run dist:mac` yalnızca macOS'ta / Actions'ta; gerçek bir Mac'te açıldı (v0.4.0, 2026-10-15); her özellik orada denenmedi |
+| GitHub Actions paket iş akışı (Windows + macOS; yalnızca elle, `release_tag` verilirse taslak Release) | 🟡 | `.github/workflows/release.yml` (typecheck + `test:unit` + `test:renderer` + paket). Release'e yalnızca exe, iki dmg ve `SHA256SUMS-*.txt` yüklenir (blockmap / `latest*.yml` / Mac zip yok, 2026-10-15). İki paket de CI'da derlenir (macOS paketi gerçek bir Mac'te açıldı, her özellik denenmedi) — macOS düşse de taslak Release Windows dosyalarıyla oluşur. Action'lar Node 24 sürümlerinde (checkout/setup-node/upload-artifact v7, download-artifact v8) |
 | Linux paketi | — | Hedef yok; Linux'ta yalnızca kaynaktan (`npm run dev` / `npm start`) |
 | Lisans ve üçüncü taraf bildirimleri | ✅ | PolyForm Strict 1.0.0 (`LICENSE`, kurulum sihirbazında ve `resources/LICENSE.txt`); `THIRD_PARTY_NOTICES.md` pakette (`npm run notices` ile yeniden üretilir) |
 | GitHub Releases'te yayımlanmış kurulum dosyası | ✅ | v0.1.0 yayımlandı (2026-10-14): Windows exe + macOS DMG/ZIP (imzasız; macOS gerçek Mac'te denenmedi) + SHA256SUMS. CI'da derlenir: Actions → Build packages → `release_tag` (DEVELOPMENT §9.3) |
@@ -400,7 +400,7 @@ Kullanıcıya dürüstçe söylenmesi gerekenler (kodla doğrulandı, 2026-10-13
 | Proje klasörlerinin yedeklenmesi | — | Yedek yalnızca veritabanıdır; proje klasörü ve dosyaları silinmez de |
 | Vektör (embedding) hafıza | ✅ | İsteğe bağlı, sağlayıcının embedding uç noktasıyla (2026-10-15, ADR-027, §9) |
 | Paylaşım galerisi (çevrimiçi paket vitrini) | ⏳ | Bugün: `.agentbits` dosyası ve GitHub bağlantısıyla içe aktarma (§2) |
-| Doğrulanmış macOS paketi, Linux paketi, web / mobil sürüm | — | macOS yapılandırması var ama denenmedi; Linux yalnızca kaynaktan; yalnızca Electron masaüstü |
+| Doğrulanmış macOS paketi, Linux paketi, web / mobil sürüm | — | macOS paketi gerçek bir Mac'te açıldı ama her özellik denenmedi; Linux yalnızca kaynaktan; yalnızca Electron masaüstü |
 
 ## Bilinen sorunlar / gözden geçirilmeli
 
@@ -430,7 +430,7 @@ eklendi; bunlar CHANGELOG'da kayıtlı ve gözden geçirilmeli.
 10. ~~`safeStorage` kullanılamazsa anahtar `plain:` base64 olarak saklanır~~ — **Düzeltildi:** güvenli anahtar deposu yoksa sır kaydı açık hatayla reddedilir; eski `plain:` değerler anahtar zinciri çalışınca şifrelenir.
 11. ~~Orkestratörün `blocked` listesi bellektedir~~ — **Düzeltildi:** bekletme listesi ve genel duraklatma kalıcı; yarıda kalan görevler açılışta bekletilir.
 12. ~~`permissions.ts` → `isPathAllowed()` kullanılmıyor~~ — **Kaldırıldı (2026-10-15):** yol sınırı CLI'larda (`--add-dir`, Codex `workspace-write`) zorlanır; `file_save` diske değil uygulamanın dosya deposuna yazar.
-13. Otomatik test `npm run test:unit` (güvenlik incelemesindeki olumsuz örnekler dahil) ve `.github/workflows/ci.yml` (her push/PR'da typecheck + test + build + `npm audit --omit=dev --audit-level=critical`, Windows + Ubuntu). Lint ve UI/entegrasyon testi yok; paket iş akışı (`release.yml`) yalnızca elle çalışır. Elle senaryolar: `docs/TEST_SCENARIOS_KANBAN.md`.
+13. Otomatik test `npm run test:unit` (güvenlik incelemesindeki olumsuz örnekler dahil) ve `.github/workflows/ci.yml` (her push/PR'da typecheck + test + build + `npm audit --omit=dev --audit-level=critical`, Windows + Ubuntu). Ayrıca `npm run test:renderer` (renderer mantığı, tarayıcısız) ve `npm run test:e2e` (main sürecin uçtan uca testleri, pencere yok) CI'da çalışır. Lint ve gerçek pencereyle UI testi yok; paket iş akışı (`release.yml`) yalnızca elle çalışır. Elle senaryolar: `docs/TEST_SCENARIOS_KANBAN.md`.
 14. Şablondan kurulan ajanlar "Onay iste" açık başlar — ilk çalışmalarda sol panelde onay kartları beklenmeli.
 15. "Yazıyor…" göstergesi ajanın genel durumudur (proje bazlı değil); başka projede yazan ajan da yazıyor görünür.
 16. Terminal kabukları projeler arasında ortaktır (yalnızca çalışma listesi projeye göre süzülür); yeni kabuk aktif projenin klasöründe (yoksa varsayılan projeninkinde) açılır.
