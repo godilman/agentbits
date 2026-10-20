@@ -285,12 +285,15 @@ async function main(): Promise<void> {
     tasksRepo.update(unchanged.id, { status: 'done' })
     await o.finishAndNotify(unchanged.id, 'review:u')
     await wait(WINDOW + 300)
+    // One group, or two when slow git work (Windows CI) spans the 10 s window: grouping is tested above; this step is
+    // about what each line says.
     const g = forProject('Worktree')
-    assert.equal(g.length, 1)
-    assert.equal(
-      g[0].body,
-      `merges cleanly · ${merged.key} is done (approved by the lead) and merged into the project\nmerge has to wait · ${waits.key} was approved by the lead; the merge is waiting — review the changes and merge\nchanged nothing · ${unchanged.key} is done (approved by the lead)`
-    )
+    assert.ok(g.length >= 1 && g.length <= 2, String(g.length))
+    assert.deepEqual(g.flatMap((n) => n.body.split('\n')), [
+      `merges cleanly · ${merged.key} is done (approved by the lead) and merged into the project`,
+      `merge has to wait · ${waits.key} was approved by the lead; the merge is waiting — review the changes and merge`,
+      `changed nothing · ${unchanged.key} is done (approved by the lead)`
+    ])
   })
 
   await step('back in the app: what was collected is dropped (not shown later) and the flash stops', async () => {
