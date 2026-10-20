@@ -12,7 +12,7 @@
   <a href="https://github.com/godilman/agentbits/actions/workflows/ci.yml"><img alt="CI" src="https://github.com/godilman/agentbits/actions/workflows/ci.yml/badge.svg"></a>
   <img alt="Platform: Windows" src="https://img.shields.io/badge/platform-Windows-0078D6?logo=windows&logoColor=white">
   <img alt="macOS: experimental" src="https://img.shields.io/badge/macOS-experimental-555?logo=apple&logoColor=white">
-  <img alt="Version 0.4.0" src="https://img.shields.io/badge/version-0.4.0-6366f1">
+  <img alt="Version 0.8.0" src="https://img.shields.io/badge/version-0.8.0-6366f1">
   <a href="LICENSE"><img alt="License: PolyForm Strict 1.0.0" src="https://img.shields.io/badge/license-PolyForm%20Strict%201.0.0-orange"></a>
   <a href="https://buymeacoffee.com/godilman"><img alt="Buy me a coffee" src="https://img.shields.io/badge/Buy%20me%20a%20coffee-%E2%98%95-FFDD00?logoColor=black"></a>
 </p>
@@ -36,7 +36,7 @@ own computer.
 | **How do AI teams work here?** | You talk to the project's **lead**. The lead turns your message into tasks, the autopilot hands them to free team members, each agent works with its own permissions, and the lead reviews the result (approve or send back for revision). |
 | **How is it different from a single assistant?** | Several agents work at the same time, each with its own role, job description, skills and access rights. The work is visible (office, board, terminals), reviewed by a lead, and the project keeps a long-term memory and a decision log. |
 | **Why use it?** | One place to run and watch AI work across projects, with real guardrails: deny-by-default access, approval prompts, an audit log, and secrets that never leave the main process. |
-| **I'm not a developer. Is it for me?** | Yes. Ready-made team templates cover research, marketing, product and e-commerce work, and a free **Demo** mode lets you try everything without an API key. Real work needs an AI provider (see below); some tasks, such as browsing the web or editing files, only work with certain providers. |
+| **I'm not a developer. Is it for me?** | Yes. Ready-made team templates cover research, marketing, product and e-commerce work, and a free **Demo** mode lets you walk through the whole workflow as a simulation, without an API key. Real work needs an AI provider (see below); some tasks, such as browsing the web or editing files, only work with certain providers. |
 
 ## Highlights
 
@@ -62,7 +62,7 @@ own computer.
 - **Needs you.** One list, in the top bar, of everything waiting for you: approvals, unmerged work, reviews the lead
   couldn't decide, held tasks with their reason. Cards say why a task doesn't move.
 - **Notifications.** When Agentbits isn't in front, the system tells you about replies, approvals, decisions waiting
-  for you and finished work (grouped, never stale); a click only opens the right place. One switch in Settings.
+  for you and finished work (grouped, never stale); a click only opens the right place. Settings → General → Notifications.
 - **Lead review, memory and decisions.** Finished work goes to the lead for review, checked against the task's acceptance
   criteria when it has them; "What changed?" shows the files and the diff. Accepted decisions are stored as
   ADR-style records, and a persistent project memory (SQLite FTS5) keeps context between runs. Optional semantic
@@ -104,8 +104,8 @@ own computer.
 1. **Set up a team.** Pick a template or create agents yourself, assign the team to a project and choose its lead.
 2. **Describe the work.** Write to the lead in the project chat, for example *"Research three competitors' pricing.
    Write the landing page copy. Prepare the campaign email."*
-3. **Watch it happen.** Tasks appear on the board, agents pick them up, and the office, terminals and live chat
-   show progress. Agents set to "ask before each task" wait for your approval first.
+3. **Watch it happen.** Tasks appear on the board; once you press *Start work in this project*, agents pick them up, and the office, terminals and live chat
+   show progress. Agents with **Require approval** on wait for your approval first.
 4. **Review and keep.** The lead approves the work or sends it back. Reports, decisions and memory stay with the project.
 
 ## Real-world use cases
@@ -147,8 +147,8 @@ scenario needs.
 | **Reports.** Completed work, success rate, per-agent output and token usage. <br><img src="docs/screenshots/reports.png" alt="Reports page with task reports and agent performance"> | **Connections.** Per-agent database and server access with a required read-only user. <br><img src="docs/screenshots/connections.png" alt="Connection settings for a staging PostgreSQL database"> |
 | **Memory.** The "Knows you" profile and the graph linking memories to topics, tasks and decisions. <br><img src="docs/screenshots/memory.png" alt="Organization → Memory: the profile on the left, the memory graph on the right"> | |
 
-*Screenshots were taken in Demo mode with example data. The Demo provider simulates the work, including the
-tool calls you see in terminals.*
+*Screenshots were taken in Demo mode (v0.4.0) with example data. Demo only simulates the work: it calls no tools, and
+since v0.8.0 every simulated step is labelled as a simulation.*
 
 ## Supported AI providers
 
@@ -158,7 +158,7 @@ tool calls you see in terminals.*
 | **Codex CLI** | Codex CLI installed and signed in (`codex login`) | Edit files inside the project folder (sandboxed), run commands, network access only with permission, use connections, files and apps |
 | **Anthropic API** | An Anthropic API key | Text work plus Agentbits tools (connections, files, skills, apps). No file editing or shell. |
 | **OpenAI API** | An OpenAI API key, or an OpenAI-compatible endpoint: Google Gemini, Ollama, LM Studio or your own address (local servers need no key) | Same as Anthropic API |
-| **Demo (simulation)** | Nothing | Simulates realistic agent behaviour so you can explore the app for free. Doesn't do real work. |
+| **Demo (simulation)** | Nothing | Simulates the workflow for free; calls no tools and labels every step as a simulation. Doesn't do real work. |
 
 You can mix providers: set a default and choose a different one per agent. Agentbits does not include, install or
 sign in to the CLIs, and it does not offer signing in with a Claude subscription inside the app.
@@ -178,7 +178,7 @@ SHA-256 checksums are attached to each release as `SHA256SUMS-*.txt`.
 ### Run from source
 
 **Requirements**
-- [Node.js](https://nodejs.org/) **22 or newer** (needed only to run or build from source)
+- [Node.js](https://nodejs.org/) **22.6 or newer** (needed only to run or build from source)
 - Windows 10/11, macOS or Linux. The Windows installer is the main target. Running from source works on all three;
   the macOS package is not fully tested yet, and there is no Linux package.
 - Optional: Claude Code CLI or Codex CLI, or an Anthropic / OpenAI API key
@@ -194,7 +194,9 @@ npm run dev     # start in development mode
 |---|---|
 | `npm run dev` | Development mode with hot reload |
 | `npm run typecheck` | Type checks for the main and renderer processes |
-| `npm run test:unit` | Unit tests: SQL/SSH classification (including security regression cases), file extraction, skills, MCP config, review parsing, translations |
+| `npm run test:unit` | Unit tests: SQL/SSH classification (including security regression cases), file extraction, skills, MCP config, review parsing, provider and orchestration helpers, notifications, translations |
+| `npm run test:renderer` | Renderer logic tests (drafts, layout, focus/Escape layers, notification clicks); no browser |
+| `npm run test:e2e` | Main-process end-to-end tests: real SQLite, git and SSH tunnel, fake providers; no window |
 | `npm run build` / `npm start` | Production build into `out/` / run the built app |
 | `npm run dist:win` | Windows installer → `release/Agentbits-Setup-<version>.exe` (x64, NSIS) |
 | `npm run dist:mac` | macOS DMG (Apple Silicon + Intel); runs only on macOS or in GitHub Actions |
@@ -218,7 +220,8 @@ AGENTBITS_DATA_DIR=/tmp/agentbits-test npm run dev                     # macOS /
    ⚠️ CLI agents really change files in that folder, so start with an empty folder or a git branch.
 3. **Build the team.** A fresh install has no agents. Open the **Guide** (`F1`); it walks you through the steps.
    For example, Organization → Templates → *Core Team*, then assign the team to your project.
-4. **Give the lead its first job** in the project chat and watch the office, board and terminals.
+4. **Give the lead its first job** in the project chat, then press **Start work in this project** (opening a project
+   never starts work by itself). Watch the office, board and terminals.
 
 Useful shortcuts: `Ctrl+O` Organization · `Ctrl+1…9` project sections · `Ctrl+Tab` next project · `Ctrl+P` project
 picker · `Ctrl+,` Settings · `F1` Guide.
@@ -247,8 +250,9 @@ Coding agents start at [CLAUDE.md](CLAUDE.md) / [AGENTS.md](AGENTS.md).
 - **Local first.** Everything (organization, projects, chats, tasks, memory, reports, files) is stored in a SQLite
   database on your computer: `%APPDATA%\Agentbits` on Windows, `~/Library/Application Support/Agentbits` on macOS,
   `~/.config/Agentbits` on Linux. There is no Agentbits server, no account and no telemetry. Network traffic goes
-  only to the providers, connections and apps you configure, to GitHub when you install a skill, and to the
-  sites you open in the built-in Browser tab.
+  only to the providers (and their CLIs), connections and apps you configure, to GitHub when you install a skill or
+  import a shared team, to the public pages an agent with the web permission reads, and to the sites you open in the
+  built-in Browser tab.
 - **Secrets stay in the main process.** API keys, passwords and tokens are encrypted with the operating system
   keychain (Windows DPAPI, macOS Keychain, Linux Secret Service) and are never sent to the UI, prompts, terminals or
   logs. If no keychain is available, Agentbits refuses to store secrets.
@@ -256,6 +260,9 @@ Coding agents start at [CLAUDE.md](CLAUDE.md) / [AGENTS.md](AGENTS.md).
   Production database/server changes and "ask me first" tools wait for your approval, and every call is audited.
 - **Untrusted content stays data.** File contents, query results, command output and app results reach the model
   wrapped as untrusted data, never as instructions.
+- **Notifications on the lock screen.** A notification shows the project and agent names and the first 50 characters
+  of a task title (secret-like text masked); Windows may show it on the lock screen. Turn them off in Settings →
+  General → Notifications.
 - **Honest limits.** An agent with terminal and network permissions can do what your user account can do. Grant
   those only to agents you trust, or run Agentbits under a restricted OS user. The full list of what is enforced
   where is in [docs/SECURITY.md](docs/SECURITY.md).
@@ -264,23 +271,24 @@ Found a vulnerability? Please report it privately, see [SECURITY.md](SECURITY.md
 
 ## Current limitations
 
-Agentbits is an early release (**v0.4.0**). It does not:
+Agentbits is an early release (**v0.8.0**). It does not:
 
 - update itself (install a newer version over the old one; your data is kept);
 - bundle or sign in to Claude Code / Codex CLI, or support providers that aren't OpenAI-compatible beyond the ones above;
 - let API-based agents (Anthropic / OpenAI-compatible) edit files or run commands; that needs a CLI provider;
 - let agents drive a full browser (clicks, forms, JavaScript; they read pages as text), run scheduled/recurring tasks,
-  send OS notifications, or push to remotes / open pull requests;
+  or push to remotes / open pull requests;
 - read handwriting with OCR, or host a shared gallery of teams (sharing works with files and GitHub links);
 - ship signed installers, a tested macOS package or a Linux package.
 
-Also: CLI "pause" holds the output stream but does not freeze the process on Windows, backups cover the database
+Also: system notifications and the quit warning haven't been tried on every real Windows setup yet (lock screen,
+Focus Assist) and are untested on macOS. CLI "pause" holds the output stream but does not freeze the process on Windows, backups cover the database
 but not project folders, and the MySQL and SQL Server drivers have had less testing than PostgreSQL and SSH. More
 details: [docs/FEATURES.md](docs/FEATURES.md).
 
 ## Roadmap
 
-These items are already listed as planned in [docs/FEATURES.md](docs/FEATURES.md). There are no dates.
+Planned or under consideration, without dates; current status is in [docs/FEATURES.md](docs/FEATURES.md).
 
 - [ ] Code-signed installers and signed, notarized macOS packages
 - [ ] An online gallery for shared teams and agents

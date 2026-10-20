@@ -1,7 +1,7 @@
 {
   "name": "agentbits",
   "productName": "Agentbits",
-  "version": "0.7.1",
+  "version": "0.8.0",
   "description": "You lead. Your AI team gets things done. Multi-agent orchestration desktop app with a pixel-art office.",
   "main": "./out/main/index.js",
   "author": "Gökhan Dilman",

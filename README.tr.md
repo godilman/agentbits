@@ -12,7 +12,7 @@
   <a href="https://github.com/godilman/agentbits/actions/workflows/ci.yml"><img alt="CI" src="https://github.com/godilman/agentbits/actions/workflows/ci.yml/badge.svg"></a>
   <img alt="Platform: Windows" src="https://img.shields.io/badge/platform-Windows-0078D6?logo=windows&logoColor=white">
   <img alt="macOS: deneysel" src="https://img.shields.io/badge/macOS-deneysel-555?logo=apple&logoColor=white">
-  <img alt="Sürüm 0.4.0" src="https://img.shields.io/badge/s%C3%BCr%C3%BCm-0.4.0-6366f1">
+  <img alt="Sürüm 0.8.0" src="https://img.shields.io/badge/s%C3%BCr%C3%BCm-0.8.0-6366f1">
   <a href="LICENSE"><img alt="Lisans: PolyForm Strict 1.0.0" src="https://img.shields.io/badge/lisans-PolyForm%20Strict%201.0.0-orange"></a>
   <a href="https://buymeacoffee.com/godilman"><img alt="Buy me a coffee" src="https://img.shields.io/badge/Buy%20me%20a%20coffee-%E2%98%95-FFDD00?logoColor=black"></a>
 </p>
@@ -35,7 +35,7 @@ Hepsi tek pencerede, verilerin de kendi bilgisayarında kalır.
 | **Yapay zeka ekipleri nasıl çalışır?** | Projenin **lideriyle** konuşursun. Lider mesajını görevlere çevirir, otopilot görevleri boştaki üyelere verir, her ajan kendi izinleriyle çalışır, lider de sonucu inceler: onaylar ya da düzeltme notuyla geri gönderir. |
 | **Tek bir asistandan farkı ne?** | Birden fazla ajan aynı anda çalışır; her birinin kendi rolü, iş tanımı, yetenekleri ve erişim hakları vardır. İş görünürdür (ofis, pano, terminaller), bir lider tarafından incelenir; projenin kalıcı hafızası ve karar kaydı tutulur. |
 | **Neden kullanayım?** | Projeler genelinde yapay zeka işini tek yerden yürütür ve izlersin. Gerçek güvenlik önlemleri de vardır: varsayılan olarak her erişim kapalıdır, kritik işlemler onay bekler, her erişim denetim kaydına yazılır ve sırlar ana süreçten hiç çıkmaz. |
-| **Yazılımcı değilim, işime yarar mı?** | Evet. Hazır ekip şablonları araştırma, pazarlama, ürün ve e-ticaret işlerini kapsar. Ücretsiz **Demo** moduyla API anahtarı olmadan her şeyi deneyebilirsin. Gerçek iş için bir yapay zeka sağlayıcısı gerekir (aşağıda). Web'de gezinme ya da dosya düzenleme gibi bazı işler yalnızca belirli sağlayıcılarla çalışır. |
+| **Yazılımcı değilim, işime yarar mı?** | Evet. Hazır ekip şablonları araştırma, pazarlama, ürün ve e-ticaret işlerini kapsar. Ücretsiz **Demo** moduyla API anahtarı olmadan tüm akışı simülasyon olarak deneyebilirsin. Gerçek iş için bir yapay zeka sağlayıcısı gerekir (aşağıda). Web'de gezinme ya da dosya düzenleme gibi bazı işler yalnızca belirli sağlayıcılarla çalışır. |
 
 ## Öne çıkanlar
 
@@ -62,7 +62,7 @@ Hepsi tek pencerede, verilerin de kendi bilgisayarında kalır.
 - **Bana ihtiyaç var.** Üst barda, seni bekleyen her şeyin tek listesi: onaylar, birleştirilmemiş işler, liderin karar
   veremediği incelemeler, nedeniyle bekletilen görevler. Kart, görevin neden ilerlemediğini söyler.
 - **Bildirimler.** Agentbits önde değilken yanıtları, onayları, seni bekleyen kararları ve biten işleri sistem
-  bildirimiyle söyler (gruplanmış, bayatlamış olanlar düşer); tıklama yalnız ilgili yeri açar. Ayarlar'da tek anahtar.
+  bildirimiyle söyler (gruplanmış, bayatlamış olanlar düşer); tıklama yalnız ilgili yeri açar. Ayarlar → Genel → Bildirimler.
 - **Lider incelemesi, hafıza ve kararlar.** Biten iş liderin incelemesine gider; görevin kabul kriterleri varsa her biri
   kontrol edilir, "Ne değişti?" dosyaları ve farkı gösterir. Kabul edilen kararlar ADR tarzında
   kaydedilir, kalıcı proje hafızası (SQLite FTS5) da bağlamı çalışmalar arasında korur. İsteğe bağlı anlamsal hafıza,
@@ -106,8 +106,8 @@ Hepsi tek pencerede, verilerin de kendi bilgisayarında kalır.
 1. **Ekibi kur.** Bir şablon seç ya da ajanları kendin oluştur, takımı projeye ata ve liderini belirle.
 2. **İşi anlat.** Proje sohbetinde lidere yaz. Örneğin: *"Üç rakibin fiyatlarını araştırın. Açılış sayfası
    metnini yazın. Kampanya e-postasını hazırlayın."*
-3. **İzle.** Görevler panoda belirir, ajanlar işi alır; ofis, terminaller ve canlı sohbet ilerlemeyi gösterir.
-   "Her görevden önce sor" ayarlı ajanlar önce senin onayını bekler.
+3. **İzle.** Görevler panoda belirir; *Bu projede çalışmayı başlat* dediğinde ajanlar işi alır; ofis, terminaller ve canlı sohbet ilerlemeyi gösterir.
+   **Onay iste** açık olan ajanlar önce senin onayını bekler.
 4. **İncele ve sakla.** Lider işi onaylar ya da geri gönderir. Raporlar, kararlar ve hafıza projede kalır.
 
 ## Gerçek kullanım senaryoları
@@ -149,8 +149,8 @@ senaryonun neye ihtiyaç duyduğunu söyler.
 | **Raporlar.** Tamamlanan işler, başarı oranı, ajan başına üretim ve token kullanımı. <br><img src="docs/screenshots/tr/reports.png" alt="Görev raporları ve ajan performansıyla Raporlar sayfası"> | **Bağlantılar.** Zorunlu salt-okunur kullanıcıyla, ajan bazında veritabanı ve sunucu erişimi. <br><img src="docs/screenshots/tr/connections.png" alt="Staging PostgreSQL veritabanı için bağlantı ayarları"> |
 | **Hafıza.** "Seni tanıyorum" profili ve hatıraların konulara, görevlere ve kararlara bağlandığı graf. <br><img src="docs/screenshots/tr/memory.png" alt="Organizasyon → Hafıza: solda profil, sağda hafıza grafı"> | |
 
-*Ekran görüntüleri Demo modunda örnek verilerle alındı. Demo sağlayıcı, terminallerde görünen araç çağrıları dahil
-işi taklit eder.*
+*Ekran görüntüleri Demo modunda (v0.4.0) örnek verilerle alındı. Demo işi yalnızca taklit eder, hiçbir araç
+çağırmaz; v0.8.0'dan beri taklit edilen her adım "simülasyon" diye etiketlenir.*
 
 ## Desteklenen yapay zeka sağlayıcıları
 
@@ -160,7 +160,7 @@ işi taklit eder.*
 | **Codex CLI** | Kurulu ve giriş yapılmış Codex CLI (`codex login`) | Proje klasörü içinde dosya düzenleme (sandbox'lı), komut çalıştırma, yalnızca izinle ağ erişimi, bağlantılar, dosyalar ve uygulamalar |
 | **Anthropic API** | Anthropic API anahtarı | Metin işleri ve Agentbits araçları (bağlantılar, dosyalar, skill'ler, uygulamalar). Dosya düzenleme ya da kabuk yok. |
 | **OpenAI API** | OpenAI API anahtarı ya da OpenAI uyumlu bir uç nokta: Google Gemini, Ollama, LM Studio ya da kendi adresin (yerel sunucuda anahtar gerekmez) | Anthropic API ile aynı |
-| **Demo (simülasyon)** | Hiçbir şey | Uygulamayı ücretsiz keşfetmen için gerçekçi ajan davranışını taklit eder. Gerçek iş yapmaz. |
+| **Demo (simülasyon)** | Hiçbir şey | Akışı ücretsiz taklit eder; hiçbir araç çağırmaz, her adımı simülasyon diye etiketler. Gerçek iş yapmaz. |
 
 Sağlayıcıları karıştırabilirsin: bir varsayılan belirler, ajan bazında başka bir sağlayıcı seçersin. Agentbits CLI'ları
 içermez, kurmaz ve onlarda oturum açmaz; uygulama içinde Claude aboneliğiyle giriş de sunmaz.
@@ -180,7 +180,7 @@ SHA-256 özetleri her sürümde `SHA256SUMS-*.txt` dosyalarında.
 ### Kaynaktan çalıştırma
 
 **Gereksinimler**
-- [Node.js](https://nodejs.org/) **22 ya da üstü** (yalnızca kaynaktan çalıştırmak ya da derlemek için)
+- [Node.js](https://nodejs.org/) **22.6 ya da üstü** (yalnızca kaynaktan çalıştırmak ya da derlemek için)
 - Windows 10/11, macOS ya da Linux. Ana hedef Windows kurulum dosyası. Kaynaktan çalıştırma üçünde de çalışır; macOS
   paketi henüz tam denenmedi, Linux paketi yok.
 - İsteğe bağlı: Claude Code CLI ya da Codex CLI, veya bir Anthropic / OpenAI API anahtarı
@@ -196,7 +196,9 @@ npm run dev     # geliştirme modunda başlatır
 |---|---|
 | `npm run dev` | Anında yenilemeli geliştirme modu |
 | `npm run typecheck` | Main ve renderer süreçleri için tip kontrolü |
-| `npm run test:unit` | Birim testleri: SQL/SSH sınıflandırma (güvenlik regresyon örnekleri dahil), dosya çıkarma, skill'ler, MCP yapılandırması, inceleme kararı, çeviriler |
+| `npm run test:unit` | Birim testleri: SQL/SSH sınıflandırma (güvenlik regresyon örnekleri dahil), dosya çıkarma, skill'ler, MCP yapılandırması, inceleme kararı, sağlayıcı ve orkestrasyon yardımcıları, bildirimler, çeviriler |
+| `npm run test:renderer` | Renderer mantık testleri (taslaklar, yerleşim, odak/Escape katmanları, bildirim tıklaması); tarayıcı yok |
+| `npm run test:e2e` | Main sürecin uçtan uca testleri: gerçek SQLite, git ve SSH tüneli, taklit sağlayıcılar; pencere yok |
 | `npm run build` / `npm start` | `out/` klasörüne üretim derlemesi / derlenmiş uygulamayı çalıştırma |
 | `npm run dist:win` | Windows kurulum dosyası → `release/Agentbits-Setup-<sürüm>.exe` (x64, NSIS) |
 | `npm run dist:mac` | macOS DMG (Apple Silicon + Intel); yalnızca macOS'ta ya da GitHub Actions'ta çalışır |
@@ -221,7 +223,8 @@ AGENTBITS_DATA_DIR=/tmp/agentbits-test npm run dev                     # macOS /
    ⚠️ CLI ajanları o klasördeki dosyaları gerçekten değiştirir; boş bir klasörle ya da bir git dalıyla başla.
 3. **Ekibi kur.** Yeni kurulumda hiç ajan yoktur. **Kılavuz**'u (`F1`) aç, adım adım yol gösterir. Örneğin:
    Organizasyon → Şablonlar → *Çekirdek Ekip*, sonra takımı projene ata.
-4. Proje sohbetinde **lidere ilk işini ver**; ofisi, panoyu ve terminalleri izle.
+4. Proje sohbetinde **lidere ilk işini ver**, sonra **Bu projede çalışmayı başlat**'a bas (projeyi açmak kendiliğinden
+   iş başlatmaz). Ofisi, panoyu ve terminalleri izle.
 
 Kullanışlı kısayollar: `Ctrl+O` Organizasyon · `Ctrl+1…9` proje bölümleri · `Ctrl+Tab` sonraki proje · `Ctrl+P` proje
 seçici · `Ctrl+,` Ayarlar · `F1` Kılavuz.
@@ -250,8 +253,9 @@ Kodlama ajanları [CLAUDE.md](CLAUDE.md) / [AGENTS.md](AGENTS.md) ile başlar.
 - **Önce yerel.** Her şey (organizasyon, projeler, sohbetler, görevler, hafıza, raporlar, dosyalar) bilgisayarındaki
   bir SQLite veritabanında saklanır: Windows'ta `%APPDATA%\Agentbits`, macOS'ta
   `~/Library/Application Support/Agentbits`, Linux'ta `~/.config/Agentbits`. Agentbits sunucusu, hesap ya da
-  telemetri yoktur. Ağ trafiği yalnızca senin ayarladığın sağlayıcılara, bağlantılara ve uygulamalara, skill
-  kurarken GitHub'a ve yerleşik Tarayıcı sekmesinde açtığın sitelere gider.
+  telemetri yoktur. Ağ trafiği yalnızca senin ayarladığın sağlayıcılara (ve CLI'larına), bağlantılara ve
+  uygulamalara, skill kurarken ya da paylaşılan takım içe aktarırken GitHub'a, web izni olan ajanın okuduğu herkese
+  açık sayfalara ve yerleşik Tarayıcı sekmesinde açtığın sitelere gider.
 - **Sırlar ana süreçte kalır.** API anahtarları, parolalar ve token'lar işletim sisteminin anahtar zinciriyle
   şifrelenir (Windows DPAPI, macOS Keychain, Linux Secret Service). Arayüze, prompt'lara, terminallere ve loglara asla
   gönderilmez. Anahtar zinciri yoksa Agentbits sır saklamayı reddeder.
@@ -260,6 +264,8 @@ Kodlama ajanları [CLAUDE.md](CLAUDE.md) / [AGENTS.md](AGENTS.md) ile başlar.
   çağrı denetim kaydına yazılır.
 - **Güvenilmeyen içerik veri olarak kalır.** Dosya içerikleri, sorgu sonuçları, komut çıktıları ve uygulama sonuçları
   modele talimat olarak değil, güvenilmeyen veri olarak işaretlenmiş şekilde gider.
+- **Kilit ekranında bildirim.** Bildirim proje ve ajan adını, görev başlığının ilk 50 karakterini taşır (sır benzeri
+  metin maskelenir); Windows bunu kilit ekranında gösterebilir. Ayarlar → Genel → Bildirimler'den kapatılır.
 - **Sınırlar açıkça yazılı.** Terminal ve ağ izni olan bir ajan, senin kullanıcı hesabının yapabildiği her şeyi
   yapabilir. Bu izinleri yalnızca güvendiğin ajanlara ver ya da Agentbits'i kısıtlı bir işletim sistemi kullanıcısıyla
   çalıştır. Neyin nerede zorlandığının tam listesi: [docs/SECURITY.md](docs/SECURITY.md).
@@ -268,7 +274,7 @@ Bir güvenlik açığı mı buldun? Lütfen gizli olarak bildir: [SECURITY.md](S
 
 ## Mevcut sınırlamalar
 
-Agentbits erken bir sürümdür (**v0.4.0**). Şunları yapmaz:
+Agentbits erken bir sürümdür (**v0.8.0**). Şunları yapmaz:
 
 - kendini güncellemek (yeni sürümü eskisinin üzerine kurarsın, verilerin korunur);
 - Claude Code / Codex CLI'ı içermek ya da onlarda oturum açmak; yukarıdakiler dışında OpenAI uyumlu olmayan sağlayıcıları
@@ -276,18 +282,19 @@ Agentbits erken bir sürümdür (**v0.4.0**). Şunları yapmaz:
 - API tabanlı ajanlara (Anthropic / OpenAI uyumlu) dosya düzenletmek ya da komut çalıştırtmak (bunun için CLI sağlayıcısı
   gerekir);
 - ajanlara tam bir tarayıcı kullandırmak (tıklama, form, JavaScript; sayfaları metin olarak okurlar); zamanlanmış /
-  tekrarlanan görev, işletim sistemi bildirimi, uzak depoya gönderme ya da pull request;
+  tekrarlanan görev, uzak depoya gönderme ya da pull request;
 - el yazısını OCR ile okumak ya da paylaşılan takımlar için çevrimiçi bir galeri sunmak (paylaşım dosya ve GitHub
   bağlantısıyla çalışır);
 - imzalı kurulum dosyası, denenmiş macOS paketi ya da Linux paketi sunmak.
 
-Ayrıca: CLI'larda "duraklat" çıktı akışını bekletir ama Windows'ta süreci dondurmaz; yedekler veritabanını kapsar,
+Ayrıca: sistem bildirimleri ve kapatma uyarısı her gerçek Windows kurulumunda henüz denenmedi (kilit ekranı,
+Odak Yardımı), macOS'ta denenmedi. CLI'larda "duraklat" çıktı akışını bekletir ama Windows'ta süreci dondurmaz; yedekler veritabanını kapsar,
 proje klasörlerini kapsamaz; MySQL ve SQL Server sürücüleri PostgreSQL ve SSH kadar test edilmedi. Ayrıntılar:
 [docs/FEATURES.md](docs/FEATURES.md).
 
 ## Yol haritası
 
-Bu maddeler [docs/FEATURES.md](docs/FEATURES.md)'de zaten planlı olarak geçiyor. Tarih verilmedi.
+Planlanan ya da düşünülen maddeler, tarih verilmedi; güncel durum [docs/FEATURES.md](docs/FEATURES.md)'de.
 
 - [ ] Kod imzalı kurulum dosyaları ve imzalı, onaylı macOS paketleri
 - [ ] Paylaşılan takımlar ve ajanlar için çevrimiçi galeri
