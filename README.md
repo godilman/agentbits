@@ -12,7 +12,7 @@
   <a href="https://github.com/godilman/agentbits/actions/workflows/ci.yml"><img alt="CI" src="https://github.com/godilman/agentbits/actions/workflows/ci.yml/badge.svg"></a>
   <img alt="Platform: Windows" src="https://img.shields.io/badge/platform-Windows-0078D6?logo=windows&logoColor=white">
   <img alt="macOS: experimental" src="https://img.shields.io/badge/macOS-experimental-555?logo=apple&logoColor=white">
-  <img alt="Version 0.10.0" src="https://img.shields.io/badge/version-0.10.0-6366f1">
+  <img alt="Version 0.11.0" src="https://img.shields.io/badge/version-0.11.0-6366f1">
   <a href="LICENSE"><img alt="License: PolyForm Strict 1.0.0" src="https://img.shields.io/badge/license-PolyForm%20Strict%201.0.0-orange"></a>
   <a href="https://buymeacoffee.com/godilman"><img alt="Buy me a coffee" src="https://img.shields.io/badge/Buy%20me%20a%20coffee-%E2%98%95-FFDD00?logoColor=black"></a>
 </p>
@@ -63,7 +63,9 @@ own computer.
   (PowerShell / bash) are available too.
 - **Needs you.** One list, in the top bar, of everything waiting for you: approvals, unmerged work, reviews the lead
   couldn't decide, held tasks with their reason. Cards say why a task doesn't move. A failed task is held at once,
-  with a plain-language reason, until you retry it.
+  with a plain-language reason, until you retry it. Each wait is also a card in the project chat with only the actions
+  that really apply (approve or reject a run, try again, retry the review, review and merge); connection and app
+  requests open the approval panel, and every click is checked again and applied once.
 - **Notifications.** When Agentbits isn't in front, the system tells you about replies, approvals, decisions waiting
   for you and finished work (grouped, never stale); a click only opens the right place. Settings → General → Notifications.
 - **Lead review, memory and decisions.** Finished work goes to the lead for review, checked against the task's acceptance
@@ -276,7 +278,7 @@ Found a vulnerability? Please report it privately, see [SECURITY.md](SECURITY.md
 
 ## Current limitations
 
-Agentbits is an early release (**v0.10.0**). It does not:
+Agentbits is an early release (**v0.11.0**). It does not:
 
 - update itself: it checks for new versions and tells you, but you install them from the download page (over the
   old version; your data is kept, and backed up before an upgrade changes it);

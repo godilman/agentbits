@@ -12,7 +12,7 @@
   <a href="https://github.com/godilman/agentbits/actions/workflows/ci.yml"><img alt="CI" src="https://github.com/godilman/agentbits/actions/workflows/ci.yml/badge.svg"></a>
   <img alt="Platform: Windows" src="https://img.shields.io/badge/platform-Windows-0078D6?logo=windows&logoColor=white">
   <img alt="macOS: deneysel" src="https://img.shields.io/badge/macOS-deneysel-555?logo=apple&logoColor=white">
-  <img alt="Sürüm 0.10.0" src="https://img.shields.io/badge/s%C3%BCr%C3%BCm-0.10.0-6366f1">
+  <img alt="Sürüm 0.11.0" src="https://img.shields.io/badge/s%C3%BCr%C3%BCm-0.11.0-6366f1">
   <a href="LICENSE"><img alt="Lisans: PolyForm Strict 1.0.0" src="https://img.shields.io/badge/lisans-PolyForm%20Strict%201.0.0-orange"></a>
   <a href="https://buymeacoffee.com/godilman"><img alt="Buy me a coffee" src="https://img.shields.io/badge/Buy%20me%20a%20coffee-%E2%98%95-FFDD00?logoColor=black"></a>
 </p>
@@ -62,7 +62,10 @@ Hepsi tek pencerede, verilerin de kendi bilgisayarında kalır.
   etkileşimli kabuklar (PowerShell / bash) da var.
 - **Bana ihtiyaç var.** Üst barda, seni bekleyen her şeyin tek listesi: onaylar, birleştirilmemiş işler, liderin karar
   veremediği incelemeler, nedeniyle bekletilen görevler. Kart, görevin neden ilerlemediğini söyler. Hata veren görev
-  hemen bekletilir, nedeni sade dille yazılır; sen yeniden deneyene kadar başlamaz.
+  hemen bekletilir, nedeni sade dille yazılır; sen yeniden deneyene kadar başlamaz. Her bekleme proje sohbetinde de
+  yalnızca gerçekten işe yarayan eylemlerle bir karttır (çalışmayı onayla ya da reddet, yeniden dene, incelemeyi yeniden
+  dene, incele ve birleştir); bağlantı ve uygulama istekleri onay penceresini açar, her tıklama yeniden denetlenir ve bir
+  kez uygulanır.
 - **Bildirimler.** Agentbits önde değilken yanıtları, onayları, seni bekleyen kararları ve biten işleri sistem
   bildirimiyle söyler (gruplanmış, bayatlamış olanlar düşer); tıklama yalnız ilgili yeri açar. Ayarlar → Genel → Bildirimler.
 - **Lider incelemesi, hafıza ve kararlar.** Biten iş liderin incelemesine gider; görevin kabul kriterleri varsa her biri
@@ -278,7 +281,7 @@ Bir güvenlik açığı mı buldun? Lütfen gizli olarak bildir: [SECURITY.md](S
 
 ## Mevcut sınırlamalar
 
-Agentbits erken bir sürümdür (**v0.10.0**). Şunları yapmaz:
+Agentbits erken bir sürümdür (**v0.11.0**). Şunları yapmaz:
 
 - kendini güncellemek: yeni sürümleri kontrol edip haber verir, kurulumu indirme sayfasından yaparsın (eskisinin
   üzerine; verilerin korunur ve yükseltme değiştirmeden önce yedeklenir);

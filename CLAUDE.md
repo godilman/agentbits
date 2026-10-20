@@ -22,9 +22,9 @@ yalnızca izin verilen **Bağlantılar** (SSH / PostgreSQL / MySQL / SQL Server)
 hissinde, koyu temalı, ajanların ne yaptığını canlı gösteren güvenli bir "yapay zeka şirketi ofisi".
 Ürün vizyonu → [docs/PROJECT.md](docs/PROJECT.md).
 
-Durum: **v0.10.0** (2026-10-20) — organizasyon, projeler ve tüm proje bölümleri çalışıyor; özellik durumu →
+Durum: **v0.11.0** (2026-10-20) — organizasyon, projeler ve tüm proje bölümleri çalışıyor; özellik durumu →
 [docs/FEATURES.md](docs/FEATURES.md). Depo herkese açık; yayımlanan sürümler v0.1.0 (2026-10-14), v0.2.0 (2026-10-15),
-v0.3.0 (2026-10-15), v0.4.0 (2026-10-15), v0.5.0 (2026-10-16), v0.5.1 (2026-10-16), v0.5.2 (2026-10-16), v0.5.3 (2026-10-16), v0.5.4 (2026-10-16), v0.5.5 (2026-10-16), v0.5.6 (2026-10-16), v0.5.7 (2026-10-16), v0.6.0 (2026-10-19), v0.7.0 (2026-10-19), v0.7.1 (2026-10-19), v0.8.0 (2026-10-20), v0.9.0 (2026-10-20), v0.10.0 (2026-10-20). v0.1.1 taslağı yayımlanmadı; sahibin isteğiyle 2026-10-15'te silindi.
+v0.3.0 (2026-10-15), v0.4.0 (2026-10-15), v0.5.0 (2026-10-16), v0.5.1 (2026-10-16), v0.5.2 (2026-10-16), v0.5.3 (2026-10-16), v0.5.4 (2026-10-16), v0.5.5 (2026-10-16), v0.5.6 (2026-10-16), v0.5.7 (2026-10-16), v0.6.0 (2026-10-19), v0.7.0 (2026-10-19), v0.7.1 (2026-10-19), v0.8.0 (2026-10-20), v0.9.0 (2026-10-20), v0.10.0 (2026-10-20), v0.11.0 (2026-10-20). v0.1.1 taslağı yayımlanmadı; sahibin isteğiyle 2026-10-15'te silindi.
 
 ## Güncel durum ve devir notu (son güncelleme: 2026-10-20)
 
