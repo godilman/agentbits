@@ -12,7 +12,10 @@
     "emptyTitle": "No tasks yet",
     "emptyHint": "Describe some work to the lead in the chat on the left, or add a new task.",
     "loadOlder_one": "Show {{count}} older task",
-    "loadOlder_other": "Show {{count}} older tasks"
+    "loadOlder_other": "Show {{count}} older tasks",
+    "cancelled": "Cancelled ({{count}})",
+    "cancelledHint": "Cancelled tasks keep their history. Open one to see what it left behind, or reopen it.",
+    "noCancelled": "No cancelled tasks."
   },
   "card": {
     "priority": "Priority: {{label}}",
@@ -41,7 +44,11 @@
       "lead": "Approved by the lead",
       "user": "Done by you (no lead review)"
     },
-    "mergeWaits": "Waiting to be merged"
+    "mergeWaits": "Waiting to be merged",
+    "cancelled": "Cancelled",
+    "depCancelled": "{{key}} (cancelled)",
+    "recovering": "Recovering",
+    "recoveringHint": "The team is trying again on its own; nothing is needed from you, and you can cancel the task"
   },
   "fields": {
     "title": "Title",
@@ -194,5 +201,33 @@
     "readUnconfirmed_other": "{{count}} read attempts failed or have no recorded result (not counted as read)",
     "readOwnUnknown": "This provider's own reads aren't reported; only reads through Agentbits are listed.",
     "shellMayRead": "Shell commands may have read files too; that isn't tracked."
+  },
+  "cancel": {
+    "title": "Cancel {{key}}?",
+    "keep": "Keep it",
+    "confirm": "Cancel task",
+    "race": "Its race attempt is cancelled with it: {{keys}}.",
+    "running": "The agent working on it is asked to stop. The cancel is complete once the run has really stopped; until then the task shows “Cancelling”.",
+    "approval": "The run waiting for your approval is turned down.",
+    "kept": "Nothing is undone: changes already made stay where they are, and connection or app operations already done stay done. Cancelling stops the agent's run; it doesn't stop an operation it already started elsewhere. The task and its history are kept; it doesn't count as done or deleted, and you can reopen it.",
+    "dependents": "Tasks that depend on it aren't cancelled, but they won't start, and they say why: {{keys}}.",
+    "button": "Cancel task",
+    "reopen": "Reopen",
+    "stopping": "Cancelling: waiting for the run to stop",
+    "banner": "Cancelled {{ago}}",
+    "bannerHint": "Nothing starts or changes for it any more. Reopen it to work on it again; it won't start on its own."
+  },
+  "recovery": {
+    "files": "The team is recovering: waiting for the changed files to be read in",
+    "retryAt": "The team is recovering: the review is tried again at {{time}} (extra attempt {{attempt}} of {{max}})",
+    "retrying": "The team is recovering: the review runs again",
+    "hint": "The worker doesn't run again; nothing is needed from you. The recovery ends by {{until}} at the latest; if it doesn't work, the decision comes to you.",
+    "now": "Retry the review now",
+    "waitsStart": "The team is recovering: the review is tried again once you start this project's work (extra attempt {{attempt}} of {{max}})",
+    "workAt": "The team is recovering: the worker runs the work again at {{time}} (extra attempt {{attempt}} of {{max}})",
+    "workWaitsStart": "The team is recovering: the worker runs the work again once you start this project's work (extra attempt {{attempt}} of {{max}})",
+    "workStarting": "The team is recovering: the worker is starting the work again",
+    "workWhy": "Why: {{reason}} The last try changed nothing outside (at most it read Agentbits' own data).",
+    "workHint": "Nothing is needed from you; you can cancel the task if you don't want that. The recovery ends by {{until}} at the latest; if it doesn't work, it's your call."
   }
 }

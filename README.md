@@ -12,7 +12,7 @@
   <a href="https://github.com/godilman/agentbits/actions/workflows/ci.yml"><img alt="CI" src="https://github.com/godilman/agentbits/actions/workflows/ci.yml/badge.svg"></a>
   <img alt="Platform: Windows" src="https://img.shields.io/badge/platform-Windows-0078D6?logo=windows&logoColor=white">
   <img alt="macOS: experimental" src="https://img.shields.io/badge/macOS-experimental-555?logo=apple&logoColor=white">
-  <img alt="Version 0.11.0" src="https://img.shields.io/badge/version-0.11.0-6366f1">
+  <img alt="Version 0.12.0" src="https://img.shields.io/badge/version-0.12.0-6366f1">
   <a href="LICENSE"><img alt="License: PolyForm Strict 1.0.0" src="https://img.shields.io/badge/license-PolyForm%20Strict%201.0.0-orange"></a>
   <a href="https://buymeacoffee.com/godilman"><img alt="Buy me a coffee" src="https://img.shields.io/badge/Buy%20me%20a%20coffee-%E2%98%95-FFDD00?logoColor=black"></a>
 </p>
@@ -57,13 +57,18 @@ own computer.
 - **Live pixel-art office.** Agents sit at their desks while they work, take coffee breaks, and show approval or
   error badges. Click an agent to see what it is doing.
 - **Kanban board.** To do → In progress → In review → Done, with drag and drop, per-task activity, logs and runs.
-  Moving a running task to Done asks first and never merges anything by itself.
+  Moving a running task to Done asks first and never merges anything by itself. "Cancel task" stops its run and turns
+  down its approvals; nothing picks it up again until you reopen it, and its history stays.
 - **Agent terminals.** A persistent transcript for every agent: what it was asked, which tools it used, and token
   counts. You can redirect an agent, queue an instruction or give it a new task from there. Real interactive shells
   (PowerShell / bash) are available too.
 - **Needs you.** One list, in the top bar, of everything waiting for you: approvals, unmerged work, reviews the lead
   couldn't decide, held tasks with their reason. Cards say why a task doesn't move. A failed task is held at once,
-  with a plain-language reason, until you retry it. Each wait is also a card in the project chat with only the actions
+  with a plain-language reason, until you retry it. The narrow exception (Settings → General → "Automatic recovery"):
+  after a passing provider failure (network, timeout, overload), a lead review on an API provider or Demo is tried
+  again, and a worker run on an API provider or Demo is run again only when its record shows it changed nothing
+  outside Agentbits — at most two extra tries per task. Claude Code and Codex runs and reviews are never retried on
+  their own. Each wait is also a card in the project chat with only the actions
   that really apply (approve or reject a run, try again, retry the review, review and merge); connection and app
   requests open the approval panel, and every click is checked again and applied once.
 - **Notifications.** When Agentbits isn't in front, the system tells you about replies, approvals, decisions waiting
@@ -278,7 +283,7 @@ Found a vulnerability? Please report it privately, see [SECURITY.md](SECURITY.md
 
 ## Current limitations
 
-Agentbits is an early release (**v0.11.0**). It does not:
+Agentbits is an early release (**v0.12.0**). It does not:
 
 - update itself: it checks for new versions and tells you, but you install them from the download page (over the
   old version; your data is kept, and backed up before an upgrade changes it);

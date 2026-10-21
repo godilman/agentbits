@@ -12,7 +12,10 @@
     "emptyTitle": "Henüz görev yok",
     "emptyHint": "Sol paneldeki sohbetten lidere bir iş tarif et ya da yeni görev ekle.",
     "loadOlder_one": "{{count}} eski görevi göster",
-    "loadOlder_other": "{{count}} eski görevi göster"
+    "loadOlder_other": "{{count}} eski görevi göster",
+    "cancelled": "İptal edilenler ({{count}})",
+    "cancelledHint": "İptal edilen görevlerin geçmişi durur. Ne bıraktığını görmek için birini aç ya da yeniden aç.",
+    "noCancelled": "İptal edilen görev yok."
   },
   "card": {
     "priority": "Öncelik: {{label}}",
@@ -41,7 +44,11 @@
       "lead": "Lider onayladı",
       "user": "Elle tamamlandı (lider incelemesi yok)"
     },
-    "mergeWaits": "Birleştirme bekliyor"
+    "mergeWaits": "Birleştirme bekliyor",
+    "cancelled": "İptal edildi",
+    "depCancelled": "{{key}} (iptal edildi)",
+    "recovering": "Toparlanıyor",
+    "recoveringHint": "Ekip otomatik olarak yeniden deniyor; senden bir şey gerekmiyor, istersen görevi iptal edebilirsin"
   },
   "fields": {
     "title": "Başlık",
@@ -194,5 +201,33 @@
     "readUnconfirmed_other": "{{count}} okuma denemesi başarısız ya da sonucu kayıtsız (okundu sayılmadı)",
     "readOwnUnknown": "Bu sağlayıcı kendi okumalarını bildirmez; yalnız Agentbits üzerinden okunanlar listelenir.",
     "shellMayRead": "Kabuk komutları da dosya okumuş olabilir; bu izlenmez."
+  },
+  "cancel": {
+    "title": "{{key}} iptal edilsin mi?",
+    "keep": "Vazgeç",
+    "confirm": "Görevi iptal et",
+    "race": "Yarış denemesi de onunla birlikte iptal edilir: {{keys}}.",
+    "running": "Üzerinde çalışan ajandan durması istenir. İptal, çalışma gerçekten durunca tamamlanır; o zamana kadar görevde “İptal ediliyor” yazar.",
+    "approval": "Onayını bekleyen çalışma reddedilir.",
+    "kept": "Hiçbir şey geri alınmaz: yapılmış değişiklikler oldukları yerde kalır, yapılmış bağlantı ve uygulama işlemleri de geri alınmaz. İptal ajanın çalışmasını durdurur; başka yerde başlatmış olduğu bir işlemi durdurmaz. Görev ve geçmişi korunur; bitmiş ya da silinmiş sayılmaz, istersen yeniden açabilirsin.",
+    "dependents": "Buna bağlı görevler iptal edilmez ama başlamaz ve nedenini söyler: {{keys}}.",
+    "button": "Görevi iptal et",
+    "reopen": "Yeniden aç",
+    "stopping": "İptal ediliyor: çalışmanın durması bekleniyor",
+    "banner": "İptal edildi · {{ago}}",
+    "bannerHint": "Artık bu görev için hiçbir şey başlamaz ya da değişmez. Üzerinde yeniden çalışmak için yeniden aç; kendiliğinden başlamaz."
+  },
+  "recovery": {
+    "files": "Ekip toparlıyor: değişen dosyaların okunması bekleniyor",
+    "retryAt": "Ekip toparlıyor: inceleme yeniden denenecek, saat {{time}} (ek deneme {{attempt}}/{{max}})",
+    "retrying": "Ekip toparlıyor: inceleme yeniden yapılıyor",
+    "hint": "Çalışan yeniden çalışmaz; senden bir şey gerekmiyor. Toparlanma en geç {{until}} biter; olmazsa karar sana kalır.",
+    "now": "İncelemeyi şimdi yeniden dene",
+    "waitsStart": "Ekip toparlıyor: inceleme, bu projede çalışmayı başlattığında yeniden denenecek (ek deneme {{attempt}}/{{max}})",
+    "workAt": "Ekip toparlıyor: çalışan işi yeniden çalıştıracak, saat {{time}} (ek deneme {{attempt}}/{{max}})",
+    "workWaitsStart": "Ekip toparlıyor: çalışan, bu projede çalışmayı başlattığında işi yeniden çalıştıracak (ek deneme {{attempt}}/{{max}})",
+    "workStarting": "Ekip toparlıyor: çalışan işi yeniden başlatıyor",
+    "workWhy": "Neden: {{reason}} Önceki deneme dışarıda bir şey değiştirmedi (en fazla Agentbits'in kendi verilerini okudu).",
+    "workHint": "Senden bir şey gerekmiyor; istemezsen görevi iptal edebilirsin. Toparlanma en geç {{until}} biter; olmazsa karar sana kalır."
   }
 }

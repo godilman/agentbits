@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { GitMerge, Play, Send, Square, Trash2, X } from 'lucide-react'
+import { Ban, GitMerge, Play, RefreshCw, RotateCcw, Send, Square, Trash2, X } from 'lucide-react'
 import type { ApiArgs } from '@shared/ipc'
 import type { AgentLog, NeedsOutcome, Run, TaskStatus } from '@shared/types'
 import { PixelAvatar } from '@/components/common/PixelAvatar'
@@ -19,6 +19,7 @@ import { RecalledTrace } from '@/features/memory/parts'
 import { TaskFiles } from '@/features/files/TaskFiles'
 import { useStartGuard } from './StartGuard'
 import { useDoneGuard } from './DoneGuard'
+import { useCancelTask } from './CancelGuard'
 import { clearSent, draftSnapshot, setDraft as saveDraft, useDraft } from '@/lib/drafts'
 import { JumpToNew, useStickToBottom } from '@/components/common/Stick'
 
@@ -36,6 +37,8 @@ export function TaskDrawer() {
   const loadChannel = useAppStore((s) => s.loadChannel)
   const liveLogs = useAppStore((s) => s.logs)
   const activeRun = useAppStore((s) => s.activeRuns.find((r) => r.taskId === s.selectedTaskId))
+  // The team is recovering the review (ADR-036): the stored object, not a new one.
+  const recovering = useAppStore((s) => s.orchestratorWaits.recovering[s.selectedTaskId ?? ''] ?? null)
   // Why the task waits for the user: held (in To do) or a review that couldn't decide (in review).
   const heldWhy = useAppStore((s) => (s.selectedTaskId && s.orchestratorWaits.held[s.selectedTaskId]) ?? null)
   const simWork = useAppStore((s) => !!s.selectedTaskId && s.orchestratorWaits.simulatedWork.includes(s.selectedTaskId))
@@ -58,6 +61,7 @@ export function TaskDrawer() {
   const detailsRef = useRef<HTMLDivElement>(null)
   const [guardStart, startModal] = useStartGuard()
   const [guardDone, doneModal] = useDoneGuard()
+  const [cancelTask, cancelModal] = useCancelTask()
   const [width, widthHandle] = useResize('taskDrawer', 460, { min: 360, max: 1100, invert: true, className: 'absolute inset-y-0 left-0' })
   const [detailsMax, detailsHandle] = useResize('taskDrawerDetails', Math.round(window.innerHeight * 0.45), { min: 80, max: 2000, axis: 'y', measure: detailsRef })
   // Worktree mode: a done task whose branch still waits to be merged (e.g. uncommitted changes in the folder).
@@ -143,6 +147,7 @@ export function TaskDrawer() {
       {widthHandle}
       {startModal}
       {doneModal}
+      {cancelModal}
       <Modal
         open={mergeReview}
         onClose={() => !merging && setMergeReview(false)}
@@ -209,6 +214,10 @@ export function TaskDrawer() {
             <button className="btn-danger h-6 text-[12px]" onClick={() => activeRun && void call('runs:stop', activeRun.id)}>
               <Square size={11} /> {t('actions.stop')}
             </button>
+          ) : task.cancelledAt ? (
+            <button className="btn-outline h-6 text-[12px]" onClick={() => void call('tasks:reopen', task.id).catch((e) => toast('error', apiError(e)))}>
+              <RotateCcw size={11} /> {t('tasks:cancel.reopen')}
+            </button>
           ) : (
             task.status !== 'done' && (
               <button className="btn-outline h-6 text-[12px]" onClick={() => guardStart(task.id, task.key, (force) => void call('tasks:start', task.id, force))}>
@@ -216,6 +225,11 @@ export function TaskDrawer() {
                 {task.status === 'in_review' ? t('tasks:drawer.rerunWorker') : heldWhy !== null && task.status === 'todo' ? t('tasks:drawer.retry') : t('tasks:drawer.startNow')}
               </button>
             )
+          )}
+          {task.status !== 'done' && !task.cancelledAt && (
+            <button className="btn-ghost h-6 text-[12px]" data-testid="cancel-task" onClick={() => cancelTask(task)}>
+              <Ban size={11} /> {t('tasks:cancel.button')}
+            </button>
           )}
           <button
             className="icon-btn hover:text-rose-400"
@@ -233,10 +247,67 @@ export function TaskDrawer() {
         </div>
       </div>
 
+      {task.cancelledAt && (
+        <div className="border-b border-line bg-white/[0.03] px-4 py-2.5 text-[13px] leading-relaxed text-zinc-300" role="status">
+          <div className="font-medium text-zinc-100">
+            {activeRun ? t('tasks:cancel.stopping') : t('tasks:cancel.banner', { ago: ago(task.cancelledAt) })}
+          </div>
+          <div className="mt-0.5 text-zinc-400">{t('tasks:cancel.bannerHint')}</div>
+        </div>
+      )}
       {task.status === 'todo' && heldWhy !== null && (
         <div className="border-b border-line bg-amber-500/[0.06] px-4 py-2.5 text-[13px] leading-relaxed text-amber-200">
           <div className="font-medium">{heldWhy ? t('tasks:card.held', { reason: heldWhy }) : t('tasks:card.heldNoReason')}</div>
           <div className="mt-0.5 text-amber-200/80">{t('tasks:drawer.heldHint')}</div>
+        </div>
+      )}
+      {task.status === 'todo' && recovering?.kind === 'work' && (
+        <div className="flex items-start gap-3 border-b border-line bg-sky-500/[0.06] px-4 py-2.5 text-[13px] leading-relaxed text-sky-200" role="status" data-testid="work-recovery">
+          <RefreshCw size={13} className="mt-1 shrink-0" />
+          <div className="min-w-0 flex-1">
+            <div className="font-medium">
+              {recovering.waitsForStart
+                ? t('tasks:recovery.workWaitsStart', { attempt: recovering.attempt, max: recovering.max })
+                : recovering.at
+                  ? t('tasks:recovery.workAt', { time: clock(recovering.at), attempt: recovering.attempt, max: recovering.max })
+                  : t('tasks:recovery.workStarting')}
+            </div>
+            {recovering.reason && <div className="mt-0.5 text-sky-200/80">{t('tasks:recovery.workWhy', { reason: recovering.reason })}</div>}
+            <div className="mt-0.5 text-sky-200/80">{t('tasks:recovery.workHint', { until: clock(recovering.until) })}</div>
+          </div>
+          <button className="btn-outline h-7 shrink-0 text-[12px]" onClick={() => cancelTask(task)}>
+            {t('tasks:cancel.button')}
+          </button>
+        </div>
+      )}
+      {task.status === 'in_review' && recovering && (
+        <div className="flex items-start gap-3 border-b border-line bg-sky-500/[0.06] px-4 py-2.5 text-[13px] leading-relaxed text-sky-200" role="status">
+          <RefreshCw size={13} className="mt-1 shrink-0" />
+          <div className="min-w-0 flex-1">
+            <div className="font-medium">
+              {recovering.kind === 'files'
+                ? t('tasks:recovery.files')
+                : recovering.waitsForStart
+                  ? t('tasks:recovery.waitsStart', { attempt: recovering.attempt, max: recovering.max })
+                  : recovering.at
+                  ? t('tasks:recovery.retryAt', { time: clock(recovering.at), attempt: recovering.attempt, max: recovering.max })
+                  : t('tasks:recovery.retrying')}
+            </div>
+            <div className="mt-0.5 text-sky-200/80">{t('tasks:recovery.hint', { until: clock(recovering.until) })}</div>
+          </div>
+          <button
+            className="btn-outline h-7 shrink-0 text-[12px]"
+            disabled={retrying}
+            onClick={() => {
+              setRetrying(true)
+              void call('tasks:retryReview', task.id)
+                .then((r) => r === 'pending' && toast('info', t('tasks:drawer.reviewPending')))
+                .catch((e) => toast('error', apiError(e)))
+                .finally(() => setRetrying(false))
+            }}
+          >
+            {t('tasks:recovery.now')}
+          </button>
         </div>
       )}
       {task.status === 'in_review' && undecided && (

@@ -39,7 +39,8 @@
     "agentDisabled": "The agent was turned off before the run started",
     "stopped": "Run stopped",
     "stoppedByUser": "Stopped by the user",
-    "capsChanged": "Its permissions, connections or apps changed while the run waited for approval"
+    "capsChanged": "Its permissions, connections or apps changed while the run waited for approval",
+    "cancelled": "The task was cancelled"
   },
   "notes": {
     "addedToFirstPrompt": "Added to the first prompt",
@@ -86,7 +87,8 @@
     "reviewStale": "Review of {{key}} dropped: a newer run or changed task details — reviewing the current state",
     "workStarted": "Work started in this project for this session",
     "reviewUnverifiable": "❔ {{key}} couldn't be verified: {{note}}",
-    "filesNotReadyAtStart": "⚠ Not ready yet when the work started (still being read in): {{names}}"
+    "filesNotReadyAtStart": "⚠ Not ready yet when the work started (still being read in): {{names}}",
+    "filesDisappeared": "⚠ Present when the work started, not found in the project folder when it ended (the folder is shared: not known who removed them): {{names}}"
   },
   "chat": {
     "taskStarted": "{{agent}} started the task.",
@@ -143,7 +145,11 @@
     "retryReviewNoLead": "This project has no active lead to review the task. Assign or turn on a lead first, or decide yourself.",
     "cardNotHere": "This request belongs to another project.",
     "cardAction": "That isn't possible for this request any more.",
-    "reviewQueued": "A review of this task is already queued; it runs on its turn."
+    "reviewQueued": "A review of this task is already queued; it runs on its turn.",
+    "cancelled": "{{key}} is cancelled: reopen it first.",
+    "cancelDone": "{{key}} is already done, so it can't be cancelled.",
+    "alreadyCancelled": "{{key}} is already cancelled.",
+    "cancelStopping": "{{key}} is still stopping; reopen it once its run has ended."
   },
   "result": {
     "taskCreated": "{{key}} created and {{agent}} started",
@@ -283,7 +289,9 @@
     "authFailed": "The provider login isn't valid — sign in again, then restart it",
     "failed_one": "Failed: {{error}}",
     "failed_other": "Failed {{count}} times: {{error}}",
-    "capsChanged": "What the agent can use changed while it waited for your approval; start it again to see the current list"
+    "capsChanged": "What the agent can use changed while it waited for your approval; start it again to see the current list",
+    "cancelled": "Cancelled",
+    "reopened": "Reopened: waits until you start it"
   },
   "review": {
     "unmet": "Acceptance criteria not met: {{list}}"
@@ -331,6 +339,80 @@
     "failed": "“{{title}}” stopped with an error: {{reason}} It won't restart on its own. “{{retry}}” runs the work again from the start; nothing the earlier attempt did is undone. · {{key}}",
     "limitStopped": "“{{title}}” stopped at a limit: {{reason}} It won't restart on its own. “{{retry}}” runs the work again; nothing the earlier attempt did is undone. · {{key}}",
     "isolation": "“{{title}}” couldn't start: {{reason}} It won't start on its own; fix it, then press “{{retry}}”. · {{key}}",
-    "auth": "“{{title}}” stopped because of the provider sign-in: {{reason}} Fix the sign-in first, then press “{{retry}}”; nothing the earlier attempt did is undone. · {{key}}"
+    "auth": "“{{title}}” stopped because of the provider sign-in: {{reason}} Fix the sign-in first, then press “{{retry}}”; nothing the earlier attempt did is undone. · {{key}}",
+    "recoveryRetry": "🔁 “{{title}}”: {{reason}} The team will try only the review again in {{minutes}} min (extra attempt {{attempt}} of {{max}}); the worker doesn't run again. Nothing is needed from you. · {{key}}",
+    "recoveryFiles": "⏳ “{{title}}”: the changed files are still being read in ({{files}}). The review starts on its own once their current content is there (at most {{minutes}} min); no model is called meanwhile. Nothing is needed from you. · {{key}}",
+    "recoveryRetryLater": "🔁 “{{title}}”: {{reason}} The team will try only the review again once you start this project's work (extra attempt {{attempt}} of {{max}}); the worker doesn't run again. · {{key}}",
+    "recoveryWork": "🔁 “{{title}}”: {{reason}} The run changed nothing outside (at most it read Agentbits' own data); {{worker}} will run the work again on its own in {{minutes}} min (extra attempt {{attempt}} of {{max}}). Nothing is needed from you; you can cancel the task if you don't want that. · {{key}}",
+    "recoveryWorkLater": "🔁 “{{title}}”: {{reason}} The run changed nothing outside (at most it read Agentbits' own data); {{worker}} will run the work again once you start this project's work (extra attempt {{attempt}} of {{max}}). You can cancel the task if you don't want that. · {{key}}",
+    "runApprovalRetry": "🔁 “{{title}}” is waiting for your approval for an automatic retry (extra attempt {{attempt}} of {{max}}). The last try stopped because: {{reason}} It is recorded as having changed nothing outside. If you approve, {{worker}} runs the work again from the start and will be able to use: {{caps}}. An earlier approval doesn't count; if you reject it, the work doesn't start and the task is held. · {{key}}"
+  },
+  "cancel": {
+    "requested": "⏳ Cancel requested for “{{title}}”: its agent was asked to stop, and that it stopped isn't confirmed yet. Until then nothing new starts for it and whatever the run still sends is ignored; a note here confirms the cancel once the run has ended. · {{key}}",
+    "done": "🛑 “{{title}}” is cancelled: its agent's run has stopped. {{details}} This doesn't undo or stop operations it had already started elsewhere (connections, apps, commands that keep running on their own). Nothing is needed from you; the task and its history are kept, and you can reopen it. · {{key}}",
+    "neverRan": "It never ran.",
+    "ran_one": "It ran once.",
+    "ran_other": "It ran {{count}} times.",
+    "demo": "Demo provider: nothing real was changed.",
+    "files_one": "It wrote {{count}} file with file tools.",
+    "files_other": "It wrote {{count}} files with file tools.",
+    "noFiles": "It wrote no file with file tools.",
+    "commands_one": "It ran {{count}} shell command; shell commands may also have changed files or reached other systems.",
+    "commands_other": "It ran {{count}} shell commands; shell commands may also have changed files or reached other systems.",
+    "noCommands": "It ran no shell command.",
+    "unknown": "Which files it changed and which commands it ran isn't known (this provider doesn't record its tools in full).",
+    "external_one": "It did {{count}} connection or app operation (see the audit log).",
+    "external_other": "It did {{count}} connection or app operations (see the audit log).",
+    "noExternal": "It did no connection or app operation.",
+    "left": "Nothing was undone: what it changed is {{where}}.",
+    "dependents": "Tasks that depend on it won't start: {{keys}}. Cancel them too, or start them anyway.",
+    "depCancelled": "{{key}} (cancelled)",
+    "reopened": "↩ “{{title}}” was reopened. It doesn't start on its own: start it when you want it to run. · {{key}}"
+  },
+  "recovery": {
+    "noLimits": "It wasn't retried automatically: this provider's review calls have no enforced time or token limit (only the API providers' do).",
+    "noLimitsNow": "The pending automatic review retry wasn't made: the lead's current provider can't enforce a time or token limit on review calls (only the API providers can).",
+    "used": "Automatic retries for this task are used up ({{max}} of {{max}}).",
+    "windowOver": "The automatic recovery ran out of time.",
+    "windowOverNow": "The pending automatic review wasn't made: the automatic recovery's {{minutes}} minutes are up.",
+    "triedFiles": "The team waited {{minutes}} min for the files to be read in.",
+    "tried_one": "The team tried the review once more over {{minutes}} min; it didn't work.",
+    "tried_other": "The team tried the review {{count}} more times over {{minutes}} min; it didn't work.",
+    "cost": "The task's model calls cost {{cost}} USD so far.",
+    "costUnknown": "What the task's model calls cost isn't known (this provider doesn't report it; {{tokens}} tokens so far).",
+    "costDemo": "Demo provider: no real cost.",
+    "paused": {
+      "user": "The automatic recovery stopped because you paused everything.",
+      "auth": "The automatic recovery stopped because everything was paused for a sign-in problem.",
+      "off": "The automatic recovery stopped because it was turned off in Settings; the pending review wasn't made."
+    },
+    "costNone": "There is no usage record of the task's model calls, so what they cost isn't known.",
+    "reviewFailed": "The lead's review couldn't finish ({{provider}}: {{what}}).",
+    "why": {
+      "network": "no network connection",
+      "timeout": "no answer in time",
+      "overloaded": "overloaded"
+    },
+    "workFailed": "The worker's provider call couldn't finish ({{provider}}: {{what}}).",
+    "triedWork_one": "The team ran the worker once more over {{minutes}} min; it didn't work.",
+    "triedWork_other": "The team ran the worker {{count}} more times over {{minutes}} min; it didn't work.",
+    "work": {
+      "notRetried": "It wasn't run again automatically: {{why}}",
+      "cli": "the worker's provider doesn't run its tools through Agentbits (Claude Code / Codex), so it can't be shown that nothing outside changed.",
+      "notCall": "the failure wasn't in the model call but in preparing or finishing the run.",
+      "noRecord": "the run has no record of its tools, so it can't be shown that nothing outside changed.",
+      "tools": "the run called these tools: {{tools}}; it may have changed something outside.",
+      "files": "the run saved a file.",
+      "audit": "the run did a connection or app operation.",
+      "inputs": "the task's title, description, acceptance criteria, dependencies or assigned worker changed; the old work isn't repeated on its own.",
+      "gone": "the recovery plan no longer applies.",
+      "notStarted": "this project's work isn't started.",
+      "agent": "the worker is turned off or gone.",
+      "off": "automatic recovery was turned off in Settings.",
+      "paused": "everything was paused.",
+      "window": "the automatic recovery's {{minutes}} minutes are up.",
+      "used": "the task's automatic retries are used up ({{max}} of {{max}}).",
+      "deps": "tasks it depends on aren't done yet ({{keys}})."
+    }
   }
 }

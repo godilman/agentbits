@@ -109,6 +109,8 @@ export interface Task {
   raceOf: string | null
   /** Race mode: the lead's comparison picked this attempt (`won`) or the other one (`lost`). */
   raceResult: 'won' | 'lost' | null
+  /** When the user cancelled it (null = not cancelled): kept with its history, never picked up or moved by a late result. */
+  cancelledAt: string | null
   /** Acceptance criteria, one per line ('' = none): in the assignee's prompt and checked one by one in the lead's review. */
   acceptance: string
   /** The lead's check of each criterion at the last review (null = not reviewed against criteria). */
@@ -217,6 +219,11 @@ export interface RunEvidence {
   denied: string[]
   /** The report was longer than what the lead's review reads. */
   reportCut: boolean
+  /**
+   * Shared project folder, CLI agent: recorded project-folder files found when the run started and not found when it
+   * ended. Not proof that this run removed them (someone else may have, in the shared folder).
+   */
+  lostFiles: string[]
 }
 
 /** The task's result as shown first in its details: evidence, who reviewed, what changed (worktree). */
@@ -465,6 +472,8 @@ export interface AppSettings {
   workspaceRoot: string
   autopilot: boolean // scheduler picks up todo tasks automatically
   reviewByLead: boolean
+  /** Review recovery (ADR-036): retry only the lead's review after a passing failure, wait for files being read in. */
+  autoRecovery: boolean
   /** Operating-system notifications (and the taskbar flash) while no app window has focus (`main/notify.ts`). */
   notifications: boolean
   /** Look for a newer published Agentbits version every 6 hours (packaged builds); only tells, never installs (`main/update.ts`). */
@@ -809,11 +818,39 @@ export type NeedsOutcome =
   | 'merged'
   | 'mergeGone' // nothing waits to be merged any more (no change, isolation off, working copy gone) — not "merged"
   | 'allowed' // a connection / app request: the operation may run
+  | 'cancelled' // the user cancelled the task
   | 'superseded' // the task is waiting again, for a newer reason (a new card)
 export interface NeedsResolution {
   outcome: NeedsOutcome
   at: string
 }
+/**
+ * A task whose review the team is recovering (ADR-036; the worker never runs again): `retry` = the review is tried
+ * again at `at` (null: queued now), `files` = waiting for changed files to be read in. `until`: the recovery's end.
+ */
+export interface RecoveryInfo {
+  /** retry / files: the lead's review; work: the worker's run, known to have changed nothing outside (ADR-037). */
+  kind: 'retry' | 'files' | 'work'
+  at: string | null
+  /** Work: why the last run stopped. */
+  reason: string | null
+  /** Work: the run is started (or waits for approval). */
+  launched: boolean
+  attempt: number
+  max: number
+  until: string
+  /** Nothing is armed until the user starts the project's work (after a restart, or before it was ever started). */
+  waitsForStart: boolean
+}
+
+/** What "Cancel task" covers: the task and its race attempt (`keys`), tasks waiting on them, what runs now. */
+export interface CancelScope {
+  keys: string[]
+  dependents: string[]
+  running: boolean
+  awaitingApproval: boolean
+}
+
 /** `needs:act`: done (the request was taken), or the wait is gone (already decided / expired / superseded). */
 export type NeedsActResult = { result: 'done'; outcome: NeedsOutcome | null } | { result: 'gone'; outcome: NeedsOutcome | null }
 
@@ -876,6 +913,11 @@ export interface FileRecord {
   projectShared: boolean
   /** The original bytes are available (false after a restore from a backup that outlived them, or a deleted workspace file). */
   hasOriginal: boolean
+  /**
+   * Project-folder file not found on disk when last checked (ISO time; null = found). Its record stays, its extracted
+   * text is gone; it is read in anew when it is found again. Not proof of who removed it.
+   */
+  missingAt: string | null
   createdAt: string
   updatedAt: string
 }

@@ -4,7 +4,7 @@ import { evidenceSection, runEvidence } from './evidence'
 import { app } from 'electron'
 import { intlLocale, languageName } from '@shared/i18n'
 import { allTranslations, currentLanguage, t } from '../i18n'
-import type { Agent, AgentInstruction, FileRecord, InstructionInput, LogLevel, Message, NeedsAction, NeedsActResult, NeedsCard, NeedsOutcome, Project, Provider, Task, UsageDelta, UsageMode } from '@shared/types'
+import type { Agent, AgentInstruction, CancelScope, ProviderKind, RecoveryInfo, FileRecord, InstructionInput, LogLevel, Message, NeedsAction, NeedsActResult, NeedsCard, NeedsOutcome, Project, Provider, Task, UsageDelta, UsageMode } from '@shared/types'
 import { resolveAfter, type LeadMessage } from '@shared/leadComms'
 import { acceptanceList, judgeCriteria, parseRaceVerdict, pickRival } from '@shared/review'
 import { isTwin } from '@shared/org'
@@ -28,7 +28,7 @@ import {
 } from '../db/repos'
 import { redactSecrets } from '@shared/redact'
 import { errorDetail, runErrorKind } from '@shared/runErrors'
-import { emit } from '../events'
+import { emit, onEvent } from '../events'
 import { startReplyStream } from './replyStream'
 import { instructionsRepo, usageRepo } from '../db/usage'
 import { prepareMcp } from '../connections/bridge'
@@ -50,7 +50,9 @@ import {
   nativeAttachments,
   nativePaths,
   readableFiles as readableFilesOf,
+  disappearedSince,
   recordWorkspaceChanges,
+  workspacePresent,
   shareFiles,
   visionFor
 } from '../files/service'
@@ -104,6 +106,10 @@ interface ActiveRun {
   partial: string
   /** Earlier turns for providers without a resumable session. */
   history: { role: 'user' | 'assistant'; content: string }[]
+  /** Every tool the run asked Agentbits to run, counted before it runs (null: its tools don't go through Agentbits). */
+  tools: string[] | null
+  /** The run failed in the provider call itself (not while preparing or finishing). */
+  callFailed: boolean
 }
 
 /** Marks a note from the project lead inside an instruction turn (the rest comes from the user). */
@@ -187,13 +193,52 @@ const HELD_WHY_KEY = 'orchestrator.heldWhy'
 const UNDECIDED_KEY = 'orchestrator.undecided'
 /** The event (card) of each held task and of each task whose merge waits: a decision is checked against it. */
 const HELD_EVENT_KEY = 'orchestrator.heldEvent'
+/**
+ * Review recovery (ADR-036): only the lead's review is tried again — never the worker. Per task at most
+ * `RECOVERY_RETRIES` extra review calls in its lifetime (kept across restarts), 1 and 5 minutes apart, and one
+ * recovery lasts at most `RECOVERY_WINDOW_MS`. Model calls are retried only where each call's limits are enforced by
+ * the provider adapter (request timeout and output tokens: the API providers; the Demo makes no real calls); Claude
+ * Code / Codex reviews have no such limits, so their failures go to the user. Waiting for files is no model call.
+ */
+const RECOVERY_KEY = 'orchestrator.recovery'
+export const RECOVERY_RETRIES = 2
+export const RECOVERY_DELAYS_MS = [60_000, 5 * 60_000]
+export const RECOVERY_WINDOW_MS = 30 * 60_000
+const RECOVERABLE_REVIEW = new Set<ProviderKind>(['anthropic', 'openai', 'mock'])
+/**
+ * Worker recovery (ADR-037): a worker run is run again on its own only when it is known to have changed nothing
+ * outside: the provider's tools all go through Agentbits (`callTool`, counted before each runs), the run called none but
+ * these reads of Agentbits' own data, it saved no file and touched no connection, and it failed in the provider call for
+ * a passing reason. Any other tool (also one added later) counts as a possible side effect. Same budget as reviews.
+ */
+const RECOVERABLE_WORK = new Set<ProviderKind>(['anthropic', 'openai', 'mock'])
+const SIDE_EFFECT_FREE_TOOLS = new Set(['files_list', 'file_read', 'file_search', 'skill_read', 'project_memory_read', 'project_memory_search', 'team_status'])
+type RecoveryEpisode = {
+  kind: 'retry' | 'files' | 'work'
+  runId: string
+  startedAt: number
+  nextAt: number | null
+  fileIds: string[]
+  retries: number
+  /** Work: the task's inputs when the failed run started (a change means the old work isn't repeated). */
+  basis?: string
+  /** Work: why the run stopped (shown while it waits and in the approval card). */
+  reason?: string
+  /** Work: the run the recovery started (it may still wait for approval), and the one whose provider call began (counted). */
+  launched?: string | null
+  counted?: string | null
+}
+type RecoveryState = { attempts: number; episode: RecoveryEpisode | null }
 const MERGE_EVENT_KEY = 'orchestrator.mergeEvent'
 /** #general status lines (`orchestrator:say.*`). */
 type SayKey =
   | 'sentForReview' | 'doneNoReview' | 'doneNoLead' | 'commitFailed' | 'approved' | 'sentBack' | 'sentBackWaits'
-  | 'unverifiable' | 'notMoving' | 'limit' | 'decide' | 'runApproval' | 'failed' | 'limitStopped' | 'isolation' | 'auth'
+  | 'unverifiable' | 'notMoving' | 'limit' | 'decide' | 'runApproval' | 'failed' | 'limitStopped' | 'isolation' | 'auth' | 'recoveryRetry' | 'recoveryRetryLater' | 'recoveryFiles'
+  | 'recoveryWork' | 'recoveryWorkLater' | 'runApprovalRetry'
 /** Agentbits tools that only read (a run using only these, and no file tool / shell, changed nothing it knows of). */
 const READ_ONLY_TOOLS = /^mcp__agentbits__(file_read|file_search|files_list|project_memory_read|project_memory_search)( |$)/
+/** The worker recovery's run was not started after all (checked just before the provider call): why. */
+class RecoverySkipped extends Error {}
 /** The lead's one-line summary as its own sentence (empty when there is none). */
 const sentence = (s?: string): string => (s ? ` ${/[.!?…]$/.test(s) ? s : `${s}.`}` : '')
 
@@ -285,12 +330,39 @@ class Orchestrator {
     this.saveUndecided()
     this.heldEvent = new Map(Object.entries(readJson<Record<string, string>>(HELD_EVENT_KEY, {})))
     this.mergeEvent = new Map(Object.entries(readJson<Record<string, string>>(MERGE_EVENT_KEY, {})))
+    // Recovery attempts and recoveries survive a restart; nothing is armed until the user starts a project's work.
+    this.recovery = new Map(Object.entries(readJson<Record<string, RecoveryState>>(RECOVERY_KEY, {})))
+    if (!this.filesListener) this.filesListener = onEvent((e) => e.type === 'files:changed' && this.filesSettled())
     // Run approvals live in memory: a run that waited for one when the app closed is cancelled below; its card says so.
     for (const r of runsRepo.list({ activeOnly: true }).filter((x) => x.status === 'awaiting_approval')) endWait(r.projectId, `run:${r.id}:approval`, 'closed')
     const stale = runsRepo.cancelStale()
     instructionsRepo.cancelStale()
+    // Worker recoveries whose run had begun when the app closed (ADR-037): a provider call that started is counted and
+    // never repeated on its own (it may have done part of its work: the task is held as interrupted below). One that
+    // never reached the provider (waiting for approval, preparing) waits for its time again, not counted, and asks again.
+    const waitAgain = new Set<string>()
+    for (const [id, st] of this.recovery) {
+      const ep = st.episode
+      if (ep?.kind !== 'work' || !ep.launched) continue
+      if (ep.counted === ep.launched) {
+        st.episode = null
+        continue
+      }
+      Object.assign(ep, { runId: ep.launched, launched: null, nextAt: Date.now() })
+      waitAgain.add(id)
+      this.blocked.delete(id) // held as "stopped" by the quit itself, not by the user
+      this.heldWhy.delete(id)
+    }
+    if (waitAgain.size || this.recovery.size) this.saveRecovery()
     for (const task of tasksRepo.listAll()) {
-      if (task.status === 'in_progress') {
+      if (task.status === 'in_progress' && task.cancelledAt) {
+        // Cancelled while it ran and the app closed before the run ended: the run is over now, so is the cancel.
+        tasksRepo.update(task.id, { status: 'todo', progress: 0 })
+        this.cancelling.add(task.id)
+        this.cancelDone(task.id)
+      } else if (task.status === 'in_progress' && waitAgain.has(task.id)) {
+        tasksRepo.update(task.id, { status: 'todo', progress: 0 })
+      } else if (task.status === 'in_progress') {
         // Interrupted by a quit / crash: it may have done part of its work, so it is not restarted automatically.
         tasksRepo.update(task.id, { status: 'todo', progress: 0 })
         this.blocked.add(task.id)
@@ -306,7 +378,8 @@ class Orchestrator {
     // Not reviewed until the user starts the project's work (an approval finishes and merges the task).
     if (settingsRepo.get().reviewByLead) {
       // A task already waiting for the user's decision stays with the user: only "Retry the review" asks the lead again.
-      for (const t of tasksRepo.listAll().filter((x) => x.status === 'in_review' && !this.undecided.has(x.id))) this.deferredReviews.add(t.id)
+      // A task being recovered isn't queued here either: its recovery reviews it (counted), never a second, uncounted one.
+      for (const t of tasksRepo.listAll().filter((x) => x.status === 'in_review' && !this.undecided.has(x.id) && !this.recovery.get(x.id)?.episode)) this.deferredReviews.add(t.id)
     }
     // Copies / branches left by tasks that are gone (also from older versions); task copies are made only after this.
     this.swept = this.sweepWorktrees()
@@ -318,6 +391,9 @@ class Orchestrator {
    * cancelled work has really finished, so nothing writes into rows that are about to be deleted.
    */
   async resetRuntime(): Promise<void> {
+    for (const timer of this.recoveryTimers.values()) clearTimeout(timer)
+    this.recoveryTimers.clear()
+    this.recovery.clear()
     for (const resolve of [...this.approvals.values()]) resolve(false)
     this.approvals.clear()
     for (const r of this.active.values()) {
@@ -352,7 +428,10 @@ class Orchestrator {
 
   /** Cancels a project's task runs, chat replies and reviews and waits for them to end (project delete / clean-up). */
   async stopProject(projectId: string): Promise<void> {
-    for (const task of tasksRepo.listAll().filter((x) => x.projectId === projectId)) this.stopTask(task.id)
+    for (const task of tasksRepo.listAll().filter((x) => x.projectId === projectId)) {
+      this.stopTask(task.id)
+      this.dropRecovery(task.id)
+    }
     for (const [c, a] of this.aux) if (a.projectId === projectId) c.abort()
     this.quiescing++
     try {
@@ -377,6 +456,8 @@ class Orchestrator {
 
   shutdown(): void {
     this.closing = true
+    for (const timer of this.recoveryTimers.values()) clearTimeout(timer)
+    this.recoveryTimers.clear()
     if (this.interval) clearInterval(this.interval)
     for (const r of this.active.values()) {
       r.stopped = true
@@ -419,6 +500,8 @@ class Orchestrator {
    * user caused it (stopped, rejected).
    */
   private hold(taskId: string, reason: string, notify: { why: HoldKind; event: string } | null): void {
+    // A cancelled task waits for nothing: no hold, no card (a run ending after the cancel lands here too).
+    if (tasksRepo.get(taskId)?.cancelledAt) return
     this.blocked.add(taskId)
     this.heldWhy.set(taskId, reason)
     // A new hold is a new wait: an older card of this task says it was superseded (it never comes back to life).
@@ -458,8 +541,16 @@ class Orchestrator {
     simulatedWork: string[]
     simulatedReview: string[]
     waitEvents: string[]
+    recovering: Record<string, RecoveryInfo>
   } {
     for (const id of [...this.undecided]) if (tasksRepo.get(id)?.status !== 'in_review') this.clearUndecided(id, 'moved')
+    // Moved out of review, cancelled or run again meanwhile: its recovery is over.
+    for (const [id, st] of this.recovery) {
+      const task = tasksRepo.get(id)
+      if (st.episode && (!task || !this.recoveryCurrent(task, st.episode))) this.dropRecovery(id)
+      // Its inputs changed while it waited: the old work isn't repeated; the task waits for the user.
+      else if (task && st.episode?.kind === 'work' && !st.episode.launched && this.workBasis(task) !== st.episode.basis) this.workStopped(id, t('orchestrator:recovery.work.notRetried', { why: t('orchestrator:recovery.work.inputs') }))
+    }
     const unmerged = this.unmergedDone()
     for (const id of [...this.mergeEvent.keys()]) if (!unmerged.has(id)) this.mergeDone(id, 'mergeGone') // a real merge closed it already ('merged')
     return {
@@ -476,7 +567,8 @@ class Orchestrator {
         ...[...this.undecided].map((id) => this.undecidedEvent.get(id)),
         ...[...this.blocked].map((id) => this.heldEvent.get(id)),
         ...[...this.mergeEvent.values()]
-      ].filter((x): x is string => !!x)
+      ].filter((x): x is string => !!x),
+      recovering: this.recoveringInfo()
     }
   }
 
@@ -512,6 +604,7 @@ class Orchestrator {
 
   /** The card of a held task: "Try again" (a new run; nothing done is undone) and the task. */
   private heldCard(task: Task, event: string, text: string, taskText: string): void {
+    if (tasksRepo.get(task.id)?.cancelledAt) return
     postCard(task.projectId, task.id, text, { kind: 'held', event, taskId: task.id, actions: ['retry', 'openTask'] }, taskText)
   }
 
@@ -616,9 +709,10 @@ class Orchestrator {
     return this.globalPaused
   }
 
-  pauseAll(): void {
+  pauseAll(by: 'user' | 'auth' = 'user'): void {
     this.globalPaused = true
     writeJson(PAUSED_KEY, true)
+    this.recoveryStopped(by)
     for (const r of this.active.values()) this.pauseRun(r.runId)
     emit({ type: 'orchestrator:changed' })
   }
@@ -642,11 +736,13 @@ class Orchestrator {
     if (!active.length) return
     const leads = new Map(active.map((pid) => [pid, projectLead(pid)?.id ?? null]))
     const unmerged = this.mergeBlockers()
+    // Held, or waiting for a worker recovery (only its timer starts it).
+    const held = new Set([...this.blocked, ...[...this.recovery].filter(([, st]) => st.episode?.kind === 'work').map(([id]) => id)])
     for (const agent of agentsRepo.list()) {
       if (!agent.enabled || agent.isLead || agent.status !== 'idle' || this.busy.has(agent.id)) continue
       // Unassigned work only from projects the agent belongs to and does not lead.
       const workable = memberProjectIds(agent.id).filter((pid) => leads.has(pid) && leads.get(pid) !== agent.id)
-      const task = tasksRepo.nextFor(agent.id, this.blocked, active, workable, unmerged) ?? (settings.shareWithTwins ? this.takeFromTwin(agent, workable, unmerged) : null)
+      const task = tasksRepo.nextFor(agent.id, held, active, workable, unmerged) ?? (settings.shareWithTwins ? this.takeFromTwin(agent, workable, unmerged, held) : null)
       if (task) void this.startTask(task.id, agent.id)
     }
   }
@@ -655,12 +751,12 @@ class Orchestrator {
    * An idle agent takes over a task queued for a busy twin (same role and skills, e.g. a duplicated developer) in a
    * project both work in. Tasks with a revision note stay with their agent (it has the context).
    */
-  private takeFromTwin(agent: Agent, projectIds: string[], unmerged: Set<string>): Task | null {
+  private takeFromTwin(agent: Agent, projectIds: string[], unmerged: Set<string>, held: Set<string>): Task | null {
     if (!projectIds.length) return null
     const busyTwins = agentsRepo
       .list()
       .filter((o) => o.enabled && !o.isLead && isTwin(agent, o) && (o.status !== 'idle' || this.busy.has(o.id)))
-    const task = tasksRepo.queuedFor(busyTwins.map((o) => o.id), projectIds, this.blocked, unmerged)[0]
+    const task = tasksRepo.queuedFor(busyTwins.map((o) => o.id), projectIds, held, unmerged)[0]
     if (!task) return null
     const from = busyTwins.find((o) => o.id === task.assigneeId)?.name ?? '?'
     tasksRepo.update(task.id, { assigneeId: agent.id })
@@ -797,6 +893,7 @@ class Orchestrator {
 
   /** Lead approval / race result: merge, then tell the user what came of it (merged, waiting, conflict, no copy). */
   private async finishAndNotify(taskId: string, event: string, raceLoser?: string): Promise<void> {
+    if (tasksRepo.get(taskId)?.cancelledAt) return // a late approval of a cancelled task merges nothing
     this.mergeOutcome.delete(taskId)
     try {
       await this.finishTaskBranch(taskId)
@@ -819,6 +916,7 @@ class Orchestrator {
     const project = task ? getProject(task.projectId) : null
     // A race's losing attempt is never merged (its copy is being discarded).
     if (!task || task.raceResult === 'lost' || !project?.rootPath || project.isolation !== 'worktree') return null
+    if (task.cancelledAt) return t('orchestrator:errors.cancelled', { key: task.key })
     const dir = this.worktreeDir(project.id, task.key)
     if (!existsSync(dir)) return null
     const root = project.rootPath
@@ -1058,7 +1156,7 @@ class Orchestrator {
     return task.dependsOn
       .map((id) => tasksRepo.get(id))
       .filter((d): d is Task => !!d && (d.status !== 'done' || blockers.has(d.id)))
-      .map((d) => d.key)
+      .map((d) => (d.cancelledAt ? t('orchestrator:cancel.depCancelled', { key: d.key }) : d.key))
   }
 
   /**
@@ -1067,6 +1165,7 @@ class Orchestrator {
    */
   /** Why a task can't start now (shown as it is), or the agent that will run it. */
   private startCheck(task: Task, agentId?: string, force = false): { agent: Agent } | { error: string } {
+    if (task.cancelledAt) return { error: t('orchestrator:errors.cancelled', { key: task.key }) }
     const waits = force ? [] : this.waitingFor(task.id)
     if (waits.length) return { error: t('orchestrator:toast.waitingFor', { key: task.key, keys: waits.join(', ') }) }
     const agent =
@@ -1081,7 +1180,8 @@ class Orchestrator {
     return { agent }
   }
 
-  async startTask(taskId: string, agentId?: string, opts: { force?: boolean } = {}): Promise<void> {
+  /** `auto`: the worker recovery runs it again (its plan stays; no race copy); otherwise every start ends a recovery. */
+  async startTask(taskId: string, agentId?: string, opts: { force?: boolean; auto?: boolean } = {}): Promise<void> {
     if (this.closing) return
     const task = tasksRepo.get(taskId)
     if (!task || task.status === 'in_progress') return
@@ -1091,14 +1191,19 @@ class Orchestrator {
       return
     }
     const { agent } = check
-    this.release(task.id, 'restarted')
-    // A new run: what was said about the previous one's review no longer applies.
-    this.clearUndecided(task.id, 'restarted')
+    const ep = opts.auto ? this.recovery.get(task.id)?.episode : null
+    if (opts.auto && (ep?.kind !== 'work' || ep.launched)) return // not (or no longer) the recovery's, or already started
+    if (!opts.auto) {
+      this.release(task.id, 'restarted')
+      // A new run: what was said about the previous one's review no longer applies.
+      this.clearUndecided(task.id, 'restarted')
+      this.dropRecovery(task.id)
+    }
     this.busy.add(agent.id)
     // Race mode: a first start of an ordinary task also hands a copy to a member on another provider / model.
     // Only with the lead's review on: the lead is the one who picks the winner.
     const st = settingsRepo.get()
-    if (st.raceMode && st.reviewByLead && !task.raceOf && !task.raceResult && !task.reviewNote && !tasksRepo.challengerOf(task.id)) {
+    if (!opts.auto && st.raceMode && st.reviewByLead && !task.raceOf && !task.raceResult && !task.reviewNote && !tasksRepo.challengerOf(task.id)) {
       this.spawnChallenger(task, agent)
     }
 
@@ -1108,6 +1213,11 @@ class Orchestrator {
     const needApproval = perms.requireApproval
     tasksRepo.update(task.id, { status: 'in_progress', assigneeId: agent.id, startedAt: nowIso(), progress: 2 })
     const run = runsRepo.create(task.id, agent.id, needApproval ? 'awaiting_approval' : 'running', task.projectId)
+    if (ep) {
+      ep.launched = run.id // one start per planned try: a second timer or start finds it taken
+      ep.nextAt = null
+      this.saveRecovery()
+    }
     emit({ type: 'tasks:changed' })
     emit({ type: 'runs:changed' })
 
@@ -1116,10 +1226,13 @@ class Orchestrator {
       // What the agent will really be able to do (its current permissions; approving widens nothing).
       const event = `run:${run.id}:approval`
       const caps = this.capsOf(agent)
+      // An automatic retry asks again (an earlier yes is never reused): why the last try stopped, and what starts now.
       postCard(
         task.projectId,
         task.id,
-        this.sayText(task, 'runApproval', { worker: agent.name, caps }),
+        ep
+          ? this.sayText(task, 'runApprovalRetry', { worker: agent.name, caps, reason: ep.reason ?? '', attempt: this.recState(task.id).attempts + 1, max: RECOVERY_RETRIES })
+          : this.sayText(task, 'runApproval', { worker: agent.name, caps }),
         { kind: 'runApproval', event, taskId: task.id, runId: run.id, actions: ['reject', 'approve', 'openTask'] }
       )
       notifyUser({ kind: 'runApproval', taskId: task.id, runId: run.id, stillPending: () => this.approvals.has(run.id) })
@@ -1135,13 +1248,16 @@ class Orchestrator {
       // Its reach changed while it waited (a permission, connection, app or provider): the yes was for the list the
       // card showed, so it doesn't count; the task is held and a new start shows the current list.
       const changed = ok && !disabled && !!now && this.capsOf(now) !== caps
+      // The user cancelled the task while its run waited (the cancel turned the approval down).
+      const cancelled = !!tasksRepo.get(task.id)?.cancelledAt
       // "Approved" only says the run may start; whether it really starts shows in the task's own lines.
-      endWait(task.projectId, event, disabled || changed ? 'withdrawn' : decided === undefined ? 'withdrawn' : decided ? 'approved' : 'rejected')
-      if (!ok || disabled || changed) {
-        const why = disabled ? 'agentDisabled' : changed ? 'capsChanged' : 'notApproved'
+      endWait(task.projectId, event, cancelled ? 'cancelled' : disabled || changed ? 'withdrawn' : decided === undefined ? 'withdrawn' : decided ? 'approved' : 'rejected')
+      if (!ok || disabled || changed || cancelled) {
+        const why = cancelled ? 'cancelled' : disabled ? 'agentDisabled' : changed ? 'capsChanged' : 'notApproved'
         runsRepo.update(run.id, { status: 'cancelled', endedAt: nowIso(), error: t(`orchestrator:runs.${why}`) })
         tasksRepo.update(task.id, { status: 'todo', progress: 0 })
-        this.hold(task.id, t(`orchestrator:held.${why}`), null)
+        if (!cancelled) this.hold(task.id, t(`orchestrator:held.${why}`), null)
+        this.dropRecovery(task.id) // turned down (or its conditions changed): not tried again on its own, not counted
         this.busy.delete(agent.id)
         this.setStatus(agent.id, disabled ? 'offline' : 'idle')
         this.log({ level: 'warn', message: why === 'notApproved' ? t('orchestrator:log.runNotApproved') : t(`orchestrator:runs.${why}`), runId: run.id, agentId: agent.id, taskId: task.id, projectId: task.projectId })
@@ -1173,7 +1289,9 @@ class Orchestrator {
       sessionId: null,
       sessionCost: 0,
       partial: '',
-      history: []
+      history: [],
+      tools: null,
+      callFailed: false
     }
     this.active.set(runId, ar)
     this.setStatus(agent.id, 'working', task.key)
@@ -1263,6 +1381,9 @@ class Orchestrator {
           (provider.kind === 'claude-cli' || provider.kind === 'codex-cli' ? ' Files you write into the project folder are listed for the user too.' : '')
       }
       const runStartedMs = Date.now()
+      // Shared project folder, CLI agent writing in it: which recorded files are there now, to tell what was gone at the end.
+      const cliWritesFolder = (provider.kind === 'claude-cli' || provider.kind === 'codex-cli') && perms.fsWrite && !!project?.rootPath && !wt
+      const presentAtStart = cliWritesFolder ? workspacePresent(pid) : null
 
       // What the agent was asked, and by whom: visible in its terminal.
       const lead = projectLead(pid)
@@ -1372,7 +1493,22 @@ class Orchestrator {
         toolOpts.mcpConfigPath = mcp.configPath
         toolOpts.mcpServer = mcp.server
       } else if (toolsAvailable) {
-        toolOpts.callTool = (n, a) => runAgentTool(connCtx, n, a)
+        const used: string[] = (ar.tools = [])
+        toolOpts.callTool = (n, a) => {
+          used.push(n) // before it runs: a tool whose result never came back still counts
+          return runAgentTool(connCtx, n, a)
+        }
+      }
+      // A run the recovery started: everything is checked again now, just before the provider is called (after an
+      // approval too); the attempt is counted only now.
+      const ep = this.recovery.get(task.id)?.episode
+      if (ep?.kind === 'work' && ep.launched === runId) {
+        const why = this.workGate(task.id, runId)
+        if (why) throw new RecoverySkipped(t('orchestrator:recovery.work.notRetried', { why }))
+        this.recState(task.id).attempts++
+        ep.retries++
+        ep.counted = runId
+        this.saveRecovery()
       }
       let next: { prompt: string; history?: ActiveRun['history']; resume?: string | null } = { prompt }
       let result: Awaited<ReturnType<ProviderAdapter['run']>>
@@ -1461,6 +1597,7 @@ class Orchestrator {
             next = continueWith(texts.map((r) => r.text))
             continue
           }
+          ar.callFailed = true
           throw e
         }
         flush()
@@ -1488,8 +1625,12 @@ class Orchestrator {
         costUsd: totals.calls ? totals.costUsd : usageCost || result.costUsd,
         endedAt: nowIso()
       })
-      tasksRepo.update(task.id, { status: 'in_review', progress: 100 })
+      // Cancelled meanwhile (a provider that finished despite the stop): the run's work is recorded, the task stays
+      // cancelled — no review, no done, no merge.
+      const cancelled = !!tasksRepo.get(task.id)?.cancelledAt
+      tasksRepo.update(task.id, cancelled ? { status: 'todo', progress: 0 } : { status: 'in_review', progress: 100 })
       this.failCounts.delete(task.id)
+      this.dropRecovery(task.id) // a worker recovery that led here is over (its attempts stay counted)
       this.log({
         ...logCtx,
         level: 'status',
@@ -1506,8 +1647,11 @@ class Orchestrator {
         this.heldCard(task, `run:${runId}:held`, this.sayText(task, 'commitFailed', { worker: agent.name, retry: t('tasks:drawer.retry') }), why)
       }
       // Outputs: files saved with file_save, and (CLI agents) files changed in the project folder (worktree mode: after the merge).
-      if ((provider.kind === 'claude-cli' || provider.kind === 'codex-cli') && perms.fsWrite && project?.rootPath && !wt) {
+      if (cliWritesFolder && project?.rootPath) {
         recordWorkspaceChanges(connCtx, project.rootPath, runStartedMs)
+        // Present at the start, not found now: said for the review, never as "this run removed them" (shared folder).
+        const lost = presentAtStart ? disappearedSince(presentAtStart).map((f) => f.relPath ?? f.name) : []
+        if (lost.length) this.log({ ...logCtx, level: 'warn', message: t('orchestrator:log.filesDisappeared', { names: lost.join(', ') }), meta: { lostFiles: lost } })
       }
       const outputs = generatedFor(runId)
       if (outputs.length) this.log({ ...logCtx, level: 'info', message: t('orchestrator:log.outputFiles', { names: outputs.map((f) => f.relPath ?? f.name).join(', ') }) })
@@ -1515,7 +1659,7 @@ class Orchestrator {
       const done = sameEvent()
       this.post(`task:${task.id}`, 'agent', agent.id, body, pid, outputs, done)
       // #general: what happened and what comes next, by the app (a commit failure already said it above).
-      if (committed) {
+      if (committed && !cancelled) {
         const reviewLead = settingsRepo.get().reviewByLead ? projectLead(pid) : null
         if (reviewLead) this.say(task, 'sentForReview', { worker: agent.name, lead: reviewLead.name }, done)
         else this.say(task, settingsRepo.get().reviewByLead ? 'doneNoLead' : 'doneNoReview', { worker: agent.name }, done, true)
@@ -1569,13 +1713,21 @@ class Orchestrator {
 
       this.setStatus(agent.id, 'break', t('orchestrator:status.coffeeBreak'))
       this.setStatusLater(agent.id, BREAK_MS[0] + Math.random() * (BREAK_MS[1] - BREAK_MS[0]), 'break')
-      if (committed && settingsRepo.get().reviewByLead) this.queueReview(task.id)
+      if (committed && !cancelled && settingsRepo.get().reviewByLead) this.queueReview(task.id)
     } catch (e) {
       flush()
       for (const q of instructionsRepo.queuedFor(runId)) instructionsRepo.setStatus(q.id, 'cancelled', { note: t('orchestrator:notes.endedBeforeFinish') })
       for (const r of ar.redirects.splice(0)) instructionsRepo.setStatus(r.id, 'cancelled', { note: t('orchestrator:runs.stopped') })
       const totals = usageRepo.forRun(runId)
-      if (e instanceof AbortedError || ar.controller.signal.aborted) {
+      if (e instanceof RecoverySkipped) {
+        // The recovery's run didn't start (no provider call, not counted): the task waits for the user, saying why.
+        runsRepo.update(runId, { status: 'cancelled', endedAt: nowIso(), error: e.message })
+        tasksRepo.update(task.id, { status: 'todo', progress: 0 })
+        this.workStopped(task.id, e.message)
+        this.setStatus(agent.id, 'idle')
+      } else if (e instanceof AbortedError || ar.controller.signal.aborted) {
+        // Stopped by the user or a run limit: a recovery ends (on quit, the next start decides).
+        if (!this.closing) this.dropRecovery(task.id)
         runsRepo.update(runId, {
           status: 'cancelled',
           endedAt: nowIso(),
@@ -1589,7 +1741,7 @@ class Orchestrator {
         this.log({ ...logCtx, level: 'status', message: t('orchestrator:log.runStoppedToTodo') })
         // Stopping doesn't undo anything: say where what the agent did so far is (a stop for a move to Done gets the
         // "done by hand" note instead).
-        if (!this.stoppingForDone.has(task.id)) this.postOnce(`task:${task.id}`, this.leftChangesNote(task, ar.limitHit ? 'limit' : 'stopped'), pid)
+        if (!this.stoppingForDone.has(task.id) && !tasksRepo.get(task.id)?.cancelledAt) this.postOnce(`task:${task.id}`, this.leftChangesNote(task, ar.limitHit ? 'limit' : 'stopped'), pid)
         if (ar.limitHit) {
           this.log({ ...logCtx, level: 'warn', message: ar.limitHit })
           this.heldCard(task, `run:${runId}:held`, this.sayText(task, 'limitStopped', { reason: ar.limitHit, retry: t('tasks:drawer.retry') }), ar.limitHit)
@@ -1626,10 +1778,23 @@ class Orchestrator {
           // own (not after the cooldown, not on restart); the user restarts it explicitly.
           const fails = (this.failCounts.get(task.id) ?? 0) + 1
           this.failCounts.set(task.id, fails)
-          this.hold(task.id, t('orchestrator:held.failed', { count: fails, error: text.slice(0, 200) }), { why: 'failed', event: `run:${runId}:held` })
-          this.heldCard(task, `run:${runId}:held`, this.sayText(task, 'failed', { worker: agent.name, reason: text, retry: t('tasks:drawer.retry') }), t('orchestrator:chat.taskFailedHeld', { agent: agent.name, text: full }))
-          this.setStatus(agent.id, 'error', text.slice(0, 120))
-          this.setStatusLater(agent.id, ERROR_COOLDOWN_MS, 'error')
+          // Exception (ADR-037): a passing failure of a run known to have changed nothing outside is run again later.
+          const kind = runErrorKind(msg)
+          const passing = kind === 'network' || kind === 'timeout' || kind === 'overloaded'
+          const short = passing ? t('orchestrator:recovery.workFailed', { provider: provider.label, what: t(`orchestrator:recovery.why.${kind}`) }) : ''
+          const again = passing ? this.retryWorkLater(task, runId, agent, provider.kind, ar, short) : null
+          if (again?.scheduled) {
+            this.setStatus(agent.id, 'idle')
+          } else {
+            const why = again?.why ? ` ${again.why}` : ''
+            const tried = this.recoveryTried(task.id)
+            this.dropRecovery(task.id)
+            const reason = `${text}${why}${tried ? ` ${tried}` : ''}`
+            this.hold(task.id, t('orchestrator:held.failed', { count: fails, error: text.slice(0, 200) }) + why, { why: 'failed', event: `run:${runId}:held` })
+            this.heldCard(task, `run:${runId}:held`, this.sayText(task, 'failed', { worker: agent.name, reason, retry: t('tasks:drawer.retry') }), t('orchestrator:chat.taskFailedHeld', { agent: agent.name, text: `${full}${why}${tried ? ` ${tried}` : ''}` }))
+            this.setStatus(agent.id, 'error', text.slice(0, 120))
+            this.setStatusLater(agent.id, ERROR_COOLDOWN_MS, 'error')
+          }
         }
       }
     } finally {
@@ -1639,9 +1804,12 @@ class Orchestrator {
       disposeImages?.()
       skillCopies?.dispose()
       forgetRun(runId)
-      rejectApprovalsForRun(runId)
+      const cancelledTask = !!tasksRepo.get(task.id)?.cancelledAt
+      rejectApprovalsForRun(runId, cancelledTask ? 'cancelled' : 'withdrawn')
       this.active.delete(runId)
       this.busy.delete(agent.id)
+      // A cancel that waited for this run to end is confirmed now (not before).
+      if (cancelledTask && !this.isRunning(task.id)) this.cancelDone(task.id)
       emit({ type: 'tasks:changed' })
       emit({ type: 'runs:changed' })
       emit({ type: 'instructions:changed' })
@@ -2081,7 +2249,7 @@ class Orchestrator {
 
   /** Pause everything once and tell the user exactly how to fix credentials. */
   private authFailure(text: string, projectId: string | null): void {
-    if (!this.globalPaused) this.pauseAll()
+    if (!this.globalPaused) this.pauseAll('auth')
     if (Date.now() - this.lastAuthAlert < 60_000) return
     this.lastAuthAlert = Date.now()
     this.post('general', 'system', null, t('orchestrator:auth.alert', { text }), projectId)
@@ -2170,10 +2338,516 @@ class Orchestrator {
     }
   }
 
+  /* ───────────────────────── cancel ───────────────────────── */
+
+  /** Cancelled tasks whose run hadn't ended yet: the run's end confirms the cancel (its summary is posted then). */
+  private cancelling = new Set<string>()
+
+  /* ───────────────────────── review recovery (ADR-036) ───────────────────────── */
+
+  private recovery = new Map<string, RecoveryState>()
+  /** One timer per task at most (re-arming clears the old one): never two retries or two reviews for one task. */
+  private recoveryTimers = new Map<string, NodeJS.Timeout>()
+  private filesListener: (() => void) | null = null
+
+  private saveRecovery(): void {
+    for (const id of [...this.recovery.keys()]) if (!tasksRepo.get(id)) this.recovery.delete(id)
+    writeJson(RECOVERY_KEY, Object.fromEntries(this.recovery))
+    emit({ type: 'orchestrator:changed' })
+  }
+
+  private recState(taskId: string): RecoveryState {
+    let st = this.recovery.get(taskId)
+    if (!st) this.recovery.set(taskId, (st = { attempts: 0, episode: null }))
+    return st
+  }
+
+  /** Recovery acts only where the user started the project's work in this session and nothing is paused. */
+  private recoveryLive(projectId: string): boolean {
+    return !this.closing && !this.globalPaused && this.workStarted.has(projectId)
+  }
+
+  /** The recovery still fits the task: not cancelled, no other run since (review: still in review, the same run). */
+  private recoveryCurrent(task: Task, ep: RecoveryEpisode): boolean {
+    const latest = runsRepo.list({ taskId: task.id, limit: 1 })[0]?.id
+    if (ep.kind === 'work') return !task.cancelledAt && (ep.launched ? latest === ep.launched : task.status === 'todo' && latest === ep.runId)
+    return task.status === 'in_review' && !task.cancelledAt && latest === ep.runId
+  }
+
+  /** Ends the task's recovery (its timer too); the lifetime attempt count stays. */
+  private dropRecovery(taskId: string): void {
+    const timer = this.recoveryTimers.get(taskId)
+    if (timer) clearTimeout(timer)
+    this.recoveryTimers.delete(taskId)
+    const st = this.recovery.get(taskId)
+    if (st?.episode) {
+      st.episode = null
+      this.saveRecovery()
+    }
+  }
+
+  /**
+   * A review failed for a passing reason, or gave no clear verdict: schedule one more review call (never the worker),
+   * or say why not (`why`, for the user's card; '' when recovery doesn't apply at all).
+   */
+  private retryReviewLater(task: Task, runId: string, provider: ProviderKind, reason: string): { scheduled: true } | { scheduled: false; why: string } {
+    if (!settingsRepo.get().autoRecovery) return { scheduled: false, why: this.recovery.get(task.id)?.episode ? t('orchestrator:recovery.paused.off') : '' }
+    if (task.cancelledAt || task.raceOf || tasksRepo.challengerOf(task.id)) return { scheduled: false, why: '' }
+    if (!RECOVERABLE_REVIEW.has(provider)) return { scheduled: false, why: t('orchestrator:recovery.noLimits') }
+    const st = this.recState(task.id)
+    if (st.attempts >= RECOVERY_RETRIES) return { scheduled: false, why: st.episode?.retries ? '' : t('orchestrator:recovery.used', { max: RECOVERY_RETRIES }) }
+    const ep: RecoveryEpisode = st.episode?.runId === runId ? st.episode : { kind: 'retry', runId, startedAt: Date.now(), nextAt: null, fileIds: [], retries: 0 }
+    const delay = RECOVERY_DELAYS_MS[Math.min(st.attempts, RECOVERY_DELAYS_MS.length - 1)]
+    if (Date.now() + delay - ep.startedAt > RECOVERY_WINDOW_MS) return { scheduled: false, why: '' }
+    ep.kind = 'retry'
+    ep.nextAt = Date.now() + delay
+    st.episode = ep
+    this.saveRecovery()
+    this.armRecovery(task.id)
+    const ev = sameEvent()
+    // When nothing is armed yet (the project's work isn't started), no time is promised.
+    const live = this.recoveryLive(task.projectId)
+    const text = this.sayText(task, live ? 'recoveryRetry' : 'recoveryRetryLater', { reason, minutes: Math.round(delay / 60_000), attempt: st.attempts + 1, max: RECOVERY_RETRIES })
+    this.post(`task:${task.id}`, 'system', null, text, task.projectId, [], ev)
+    this.post('general', 'system', null, text, task.projectId, [], { ...ev, status: true })
+    return { scheduled: true }
+  }
+
+  /** The changed files are still being read in: wait for them (no model call), then one review. False: too long. */
+  private reviewWhenFilesReady(task: Task, runId: string, fileIds: string[], names: string[]): boolean {
+    if (!settingsRepo.get().autoRecovery || task.cancelledAt) return false
+    const st = this.recState(task.id)
+    const same = st.episode?.runId === runId ? st.episode : null
+    const ep: RecoveryEpisode = same ?? { kind: 'files', runId, startedAt: Date.now(), nextAt: null, fileIds, retries: 0 }
+    if (Date.now() - ep.startedAt >= RECOVERY_WINDOW_MS) return false
+    const announce = !same || same.kind !== 'files'
+    ep.kind = 'files'
+    ep.fileIds = fileIds
+    ep.nextAt = null
+    st.episode = ep
+    this.saveRecovery()
+    this.armRecovery(task.id)
+    if (announce) {
+      const ev = sameEvent()
+      const text = this.sayText(task, 'recoveryFiles', { files: names.join(', '), minutes: Math.round(RECOVERY_WINDOW_MS / 60_000) })
+      this.post(`task:${task.id}`, 'system', null, text, task.projectId, [], ev)
+      this.post('general', 'system', null, text, task.projectId, [], { ...ev, status: true })
+    }
+    return true
+  }
+
+  /** (Re)arms the task's one timer: the next review try, or the end of a files wait. Nothing while not live. */
+  private armRecovery(taskId: string): void {
+    const old = this.recoveryTimers.get(taskId)
+    if (old) clearTimeout(old)
+    this.recoveryTimers.delete(taskId)
+    const ep = this.recovery.get(taskId)?.episode
+    const task = tasksRepo.get(taskId)
+    if (!ep || !task || !this.recoveryLive(task.projectId)) return
+    if (ep.kind === 'work') {
+      if (ep.launched) return // its run is started (or waits for approval)
+      this.recoveryTimers.set(taskId, setTimeout(() => this.recoveryDue(taskId), Math.max(0, (ep.nextAt ?? 0) - Date.now())))
+      return
+    }
+    // Its review was queued and the app closed before it ran: queued again (already counted, so not counted again).
+    if (ep.kind === 'retry' ? ep.nextAt === null : !ep.fileIds.length) {
+      if (!this.reviewing.has(taskId)) {
+        this.reviewedRun.delete(taskId)
+        this.queueReview(taskId)
+      }
+      return
+    }
+    if (ep.kind === 'files' && !filesRepo.byIds(ep.fileIds).some((f) => f.status === 'processing')) return this.filesSettled()
+    const at = (ep.kind === 'retry' ? ep.nextAt : null) ?? ep.startedAt + RECOVERY_WINDOW_MS
+    this.recoveryTimers.set(taskId, setTimeout(() => this.recoveryDue(taskId), Math.max(0, at - Date.now())))
+  }
+
+  private recoveryDue(taskId: string): void {
+    this.recoveryTimers.delete(taskId)
+    const st = this.recovery.get(taskId)
+    const ep = st?.episode
+    const task = tasksRepo.get(taskId)
+    if (!st || !ep || !task) return
+    if (!this.recoveryCurrent(task, ep)) return this.dropRecovery(taskId)
+    if (!this.recoveryLive(task.projectId)) return // armed again when the user starts the work
+    if (ep.kind === 'work') return this.workDue(taskId)
+    if (ep.kind === 'files') {
+      const names = filesRepo.byIds(ep.fileIds).filter((f) => f.status === 'processing').map((f) => f.name)
+      return this.needsUser(taskId, t('orchestrator:reviewIssue.filesNotReady', { files: names.join(', ') }), `recovery:${taskId}:${randomUUID()}`)
+    }
+    if (Date.now() - ep.startedAt > RECOVERY_WINDOW_MS) return this.needsUser(taskId, t('orchestrator:recovery.windowOver'), `recovery:${taskId}:${randomUUID()}`)
+    // A review already running for it: queueReview marks it to go once more after that one (never two at a time).
+    st.attempts++
+    ep.retries++
+    ep.nextAt = null
+    this.saveRecovery()
+    this.reviewedRun.delete(taskId)
+    this.queueReview(taskId)
+  }
+
+  /** Files changed state: a waiting review whose files are all read in now is queued — once. */
+  private filesSettled(): void {
+    for (const [taskId, st] of this.recovery) {
+      const ep = st.episode
+      if (!ep || ep.kind !== 'files' || !ep.fileIds.length) continue
+      if (filesRepo.byIds(ep.fileIds).some((f) => f.status === 'processing')) continue
+      const task = tasksRepo.get(taskId)
+      if (!task || !this.recoveryCurrent(task, ep)) {
+        this.dropRecovery(taskId)
+        continue
+      }
+      if (!this.recoveryLive(task.projectId)) continue
+      ep.fileIds = [] // queued once; a review finding new changes still being read waits again (same recovery)
+      const timer = this.recoveryTimers.get(taskId)
+      if (timer) clearTimeout(timer)
+      this.recoveryTimers.delete(taskId)
+      this.saveRecovery()
+      this.reviewedRun.delete(taskId)
+      this.queueReview(taskId)
+    }
+  }
+
+  /** What the recovery tried, and what the task's model calls cost so far (or that it isn't known), for the user. */
+  private recoveryTried(taskId: string): string {
+    const ep = this.recovery.get(taskId)?.episode
+    if (!ep) return ''
+    const minutes = Math.max(1, Math.round((Date.now() - ep.startedAt) / 60_000))
+    const tried =
+      ep.kind === 'files' && !ep.retries
+        ? t('orchestrator:recovery.triedFiles', { minutes })
+        : ep.retries
+          ? t(ep.kind === 'work' ? 'orchestrator:recovery.triedWork' : 'orchestrator:recovery.tried', { count: ep.retries, minutes })
+          : ''
+    return tried ? `${tried} ${this.taskCost(taskId)}`.trim() : ''
+  }
+
+  /** The task's model use so far: a cost only when every call reported one (Claude Code does; the API providers don't). */
+  private taskCost(taskId: string): string {
+    const rows = getDb()
+      .prepare('SELECT provider, SUM(cost_usd) AS cost, SUM(input + output + cache_read + cache_write) AS tokens FROM token_usage WHERE task_id = ? GROUP BY provider')
+      .all(taskId) as { provider: string; cost: number; tokens: number }[]
+    if (!rows.length) return t('orchestrator:recovery.costNone')
+    if (rows.every((r) => r.provider === 'mock')) return t('orchestrator:recovery.costDemo')
+    const tokens = rows.reduce((n, r) => n + r.tokens, 0)
+    if (rows.every((r) => r.provider === 'claude-cli' || r.provider === 'mock')) return t('orchestrator:recovery.cost', { cost: rows.reduce((n, r) => n + r.cost, 0).toFixed(2) })
+    return t('orchestrator:recovery.costUnknown', { tokens: num(tokens) })
+  }
+
+  /**
+   * Right before a review call: if the recovery queued it, may it still be made? Null = yes (or not the recovery's call,
+   * e.g. the user's own retry); 'again' = the lead or its provider changed since this review began; else why not.
+   * A counted try that isn't made is not counted.
+   */
+  private recoveryGate(task: Task, lead: Agent, provider: Provider): string | null {
+    const st = this.recovery.get(task.id)
+    const ep = st?.episode
+    if (!st || !ep || ep.kind === 'work') return null
+    const now = projectLead(task.projectId)
+    const current = now ? this.providerFor(now).provider : null
+    if (now?.id !== lead.id || current?.id !== provider.id || current?.kind !== provider.kind) return 'again'
+    const counted = ep.kind === 'retry' && ep.nextAt === null
+    // Waiting for files ended in the first review of the work, not a retry: the provider check isn't for it.
+    // The time window is checked here too: a review queued long ago (a restart, a long queue, files ready late) is too late.
+    const why = !settingsRepo.get().autoRecovery
+      ? t('orchestrator:recovery.paused.off')
+      : Date.now() - ep.startedAt > RECOVERY_WINDOW_MS
+        ? t('orchestrator:recovery.windowOverNow', { minutes: Math.round(RECOVERY_WINDOW_MS / 60_000) })
+      : (counted || ep.retries > 0) && !RECOVERABLE_REVIEW.has(provider.kind)
+        ? t('orchestrator:recovery.noLimitsNow')
+        : ''
+    if (why && counted) {
+      st.attempts--
+      ep.retries--
+    }
+    return why || null
+  }
+
+  /** Everything paused (the user, a sign-in failure) or recovery turned off: pending recoveries end; each task waits for the user, saying why. */
+  recoveryStopped(why: 'user' | 'auth' | 'off'): void {
+    for (const [taskId, st] of this.recovery) {
+      if (!st.episode) continue
+      // Turned off: a review queued or running for it checks the setting itself right before its call / after it.
+      if (why === 'off' && this.reviewing.has(taskId)) continue
+      // A worker run the recovery started checks everything itself just before its provider call.
+      if (st.episode.kind === 'work') {
+        if (!st.episode.launched) this.workStopped(taskId, t(`orchestrator:recovery.paused.${why}`))
+        continue
+      }
+      const task = tasksRepo.get(taskId)
+      if (task?.status === 'in_review' && !task.cancelledAt) this.needsUser(taskId, t(`orchestrator:recovery.paused.${why}`), `recovery:${taskId}:${randomUUID()}`)
+      this.dropRecovery(taskId)
+    }
+  }
+
+  /* ── worker recovery (ADR-037) ── */
+
+  /** The task's inputs a run worked from: a change while it waits means the old work isn't repeated on its own. */
+  private workBasis(task: Task): string {
+    return JSON.stringify([task.title, task.description, task.acceptance, [...task.dependsOn].sort(), task.assigneeId])
+  }
+
+  /** Why a failed run can't be taken as having changed nothing outside ('' = it can: none of these). */
+  private sideEffects(runId: string, kind: ProviderKind, ar: ActiveRun): string {
+    if (!RECOVERABLE_WORK.has(kind)) return t('orchestrator:recovery.work.cli')
+    if (!ar.callFailed) return t('orchestrator:recovery.work.notCall')
+    // No counter (tools that don't go through Agentbits): nothing known is not "nothing happened".
+    if (!ar.tools) return t('orchestrator:recovery.work.noRecord')
+    const used = [...new Set(ar.tools.filter((n) => !SIDE_EFFECT_FREE_TOOLS.has(n)))]
+    if (used.length) return t('orchestrator:recovery.work.tools', { tools: used.join(', ') })
+    // Second layer: the run's own records (files it produced, connection / app operations).
+    if (generatedFor(runId).length) return t('orchestrator:recovery.work.files')
+    if ((getDb().prepare('SELECT COUNT(*) AS n FROM audit_log WHERE run_id = ?').get(runId) as { n: number }).n) return t('orchestrator:recovery.work.audit')
+    return ''
+  }
+
+  /**
+   * A worker run failed for a passing reason: run it again later when it is known to have changed nothing outside, or
+   * say why not (`why`, for the card; '' when recovery doesn't apply at all).
+   */
+  private retryWorkLater(task: Task, runId: string, agent: Agent, kind: ProviderKind, ar: ActiveRun, reason: string): { scheduled: true } | { scheduled: false; why: string } {
+    const st = this.recovery.get(task.id)
+    const prev = st?.episode?.kind === 'work' && st.episode.launched === runId ? st.episode : null
+    if (!settingsRepo.get().autoRecovery) return { scheduled: false, why: prev ? t('orchestrator:recovery.paused.off') : '' }
+    const now = tasksRepo.get(task.id)
+    if (!now || now.cancelledAt || now.raceOf || tasksRepo.challengerOf(task.id)) return { scheduled: false, why: '' }
+    const effects = this.sideEffects(runId, kind, ar)
+    if (effects) return { scheduled: false, why: t('orchestrator:recovery.work.notRetried', { why: effects }) }
+    // `task` is what the run started from: changed since, the old work isn't repeated.
+    const basis = prev?.basis ?? this.workBasis(task)
+    if (this.workBasis(now) !== basis) return { scheduled: false, why: t('orchestrator:recovery.work.notRetried', { why: t('orchestrator:recovery.work.inputs') }) }
+    const state = this.recState(task.id)
+    if (state.attempts >= RECOVERY_RETRIES) return { scheduled: false, why: prev ? '' : t('orchestrator:recovery.used', { max: RECOVERY_RETRIES }) }
+    const ep: RecoveryEpisode = prev ?? { kind: 'work', runId, startedAt: Date.now(), nextAt: null, fileIds: [], retries: 0, basis }
+    const delay = RECOVERY_DELAYS_MS[Math.min(state.attempts, RECOVERY_DELAYS_MS.length - 1)]
+    if (Date.now() + delay - ep.startedAt > RECOVERY_WINDOW_MS) return { scheduled: false, why: '' }
+    Object.assign(ep, { runId, nextAt: Date.now() + delay, reason, launched: null, counted: null })
+    state.episode = ep
+    this.saveRecovery()
+    this.armRecovery(task.id)
+    const live = this.recoveryLive(task.projectId)
+    const ev = sameEvent()
+    const text = this.sayText(task, live ? 'recoveryWork' : 'recoveryWorkLater', { reason, worker: agent.name, minutes: Math.round(delay / 60_000), attempt: state.attempts + 1, max: RECOVERY_RETRIES })
+    this.post(`task:${task.id}`, 'system', null, text, task.projectId, [], ev)
+    this.post('general', 'system', null, text, task.projectId, [], { ...ev, status: true })
+    return { scheduled: true }
+  }
+
+  /**
+   * May the worker recovery's run start? Checked when its time comes and again just before the provider call (`runId`:
+   * the run it started). Null = yes; 'busy' = its agent is on other work (wait); else why not.
+   */
+  private workGate(taskId: string, runId: string | null): string | null {
+    const st = this.recovery.get(taskId)
+    const ep = st?.episode
+    const task = tasksRepo.get(taskId)
+    if (!st || !ep || ep.kind !== 'work' || !task || task.cancelledAt) return t('orchestrator:recovery.work.gone')
+    if (runId ? ep.launched !== runId : ep.launched || !this.recoveryCurrent(task, ep)) return t('orchestrator:recovery.work.gone')
+    if (!settingsRepo.get().autoRecovery) return t('orchestrator:recovery.work.off')
+    if (this.globalPaused) return t('orchestrator:recovery.work.paused')
+    if (!this.workStarted.has(task.projectId)) return t('orchestrator:recovery.work.notStarted')
+    if (Date.now() - ep.startedAt > RECOVERY_WINDOW_MS) return t('orchestrator:recovery.work.window', { minutes: Math.round(RECOVERY_WINDOW_MS / 60_000) })
+    if (st.attempts >= RECOVERY_RETRIES) return t('orchestrator:recovery.work.used', { max: RECOVERY_RETRIES })
+    if (this.workBasis(task) !== ep.basis) return t('orchestrator:recovery.work.inputs')
+    const waits = this.waitingFor(taskId)
+    if (waits.length) return t('orchestrator:recovery.work.deps', { keys: waits.join(', ') })
+    const agent = task.assigneeId ? agentsRepo.get(task.assigneeId) : null
+    if (!agent?.enabled) return t('orchestrator:recovery.work.agent')
+    if (!RECOVERABLE_WORK.has(this.providerFor(agent).provider.kind)) return t('orchestrator:recovery.work.cli')
+    if (!runId && this.busy.has(agent.id)) return 'busy'
+    return null
+  }
+
+  /** The worker recovery's time came: start the run (the usual start checks, an approval if the agent needs one). */
+  private workDue(taskId: string): void {
+    const ep = this.recovery.get(taskId)?.episode
+    if (ep?.kind === 'work' && ep.launched) return // already started (or asking for approval): never a second run
+    const why = this.workGate(taskId, null)
+    if (why === 'busy' && ep) {
+      // Its agent is on other work: looked at again in a minute (within the same time window).
+      ep.nextAt = Date.now() + 60_000
+      this.saveRecovery()
+      return this.armRecovery(taskId)
+    }
+    if (why) return this.workStopped(taskId, t('orchestrator:recovery.work.notRetried', { why }))
+    void this.startTask(taskId, tasksRepo.get(taskId)?.assigneeId ?? undefined, { auto: true })
+  }
+
+  /** The worker recovery ends without a run: the task is held for the user, saying why (`why`, a sentence) and what was tried. */
+  private workStopped(taskId: string, why: string): void {
+    const task = tasksRepo.get(taskId)
+    const ep = this.recovery.get(taskId)?.episode
+    const tried = this.recoveryTried(taskId)
+    this.dropRecovery(taskId)
+    if (!task || task.cancelledAt || task.status !== 'todo') return
+    const reason = [ep?.reason, why, tried].filter(Boolean).join(' ')
+    const event = `recovery:${taskId}:${randomUUID()}`
+    this.hold(taskId, reason, { why: 'failed', event })
+    this.heldCard(task, event, this.sayText(task, 'failed', { reason, retry: t('tasks:drawer.retry') }), reason)
+    emit({ type: 'orchestrator:changed' })
+  }
+
+  /** What the renderer shows for tasks being recovered. */
+  private recoveringInfo(): Record<string, RecoveryInfo> {
+    const out: Record<string, RecoveryInfo> = {}
+    for (const [taskId, st] of this.recovery) {
+      const ep = st.episode
+      if (!ep) continue
+      const task = tasksRepo.get(taskId)
+      if (!task || !this.recoveryCurrent(task, ep)) continue
+      out[taskId] = {
+        kind: ep.kind,
+        at: ep.kind !== 'files' && ep.nextAt ? new Date(ep.nextAt).toISOString() : null,
+        attempt: Math.min(st.attempts + ((ep.kind === 'retry' && ep.nextAt) || (ep.kind === 'work' && !ep.counted) ? 1 : 0), RECOVERY_RETRIES),
+        reason: ep.reason ?? null,
+        launched: !!ep.launched,
+        max: RECOVERY_RETRIES,
+        until: new Date(ep.startedAt + RECOVERY_WINDOW_MS).toISOString(),
+        waitsForStart: !this.recoveryLive(task.projectId)
+      }
+    }
+    return out
+  }
+
+  private isRunning(taskId: string): boolean {
+    return [...this.active.values()].some((r) => r.taskId === taskId)
+  }
+
+  /** The task and its race attempt (for the user one job: cancelled together), neither done nor already cancelled. */
+  private cancelSet(task: Task): Task[] {
+    const partner = task.raceOf ? tasksRepo.get(task.raceOf) : tasksRepo.challengerOf(task.id)
+    return [task, ...(partner && partner.status !== 'done' && !partner.cancelledAt ? [partner] : [])]
+  }
+
+  /** What "Cancel task" covers, for the confirmation: which tasks, which tasks wait on them, what is running now. */
+  cancelScope(taskId: string): CancelScope {
+    const task = tasksRepo.get(taskId)
+    if (!task) throw new Error(t('main:errors.taskNotFound'))
+    if (task.status === 'done') throw new Error(t('orchestrator:errors.cancelDone', { key: task.key }))
+    if (task.cancelledAt) throw new Error(t('orchestrator:errors.alreadyCancelled', { key: task.key }))
+    const set = this.cancelSet(task)
+    const ids = new Set(set.map((x) => x.id))
+    const runs = set.flatMap((x) => runsRepo.list({ activeOnly: true, taskId: x.id }))
+    return {
+      keys: set.map((x) => x.key),
+      dependents: tasksRepo
+        .listAll()
+        .filter((x) => !ids.has(x.id) && x.status !== 'done' && !x.cancelledAt && x.dependsOn.some((d) => ids.has(d)))
+        .map((x) => x.key),
+      running: runs.some((r) => r.status !== 'awaiting_approval'),
+      awaitingApproval: runs.some((r) => r.status === 'awaiting_approval')
+    }
+  }
+
+  /**
+   * The user gives up a task (and its race attempt). The mark is written first, so every later path — a run or review
+   * ending late, a queued review, autopilot, a card, a restart — sees it. Then what waits ends as "cancelled", a run
+   * waiting for approval is turned down and a running agent is asked to stop. `stopped`: every run really ended;
+   * until then the cancel is only requested, and the run's end confirms it. Nothing is undone; the task and its
+   * history stay (not deleted, not done). Tasks that depend on it are not cancelled: they wait, saying why.
+   */
+  async cancelTask(taskId: string, timeoutMs = 60_000): Promise<{ keys: string[]; stopped: boolean }> {
+    const task = tasksRepo.get(taskId)
+    this.cancelScope(taskId) // the same checks as the confirmation (not found / done / already cancelled)
+    const set = this.cancelSet(task!)
+    const at = nowIso()
+    for (const x of set) tasksRepo.update(x.id, { cancelledAt: at })
+    for (const x of set) {
+      this.cancelling.add(x.id)
+      this.release(x.id, 'cancelled')
+      this.clearUndecided(x.id, 'cancelled')
+      this.dropRecovery(x.id)
+      this.deferredReviews.delete(x.id)
+      this.reviewAgain.delete(x.id)
+      this.sentBackRun.delete(x.id)
+      if (!this.isRunning(x.id)) tasksRepo.update(x.id, { status: 'todo', progress: 0 })
+      this.stopTask(x.id) // a running agent is asked to stop; a run waiting for approval is turned down
+    }
+    emit({ type: 'tasks:changed' })
+    emit({ type: 'runs:changed' })
+    emit({ type: 'orchestrator:changed' })
+    const busy = (): boolean => set.some((x) => this.isRunning(x.id))
+    if (busy()) {
+      const ev = sameEvent()
+      for (const x of set.filter((y) => this.isRunning(y.id))) {
+        const text = t('orchestrator:cancel.requested', { title: x.title, key: x.key })
+        this.post(`task:${x.id}`, 'system', null, text, x.projectId, [], ev)
+        this.post('general', 'system', null, text, x.projectId, [], { ...ev, status: true })
+      }
+    }
+    const until = Date.now() + timeoutMs
+    while (busy() && Date.now() < until) await new Promise((r) => setTimeout(r, 50))
+    for (const x of set) if (!this.isRunning(x.id)) this.cancelDone(x.id)
+    return { keys: set.map((x) => x.key), stopped: !busy() }
+  }
+
+  /** The cancel is complete (nothing of the task runs any more): one summary in the task thread and #general. */
+  private cancelDone(taskId: string): void {
+    if (!this.cancelling.delete(taskId)) return
+    const task = tasksRepo.get(taskId)
+    if (!task?.cancelledAt) return
+    if (task.status !== 'todo') tasksRepo.update(taskId, { status: 'todo', progress: 0 })
+    const text = this.cancelSummary(task)
+    const ev = sameEvent()
+    this.post(`task:${taskId}`, 'system', null, text, task.projectId, [], ev)
+    this.post('general', 'system', null, text, task.projectId, [], { ...ev, status: true })
+    emit({ type: 'tasks:changed' })
+  }
+
+  /**
+   * What the cancelled task left, from the records only: runs, files written and shell commands when the provider's
+   * tool record is complete (otherwise "not known"), connection and app operations (always audited), where its changes
+   * are, and the tasks that now wait in vain. Nothing is undone; nothing is asked of the user.
+   */
+  private cancelSummary(task: Task): string {
+    const runs = runsRepo.list({ taskId: task.id, limit: 50 }).filter((r) => logsRepo.runStarted(r.id))
+    const parts: string[] = []
+    if (!runs.length) parts.push(t('orchestrator:cancel.neverRan'))
+    else {
+      parts.push(t('orchestrator:cancel.ran', { count: runs.length }))
+      const evidence = runs.map((r) => runEvidence(r.id))
+      if (evidence.some((e) => e?.simulated)) parts.push(t('orchestrator:cancel.demo'))
+      else if (evidence.every((e) => e && e.toolRecord && !e.recordMissing)) {
+        const files = evidence.reduce((n, e) => n + (e?.fileCount.written ?? 0), 0)
+        const commands = evidence.reduce((n, e) => n + (e?.commandCount.total ?? 0), 0)
+        parts.push(files ? t('orchestrator:cancel.files', { count: files }) : t('orchestrator:cancel.noFiles'))
+        parts.push(commands ? t('orchestrator:cancel.commands', { count: commands }) : t('orchestrator:cancel.noCommands'))
+      } else parts.push(t('orchestrator:cancel.unknown'))
+      const external = (getDb().prepare("SELECT COUNT(*) AS n FROM audit_log WHERE task_id = ? AND actor_type = 'agent' AND result = 'ok'").get(task.id) as { n: number }).n
+      parts.push(external ? t('orchestrator:cancel.external', { count: external }) : t('orchestrator:cancel.noExternal'))
+      parts.push(t('orchestrator:cancel.left', { where: this.changesWhere(task) }))
+    }
+    const dependents = tasksRepo.listAll().filter((x) => x.status !== 'done' && !x.cancelledAt && x.dependsOn.includes(task.id))
+    if (dependents.length) parts.push(t('orchestrator:cancel.dependents', { keys: dependents.map((x) => x.key).join(', ') }))
+    return t('orchestrator:cancel.done', { title: task.title, key: task.key, details: parts.join(' ') })
+  }
+
+  /**
+   * "Reopen": the cancel is lifted for the task and its race attempt cancelled with it. Nothing starts on its own —
+   * the task waits (held) until the user starts it.
+   */
+  reopenTask(taskId: string): string[] {
+    const task = tasksRepo.get(taskId)
+    if (!task) throw new Error(t('main:errors.taskNotFound'))
+    if (!task.cancelledAt) return []
+    const partner = task.raceOf ? tasksRepo.get(task.raceOf) : tasksRepo.challengerOf(task.id)
+    const set = [task, ...(partner?.cancelledAt === task.cancelledAt ? [partner] : [])]
+    if (set.some((x) => this.cancelling.has(x.id) || this.isRunning(x.id))) throw new Error(t('orchestrator:errors.cancelStopping', { key: task.key }))
+    const ev = sameEvent()
+    for (const x of set) {
+      tasksRepo.update(x.id, { cancelledAt: null, status: 'todo', progress: 0 })
+      this.hold(x.id, t('orchestrator:held.reopened'), null)
+      this.post(`task:${x.id}`, 'system', null, t('orchestrator:cancel.reopened', { title: x.title, key: x.key }), x.projectId, [], ev)
+    }
+    emit({ type: 'tasks:changed' })
+    emit({ type: 'orchestrator:changed' })
+    return set.map((x) => x.key)
+  }
+
   /* ───────────────────────── review ───────────────────────── */
 
   queueReview(taskId: string): void {
     this.deferredReviews.delete(taskId) // reviewed now (a user's retry or a new run)
+    if (tasksRepo.get(taskId)?.cancelledAt) return // cancelled: nothing to judge
     if (this.reviewing.has(taskId)) {
       // Not dropped: a new run may have finished while the queued / running review judges an older one.
       this.reviewAgain.add(taskId)
@@ -2223,6 +2897,8 @@ class Orchestrator {
     if (this.workStarted.has(projectId)) return
     this.workStarted.add(projectId)
     this.log({ projectId, level: 'status', message: t('orchestrator:log.workStarted') })
+    // Recoveries left from before (a restart): they go on only now that the user started the work.
+    for (const [id, st] of this.recovery) if (st.episode && tasksRepo.get(id)?.projectId === projectId) this.armRecovery(id)
     for (const id of [...this.deferredReviews]) {
       const task = tasksRepo.get(id)
       if ((task && task.projectId !== projectId) || this.blocked.has(id)) continue // held: only the user's retry reviews it
@@ -2235,14 +2911,17 @@ class Orchestrator {
 
   /** Where a stopped / manually finished task's changes are (nothing is undone). */
   leftChangesNote(task: Task, why: 'stopped' | 'limit' | 'manualDone'): string {
+    return t(`orchestrator:changesLeft.${why}`, { where: this.changesWhere(task) })
+  }
+
+  /** Where the task's changes are: its working copy (worktree), else the project folder. */
+  private changesWhere(task: Task): string {
     const project = getProject(task.projectId)
-    const where =
-      project?.isolation === 'worktree' && existsSync(this.worktreeDir(project.id, task.key))
-        ? t('orchestrator:changesWhere.worktree', { branch: branchFor(task.key) })
-        : project?.rootPath
-          ? t('orchestrator:changesWhere.folder', { folder: project.rootPath })
-          : t('orchestrator:changesWhere.noFolder', { folder: this.workspace(project) })
-    return t(`orchestrator:changesLeft.${why}`, { where })
+    return project?.isolation === 'worktree' && existsSync(this.worktreeDir(project.id, task.key))
+      ? t('orchestrator:changesWhere.worktree', { branch: branchFor(task.key) })
+      : project?.rootPath
+        ? t('orchestrator:changesWhere.folder', { folder: project.rootPath })
+        : t('orchestrator:changesWhere.noFolder', { folder: this.workspace(project) })
   }
 
   /** One note in the task thread for a task the user marked done by hand. */
@@ -2297,10 +2976,14 @@ class Orchestrator {
     const task = tasksRepo.get(taskId)
     if (!task) throw new Error(t('main:errors.taskNotFound'))
     if (task.status !== 'in_review') throw new Error(t('orchestrator:errors.retryReviewNotInReview', { key: task.key }))
-    if (this.reviewing.has(taskId)) return 'pending'
+    if (this.reviewing.has(taskId)) {
+      this.dropRecovery(taskId) // the queued review is the user's now: the recovery's checks don't hold it back
+      return 'pending'
+    }
     const lead = projectLead(task.projectId)
     if (!lead) throw new Error(t('orchestrator:errors.retryReviewNoLead'))
     this.clearUndecided(taskId, 'reviewRequested')
+    this.dropRecovery(taskId) // the user's own retry: a pending automatic one is dropped (and isn't counted)
     this.reviewedRun.delete(taskId)
     this.log({ agentId: lead.id, taskId, projectId: task.projectId, level: 'status', message: t('orchestrator:log.reviewRetried', { key: task.key }) })
     emit({ type: 'orchestrator:changed' })
@@ -2320,6 +3003,13 @@ class Orchestrator {
     if (this.undecidedEvent.get(taskId) === cardEvent) return // this attempt already said it
     // Still waiting for the same reason (e.g. a race reviewed twice before anyone answered): the open card says it.
     if (this.undecided.has(taskId) && this.undecidedWhy.get(taskId) === reason) return
+    // A recovery that ends here: say what the team tried (and what the task cost so far, or that it isn't known).
+    const tried = this.recoveryTried(taskId)
+    this.dropRecovery(taskId)
+    if (tried) {
+      reason = `${reason} ${tried}`
+      if (note) note = `${note}\n${tried}`
+    }
     const before = this.undecidedEvent.get(taskId)
     if (before) endWait(task.projectId, before, 'superseded')
     this.undecided.add(taskId)
@@ -2391,12 +3081,16 @@ class Orchestrator {
     const aux = this.auxStart(pid)
     // The worker's changed files are read in again after its run: judge nothing until their current content is there.
     // Still not ready → the user decides (no verdict on content the lead can't see).
-    const notReady = await this.filesReady(generatedFor(lastRun.id).map((f) => f.id), aux.signal)
+    const changedIds = generatedFor(lastRun.id).map((f) => f.id)
+    const notReady = await this.filesReady(changedIds, aux.signal)
     if (notReady.length) {
       aux.end()
       this.setStatus(lead.id, 'idle')
       if (aux.signal.aborted || this.staleReview(taskId, basis)) return
       this.reviewedRun.set(taskId, lastRun.id)
+      // Recovery: wait for the current content (no model call meanwhile), then one review.
+      const waiting = filesRepo.byIds(changedIds).filter((f) => f.status === 'processing').map((f) => f.id)
+      if (waiting.length && this.reviewWhenFilesReady(task, lastRun.id, waiting, notReady)) return
       return this.needsUser(taskId, t('orchestrator:reviewIssue.filesNotReady', { files: notReady.join(', ') }), event)
     }
     // Files the worker produced are part of the work: inline what fits (the review has no tools).
@@ -2422,6 +3116,15 @@ class Orchestrator {
     const reviewMemory = projectMemoryForReview(pid, [task.title, task.description, task.acceptance].join('\n'))
     const ui = currentLanguage()
     const rSystem = reviewSystem(lead, criteria.length, `${languageName(ui)} (${ui})`) + (reviewMemory ? '\n\n' + reviewMemory : '')
+    // A review the recovery queued: the setting and the lead's provider are checked again now, not only when it was planned.
+    const skip = this.recoveryGate(task, lead, provider)
+    if (skip) {
+      aux.end()
+      this.setStatus(lead.id, 'idle')
+      if (skip === 'again') return void this.reviewAgain.add(taskId) // the lead or its provider changed: start over with the current one
+      this.reviewedRun.set(taskId, lastRun.id)
+      return this.needsUser(taskId, skip, event)
+    }
     this.log({
       ...leadCtx,
       level: 'prompt',
@@ -2469,11 +3172,16 @@ class Orchestrator {
           : verdict.note
       if (check?.length) tasksRepo.update(taskId, { acceptanceCheck: check })
       if (!valid) {
-        // No clear verdict: never counted as approved and not sent back either — the user decides.
+        // No clear verdict: never counted as approved and not sent back either — asked once more (recovery), then the user decides.
         this.log({ ...leadCtx, level: 'warn', message: t('orchestrator:log.reviewUnclear', { key: task.key }) })
-        this.needsUser(taskId, t('orchestrator:reviewIssue.unclear', { lead: lead.name }), event, t('orchestrator:chat.reviewUnclear', { lead: lead.name }))
+        const unclear = t('orchestrator:reviewIssue.unclear', { lead: lead.name })
+        const again = this.retryReviewLater(task, lastRun.id, provider.kind, unclear)
+        if (again.scheduled) return
+        this.needsUser(taskId, again.why ? `${unclear}. ${again.why}` : unclear, event, t('orchestrator:chat.reviewUnclear', { lead: lead.name }))
         return
       }
+      // A verdict: whatever recovery led here is over (the lifetime attempt count stays).
+      this.dropRecovery(taskId)
       this.log({ ...leadCtx, level: 'status', message: approved
           ? t('orchestrator:log.reviewApproved', { key: task.key, note })
           : t('orchestrator:log.reviewRevision', { key: task.key, note })
@@ -2552,11 +3260,19 @@ class Orchestrator {
       this.reviewedRun.set(taskId, lastRun.id)
       const { auth, text, full } = explainError(raw, provider)
       if (auth) this.authFailure(text, pid)
+      // A passing failure (network, timeout, overloaded): only the review is tried again, later — never the worker.
+      const kind = runErrorKind(raw)
+      const passing = !auth && (kind === 'network' || kind === 'timeout' || kind === 'overloaded')
+      // The status line names the cause briefly (not the provider's advice to the user: nothing is asked of them).
+      const short = passing ? t('orchestrator:recovery.reviewFailed', { provider: provider.label, what: t(`orchestrator:recovery.why.${kind}`) }) : ''
+      const again = passing ? this.retryReviewLater(task, lastRun.id, provider.kind, short) : null
+      if (again?.scheduled) return
+      const why = again && !again.scheduled && again.why ? ` ${again.why}` : ''
       this.needsUser(
         taskId,
-        t('orchestrator:reviewIssue.failed', { error: text }),
+        t('orchestrator:reviewIssue.failed', { error: text }) + why,
         event,
-        t('orchestrator:chat.reviewNeedsYou', { reason: t('orchestrator:reviewIssue.failed', { error: full }) })
+        t('orchestrator:chat.reviewNeedsYou', { reason: t('orchestrator:reviewIssue.failed', { error: full }) + why })
       )
     } finally {
       aux.end()

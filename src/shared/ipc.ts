@@ -30,6 +30,8 @@ import type {
   AgentLog,
   AgentPermissions,
   AppSettings,
+  CancelScope,
+  RecoveryInfo,
   Decision,
   DecisionInput,
   Memory,
@@ -167,6 +169,12 @@ export interface Api {
   /** Keys of the unfinished tasks this one waits for (asked before a manual start). */
   /** Only the lead's review again (the worker is not run again); 'pending' when one is already queued or running. */
   'tasks:retryReview': (id: string) => 'queued' | 'pending'
+  /** What cancelling covers (for the confirmation). */
+  'tasks:cancelScope': (id: string) => CancelScope
+  /** Cancels the task (and its race attempt); `stopped`: no run of it is still running (else only requested). */
+  'tasks:cancel': (id: string) => { keys: string[]; stopped: boolean }
+  /** Lifts the cancel; nothing starts on its own. */
+  'tasks:reopen': (id: string) => string[]
   /** A "needs you" card's action from the chat (checked again in main; `orchestrator.act`). */
   'needs:act': (projectId: string, event: string, action: NeedsAction) => NeedsActResult
   /** Start autopilot for this project in this session (opening a project starts nothing; held tasks stay held). */
@@ -352,6 +360,7 @@ export interface Api {
     simulatedReview: string[]
     /** Card events of the waits that are still open (held, undecided, merge): a card whose event isn't here is over. */
     waitEvents: string[]
+    recovering: Record<string, RecoveryInfo>
   }
 }
 

@@ -712,6 +712,22 @@ export const MIGRATIONS: { version: number; sql: string }[] = [
         PRIMARY KEY (project_id, channel)
       );
     `
+  },
+  {
+    version: 23,
+    sql: `
+      -- When the user cancelled the task (NULL = not cancelled). A cancelled task keeps its history; it is not done and
+      -- not deleted, nothing picks it up and no late result moves it; "Reopen" clears it.
+      ALTER TABLE tasks ADD COLUMN cancelled_at TEXT;
+    `
+  },
+  {
+    version: 24,
+    sql: `
+      -- A project-folder file that was not found on disk when last checked (NULL = found, or never missing). Its record
+      -- and history stay; its extracted text is removed. Cleared when the file is found again (then read in anew).
+      ALTER TABLE files ADD COLUMN missing_at TEXT;
+    `
   }
 ]
 

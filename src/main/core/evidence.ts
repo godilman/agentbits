@@ -122,6 +122,14 @@ export function runEvidence(runId: string): RunEvidence | null {
       )
     )
   ]
+  // Recorded files present when a shared-folder run started and not found when it ended (`orchestrator` logs them).
+  const lostFiles = [
+    ...new Set(
+      (getDb().prepare(`SELECT meta FROM agent_logs WHERE run_id = ? AND meta LIKE '%"lostFiles"%'`).all(runId) as { meta: string }[]).flatMap(
+        (r) => (JSON.parse(r.meta) as { lostFiles?: string[] }).lostFiles ?? []
+      )
+    )
+  ]
   for (const f of linked) if (f.role === 'read') readPaths.push(label(f))
   const readFiles = [...new Set(readPaths)]
   const given = [...new Set(linked.filter((f) => f.role === 'given').map(label))]
@@ -153,7 +161,8 @@ export function runEvidence(runId: string): RunEvidence | null {
     },
     reads: { files: readFiles.slice(0, MAX_ITEMS), filesTotal: readFiles.length, unconfirmed, searches, given: given.slice(0, MAX_ITEMS), memory, notReady },
     denied: denied.slice(0, MAX_ITEMS),
-    reportCut: (run.output?.length ?? 0) > REVIEW_REPORT_CHARS
+    reportCut: (run.output?.length ?? 0) > REVIEW_REPORT_CHARS,
+    lostFiles: lostFiles.slice(0, MAX_ITEMS)
   }
 }
 
@@ -224,6 +233,10 @@ export function evidenceSection(e: RunEvidence, diff: { files: string[]; text: s
     if (by('unknown').length) lines.push(`- Not known whether written (no result recorded): ${by('unknown').join(', ')}`)
     if (f.notListed > f.writtenNotListed) lines.push(`- … ${f.notListed - f.writtenNotListed} more files without a recorded successful write are not listed.`)
   }
+  if (e.lostFiles.length)
+    lines.push(
+      `- Present in the project folder when the run started, not found when it ended: ${e.lostFiles.join(', ')}. The folder is shared, so this run may have removed them or someone else did — not known which. Whether they are there now is in the file list.`
+    )
   lines.push(...readLines(e))
   if (n.total) lines.push('- Shell commands may also have read or changed files; that is not tracked here.')
   if (e.denied.length) lines.push('- Refused during the run (the work may be incomplete):', ...e.denied.map((d) => `  - ${d}`))

@@ -18,6 +18,7 @@ import type {
   OrgUnit,
   Project,
   Provider,
+  RecoveryInfo,
   Report,
   Run,
   Stats,
@@ -114,7 +115,7 @@ interface State {
   auditVersion: number
   orchestratorPaused: boolean
   /** Held tasks → reason; done tasks not merged yet; reviews the lead left to the user. */
-  orchestratorWaits: { held: Record<string, string>; unmerged: string[]; undecided: string[]; undecidedWhy: Record<string, string>; startedProjects: string[]; deferredReviews: string[]; simulatedWork: string[]; simulatedReview: string[]; waitEvents: string[] }
+  orchestratorWaits: { held: Record<string, string>; unmerged: string[]; undecided: string[]; undecidedWhy: Record<string, string>; startedProjects: string[]; deferredReviews: string[]; simulatedWork: string[]; simulatedReview: string[]; waitEvents: string[]; recovering: Record<string, RecoveryInfo> }
   /** A "needs you" card asked to show this connection / app request in the approval panel. */
   focusApproval: string | null
   /** A "needs you" card asked to open the merge preview of this task. */
@@ -326,7 +327,7 @@ async function loadAll(): Promise<void> {
   void useAppStore.getState().refresh('memory')
 }
 
-const waitsOf = (o: { held: { taskId: string; reason: string }[]; unmerged: string[]; undecided: string[]; undecidedWhy: Record<string, string>; startedProjects: string[]; deferredReviews: string[]; simulatedWork: string[]; simulatedReview: string[]; waitEvents: string[] }): State['orchestratorWaits'] => ({
+const waitsOf = (o: { held: { taskId: string; reason: string }[]; unmerged: string[]; undecided: string[]; undecidedWhy: Record<string, string>; startedProjects: string[]; deferredReviews: string[]; simulatedWork: string[]; simulatedReview: string[]; waitEvents: string[]; recovering: Record<string, RecoveryInfo> }): State['orchestratorWaits'] => ({
   held: Object.fromEntries(o.held.map((h) => [h.taskId, h.reason])),
   unmerged: o.unmerged,
   undecided: o.undecided,
@@ -335,7 +336,8 @@ const waitsOf = (o: { held: { taskId: string; reason: string }[]; unmerged: stri
   deferredReviews: o.deferredReviews,
   simulatedWork: o.simulatedWork,
   simulatedReview: o.simulatedReview,
-  waitEvents: o.waitEvents
+  waitEvents: o.waitEvents,
+  recovering: o.recovering
 })
 
 export const useAppStore = create<State>((set, get) => ({
@@ -377,7 +379,7 @@ export const useAppStore = create<State>((set, get) => ({
   approvals: [],
   auditVersion: 0,
   orchestratorPaused: false,
-  orchestratorWaits: { held: {}, unmerged: [], undecided: [], undecidedWhy: {}, startedProjects: [], deferredReviews: [], simulatedWork: [], simulatedReview: [], waitEvents: [] },
+  orchestratorWaits: { held: {}, unmerged: [], undecided: [], undecidedWhy: {}, startedProjects: [], deferredReviews: [], simulatedWork: [], simulatedReview: [], waitEvents: [], recovering: {} },
   focusApproval: null,
   mergeReviewFor: null,
   toasts: [],

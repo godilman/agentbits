@@ -223,7 +223,8 @@
       "originalGoneShort": "Dosyanın aslı artık yok",
       "unsafeOpen": ".{{ext}} dosyaları güvenlik nedeniyle doğrudan açılmaz; “Farklı kaydet” ile indirin",
       "revealWorkspaceOnly": "Yalnızca proje klasöründeki dosyalar gösterilebilir",
-      "quota": "Dosya deposu dolu ({{quota}} MB sınırın {{used}} MB'ı kullanılıyor). Gerekmeyen dosyaları sil ya da sınırı Ayarlar → Güvenlik ve sınırlar'dan yükselt."
+      "quota": "Dosya deposu dolu ({{quota}} MB sınırın {{used}} MB'ı kullanılıyor). Gerekmeyen dosyaları sil ya da sınırı Ayarlar → Güvenlik ve sınırlar'dan yükselt.",
+      "folderUnreachable": "Proje klasörü denetlenemedi ({{reason}}); denetlenene kadar kayıtlı metin kullanılmıyor"
     },
     "largeNotExtracted": "Büyük dosya; içerik çıkarılmadı (klasörden açın)",
     "audit": {
@@ -313,7 +314,8 @@
       "pdfOcr_one": "{{n}} taranmış sayfa OCR ile okundu (hatalar olabilir)",
       "pdfOcr_other": "{{n}} taranmış sayfa OCR ile okundu (hatalar olabilir)",
       "ocrPartial": "Taranmış sayfaların hepsi OCR ile okunamadı (sayfa ya da süre sınırı)"
-    }
+    },
+    "notInFolder": "Proje klasöründe bulunamadı (önceki metni artık kullanılmıyor)"
   },
   "feedback": {
     "subject": {

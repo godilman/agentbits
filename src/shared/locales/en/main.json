@@ -223,7 +223,8 @@
       "originalGoneShort": "The file's original no longer exists",
       "unsafeOpen": ".{{ext}} files aren't opened directly for security reasons; download them with “Save as”",
       "revealWorkspaceOnly": "Only files in the project folder can be shown",
-      "quota": "The file store is full ({{used}} MB of {{quota}} MB). Delete files you no longer need or raise the limit in Settings → Security and limits."
+      "quota": "The file store is full ({{used}} MB of {{quota}} MB). Delete files you no longer need or raise the limit in Settings → Security and limits.",
+      "folderUnreachable": "The project folder couldn't be checked ({{reason}}); the stored text isn't used until it can be"
     },
     "largeNotExtracted": "Large file; content not extracted (open it from the folder)",
     "audit": {
@@ -313,7 +314,8 @@
       "pdfOcr_one": "{{n}} scanned page was read with OCR (may contain mistakes)",
       "pdfOcr_other": "{{n}} scanned pages were read with OCR (may contain mistakes)",
       "ocrPartial": "Not every scanned page could be read with OCR (page or time limit)"
-    }
+    },
+    "notInFolder": "Not found in the project folder (its earlier text is no longer used)"
   },
   "feedback": {
     "subject": {

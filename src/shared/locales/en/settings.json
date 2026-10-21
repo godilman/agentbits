@@ -174,6 +174,10 @@
         "badResponse": "GitHub's answer couldn't be read; try again later.",
         "failed": "The check failed; try again later."
       }
+    },
+    "recovery": {
+      "title": "Automatic recovery",
+      "desc": "Work cut short for a passing reason (network, timeout, overload) is tried again by the team on its own: at most 2 extra tries per task in all (the review and the worker share them; not reset on restart), 1 and 5 minutes later, within 30 minutes. When the lead's review fails or gives no clear verdict, only the review is tried again. The worker runs again only when its last try is known from the records to have changed nothing outside: an API provider whose tools go through Agentbits, only reads of Agentbits' own data, no file saved, no connection operation. If the task changed meanwhile, the old work isn't repeated; a worker that needs approval asks again. Only with API providers, whose calls have enforced time and token limits; with Claude Code or Codex it's your call. While changed files are still being read in, the review waits for them (no model call). The cost is shown when the provider reports it, otherwise as not known. Pausing, cancelling or retrying yourself ends a pending recovery."
     }
   },
   "data": {

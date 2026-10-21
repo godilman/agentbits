@@ -632,6 +632,9 @@ function GeneralSection() {
         <Row title={t('settings:general.review.title')} desc={t('settings:general.review.desc')}>
           <Toggle checked={settings.reviewByLead} onChange={(v) => update({ reviewByLead: v })} />
         </Row>
+        <Row title={t('settings:general.recovery.title')} desc={t('settings:general.recovery.desc')}>
+          <Toggle checked={settings.autoRecovery} onChange={(v) => update({ autoRecovery: v })} />
+        </Row>
         <Row title={t('settings:general.notifications.title')} desc={t('settings:general.notifications.desc')}>
           <Toggle checked={settings.notifications} onChange={(v) => update({ notifications: v })} />
         </Row>

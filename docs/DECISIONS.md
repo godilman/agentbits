@@ -707,3 +707,134 @@ Durum değerleri: *Kabul edildi*, *Önerildi*, *Yerini aldı*, *Geri alındı*.
     Birleşme beklemesi gerçek birleştirmeyle `merged`, başka yolla kapanırsa `mergeGone`.
 - **Elenen:** sohbette serbest metinle onay, bağlantı onayının karttan doğrudan verilmesi, ayrı kart tablosu (migration),
   kartın kendi durumuna güvenmek.
+
+## ADR-035 — Görevi iptal etme: işaret önce, korumalar ortak noktalarda, istek ≠ doğrulama (2026-10-20)
+
+- **Bağlam:** Kullanıcının başladığı bir işten vazgeçmesinin yolu yoktu: durdurmak görevi "Yeniden dene" bekleyen bir
+  bekletmeye, silmek geçmişin kaybına, "Bitti"ye taşımak başarıya (bağımlılar başlar) dönüşüyordu. Otomatik toparlanma
+  (sonraki paketler) eklenmeden önce kullanıcının "bu işi bırakın" kontrolü hazır olmalıydı.
+- **Karar (sahibin, 2026-10-20):**
+  - `tasks.cancelled_at` (v23). İptal edilen görev geçmişiyle kalır; bitmiş, silinmiş ya da başarılı sayılmaz. Panoda
+    "Yapılacak" işi gibi görünmez: ayrı "İptal edilenler" görünümü.
+  - İşaret her şeyden önce yazılır; sonra beklemeler "iptal edildi" sonucuyla kapanır, onay bekleyen çalışma reddedilir,
+    çalışan ajandan durması istenir. Korumalar tek tek çağıranlarda değil ortak noktalardadır (otopilot sorgusu, başlatma
+    denetimi, bekletme / kart, inceleme kuyruğu, çalışmanın başarı yolu, birleştirme, panoda taşıma, açılış): geç gelen
+    çalışma ya da inceleme sonucu görevi yeniden açamaz, bitiremez, birleştiremez.
+  - "İptal istendi" ile "iptal edildi" ayrıdır: çalışma gerçekten bitmeden "iptal edildi" denmez; bitince özet yazılır.
+  - Özet yalnız kayıttan: çalışma sayısı; dosyalar ve kabuk komutları yalnız tam araç kaydıyla, yoksa "bilinmiyor";
+    bağlantı / uygulama işlemleri denetim kaydından; değişikliklerin yeri. Hiçbir şey geri alınmaz; kullanıcıdan bir şey
+    istenmez.
+  - Yarış denemeleri birlikte iptal edilir (onay penceresinde gösterilir). Bağımlı görevler iptal edilmez; başlamaz ve
+    "TA-n (iptal edildi)" der. "Yeniden aç" kendiliğinden başlatmaz (görev, kullanıcı başlatana kadar bekler).
+- **Elenen:** ayrı bir `cancelled` görev durumu (dört sütunlu pano ve her durum denetimi değişirdi), iptalde silme,
+  bağımlıları otomatik iptal, çalışma kopyasını atma, değişiklikleri geri alma.
+
+## ADR-036 — İnceleme toparlanması: yalnız inceleme, sınırları kodda, bilinmeyen maliyet bilinmiyor (2026-10-20)
+
+- **Bağlam:** Geçici bir sağlayıcı hatası (ağ, zaman aşımı, aşırı yük), net olmayan bir karar ya da henüz okunan
+  dosyalar yüzünden inceleme hemen "karar sende" oluyordu; kullanıcı "İncelemeyi yeniden dene"ye basan bir operatöre
+  dönüşüyordu. Sahibin planı: önce iptal (ADR-035), sonra çalışanı yeniden başlatmayan inceleme toparlanması (bu ADR);
+  çalışan tekrarı ve liderin yaklaşım değiştirmesi sonraki paketlerde.
+- **Karar (sahibin, 2026-10-20):**
+  - Yalnız lider incelemesi yeniden denenir; çalışan asla. Görev başına ömür boyu en fazla 2 ek inceleme çağrısı
+    (`orchestrator.recovery`, yeniden açılışta sıfırlanmaz, ajan değişiminde ya da geçişlerde de), 1 ve 5 dk arayla; bir
+    toparlanma en fazla 30 dk. Geçici hata ve net olmayan karar aynı bütçeden.
+  - Model tekrarı yalnız çağrı başına sınırları sağlayıcı bağdaştırıcısında uygulanan sağlayıcılarda: API sağlayıcıları
+    (istek zaman aşımı 10 dk, inceleme çıktısı 2000 token) ve Demo. Claude Code / Codex incelemesinde bu sınırlar yok:
+    otomatik tekrar yapılmaz, kart nedenini söyler.
+  - Yeni bir dolar sınırı yok. Mevcut çalışma başına token / maliyet / süre sınırları çalışanın çalışmalarına uygulanmaya
+    devam eder; toparlanmayı deneme sayısı, çağrı başına sınırlar ve süre penceresi sınırlar. Görevin maliyeti yalnız
+    bütün çağrıları maliyet bildirdiyse yazılır (Claude Code); API sağlayıcıları bildirmez, kullanım kaydı yoksa da
+    bilinmez: "bilinmiyor" (token sayısıyla) denir, bütçenin altında sayılmaz.
+  - Dosyaların okunmasını beklemek model çağrısı ve deneme sayılmaz; içerik hazır olunca (dosya olayı) tek inceleme
+    kuyruğa alınır.
+  - Uygulama açılışı hiçbir şey başlatmaz: toparlanma zamanlayıcısı yalnız kullanıcı projede işi başlatınca kurulur;
+    toparlanmadaki görev açılıştaki inceleme kuyruğuna ayrıca girmez (sayılmayan ikinci inceleme olmaz). Görev başına
+    tek zamanlayıcı; inceleme sürerken gelen tekrar mevcut "bir kez daha" kuyruğuna düşer.
+  - Kullanıcının iptali, her şeyi duraklatması, kendi yeniden denemesi (sayılmaz), çalışanı yeniden çalıştırması ya da
+    görevi incelemeden çıkarması bekleyen toparlanmayı bitirir; duraklatmada görev nedeniyle kullanıcıya düşer.
+  - Toparlanma sürerken kart yok, durum satırı ("Senden bir şey gerekmiyor") ve görevde "Toparlanıyor"; kullanıcıya
+    düştüğünde kart ne denendiğini ve maliyeti (ya da bilinmediğini) söyler. Ayarlar → Genel → "Otomatik toparlanma"
+    (varsayılan açık) değerleri yazar.
+  - (Ek, sahibin düzeltmesi) Ayar ve sağlayıcı yalnız planlarken değil, model çağrısından hemen önce de denetlenir
+    (`recoveryGate`): toparlanmanın kuyruğa aldığı inceleme (zamanlayıcı ya da dosya olayıyla) ayar kapalıysa ya da
+    liderin o anki sağlayıcısı çağrı sınırı uygulayamıyorsa (CLI) çağrı yapmadan kullanıcıya düşer, nedenini söyler;
+    yapılmayan deneme sayılmaz. 30 dk'lık süre de aynı kapıda denetlenir: yeniden açılışta, kuyrukta uzun bekleyişte ya
+    da dosyalar geç hazır olunca süre dolmuşsa çağrı yapılmaz, kart süreyi söyler. İnceleme hazırlanırken lider ya da sağlayıcısı değiştiyse inceleme güncel olanla baştan
+    kurulur. Ayar kapanınca bekleyen toparlanmalar hemen biter (görev açıklamasız "Toparlanıyor"da kalmaz). Kullanıcının
+    kendi "İncelemeyi yeniden dene"si toparlanma değildir: ayar ve sağlayıcı denetimine takılmaz, kuyruktaki otomatik
+    tekrarın üstüne basılsa da. Kuyruğa alınmış ama uygulama kapandığı için çalışmamış inceleme açılışta (proje çalışması
+    başlatılınca) yeniden kuyruğa girer, ikinci kez sayılmaz.
+  - "Doğrulayamadım" için salt okunur kanıt toplama bu pakette yok: salt okunurluk sağlayıcılarda henüz kodla güvenilir
+    biçimde zorlanamıyor; dosyalar okunuyorsa zaten bekleniyor, değilse kart somut engeli (liderin notu) söyler.
+- **Elenen:** gizli 3 USD sınırı, "çalışma sınırının 2 katı", CLI incelemelerinde sınırsız otomatik tekrar, açılışta
+  kendiliğinden toparlanma, yarış incelemelerinde toparlanma (bu pakette dışarıda; yarış hataları eskisi gibi kullanıcıya).
+
+## ADR-037 — Çalışan toparlanması: yalnız yan etkisizliği kayıtla bilinen çalışma, aynı bütçe (2026-10-21)
+
+- **Bağlam:** ADR-036 yalnız incelemeyi yeniden deniyordu; çalışanın geçici bir sağlayıcı hatası (ağ, zaman aşımı, aşırı
+  yük) hâlâ hemen "karar sende" oluyordu. Çalışma dışarıda bir şey değiştirmiş olabileceği için kör tekrar yasak
+  (`orchestrator.ts` "held at the first failure"). Sahibin sırası A → B → C → D; bu ADR C.
+- **Karar (sahibin, 2026-10-21):**
+  - Çalışan yalnız şu koşulların **hepsi** tutuyorsa kendiliğinden yeniden çalıştırılır: sağlayıcı araçlarını Agentbits
+    üzerinden çalıştırıyor (API sağlayıcıları ve Demo; `callTool`); her araç çağrısı **çalışmadan önce** sayıldı (sonucu
+    gelmeyen de sayılır) ve yalnız kodda tanımlı Agentbits iç okumaları çağrıldı (`SIDE_EFFECT_FREE_TOOLS`: `files_list`,
+    `file_read`, `file_search`, `skill_read`, `project_memory_read`, `project_memory_search`, `team_status`; tanınmayan ya
+    da sonradan eklenen araç tekrarı engeller); hata sağlayıcı çağrısının kendisinden (hazırlık / bitiriş değil); ikinci
+    katman olarak çalışmanın üretilmiş dosyası ve denetim kaydı (`audit_log.run_id`) yok. "API sağlayıcısı" tek başına kanıt
+    sayılmaz; sayaç yoksa "yan etki yok" sayılmaz. Claude Code / Codex hiç tekrarlanmaz (araç kaydı garanti değil).
+  - Bütçe incelemeyle ortak: görev başına toplam 2 ek otomatik deneme (`orchestrator.recovery.attempts`), aşama / ajan
+    değişimi ya da yeniden açılış sıfırlamaz; 1 ve 5 dk, 30 dk pencere. Deneme, onay istenirken değil, sağlayıcı girişimi
+    gerçekten başlarken sayılır (`ep.counted`); yapılmayan deneme sayılmaz.
+  - Yan etkisizlik kaydı başarısız çalışmaya bağlıdır (`ep.runId`, girdilerin özü `ep.basis`: başlık, açıklama, kabul
+    kriterleri, bağımlılıklar, atanan). Daha yeni bir çalışma, girdilerin değişmesi (çalışma sürerken de) ya da kullanıcının
+    başka bir işlemi planı geçersiz kılar; görev nedeniyle kullanıcıya düşer.
+  - Ortak kapı (`workGate`) hem zamanlayıcıda hem sağlayıcı çağrılmadan hemen önce (onaydan sonra da) çalışır: ayar,
+    duraklatma, proje çalışması, süre, bütçe, girdiler, bağımlılıklar, çalışan açık mı, o anki sağlayıcı. Bir başlatma
+    (`ep.launched`) tek: ikinci zamanlayıcı, yeniden onay ya da başka başlatma ikinci çalışma açamaz.
+  - Onay isteyen çalışan yeniden denemede de onay ister; kart önceki girişimin neden durduğunu, bunun otomatik tekrar
+    olduğunu ve onayla neyin başlayacağını söyler; önceki onay kullanılmaz. Onay sırasında yetenekler değişirse mevcut
+    "capsChanged" kuralı geçerli.
+  - Kapanış: kuyrukta bekleyen plan korunur (proje çalışması başlatılınca sürer); onay beklerken / hazırlıkta kapanan
+    çalışma sağlayıcıya ulaşmadığı için sayılmaz, yeniden onay ister; sağlayıcı çağrısı başlamışsa sayılmış kalır ve
+    kendiliğinden tekrarlanmaz (görev "yarıda kaldı" ile bekletilir).
+  - Beklerken kart açılmaz ("Bana ihtiyaç var" değil); otopilot görevi almaz; görev ayrıntısında neden beklendiği ve
+    "Görevi iptal et" düğmesi, panoda "Toparlanıyor". Kullanıcının kendi başlatması toparlanma politikasından ayrıdır
+    (sayılmaz) ama iptal / bağımlılık / çalışan kontrollerini aşmaz. Çalışma başına token / süre / maliyet sınırları
+    her tekrarda aynen geçerli; sınıra takılan tekrar yeniden denenmez.
+- **Elenen:** "API sağlayıcısıysa yan etki yok" varsayımı, okuma gibi görünen dış araçlar (`web_fetch`, `db_query`,
+  uygulama okumaları) için istisna, onay sırasında deneme sayma, kapanıştan sonra başlamış girişimi yeniden deneme,
+  yarış görevlerinde çalışan tekrarı, çalışan değiştirme (D paketi).
+- **Not:** ADR-036'daki "çalışan asla" kuralı bu ADR'deki dar istisna dışında geçerlidir.
+
+## ADR-038 — Proje klasöründen kaybolan dosyalar: "diskte yok" ≠ "bu çalışma sildi" (2026-10-21)
+
+- **Bağlam:** Gerçek kayıtta (20 Ekim, salt-okunur kopya) TA-6 "Electron dosyalarını kaldır" 3 kez geri gönderildi.
+  Claude Code dosyaları silmişti, ama Agentbits yalnız değişen ya da yeni dosyaları görüyordu (`mtime`). Silinen
+  dosyanın kaydı ve eski metni kaldı ve lider ekte dosyayı "proje klasöründe" diye gördü. Bir scratch denemesi aynı
+  durumu güncel kodda da üretti: incelemede `project folder: X` ve eski içerik. Duruş otomatik tekrarla değil, kanıtın
+  doğru olmasıyla çözülür (sahibin önceliği: önce mevcut hatalar, sonra otomasyon).
+- **Karar (sahibin, 2026-10-21):**
+  - Klasör dosyası her okuma yolunda diskte denetlenir. Bu, inceleme hazırlanırken de olur, yalnız çalışma sonunda değil.
+  - Yalnız, proje klasörü erişilebilir durumdayken alınan `ENOENT` / `ENOTDIR` "bulunamadı" sayılır.
+  - Erişilemeyen klasör, izin hatası ya da disk hatası "denetlenemedi" sayılır. Hiçbir şey işaretlenmez; o an metin
+    verilmez.
+  - Bulunamayan dosyanın kaydı ve geçmişi kalır; çıkarılmış metni silinir, `files.missing_at` yazılır (migration v24).
+    Sürmekte olan eski okuma `supersede` ile geçersizleşir; geç sonucu metni geri yazamaz.
+  - Aynı yolda yeniden bulunan dosya yeniden okunur. Eski metin ve "bulunamadı" işareti kalmaz.
+  - Atıf: Paylaşılan klasördeki CLI çalışmasında başlangıç/bitiş karşılaştırması "başladığında vardı, bittiğinde
+    yok" der ve kimin kaldırdığının bilinmediğini ekler. Başka hiçbir yerde silme çalışana atfedilmez. Worktree
+    çalışmasında bu karşılaştırma yapılmaz; kendi kopyasındaki değişiklikleri git farkı gösterir.
+  - Yeniden adlandırma kanıt olmadan tanınmaz: eski yol kayıp, yeni yol yeni dosya. Çalışma sonu taraması `ctime`'a da
+    bakar, çünkü taşınan dosya `mtime`'ını korur.
+  - Agentbits diskte kullanıcı dosyası silmez ya da taşımaz.
+- **Elenen:**
+  - "Diskte yok = çalışan sildi" çıkarımı.
+  - Erişilemeyen klasörde bütün dosyaları kayıp sayma.
+  - Kayıt silme (geçmiş kaybolurdu).
+  - Yeni dosya durumu (CHECK değişikliği tablo yeniden kurmayı gerektirirdi; ayrı kolon yeterli).
+  - Bu pakette müdahale tıklaması ölçümü (ayrı iş).
+- **Sınır:**
+  - Karşılaştırma projenin en yeni 2000 klasör kaydına bakar; daha eskisi yalnız bir sonraki okumada "bulunamadı" olur.
+  - Diskte duran ama çalışma dışında değişmiş bir dosyanın eski metni bu paketin konusu değil.
+  - Windows'ta taşımanın `ctime`'ı (NTFS ChangeTime) güncellediği gerçek ortamda doğrulanmadı.

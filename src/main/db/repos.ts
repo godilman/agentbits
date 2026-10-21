@@ -411,6 +411,7 @@ const mapTask = (r: Row): Task => ({
   dependsOn: JSON.parse(r.depends_on || '[]'),
   raceOf: r.race_of ?? null,
   raceResult: r.race_result === 'won' || r.race_result === 'lost' ? r.race_result : null,
+  cancelledAt: r.cancelled_at ?? null,
   acceptance: r.acceptance ?? '',
   acceptanceCheck: r.acceptance_check ? JSON.parse(r.acceptance_check) : null
 })
@@ -419,9 +420,10 @@ const mapTask = (r: Row): Task => ({
 const DEPS_DONE = `NOT EXISTS (SELECT 1 FROM json_each(tasks.depends_on) d JOIN tasks dep ON dep.id = d.value WHERE dep.status <> 'done')`
 /**
  * Picker filters bound as JSON arrays: held tasks are left out in SQL (filtering after LIMIT let 25 held tasks hide every
- * other one), and so are tasks waiting for a done task whose code isn't merged into the project folder yet.
+ * other one), and so are tasks waiting for a done task whose code isn't merged into the project folder yet. A cancelled
+ * task is never picked.
  */
-const PICKABLE = `tasks.id NOT IN (SELECT value FROM json_each(@held))
+const PICKABLE = `tasks.cancelled_at IS NULL AND tasks.id NOT IN (SELECT value FROM json_each(@held))
   AND NOT EXISTS (SELECT 1 FROM json_each(tasks.depends_on) d WHERE d.value IN (SELECT value FROM json_each(@unmerged)))`
 
 type CursorPayload = { status: string; sortOrder: number; seq: number }
@@ -564,7 +566,8 @@ export const tasksRepo = {
       completedBy: 'completed_by',
       raceResult: 'race_result',
       acceptance: 'acceptance',
-      acceptanceCheck: 'acceptance_check'
+      acceptanceCheck: 'acceptance_check',
+      cancelledAt: 'cancelled_at'
     }
     const sets: string[] = []
     const vals: unknown[] = []

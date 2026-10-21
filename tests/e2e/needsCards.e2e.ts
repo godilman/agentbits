@@ -75,7 +75,8 @@ async function main(): Promise<void> {
   const p1 = await call('projects:save', { name: 'P1', rootPath: mkdtempSync(join(tmpdir(), 'ab-nc1-')), unitIds: [tpl.unitId] })
   const tpl2 = await call('templates:instantiate', 'core')
   const p2 = await call('projects:save', { name: 'P2', rootPath: mkdtempSync(join(tmpdir(), 'ab-nc2-')), unitIds: [tpl2.unitId] })
-  settingsRepo.update({ onboarded: true, autopilot: false, reviewByLead: false, raceMode: false, language: 'en' })
+  // The paths without recovery (ADR-036 has its own test: reviewRecovery.e2e.ts).
+  settingsRepo.update({ onboarded: true, autopilot: false, reviewByLead: false, raceMode: false, language: 'en', autoRecovery: false })
   getDb().prepare('UPDATE agent_permissions SET require_approval = 1').run()
   applyLanguageSetting('en')
   orchestrator.init()

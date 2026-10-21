@@ -4,6 +4,145 @@
 > `## YYYY-MM-DD — kısa başlık`, ardından **Eklendi / Değişti / Düzeltildi / Kaldırıldı / Bilinen** maddeleri
 > ve ilgili dosyalar.
 
+## 2026-10-21 — v0.12.0: Proje klasöründen kaybolan dosyalar kanıtta doğru (ADR-038)
+
+### Düzeltildi
+- **Silinen dosya hâlâ projede görünüyordu:** CLI çalışanın sildiği ya da taşıdığı proje klasörü dosyası, incelemede
+  "proje klasöründe" diye ve eski içeriğiyle görünüyordu (TA-6 kalıbı: "dosyaları kaldır" görevi tekrar tekrar geri
+  gönderiliyordu). Artık klasör dosyası her okuma yolunda diskte denetlenir: prompt bölümü, `files_list`, `file_read`,
+  `file_search`, Dosyalar araması, dosyanın doğrudan açılması (`files:get` ve `files:preview`; önceden listeleme
+  gerekmez) ve açılışta yarım kalan okuma.
+  - Bulunamayan dosya "proje klasöründe bulunamadı" diye gösterilir; eski metni verilmez. Kaydı ve geçmişi kalır.
+  - Klasöre erişilemiyorsa ya da izin hatası varsa dosya kayıp sayılmaz. "Denetlenemedi" denir ve o an metin verilmez.
+  - Aynı yolda yeniden oluşan dosya yeniden okunur.
+  - Kaybolduktan sonra biten eski okuma metni geri yazamaz.
+  - Önizleme: bulunamayan, denetlenemeyen ya da yeniden okunan klasör dosyasında kayıtlı metin ve görsel gösterilmez;
+    durum satırı nedenini söyler. Yüklenen dosyalar eskisi gibi.
+- **Atıf:** Paylaşılan klasörde çalışan CLI ajanında başlangıç ve bitiş karşılaştırılır. Kanıta "başladığında vardı,
+  bittiğinde yok; kimin kaldırdığı bilinmiyor" satırı girer. Silme hiçbir yerde çalışana atfedilmez. Worktree
+  çalışmasında bu karşılaştırma yok; kendi değişikliklerini git farkı gösterir.
+- **Taşınan dosya artık kaydediliyor:** Çalışma sonu taraması `ctime`'a da bakar, çünkü taşınan dosya eski `mtime`'ını
+  korur ve bu yüzden kaydedilmiyordu. Yeniden adlandırma tanınmaz: eski yol kayıp, yeni yol yeni dosya.
+
+### Değişti
+- Migration **v24**: `files.missing_at TEXT`. `FileRecord.missingAt`, `RunEvidence.lostFiles`.
+- Dosyalar: `src/main/files/service.ts`, `src/main/files/repo.ts`, `src/main/core/orchestrator.ts`,
+  `src/main/core/evidence.ts`, `src/main/ipc.ts`, `src/main/db/schema.ts`, `src/shared/types.ts`, locales
+  `main` / `orchestrator` (en + tr).
+
+### Testler
+- `tests/e2e/missingFiles.e2e.ts`, 9 adım:
+  - silinme;
+  - yeniden adlandırma;
+  - aynı yolda yeniden oluşturma;
+  - çalışmadan önce, başka ajanca ya da çalışma sonu ile inceleme arasında kaybolma (yanlış atıf yok);
+  - erişilemeyen klasör ve `EACCES` (kayıp sayılmaz);
+  - kaybolduktan sonra gelen eski okuma sonucu ve geç hata;
+  - açılışta yarım okuma;
+  - listeleme olmadan doğrudan önizleme ve ayrıntı (silinmiş, erişimsiz, klasör yok, yeniden okunurken, görsel;
+    yüklemeler değişmeden);
+  - worktree ile paylaşılan klasörün ayrılması.
+- 25 kasıtlı bozmanın 25'i yakalandı. İlk turda kaçan iki bozma test eksikliğiydi (taşımada eski `mtime`, prompt'u
+  denetlenmemiş dosya); testler genişletildi.
+
+### Bilinen
+- Gerçek Claude Code ile denenmedi (ayrı onay). Windows'ta taşımanın `ctime`'ı güncellediği doğrulanmadı.
+
+## 2026-10-21 — v0.12.0: Çalışan toparlanması (ADR-037)
+
+### Eklendi
+- Çalışanın sağlayıcı çağrısı geçici bir nedenle (ağ, zaman aşımı, aşırı yük) başarısız olursa ve çalışmanın dışarıda
+  hiçbir şey değiştirmediği kayıtla biliniyorsa iş kendiliğinden yeniden çalıştırılır: araçları Agentbits üzerinden
+  çalışan sağlayıcı (API / Demo), her araç çalışmadan önce sayılır, yalnız Agentbits iç okumaları, kaydedilmiş dosya ya
+  da bağlantı / uygulama işlemi yok. Claude Code / Codex ve tanınmayan araçlar tekrarı engeller; kart nedenini söyler.
+- İnceleme ile aynı bütçe: görev başına toplam 2 ek otomatik deneme (yeniden açılışta sıfırlanmaz); deneme sağlayıcı
+  girişimi başlarken sayılır, onay istenirken değil.
+- Onay isteyen çalışan yeniden onay ister; kart otomatik tekrar olduğunu, önceki denemenin neden durduğunu ve onayla
+  neyin başlayacağını söyler.
+- Beklerken görevde "Toparlanıyor" ve ayrıntıda nedeni + "Görevi iptal et"; otopilot görevi almaz.
+
+### Değişti
+- Görevin girdileri (başlık, açıklama, kabul kriterleri, bağımlılıklar, atanan) değişirse — çalışma sürerken de — eski
+  iş tekrarlanmaz. Ayar, duraklatma, süre, sağlayıcı ve çalışan, zamanlayıcıda ve sağlayıcı çağrılmadan hemen önce
+  (onaydan sonra da) yeniden denetlenir.
+- Kapanış: kuyruktaki plan korunur; onay beklerken kapanan sayılmaz ve yeniden onay ister; sağlayıcı çağrısı başlamış
+  olan sayılmış kalır ve kendiliğinden tekrarlanmaz.
+- Ayarlar → Genel → "Otomatik toparlanma" açıklaması çalışan tekrarını ve ortak bütçeyi anlatır.
+
+### Test
+- `tests/e2e/workRecovery.e2e.ts` 14 adım; 23 kasıtlı bozmanın 23'ü yakalandı (sayaç, araç listesi, sayım zamanı,
+  sağlayıcı, kayıt katmanları, kapı koşulları, tek başlatma, kapanış senaryoları, otopilot, ret, girdiler). Gerçek
+  renderer + Demo: rozet, nedenli bant ve iptal düğmesi, sohbet satırı; taşma ve hata yok.
+- Kararsız test düzeltildi: 2. adımda `file_save`'in başlattığı dosya çıkarımının 2 dakikalık zaman aşımı zamanlayıcısı
+  da yakalanıyordu; çıkarım bitmeden "zamanlayıcı yok" denetlenince yarı yarıya düşüyordu. Adım artık çıkarımın
+  bitmesini koşulla bekliyor (beklenti aynı, sabit bekleme yok).
+
+### Düzeltildi (geliştirme sırasında)
+- Onay beklenirken zamanlayıcı yeniden tetiklenirse toparlanma planı siliniyordu; artık başlamış plan dokunulmaz kalır.
+
+## 2026-10-20 — v0.12.0: İnceleme toparlanması (ADR-036)
+
+### Eklendi
+- Lider incelemesi geçici bir nedenle (ağ, zaman aşımı, aşırı yük) tamamlanamazsa ya da net karar vermezse yalnız
+  inceleme yeniden denenir — çalışan asla: görev başına en fazla 2 ek deneme (yeniden açılışta sıfırlanmaz), 1 ve 5 dk
+  sonra, 30 dk içinde. Yalnız çağrı başına süre / token sınırı uygulanan API sağlayıcılarında (ve Demo'da); Claude Code /
+  Codex'te inceleme kullanıcıya düşer ve kart nedenini söyler.
+- Değişen dosyalar okunurken inceleme bekler (model çağrısı yok, deneme sayılmaz); hazır olunca tek inceleme.
+- Toparlanma sürerken kart yerine durum satırı ve görevde "Toparlanıyor" (ne zaman, kaçıncı deneme; proje çalışması
+  başlatılmadıysa "çalışmayı başlattığında"); "İncelemeyi şimdi yeniden dene". Kullanıcıya düşünce kart ne denendiğini
+  ve görevin maliyetini (ya da bilinmediğini, token sayısıyla) söyler. Ayarlar → Genel → "Otomatik toparlanma".
+
+### Değişti
+- Uygulama açılışı toparlanmayı başlatmaz; proje çalışması başlatılınca kurulur. Toparlanmadaki görev açılıştaki
+  inceleme kuyruğuna ayrıca girmez. İptal, duraklatma, kendi yeniden denemen, çalışanı yeniden çalıştırma ya da görevi
+  taşıma bekleyen toparlanmayı bitirir.
+- (A'ya ek) İptal özeti ve onay penceresi: iptal ajanın çalışmasını durdurur; başka yerde başlamış bir işlemi geri almaz
+  ya da durdurmaz.
+
+### Değişti (inceleme sonrası düzeltme)
+- Ayar ve sağlayıcı model çağrısından hemen önce yeniden denetlenir: kuyruğa alınmış otomatik inceleme ayar kapandıysa
+  ya da lider çağrı sınırı olmayan bir sağlayıcıya (CLI) geçtiyse çağrı yapmadan kullanıcıya düşer, nedenini söyler,
+  deneme sayılmaz. Hazırlanırken lider / sağlayıcı değiştiyse güncel olanla baştan kurulur. Ayar kapanınca bekleyen
+  toparlanmalar hemen biter. 30 dk'lık süre de çağrıdan hemen önce denetlenir (yeniden açılış, kuyrukta bekleme, geç
+  hazır olan dosya). Kullanıcının kendi inceleme tekrarı bu denetimlere takılmaz.
+
+### Düzeltildi
+- Kuyruğa alınmış ama uygulama kapandığı için çalışmamış toparlanma incelemesi açılışta takılı kalıyordu ("Toparlanıyor",
+  iş yok): proje çalışması başlatılınca yeniden kuyruğa girer, ikinci kez sayılmaz.
+
+### Test
+- `tests/e2e/reviewRecovery.e2e.ts` 21 adım (süre: yeniden açılış, kuyruk, geç dosya, kullanıcının tekrarı; 4 bozmanın 4'ü
+  yakalandı) — önceki tur 17 adım (ilk 10 + bekleme sırasında / kuyruktan sonra ayar kapanması, CLI'ya geçiş,
+  hazırlanırken sağlayıcı değişimi, dosya olayından sonra ayar kapanması, kullanıcının kendi tekrarı, kuyruktayken
+  kapanış); bu düzeltme için 9 kasıtlı bozmanın 9'u yakalandı. İlk sürüm: 10 adım (uzun zamanlayıcılar yakalanıp testte tetiklenir). 16 kasıtlı bozma:
+  13'ü yakalandı, 3'ü ikinci katmanla korunuyor. Mevcut testler toparlanmasız yolu `autoRecovery: false` ile sınamaya
+  devam eder (failureReview, needsCards, cancel, reviewLoop, notify). Gerçek renderer + Demo: rozet, bant, sohbet satırı,
+  Ayarlar satırı.
+
+## 2026-10-20 — v0.12.0: Görevi iptal et (ADR-035)
+
+### Eklendi
+- **Görevi iptal et** (görev ayrıntısında): önce kapsam gösterilir (yarış denemesi birlikte iptal edilir, durdurulacak
+  çalışma, reddedilecek onay, başlamayacak bağımlı görevler, "hiçbir şey geri alınmaz"). İptal edilen görev geçmişiyle
+  kalır; bitmiş ya da silinmiş sayılmaz. Panoda "Yapılacak"ta değil, ayrı "İptal edilenler" görünümünde.
+- Çalışma gerçekten durmadan "iptal edildi" denmez ("iptal istendi"); durunca görev akışına ve #general'a kayıttan bir
+  özet düşer: kaç kez çalıştı, dosyalar ve kabuk komutları (kayıt tam değilse "bilinmiyor"), bağlantı / uygulama
+  işlemleri, değişikliklerin yeri, başlamayacak bağımlı görevler.
+- **Yeniden aç:** iptal kalkar, görev kendiliğinden başlamaz. Migration v23 `tasks.cancelled_at`; IPC
+  `tasks:cancelScope`, `tasks:cancel`, `tasks:reopen`; kart sonucu `cancelled`.
+
+### Değişti
+- Hiçbir yol iptal edilen görevi ilerletmez: otopilot, "Şimdi başlat", sürükleme, kart eylemi, geç gelen çalışma ya da
+  inceleme sonucu, inceleme kuyruğu, birleştirme, uygulama açılışı. Bağımlı görev "TA-n (iptal edildi)" bekler.
+
+### Test
+- `tests/e2e/cancel.e2e.ts` 10 adım: çalışan görev; hiçbir yoldan yeniden başlamaz; durmayı yok sayan sağlayıcı
+  ("istendi", geç sonuç görevi açmaz, bitince doğrulanır); onay bekleyen çalışma; incelemedeki görev (geç onay
+  bitirmez); bekletilen görev ve "karar sende" kartları; yarış + bağımlılar; yeniden açılış; "Yeniden aç"; bitmiş görev
+  iptal edilemez, silme çalışır. 17 kasıtlı bozma: 12'si doğrudan, 5'i ikinci koruma katmanıyla; ikisi sonra doğrudan
+  testlendi. Gerçek renderer + Demo ile Playwright: onay penceresi, odak, bant, pano görünümü, yarış kapsamı, yeniden
+  açma, sohbet özeti, 550 px.
+
 ## 2026-10-20 — v0.11.0: "Bana ihtiyaç var" sohbet kartları (ADR-034)
 
 ### Eklendi

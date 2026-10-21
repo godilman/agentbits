@@ -263,8 +263,8 @@ export function resolveApproval(id: string, ok: boolean, outcome?: NeedsOutcome)
 }
 
 /** A stopped / redirected run must not leave the agent waiting on an approval. */
-export function rejectApprovalsForRun(runId: string): void {
-  for (const [id, p] of pending) if (p.runId === runId) resolveApproval(id, false, 'withdrawn')
+export function rejectApprovalsForRun(runId: string, outcome: NeedsOutcome = 'withdrawn'): void {
+  for (const [id, p] of pending) if (p.runId === runId) resolveApproval(id, false, outcome)
 }
 
 /** Rejects every waiting request (factory reset / shutdown). */

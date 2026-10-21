@@ -1,6 +1,6 @@
 import { useMemo, useState, type DragEvent } from 'react'
 import { useTranslation } from 'react-i18next'
-import { GitMerge, Hourglass, Loader2, MessageSquareWarning, PauseCircle, Plus, Search, SquareKanban, UserCheck } from 'lucide-react'
+import { Ban, GitMerge, Hourglass, Loader2, MessageSquareWarning, PauseCircle, Plus, RefreshCw, Search, SquareKanban, UserCheck } from 'lucide-react'
 import type { Task, TaskStatus } from '@shared/types'
 import { locale } from '@/i18n'
 import { PixelAvatar } from '@/components/common/PixelAvatar'
@@ -38,6 +38,8 @@ export function TasksView() {
   const [assignee, setAssignee] = useState<string | null>(null)
   const [dragId, setDragId] = useState<string | null>(null)
   const [overCol, setOverCol] = useState<TaskStatus | null>(null)
+  // Cancelled tasks are not "To do" work: they have their own view.
+  const [showCancelled, setShowCancelled] = useState(false)
 
   const filtered = useMemo(() => {
     const lc = locale()
@@ -49,9 +51,10 @@ export function TasksView() {
     )
   }, [tasks, query, assignee])
 
+  const cancelled = filtered.filter((x) => x.cancelledAt).sort((a, b) => (b.cancelledAt ?? '').localeCompare(a.cancelledAt ?? ''))
   const byColumn = (status: TaskStatus): Task[] =>
     filtered
-      .filter((x) => x.status === status)
+      .filter((x) => x.status === status && !x.cancelledAt)
       .sort((a, b) => (status === 'done' ? (b.completedAt ?? '').localeCompare(a.completedAt ?? '') : a.sortOrder - b.sortOrder))
 
   const onDrop = (e: DragEvent, status: TaskStatus): void => {
@@ -117,14 +120,36 @@ export function TasksView() {
               </button>
             ))}
           </div>
+          {(cancelled.length > 0 || showCancelled) && (
+            <button
+              className={cn('btn-outline h-7 text-[12px]', showCancelled && 'bg-white/10')}
+              aria-pressed={showCancelled}
+              data-testid="show-cancelled"
+              onClick={() => setShowCancelled(!showCancelled)}
+            >
+              <Ban size={12} /> {t('tasks:board.cancelled', { count: cancelled.length })}
+            </button>
+          )}
           <button className="btn-primary" onClick={() => setNewTaskOpen(true)}>
             <Plus size={14} /> {t('tasks:board.newTask')}
           </button>
         </div>
       </div>
 
+      {showCancelled && (
+        <div className="min-h-0 flex-1 overflow-y-auto p-4">
+          <p className="mb-3 text-[13px] text-zinc-400">{t('tasks:board.cancelledHint')}</p>
+          <div className="grid grid-cols-[repeat(auto-fill,minmax(230px,1fr))] gap-2">
+            {cancelled.map((x) => (
+              <TaskCard key={x.id} task={x} dragging={false} onDragStart={() => undefined} onDragEnd={() => undefined} />
+            ))}
+          </div>
+          {cancelled.length === 0 && <div className="rounded-md border border-dashed border-line-soft py-6 text-center text-[12px] text-zinc-400">{t('tasks:board.noCancelled')}</div>}
+        </div>
+      )}
+
       {/* Columns never go below 230 px (no overlap): a narrow space scrolls sideways. */}
-      <div className="grid min-h-0 flex-1 grid-cols-[repeat(4,minmax(230px,1fr))] gap-3 overflow-x-auto p-4">
+      <div className={cn('grid min-h-0 flex-1 grid-cols-[repeat(4,minmax(230px,1fr))] gap-3 overflow-x-auto p-4', showCancelled && 'hidden')}>
         {TASK_COLUMNS.map((col) => {
           const items = byColumn(col.id)
           return (
@@ -205,11 +230,11 @@ function TaskCard({ task, dragging, onDragStart, onDragEnd }: { task: Task; drag
   // The original of a race has no raceOf; it is raced when a challenger points at it.
   const isRaced = useAppStore((s) => s.tasks.some((x) => x.raceOf === task.id))
   const waitsFor = useAppStore((s) =>
-    task.status === 'todo'
+    task.status === 'todo' && !task.cancelledAt
       ? task.dependsOn
           .map((id) => s.tasks.find((x) => x.id === id))
           .filter((d) => d && d.status !== 'done')
-          .map((d) => d!.key)
+          .map((d) => (d!.cancelledAt ? t('tasks:card.depCancelled', { key: d!.key }) : d!.key))
           .join(', ')
       : ''
   )
@@ -232,6 +257,10 @@ function TaskCard({ task, dragging, onDragStart, onDragEnd }: { task: Task; drag
   )
   const heldWhy = useAppStore((s) => (task.status === 'todo' ? (s.orchestratorWaits.held[task.id] ?? null) : null))
   const undecided = useAppStore((s) => task.status === 'in_review' && s.orchestratorWaits.undecided.includes(task.id))
+  const recovering = useAppStore((s) => {
+    const r = s.orchestratorWaits.recovering[task.id]
+    return !!r && (r.kind === 'work' ? task.status === 'todo' : task.status === 'in_review')
+  })
   const undecidedWhy = useAppStore((s) => (task.status === 'in_review' ? (s.orchestratorWaits.undecidedWhy[task.id] ?? '') : ''))
   const mergeWaits = useAppStore((s) => task.status === 'done' && s.orchestratorWaits.unmerged.includes(task.id))
   const ownUnmerged = useAppStore((s) => task.status === 'done' && s.orchestratorWaits.unmerged.includes(task.id))
@@ -248,7 +277,7 @@ function TaskCard({ task, dragging, onDragStart, onDragEnd }: { task: Task; drag
   return (
     <div
       data-card={task.id}
-      draggable
+      draggable={!task.cancelledAt}
       onDragStart={onDragStart}
       onDragEnd={onDragEnd}
       onClick={() => selectTask(task.id)}
@@ -261,6 +290,11 @@ function TaskCard({ task, dragging, onDragStart, onDragEnd }: { task: Task; drag
       <div className="flex flex-wrap items-center gap-x-1.5 gap-y-0.5">
         <span className="font-mono text-[11px] text-zinc-400">{task.key}</span>
         <span className={cn('h-1.5 w-1.5 rounded-full', pr.dot)} title={t('tasks:card.priority', { label: pr.label })} />
+        {task.cancelledAt && (
+          <span className="inline-flex items-center gap-1 rounded bg-zinc-500/15 px-1 text-[12px] text-zinc-300">
+            <Ban size={10} /> {t('tasks:card.cancelled')}
+          </span>
+        )}
         {(task.raceOf || task.raceResult || isRaced) && (
           <span
             className={cn(
@@ -295,6 +329,11 @@ function TaskCard({ task, dragging, onDragStart, onDragEnd }: { task: Task; drag
       {heldWhy !== null && (
         <div className="mt-1.5 flex items-start gap-1 rounded bg-amber-500/10 px-1.5 py-0.5 text-[12px] leading-snug text-amber-300" title={t('tasks:card.heldHint')}>
           <PauseCircle size={10} className="mt-[2px] shrink-0" /> <span className="line-clamp-2">{heldWhy ? t('tasks:card.held', { reason: heldWhy }) : t('tasks:card.heldNoReason')}</span>
+        </div>
+      )}
+      {recovering && (
+        <div className="mt-1.5 inline-flex items-center gap-1 rounded bg-sky-500/10 px-1.5 py-0.5 text-[12px] text-sky-300" title={t('tasks:card.recoveringHint')}>
+          <RefreshCw size={10} /> {t('tasks:card.recovering')}
         </div>
       )}
       {undecided && (

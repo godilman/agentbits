@@ -67,7 +67,8 @@
       "merged": "Projeye birleştirildi.",
       "superseded": "Görev daha yeni bir nedenle yeniden bekliyor; güncel karta bak.",
       "mergeGone": "Artık birleştirilmeyi bekleyen bir şey yok (birleştirilecek değişiklik yok, yalıtım kapatıldı ya da çalışma kopyası silindi).",
-      "allowed": "✓ Onaylandı — istenen işlem yapılabilir."
+      "allowed": "✓ Onaylandı — istenen işlem yapılabilir.",
+      "cancelled": "Görev iptal edildi."
     }
   }
 }

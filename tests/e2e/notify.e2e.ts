@@ -84,7 +84,8 @@ const RAW = /boom|secret|stack|\/etc\//i
 
 async function main(): Promise<void> {
   openDb()
-  settingsRepo.update({ onboarded: true, autopilot: false, reviewByLead: false, raceMode: false, language: 'en' })
+  // The paths without recovery (ADR-036 has its own test: reviewRecovery.e2e.ts).
+  settingsRepo.update({ onboarded: true, autopilot: false, reviewByLead: false, raceMode: false, language: 'en', autoRecovery: false })
   applyLanguageSetting('en')
   const tpl = await call('templates:instantiate', 'ecommerce')
   const project = (name: string, extra: Record<string, unknown> = {}) => call('projects:save', { name, rootPath: mkdtempSync(join(tmpdir(), 'ab-n-')), unitIds: [tpl.unitId], ...extra })

@@ -52,6 +52,7 @@ export const DEFAULT_SETTINGS: AppSettings = {
   workspaceRoot: '',
   autopilot: true,
   reviewByLead: true,
+  autoRecovery: true,
   notifications: true,
   autoUpdateCheck: true,
   logRetentionDays: 30,
@@ -106,6 +107,7 @@ export function validateSettingsPatch(patch: unknown): Partial<AppSettings> {
       case 'onboarded':
       case 'autopilot':
       case 'reviewByLead':
+      case 'autoRecovery':
       case 'notifications':
       case 'autoUpdateCheck':
       case 'shareWithTwins':

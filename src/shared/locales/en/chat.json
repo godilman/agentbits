@@ -67,7 +67,8 @@
       "merged": "Merged into the project.",
       "superseded": "The task is waiting again for a newer reason; see the newer card.",
       "mergeGone": "Nothing waits to be merged any more (no changes to merge, isolation turned off, or the working copy is gone).",
-      "allowed": "✓ Approved — the requested operation may run."
+      "allowed": "✓ Approved — the requested operation may run.",
+      "cancelled": "The task was cancelled."
     }
   }
 }

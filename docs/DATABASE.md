@@ -33,7 +33,7 @@ const MIGRATIONS: { version: number; sql: string }[] = [ { version: 1, sql: `...
 - `migrate(db)` önce `schema_migrations` tablosunu oluşturur, `MAX(version)`'dan büyük her migration'ı
   sırayla çalıştırıp sürümünü kaydeder; bekleyen adımların hepsi **tek transaction'dadır** (2026-10-20: hata olursa dosya
   eski şemasında kalır). Migration'da transaction içinde çalışmayan ifade (VACUUM, bazı PRAGMA'lar) kullanılmaz.
-- **Yalnızca ekleyin.** Uygulanmış bir migration'ı (bugün: v1–v22) asla düzenlemeyin, silmeyin, yeniden
+- **Yalnızca ekleyin.** Uygulanmış bir migration'ı (bugün: v1–v24) asla düzenlemeyin, silmeyin, yeniden
   numaralandırmayın — kullanıcı makinelerindeki DB'ler onu zaten çalıştırdı ve değişiklik oraya ulaşmaz.
 - Yeni değişiklik = dizinin sonuna `{ version: N+1, sql: ... }`. SQLite'ta tipik olarak
   `ALTER TABLE x ADD COLUMN y ... NOT NULL DEFAULT ...`; sütun silme/CHECK değiştirme için tabloyu yeniden
@@ -73,6 +73,8 @@ const MIGRATIONS: { version: number; sql: string }[] = [ { version: 1, sql: `...
 | 20 | 2026-10-19 | Proje hafızası klasörü (ADR-030): `projects.project_memory INTEGER NOT NULL DEFAULT 1`; `memory_suggestions.target_file`, `target_op` (`append`), `target_note` (TEXT) — proje hafızası dosyasına not önerisi. Gerçek SQLite ile uçtan uca denendi |
 | 21 | 2026-10-19 | Görevi kim bitirdi (Paket 1B): `tasks.completed_by TEXT` (`lead` = lider onayı / yarış kararı, `user` = elle Bitti'ye taşıma, NULL = eski kayıt ya da bitmemiş). Bitti dışına çıkınca NULL'a döner. Gerçek SQLite ile uçtan uca denendi |
 | 22 | 2026-10-19 | Mesaj taslakları (Paket 3): `message_drafts` (proje + kanal başına bir satır; metin ve yüklemesi bitmiş eklerin `{id, name, size}` listesi; proje silinince FK ile gider). Gerçek SQLite ile uçtan uca denendi |
+| 23 | 2026-10-20 | Görevi iptal etme (ADR-035): `tasks.cancelled_at TEXT` (NULL = iptal edilmedi). İptal edilen görev geçmişiyle kalır; bitmiş ya da silinmiş sayılmaz, hiçbir yol (otopilot, başlatma, geç sonuç, inceleme, birleştirme, açılış) onu ilerletmez; "Yeniden aç" NULL yazar |
+| 24 | 2026-10-21 | Proje klasöründen kaybolan dosyalar (ADR-038): `files.missing_at TEXT`. Diskte bulunamayan klasör dosyasının son denetim anı (NULL = bulundu). Kayıt ve bağlar kalır, çıkarılmış metin silinir; dosya yeniden bulununca NULL olur ve yeniden okunur. Kimin kaldırdığının kanıtı değildir |
 
 ## 3. Tablolar
 
@@ -184,6 +186,7 @@ transaction'da yazılır.
 | `race_result` | TEXT | *(v14)* CHECK `won, lost`; NULL = yarış yok ya da sürüyor |
 | `acceptance` | TEXT DEFAULT `''` | *(v16)* Kabul kriterleri, satır başına bir tane |
 | `acceptance_check` | TEXT | *(v16)* Liderin son incelemedeki kontrolü, JSON `[{text, met, note}]`. Yarışta her iki deneme için ayrı ayrı yazılır |
+| `cancelled_at` | TEXT | *(v23)* Kullanıcının iptal ettiği an (NULL = iptal edilmedi). `PICKABLE` (`nextFor` / `queuedFor`) iptal edilenleri hiç seçmez; "Yeniden aç" NULL yazar |
 | `completed_by` | TEXT | *(v21)* `lead` (lider onayı / yarış kararı) · `user` (elle Bitti; lider incelemesi yok) · NULL. Durum `done` dışına çıkınca `tasksRepo.update` / `move` NULL yazar |
 
 İndeksler: `idx_tasks_status (status, sort_order)`, `idx_tasks_assignee (assignee_id)`, `idx_tasks_project (project_id, status)`.
@@ -511,6 +514,7 @@ değiştirdiği dosyalar (`src/main/files/repo.ts` → `filesRepo`, erişim `fil
 | `pages`, `sheets`, `width`, `height`, `encoding` | INTEGER / TEXT (JSON) / INTEGER / INTEGER / TEXT | PDF/PPTX sayfa, XLSX sayfa adları, görsel boyutu, metin kodlaması |
 | `chars`, `chunk_count` | INTEGER | Çıkarılan karakter ve parça sayısı |
 | `project_shared` | INTEGER 0/1 | 1 = projenin tüm ajanları okuyabilir (klasör dosyalarında 1) |
+| `missing_at` | TEXT | *(v24)* Klasör dosyası son denetimde diskte bulunamadı (NULL = bulundu). Erişilemeyen klasör ya da izin hatası bunu yazmaz. Bu sırada parça yoktur, `status = 'failed'` |
 | `created_at`, `updated_at` | TEXT | |
 
 İndeksler: `idx_files_project (project_id, created_at)`, `idx_files_sha`, benzersiz `idx_files_workspace (project_id,

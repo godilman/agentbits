@@ -584,6 +584,40 @@ kriterleri değiştiyse sonuç atılır ve güncel hâl incelenir (`staleReview`
 çalışma ikinci kez modele gönderilmez (`reviewedRun`; `retryReview` temizler). İnceleyen **proje lideridir** (`projectLead(task.projectId)`; yalnız etkin bir ajan
 döner, yoksa ilk etkin üyeye düşer).
 
+**İnceleme toparlanması (ADR-036).** `orchestrator.recovery` (settings `orchestrator.recovery`, kalıcı):
+görev başına `attempts` (ömür boyu, en fazla 2) + `episode` (`retry` | `files`, `runId`, `startedAt`, `nextAt`,
+`fileIds`, `retries`). `review()` geçici hatada / net olmayan kararda `retryReviewLater`, dosyalar okunurken
+`reviewWhenFilesReady` çağırır; olamazsa `needsUser` (`recoveryTried`: ne denendi + `taskCost`). `armRecovery` görev başına
+tek zamanlayıcı kurar, yalnız `recoveryLive` (proje çalışması başlatılmış, duraklatma yok); `recoveryDue` denemeyi sayar,
+`reviewedRun`'ı temizleyip `queueReview` çağırır; `filesSettled` (`files:changed`) hazır dosyada tek inceleme kuyruğa
+alır. `dropRecovery`: iptal, kendi denemen, `startTask`, proje silme, `state()` temizliği; `pauseAll(by)` →
+`recoveryStopped` (kullanıcıya düşer); `settings:update` `autoRecovery=false` → `recoveryStopped('off')` (kuyrukta /
+sürmekte olan incelemeyi atlar, onu kapı halleder). `review()` model çağrısından hemen önce `recoveryGate`: toparlanmanın
+kuyruğa aldığı incelemede ayar kapalıysa, 30 dk'lık süre dolduysa ya da o anki sağlayıcı `RECOVERABLE_REVIEW` değilse çağrı yok → `needsUser`
+(sayılmış deneme iade edilir); lider / sağlayıcı inceleme başladıktan sonra değiştiyse `'again'` → `reviewAgain`.
+Kullanıcının `retryReview`'ü (kuyrukta olsa da) `dropRecovery` ile kapıdan çıkar. Açılış (`init`) zamanlayıcı kurmaz;
+`startProjectWork` kurar (`armRecovery`, kuyruktayken kapanmış incelemeyi yeniden kuyruğa alır). `state().recovering`
+→ renderer rozeti / bandı.
+
+**Çalışan toparlanması (ADR-037).** Aynı `orchestrator.recovery` kaydı, `episode.kind = 'work'` (+ `basis`, `reason`,
+`launched`, `counted`). `execute()` API / Demo sağlayıcısında `callTool`'u sarar: her araç adı çalışmadan önce
+`ar.tools`'a yazılır; `adapter.run` hatası `ar.callFailed`'ı işaretler. Başarısız dalda geçici hata → `retryWorkLater`
+(`sideEffects`: sağlayıcı `RECOVERABLE_WORK`, `callFailed`, sayaç var, yalnız `SIDE_EFFECT_FREE_TOOLS`, `generatedFor`
+boş, `audit_log.run_id` boş; girdiler `workBasis` ile çalışmanın başındakiyle aynı). Zamanlayıcı → `workDue` →
+`workGate` → `startTask(..., { auto: true })` (yarış kopyası yok, plan düşmez, `ep.launched`); onay kartı
+`runApprovalRetry`. `execute()` ilk sağlayıcı çağrısından hemen önce `workGate(task, runId)`; geçmezse `RecoverySkipped`
+→ `workStopped` (bekletme + kart), geçerse `attempts++` ve `ep.counted`. Bekleyen görev `tick()`'te `held` kümesine
+eklenir (otopilot almaz) ama `blocked` değildir ("Bana ihtiyaç var" değil). `init` kapanışı ayırır: `counted === launched`
+→ plan biter (yarıda kaldı), değilse plan sürer (`launched = null`). `state()` girdisi değişen bekleyen planı hemen
+durdurur.
+
+**Görevi iptal etme (ADR-035).** `tasks.cancelled_at` (v23). `cancelTask` işareti önce yazar (yarış denemesiyle
+birlikte), sonra `release` / `clearUndecided` "cancelled" sonucuyla, kuyrukları temizler ve `stopTask` ile durdurur;
+`cancelling` + `isRunning` istek ile doğrulamayı ayırır, `cancelDone` (çalışmanın `finally`'sinde ya da hemen) kayıttan
+özeti (`cancelSummary`) yazar. Korumalar ortak noktalarda: `PICKABLE`, `startCheck`, `hold` / `heldCard`,
+`queueReview`, başarı yolu, `finishAndNotify` / `finishTaskBranch`, `tasks:move`, `init`. `reopenTask` işareti kaldırır
+ve görevi bekletir (kendiliğinden başlamaz).
+
 **"Bana ihtiyaç var" kartları (ADR-034).** `core/needsCards.ts`: `postCard` bekleme kartını #general'a ve görev
 başlığına (`meta.card` = `{kind, event, taskId, runId?, approvalId?, actions}`, `meta.event` paylaşılır) yazar;
 `resolveCards` / `endWait` beklemenin nasıl bittiğini her açık kopyaya `meta.resolution` olarak yazar ve
@@ -1193,6 +1227,25 @@ yedek silinince/dönünce GC tekrar çalışır.
   bağımlılıkları `asarUnpack`'te; yalnızca kullanılan çekirdekler pakete girer (`electron-builder.config.js`).
 - `extract.ts` testlerde doğrudan Node ile yüklendiği için `./legacyOffice.ts` / `./ocr.ts` açık `.ts` uzantısıyla import edilir
   (`tsconfig.node.json` → `allowImportingTsExtensions`).
+
+**Proje klasöründen kaybolan dosyalar (2026-10-21, ADR-038).** `workspace` kaydı diskteki dosyanın yerini tutar;
+dosya silinince ya da taşınınca kayıt kalır. `service.checkOnDisk` her okuma yolunda (`readableFiles` → prompt bölümü,
+`files_list`, `file_search`; `resolveFile` → `file_read`; kullanıcı araması `files:list` / `files:search`; doğrudan açma
+`fileDetail` / `preview`: yeniden okunan, bulunamayan ya da denetlenemeyen klasör dosyasında kayıtlı metin ve görsel
+verilmez; açılışta `resumeProcessing`) dosyayı diskte denetler. Durumlar `onDisk`:
+- **Var:** Kayıt `missing_at` taşıyorsa işaret kalkar, dosya yeniden okunur (`readAgain`).
+- **Yok:** Proje klasörü erişilebilir durumdayken `ENOENT` / `ENOTDIR`. `markMissing` çalışır: `supersede` (geç biten
+  eski okuma bir şey yazamaz), parçalar silinir, `missing_at` yazılır. Kayıt ve bağları kalır.
+- **Denetlenemedi:** Klasör yok ya da erişilemiyor, `EACCES` / `EPERM` ya da başka bir disk hatası. Hiçbir şey
+  kalıcılaştırılmaz; o an metin verilmez, kart nedenini söyler.
+
+Paylaşılan klasörde yazma izinli CLI çalışmasında `workspacePresent` başta, `disappearedSince` sonda karşılaştırılır.
+Baştaki listede olup sonda bulunamayanlar loglanır (`meta.lostFiles`) ve kanıta girer (`RunEvidence.lostFiles`):
+"çalışma başladığında vardı, bittiğinde yok; kimin kaldırdığı bilinmiyor". Silme hiçbir yerde çalışana atfedilmez.
+Worktree çalışması kendi kopyasında çalışır; bu karşılaştırma ona yapılmaz, değişikliklerini git farkı gösterir.
+Yeniden adlandırma tanınmaz: eski yol kayıp, yeni yol yeni dosyadır. Çalışma sonu taraması `mtime` yanında `ctime`'a da
+bakar, çünkü taşınan dosya `mtime`'ını korur. Agentbits diskte hiçbir dosyayı silmez ya da taşımaz.
+Test: `tests/e2e/missingFiles.e2e.ts`.
 
 ## 9d. Çoklu dil (i18n; `src/shared/i18n.ts`, ayrıntı [I18N.md](I18N.md))
 

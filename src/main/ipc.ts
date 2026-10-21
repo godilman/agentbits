@@ -79,6 +79,7 @@ import {
   addFromBytes,
   addFromPaths,
   attachToTask,
+  checkOnDisk,
   deleteFile,
   detachFromTask,
   fileDetail,
@@ -123,6 +124,7 @@ export const handlers: Handlers = {
     const before = settingsRepo.get().language
     const s = settingsRepo.update(patch)
     if (patch.memoryEmbedProviderId !== undefined || patch.memoryEmbedModel !== undefined) scheduleIndex(300)
+    if (patch.autoRecovery === false) orchestrator.recoveryStopped('off')
     if (patch.language !== undefined && patch.language !== before) {
       applyLanguageSetting(s.language)
       relabelDefaults()
@@ -238,6 +240,8 @@ export const handlers: Handlers = {
   },
   'tasks:move': async (id, status, sortOrder, force) => {
     const before = tasksRepo.get(id)
+    // A cancelled task is reopened first (it isn't started, reviewed or made done by a drag).
+    if (before?.cancelledAt && status !== before.status) throw new Error(t('orchestrator:errors.cancelled', { key: before.key }))
     // A running task is stopped first and its run allowed to end: its clean-up puts the task back in "To do", which
     // must not overwrite the column the user chose (nor may a merge start while the agent still writes).
     if (before?.status === 'in_progress' && status !== 'in_progress') {
@@ -308,6 +312,9 @@ export const handlers: Handlers = {
     void orchestrator.startTask(id, undefined, { force: force === true })
   },
   'tasks:retryReview': (id) => orchestrator.retryReview(id),
+  'tasks:cancelScope': (id) => orchestrator.cancelScope(id),
+  'tasks:cancel': (id) => orchestrator.cancelTask(id),
+  'tasks:reopen': (id) => orchestrator.reopenTask(id),
   'needs:act': (projectId, event, action) => orchestrator.act(projectId, event, action),
   'tasks:waitingFor': (id) => orchestrator.waitingFor(id),
   'projects:startWork': (id) => orchestrator.startProjectWork(id),
@@ -742,10 +749,11 @@ export const handlers: Handlers = {
   /* attachments */
   'files:list': (opts) => {
     const list = filesRepo.list({ projectId: opts.projectId, origin: opts.origin, limit: opts.limit })
-    let out = opts.taskId ? list.filter((f) => filesRepo.linkedTo('task', opts.taskId!).includes(f.id)) : list
+    // Project-folder files as they are on disk now (text of one that isn't there is never a search hit).
+    let out = checkOnDisk(opts.taskId ? list.filter((f) => filesRepo.linkedTo('task', opts.taskId!).includes(f.id)) : list)
     const q = opts.query?.trim().toLocaleLowerCase('tr')
     if (q) {
-      const hitIds = new Set(filesRepo.search(q, out.map((f) => f.id), 200).map((h) => h.fileId))
+      const hitIds = new Set(filesRepo.search(q, out.filter((f) => f.chunkCount > 0).map((f) => f.id), 200).map((h) => h.fileId))
       out = out.filter((f) => f.name.toLocaleLowerCase('tr').includes(q) || hitIds.has(f.id))
     }
     return out
@@ -767,7 +775,7 @@ export const handlers: Handlers = {
   'files:delete': (id) => deleteFile(id),
   'files:preview': (id, offset, limit) => preview(id, offset, limit),
   'files:search': (projectId, query) => {
-    const ids = filesRepo.list({ projectId, limit: 2000 }).map((f) => f.id)
+    const ids = checkOnDisk(filesRepo.list({ projectId, limit: 2000 })).filter((f) => f.chunkCount > 0).map((f) => f.id)
     return filesRepo.search(query, ids, 50)
   },
   'files:saveAs': async (id) => {

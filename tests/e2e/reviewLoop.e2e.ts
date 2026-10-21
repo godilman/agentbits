@@ -60,7 +60,8 @@ async function main(): Promise<void> {
   openDb()
   const tpl = await call('templates:instantiate', 'ecommerce')
   const p = await call('projects:save', { name: 'Erkunt Mobil', rootPath: mkdtempSync(join(tmpdir(), 'ab-rl-')), unitIds: [tpl.unitId] })
-  settingsRepo.update({ onboarded: true, autopilot: false, reviewByLead: false, raceMode: false, language: 'en' })
+  // The paths without recovery (ADR-036 has its own test: reviewRecovery.e2e.ts).
+  settingsRepo.update({ onboarded: true, autopilot: false, reviewByLead: false, raceMode: false, language: 'en', autoRecovery: false })
   getDb().prepare('UPDATE agent_permissions SET require_approval = 0').run()
   applyLanguageSetting('en')
   orchestrator.init()

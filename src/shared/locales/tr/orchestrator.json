@@ -39,7 +39,8 @@
     "agentDisabled": "Çalışma başlamadan ajan kapatıldı",
     "stopped": "Çalışma durduruldu",
     "stoppedByUser": "Kullanıcı durdurdu",
-    "capsChanged": "Çalışma onay beklerken ajanın izinleri, bağlantıları ya da uygulamaları değişti"
+    "capsChanged": "Çalışma onay beklerken ajanın izinleri, bağlantıları ya da uygulamaları değişti",
+    "cancelled": "Görev iptal edildi"
   },
   "notes": {
     "addedToFirstPrompt": "İlk prompta eklendi",
@@ -86,7 +87,8 @@
     "reviewStale": "{{key}} incelemesi atıldı: daha yeni bir çalışma ya da değişen görev bilgileri var — güncel hâl inceleniyor",
     "workStarted": "Bu oturumda bu projede çalışma başlatıldı",
     "reviewUnverifiable": "❔ {{key}} doğrulanamadı: {{note}}",
-    "filesNotReadyAtStart": "⚠ İş başladığında henüz hazır değildi (hâlâ okunuyordu): {{names}}"
+    "filesNotReadyAtStart": "⚠ İş başladığında henüz hazır değildi (hâlâ okunuyordu): {{names}}",
+    "filesDisappeared": "⚠ İş başladığında vardı, bittiğinde proje klasöründe bulunamadı (klasör paylaşılıyor: kimin kaldırdığı bilinmiyor): {{names}}"
   },
   "chat": {
     "taskStarted": "{{agent}} göreve başladı.",
@@ -143,7 +145,11 @@
     "retryReviewNoLead": "Bu projede görevi inceleyecek etkin bir lider yok. Önce bir lider ata ya da aç, ya da kendin karar ver.",
     "cardNotHere": "Bu istek başka bir projeye ait.",
     "cardAction": "Bu istek için bu işlem artık yapılamaz.",
-    "reviewQueued": "Bu görevin incelemesi zaten sırada; sırası gelince yapılacak."
+    "reviewQueued": "Bu görevin incelemesi zaten sırada; sırası gelince yapılacak.",
+    "cancelled": "{{key}} iptal edildi: önce yeniden aç.",
+    "cancelDone": "{{key}} zaten bitti, iptal edilemez.",
+    "alreadyCancelled": "{{key}} zaten iptal edildi.",
+    "cancelStopping": "{{key}} hâlâ duruyor; çalışması bitince yeniden açabilirsin."
   },
   "result": {
     "taskCreated": "{{key}} oluşturuldu ve {{agent}} başlatıldı",
@@ -283,7 +289,9 @@
     "authFailed": "Sağlayıcı girişi geçersiz — yeniden giriş yap, sonra yeniden başlat",
     "failed_one": "Hata verdi: {{error}}",
     "failed_other": "{{count}} kez hata verdi: {{error}}",
-    "capsChanged": "Onayını beklerken ajanın kullanabildikleri değişti; güncel listeyi görmek için yeniden başlat"
+    "capsChanged": "Onayını beklerken ajanın kullanabildikleri değişti; güncel listeyi görmek için yeniden başlat",
+    "cancelled": "İptal edildi",
+    "reopened": "Yeniden açıldı: sen başlatana kadar bekler"
   },
   "review": {
     "unmet": "Karşılanmayan kabul kriterleri: {{list}}"
@@ -331,6 +339,80 @@
     "failed": "“{{title}}” hata verip durdu: {{reason}} Kendiliğinden yeniden başlamayacak. “{{retry}}” işi baştan çalıştırır; önceki denemenin yaptıkları geri alınmaz. · {{key}}",
     "limitStopped": "“{{title}}” bir sınıra takılıp durdu: {{reason}} Kendiliğinden yeniden başlamayacak. “{{retry}}” işi yeniden çalıştırır; önceki denemenin yaptıkları geri alınmaz. · {{key}}",
     "isolation": "“{{title}}” başlatılamadı: {{reason}} Kendiliğinden başlamayacak; sorunu düzeltip “{{retry}}” düğmesine bas. · {{key}}",
-    "auth": "“{{title}}” sağlayıcı oturumu yüzünden durdu: {{reason}} Önce oturumu düzelt, sonra “{{retry}}” düğmesine bas; önceki denemenin yaptıkları geri alınmaz. · {{key}}"
+    "auth": "“{{title}}” sağlayıcı oturumu yüzünden durdu: {{reason}} Önce oturumu düzelt, sonra “{{retry}}” düğmesine bas; önceki denemenin yaptıkları geri alınmaz. · {{key}}",
+    "recoveryRetry": "🔁 “{{title}}”: {{reason}} Ekip yalnız incelemeyi {{minutes}} dk sonra yeniden deneyecek (ek deneme {{attempt}}/{{max}}); çalışan yeniden çalışmaz. Senden bir şey gerekmiyor. · {{key}}",
+    "recoveryFiles": "⏳ “{{title}}”: değişen dosyalar henüz okunuyor ({{files}}). Güncel içerikleri hazır olunca inceleme kendiliğinden başlar (en fazla {{minutes}} dk); bu arada model çağrılmaz. Senden bir şey gerekmiyor. · {{key}}",
+    "recoveryRetryLater": "🔁 “{{title}}”: {{reason}} Ekip yalnız incelemeyi, bu projede çalışmayı başlattığında yeniden deneyecek (ek deneme {{attempt}}/{{max}}); çalışan yeniden çalışmaz. · {{key}}",
+    "recoveryWork": "🔁 “{{title}}”: {{reason}} Çalışma dışarıda bir şey değiştirmedi (en fazla Agentbits'in kendi verilerini okudu); {{worker}} {{minutes}} dk sonra işi kendiliğinden yeniden çalıştıracak (ek deneme {{attempt}}/{{max}}). Senden bir şey gerekmiyor; istemezsen görevi iptal edebilirsin. · {{key}}",
+    "recoveryWorkLater": "🔁 “{{title}}”: {{reason}} Çalışma dışarıda bir şey değiştirmedi (en fazla Agentbits'in kendi verilerini okudu); {{worker}} işi, bu projede çalışmayı başlattığında yeniden çalıştıracak (ek deneme {{attempt}}/{{max}}). İstemezsen görevi iptal edebilirsin. · {{key}}",
+    "runApprovalRetry": "🔁 “{{title}}” otomatik yeniden deneme için onayını bekliyor (ek deneme {{attempt}}/{{max}}). Önceki deneme şu yüzden durdu: {{reason}} Dışarıda bir şey değiştirmediği kayıtlı. Onaylarsan {{worker}} işi baştan çalıştırır ve şunları kullanabilir: {{caps}}. Önceki onay geçerli değil; reddedersen iş başlamaz ve görev bekletilir. · {{key}}"
+  },
+  "cancel": {
+    "requested": "⏳ “{{title}}” için iptal istendi: ajanından durması istendi, durduğu henüz doğrulanmadı. O zamana kadar görev için yeni bir şey başlamaz ve çalışmanın göndereceği sonuç yok sayılır; çalışma bitince iptal burada doğrulanır. · {{key}}",
+    "done": "🛑 “{{title}}” iptal edildi: ajanının çalışması durdu. {{details}} Bu, daha önce başka yerlerde başlattığı işlemlerin (bağlantılar, uygulamalar, kendi başına süren komutlar) geri alındığı ya da durduğu anlamına gelmez. Senden bir şey gerekmiyor; görev ve geçmişi duruyor, istersen yeniden açabilirsin. · {{key}}",
+    "neverRan": "Hiç çalışmadı.",
+    "ran_one": "Bir kez çalıştı.",
+    "ran_other": "{{count}} kez çalıştı.",
+    "demo": "Demo sağlayıcı: gerçek bir şey değişmedi.",
+    "files_one": "Dosya araçlarıyla {{count}} dosya yazdı.",
+    "files_other": "Dosya araçlarıyla {{count}} dosya yazdı.",
+    "noFiles": "Dosya araçlarıyla dosya yazmadı.",
+    "commands_one": "{{count}} kabuk komutu çalıştırdı; kabuk komutları dosyaları da değiştirmiş ya da başka sistemlere ulaşmış olabilir.",
+    "commands_other": "{{count}} kabuk komutu çalıştırdı; kabuk komutları dosyaları da değiştirmiş ya da başka sistemlere ulaşmış olabilir.",
+    "noCommands": "Kabuk komutu çalıştırmadı.",
+    "unknown": "Hangi dosyaları değiştirdiği ve hangi komutları çalıştırdığı bilinmiyor (bu sağlayıcı araçlarını tam kaydetmiyor).",
+    "external_one": "Bağlantı ve uygulamalarda {{count}} işlem yaptı (Denetim kaydında).",
+    "external_other": "Bağlantı ve uygulamalarda {{count}} işlem yaptı (Denetim kaydında).",
+    "noExternal": "Bağlantı ya da uygulama işlemi yapmadı.",
+    "left": "Hiçbir şey geri alınmadı: yaptığı değişiklikler {{where}} duruyor.",
+    "dependents": "Buna bağlı görevler başlamayacak: {{keys}}. İstersen onları da iptal et ya da yine de başlat.",
+    "depCancelled": "{{key}} (iptal edildi)",
+    "reopened": "↩ “{{title}}” yeniden açıldı. Kendiliğinden başlamaz; çalışmasını istediğinde başlat. · {{key}}"
+  },
+  "recovery": {
+    "noLimits": "Otomatik yeniden denenmedi: bu sağlayıcıda inceleme çağrısının süre ve token sınırı uygulanamıyor (yalnız API sağlayıcılarında uygulanıyor).",
+    "noLimitsNow": "Bekleyen otomatik inceleme tekrarı yapılmadı: liderin şu anki sağlayıcısında inceleme çağrısının süre ve token sınırı uygulanamıyor (yalnız API sağlayıcılarında uygulanıyor).",
+    "used": "Bu görevin otomatik yeniden deneme hakkı kullanıldı ({{max}}/{{max}}).",
+    "windowOver": "Otomatik toparlanmanın süresi doldu.",
+    "windowOverNow": "Bekleyen otomatik inceleme yapılmadı: otomatik toparlanmanın {{minutes}} dakikalık süresi doldu.",
+    "triedFiles": "Ekip dosyaların okunmasını {{minutes}} dk bekledi.",
+    "tried_one": "Ekip incelemeyi {{minutes}} dk içinde bir kez daha denedi; olmadı.",
+    "tried_other": "Ekip incelemeyi {{minutes}} dk içinde {{count}} kez daha denedi; olmadı.",
+    "cost": "Görevin model çağrıları şu ana kadar {{cost}} USD tuttu.",
+    "costUnknown": "Görevin model çağrılarının maliyeti bilinmiyor (bu sağlayıcı bildirmiyor; şu ana kadar {{tokens}} token).",
+    "costDemo": "Demo sağlayıcı: gerçek maliyet yok.",
+    "paused": {
+      "user": "Otomatik toparlanma, her şeyi duraklattığın için durdu.",
+      "auth": "Otomatik toparlanma, bir oturum sorunu yüzünden her şey duraklatıldığı için durdu.",
+      "off": "Otomatik toparlanma Ayarlar'dan kapatıldığı için durdu; bekleyen inceleme yapılmadı."
+    },
+    "costNone": "Görevin model çağrılarının kullanım kaydı yok; maliyeti bilinmiyor.",
+    "reviewFailed": "Lider incelemesi tamamlanamadı ({{provider}}: {{what}}).",
+    "why": {
+      "network": "ağ bağlantısı kurulamadı",
+      "timeout": "zamanında yanıt gelmedi",
+      "overloaded": "sağlayıcı aşırı yüklü"
+    },
+    "workFailed": "Çalışanın sağlayıcı çağrısı tamamlanamadı ({{provider}}: {{what}}).",
+    "triedWork_one": "Ekip çalışanı {{minutes}} dk içinde bir kez daha çalıştırdı; olmadı.",
+    "triedWork_other": "Ekip çalışanı {{minutes}} dk içinde {{count}} kez daha çalıştırdı; olmadı.",
+    "work": {
+      "notRetried": "Kendiliğinden yeniden çalıştırılmadı: {{why}}",
+      "cli": "çalışanın sağlayıcısı araçlarını Agentbits üzerinden çalıştırmıyor (Claude Code / Codex), bu yüzden dışarıda bir şey değiştirmediği kanıtlanamıyor.",
+      "notCall": "hata model çağrısında değil, çalışmanın hazırlığında ya da bitirilmesinde oldu.",
+      "noRecord": "çalışmanın araç kaydı yok; dışarıda bir şey değiştirmediği kanıtlanamıyor.",
+      "tools": "çalışma şu araçları çağırdı: {{tools}}; dışarıda bir şey değiştirmiş olabilir.",
+      "files": "çalışma bir dosya kaydetti.",
+      "audit": "çalışma bir bağlantıda ya da uygulamada işlem yaptı.",
+      "inputs": "görevin başlığı, açıklaması, kabul kriterleri, bağımlılıkları ya da atanan çalışanı değişti; eski iş kendiliğinden tekrarlanmaz.",
+      "gone": "toparlanma planı artık geçerli değil.",
+      "notStarted": "bu projede çalışma başlatılmamış.",
+      "agent": "çalışan kapalı ya da artık yok.",
+      "off": "otomatik toparlanma Ayarlar'dan kapatıldı.",
+      "paused": "her şey duraklatıldı.",
+      "window": "otomatik toparlanmanın {{minutes}} dakikalık süresi doldu.",
+      "used": "görevin otomatik yeniden deneme hakkı kullanıldı ({{max}}/{{max}}).",
+      "deps": "bağlı olduğu görevler henüz bitmedi ({{keys}})."
+    }
   }
 }

@@ -52,6 +52,7 @@ const mapFile = (r: Row): FileRecord => {
     chunkCount: r.chunk_count,
     projectShared: !!r.project_shared,
     hasOriginal: false,
+    missingAt: r.missing_at ?? null,
     createdAt: r.created_at,
     updatedAt: r.updated_at
   }
@@ -93,6 +94,7 @@ export type FilePatch = Partial<{
   chars: number
   chunkCount: number
   projectShared: boolean
+  missingAt: string | null
 }>
 
 const COLS: Record<keyof FilePatch, string> = {
@@ -112,7 +114,8 @@ const COLS: Record<keyof FilePatch, string> = {
   encoding: 'encoding',
   chars: 'chars',
   chunkCount: 'chunk_count',
-  projectShared: 'project_shared'
+  projectShared: 'project_shared',
+  missingAt: 'missing_at'
 }
 
 /** FTS5 query from free text: every word must match (prefix), quotes neutralised. */
