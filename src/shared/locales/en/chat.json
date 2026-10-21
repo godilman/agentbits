@@ -46,7 +46,9 @@
     "tasks": "preparing tasks…",
     "decision": "writing a decision…",
     "message": "writing a note to the team…",
-    "learn": "noting what it learned…"
+    "learn": "noting what it learned…",
+    "question": "writing a question…",
+    "answered": "noting your answer…"
   },
   "card": {
     "openApproval": "Open in the approval panel",
@@ -70,5 +72,20 @@
       "allowed": "✓ Approved — the requested operation may run.",
       "cancelled": "The task was cancelled."
     }
+  },
+  "request": {
+    "openReport": "Open the report",
+    "retry": "Write the summary again",
+    "asked": "The lead is writing the summary"
+  },
+  "question": {
+    "answer": "Answer",
+    "drop": "Not needed",
+    "hint": "or start your message with “{{key}}:”. An answer approves nothing.",
+    "answered": "Answered: {{answer}}",
+    "dropped": "Closed: not needed any more"
+  },
+  "jump": {
+    "gone": "That card is no longer in this chat (deleted, or the chat was cleared)."
   }
 }

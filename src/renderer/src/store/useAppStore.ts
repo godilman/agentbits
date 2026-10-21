@@ -18,7 +18,7 @@ import type {
   OrgUnit,
   Project,
   Provider,
-  RecoveryInfo,
+  OpenQuestion, RecoveryInfo,
   Report,
   Run,
   Stats,
@@ -26,6 +26,7 @@ import type {
   TeamTemplate
 } from '@shared/types'
 import { apiError, bridge, call } from '@/lib/api'
+import { mergeHistory } from '@/lib/chatJump'
 import { t } from '@/i18n'
 import { applyNav } from '@/lib/notifyNav'
 import type { UpdateState } from '@shared/update'
@@ -115,9 +116,13 @@ interface State {
   auditVersion: number
   orchestratorPaused: boolean
   /** Held tasks → reason; done tasks not merged yet; reviews the lead left to the user. */
-  orchestratorWaits: { held: Record<string, string>; unmerged: string[]; undecided: string[]; undecidedWhy: Record<string, string>; startedProjects: string[]; deferredReviews: string[]; simulatedWork: string[]; simulatedReview: string[]; waitEvents: string[]; recovering: Record<string, RecoveryInfo> }
+  orchestratorWaits: { held: Record<string, string>; unmerged: string[]; undecided: string[]; undecidedWhy: Record<string, string>; startedProjects: string[]; deferredReviews: string[]; simulatedWork: string[]; simulatedReview: string[]; waitEvents: string[]; recovering: Record<string, RecoveryInfo>; questions: OpenQuestion[] }
   /** A "needs you" card asked to show this connection / app request in the approval panel. */
   focusApproval: string | null
+  /** A chat message asked to show this report in Reports (a request's combined result). */
+  /** "Needs you" asked the chat to show this message (a question's card). */
+  focusMessage: { projectId: string; channel: string; id: string } | null
+  focusReport: string | null
   /** A "needs you" card asked to open the merge preview of this task. */
   mergeReviewFor: string | null
   toasts: Toast[]
@@ -165,6 +170,8 @@ interface State {
   closeFile: () => void
   refresh: (r: Resource) => Promise<void>
   loadChannel: (channel: string) => Promise<void>
+  /** Adds older messages to a channel's loaded history (merged by id; nothing loaded is dropped). */
+  addChannelMessages: (projectId: string, channel: string, messages: Message[]) => void
   setTab: (tab: Tab) => void
   /** Activates (and opens) a project tab. */
   openProject: (id: string) => void
@@ -327,7 +334,7 @@ async function loadAll(): Promise<void> {
   void useAppStore.getState().refresh('memory')
 }
 
-const waitsOf = (o: { held: { taskId: string; reason: string }[]; unmerged: string[]; undecided: string[]; undecidedWhy: Record<string, string>; startedProjects: string[]; deferredReviews: string[]; simulatedWork: string[]; simulatedReview: string[]; waitEvents: string[]; recovering: Record<string, RecoveryInfo> }): State['orchestratorWaits'] => ({
+const waitsOf = (o: { held: { taskId: string; reason: string }[]; unmerged: string[]; undecided: string[]; undecidedWhy: Record<string, string>; startedProjects: string[]; deferredReviews: string[]; simulatedWork: string[]; simulatedReview: string[]; waitEvents: string[]; recovering: Record<string, RecoveryInfo>; questions: OpenQuestion[] }): State['orchestratorWaits'] => ({
   held: Object.fromEntries(o.held.map((h) => [h.taskId, h.reason])),
   unmerged: o.unmerged,
   undecided: o.undecided,
@@ -337,7 +344,8 @@ const waitsOf = (o: { held: { taskId: string; reason: string }[]; unmerged: stri
   simulatedWork: o.simulatedWork,
   simulatedReview: o.simulatedReview,
   waitEvents: o.waitEvents,
-  recovering: o.recovering
+  recovering: o.recovering,
+  questions: o.questions ?? []
 })
 
 export const useAppStore = create<State>((set, get) => ({
@@ -379,8 +387,10 @@ export const useAppStore = create<State>((set, get) => ({
   approvals: [],
   auditVersion: 0,
   orchestratorPaused: false,
-  orchestratorWaits: { held: {}, unmerged: [], undecided: [], undecidedWhy: {}, startedProjects: [], deferredReviews: [], simulatedWork: [], simulatedReview: [], waitEvents: [], recovering: {} },
+  orchestratorWaits: { held: {}, unmerged: [], undecided: [], undecidedWhy: {}, startedProjects: [], deferredReviews: [], simulatedWork: [], simulatedReview: [], waitEvents: [], recovering: {}, questions: [] },
   focusApproval: null,
+  focusReport: null,
+  focusMessage: null,
   mergeReviewFor: null,
   toasts: [],
   memoryVersion: 0,
@@ -494,6 +504,12 @@ export const useAppStore = create<State>((set, get) => ({
       }
     }
   },
+
+  addChannelMessages: (projectId, channel, messages) =>
+    set((s) => {
+      const key = channelKey(projectId, channel)
+      return { channels: { ...s.channels, [key]: mergeHistory(s.channels[key] ?? [], messages) } }
+    }),
 
   loadChannel: async (channel) => {
     const pid = get().activeProjectId

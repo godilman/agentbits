@@ -1,10 +1,10 @@
-import { randomUUID } from 'crypto'
+import { createHash, randomUUID } from 'crypto'
 import { assertRunFolder } from './folders'
 import { evidenceSection, runEvidence } from './evidence'
 import { app } from 'electron'
 import { intlLocale, languageName } from '@shared/i18n'
 import { allTranslations, currentLanguage, t } from '../i18n'
-import type { Agent, AgentInstruction, CancelScope, ProviderKind, RecoveryInfo, FileRecord, InstructionInput, LogLevel, Message, NeedsAction, NeedsActResult, NeedsCard, NeedsOutcome, Project, Provider, Task, UsageDelta, UsageMode } from '@shared/types'
+import type { Agent, AgentInstruction, CancelScope, ProviderKind, RecoveryInfo, FileRecord, InstructionInput, LogLevel, Message, NeedsAction, NeedsActResult, NeedsCard, NeedsOutcome, OpenQuestion, Project, Provider, Task, UsageDelta, UsageMode } from '@shared/types'
 import { resolveAfter, type LeadMessage } from '@shared/leadComms'
 import { acceptanceList, judgeCriteria, parseRaceVerdict, pickRival } from '@shared/review'
 import { isTwin } from '@shared/org'
@@ -77,8 +77,30 @@ import {
   reviewSystem,
   stripBlocks,
   workerPrompt,
-  workerSystem
+  workerSystem,
+  wrapSystem
 } from './prompts'
+import {
+  answerMessage,
+  answerReport,
+  ended,
+  factsLine,
+  fallbackReport,
+  MAX_WRAP_CALLS,
+  parseWrap,
+  recordedChanges,
+  requestLabel,
+  requestsRepo,
+  wrapPrompt,
+  type RequestDraft,
+  type RequestTaskRef,
+  type RequestTaskView,
+  type TaskOutcome,
+  type UserRequest
+} from './requests'
+import { questionsRepo, type Question } from './questions'
+import { projectSignals, signalsSection } from './projectSignals'
+import { addressedKeys, answerPart, parseAnswered, parseQuestions } from '@shared/questions'
 
 interface ActiveRun {
   runId: string
@@ -148,6 +170,10 @@ const MOCK_PROVIDER: Provider = {
 }
 
 const TICK_MS = 1500
+/** Events after which a user request may have ended (ADR-039): its tasks, runs, approvals or waits changed. */
+const REQUEST_EVENTS = new Set(['tasks:changed', 'orchestrator:changed', 'runs:changed', 'approvals:changed'])
+/** Routine steps of a request's task: told in the task's thread, not in #general (P2). */
+const THREAD_STEPS = new Set<SayKey>(['sentForReview', 'approved', 'sentBack', 'sentBackWaits'])
 const BREAK_MS: [number, number] = [8000, 16000]
 const ERROR_COOLDOWN_MS = 45000
 
@@ -333,8 +359,19 @@ class Orchestrator {
     // Recovery attempts and recoveries survive a restart; nothing is armed until the user starts a project's work.
     this.recovery = new Map(Object.entries(readJson<Record<string, RecoveryState>>(RECOVERY_KEY, {})))
     if (!this.filesListener) this.filesListener = onEvent((e) => e.type === 'files:changed' && this.filesSettled())
+    // A request answer cut off by the quit: counted; it becomes a free "interrupted" summary from the records. Opening the
+    // app calls no model; a later, different state is answered once the user starts the project's work.
+    for (const r of requestsRepo.wrapping()) {
+      if (r.state === 'wrapping') requestsRepo.update(r.id, { state: 'publishing', draft: { kind: 'fallback', basis: r.wrapBasis ?? '', why: t('orchestrator:request.why.interrupted') } })
+    }
+    if (!this.requestsListener) this.requestsListener = onEvent((e) => REQUEST_EVENTS.has(e.type) && this.requestsSoon())
     // Run approvals live in memory: a run that waited for one when the app closed is cancelled below; its card says so.
-    for (const r of runsRepo.list({ activeOnly: true }).filter((x) => x.status === 'awaiting_approval')) endWait(r.projectId, `run:${r.id}:approval`, 'closed')
+    // Tasks whose run only waited for approval: it never reached a provider (told apart from a run cut off below).
+    const neverStarted = new Set<string>()
+    for (const r of runsRepo.list({ activeOnly: true }).filter((x) => x.status === 'awaiting_approval')) {
+      endWait(r.projectId, `run:${r.id}:approval`, 'closed')
+      neverStarted.add(r.taskId)
+    }
     const stale = runsRepo.cancelStale()
     instructionsRepo.cancelStale()
     // Worker recoveries whose run had begun when the app closed (ADR-037): a provider call that started is counted and
@@ -362,6 +399,12 @@ class Orchestrator {
         this.cancelDone(task.id)
       } else if (task.status === 'in_progress' && waitAgain.has(task.id)) {
         tasksRepo.update(task.id, { status: 'todo', progress: 0 })
+      } else if (task.status === 'in_progress' && neverStarted.has(task.id)) {
+        // Closed while its run waited for approval: nothing ran. It waits for the user, and is asked about again.
+        tasksRepo.update(task.id, { status: 'todo', progress: 0 })
+        this.blocked.add(task.id)
+        this.heldWhy.set(task.id, t('orchestrator:held.approvalClosed'))
+        this.post(`task:${task.id}`, 'system', null, t('orchestrator:chat.approvalClosedHeld'), task.projectId)
       } else if (task.status === 'in_progress') {
         // Interrupted by a quit / crash: it may have done part of its work, so it is not restarted automatically.
         tasksRepo.update(task.id, { status: 'todo', progress: 0 })
@@ -384,6 +427,7 @@ class Orchestrator {
     // Copies / branches left by tasks that are gone (also from older versions); task copies are made only after this.
     this.swept = this.sweepWorktrees()
     this.interval = setInterval(() => this.tick(), TICK_MS)
+    this.requestsSoon()
   }
 
   /**
@@ -456,6 +500,8 @@ class Orchestrator {
 
   shutdown(): void {
     this.closing = true
+    if (this.requestTimer) clearTimeout(this.requestTimer)
+    this.requestTimer = null
     for (const timer of this.recoveryTimers.values()) clearTimeout(timer)
     this.recoveryTimers.clear()
     if (this.interval) clearInterval(this.interval)
@@ -542,6 +588,7 @@ class Orchestrator {
     simulatedReview: string[]
     waitEvents: string[]
     recovering: Record<string, RecoveryInfo>
+    questions: OpenQuestion[]
   } {
     for (const id of [...this.undecided]) if (tasksRepo.get(id)?.status !== 'in_review') this.clearUndecided(id, 'moved')
     // Moved out of review, cancelled or run again meanwhile: its recovery is over.
@@ -568,7 +615,8 @@ class Orchestrator {
         ...[...this.blocked].map((id) => this.heldEvent.get(id)),
         ...[...this.mergeEvent.values()]
       ].filter((x): x is string => !!x),
-      recovering: this.recoveringInfo()
+      recovering: this.recoveringInfo(),
+      questions: questionsRepo.open().map((q) => ({ id: q.id, key: q.key, projectId: q.projectId, channel: q.channel, text: q.text, taskId: q.taskId, askedMessageId: q.askedMessageId }))
     }
   }
 
@@ -646,9 +694,19 @@ class Orchestrator {
     return t(`orchestrator:say.${key}`, { title: task.title, key: task.key, ...vars })
   }
 
-  /** Posts a status line to #general (`needsYou`: the user has to decide; drawn as such). */
+  /**
+   * Posts a status line to #general (`needsYou`: the user has to decide; drawn as such). A task done for a chat request
+   * (ADR-039) keeps its routine steps — sent for review, approved, sent back — in its own thread: #general gets the
+   * start, what waits for the user, and the combined result.
+   */
   private say(task: Task, key: SayKey, vars: Record<string, unknown>, ev: { event: string }, needsYou = false): void {
-    this.post('general', 'system', null, this.sayText(task, key, vars), task.projectId, [], { ...ev, ...(needsYou ? { needsYou: true } : { status: true }) })
+    const routine = !needsYou && THREAD_STEPS.has(key) && this.inRequest(task)
+    this.post(routine ? `task:${task.id}` : 'general', 'system', null, this.sayText(task, key, vars), task.projectId, [], { ...ev, ...(needsYou ? { needsYou: true } : { status: true }) })
+  }
+
+  /** The task (or the race attempt of one) was created for a user's chat request. */
+  private inRequest(task: Task): boolean {
+    return requestsRepo.hasTask(task.raceOf ?? task.id)
   }
 
   /**
@@ -890,15 +948,20 @@ class Orchestrator {
 
   /** How the last merge of a task's copy ended (`finishTaskBranch`), for the "done" notification. */
   private mergeOutcome = new Map<string, MergeState>()
+  /** Approved tasks whose merge is under way (a request doesn't count them as settled yet). */
+  private finishing = new Set<string>()
 
   /** Lead approval / race result: merge, then tell the user what came of it (merged, waiting, conflict, no copy). */
   private async finishAndNotify(taskId: string, event: string, raceLoser?: string): Promise<void> {
     if (tasksRepo.get(taskId)?.cancelledAt) return // a late approval of a cancelled task merges nothing
     this.mergeOutcome.delete(taskId)
+    this.finishing.add(taskId)
     try {
       await this.finishTaskBranch(taskId)
     } catch (e) {
       console.warn('[orchestrator] merge after approval', e) // the copy stays: told as "waiting" below
+    } finally {
+      this.finishing.delete(taskId)
     }
     const recorded = this.mergeOutcome.get(taskId)
     this.mergeOutcome.delete(taskId)
@@ -940,7 +1003,8 @@ class Orchestrator {
       }
       if (what === 'merged') this.mergeDone(task.id, 'merged')
       const ev = sameEvent()
-      this.post('general', 'system', null, text, task.projectId, [], { ...ev, status: true })
+      // A routine "merged" of a request's task stays in its thread; anything that went wrong is said in #general too.
+      if (!(what === 'merged' && this.inRequest(task))) this.post('general', 'system', null, text, task.projectId, [], { ...ev, status: true })
       this.post(`task:${task.id}`, 'system', null, text, task.projectId, [], ev)
     }
     try {
@@ -2349,6 +2413,11 @@ class Orchestrator {
   /** One timer per task at most (re-arming clears the old one): never two retries or two reviews for one task. */
   private recoveryTimers = new Map<string, NodeJS.Timeout>()
   private filesListener: (() => void) | null = null
+  /** User requests (ADR-039): answers being written now, the pending look, and what makes a look worth doing. */
+  private requestWraps = new Set<string>()
+  private requestTimer: NodeJS.Timeout | null = null
+  private requestDue = 0
+  private requestsListener: (() => void) | null = null
 
   private saveRecovery(): void {
     for (const id of [...this.recovery.keys()]) if (!tasksRepo.get(id)) this.recovery.delete(id)
@@ -2409,7 +2478,7 @@ class Orchestrator {
     const live = this.recoveryLive(task.projectId)
     const text = this.sayText(task, live ? 'recoveryRetry' : 'recoveryRetryLater', { reason, minutes: Math.round(delay / 60_000), attempt: st.attempts + 1, max: RECOVERY_RETRIES })
     this.post(`task:${task.id}`, 'system', null, text, task.projectId, [], ev)
-    this.post('general', 'system', null, text, task.projectId, [], { ...ev, status: true })
+    if (!this.inRequest(task)) this.post('general', 'system', null, text, task.projectId, [], { ...ev, status: true })
     return { scheduled: true }
   }
 
@@ -2431,7 +2500,7 @@ class Orchestrator {
       const ev = sameEvent()
       const text = this.sayText(task, 'recoveryFiles', { files: names.join(', '), minutes: Math.round(RECOVERY_WINDOW_MS / 60_000) })
       this.post(`task:${task.id}`, 'system', null, text, task.projectId, [], ev)
-      this.post('general', 'system', null, text, task.projectId, [], { ...ev, status: true })
+      if (!this.inRequest(task)) this.post('general', 'system', null, text, task.projectId, [], { ...ev, status: true })
     }
     return true
   }
@@ -2628,7 +2697,7 @@ class Orchestrator {
     const ev = sameEvent()
     const text = this.sayText(task, live ? 'recoveryWork' : 'recoveryWorkLater', { reason, worker: agent.name, minutes: Math.round(delay / 60_000), attempt: state.attempts + 1, max: RECOVERY_RETRIES })
     this.post(`task:${task.id}`, 'system', null, text, task.projectId, [], ev)
-    this.post('general', 'system', null, text, task.projectId, [], { ...ev, status: true })
+    if (!this.inRequest(task)) this.post('general', 'system', null, text, task.projectId, [], { ...ev, status: true })
     return { scheduled: true }
   }
 
@@ -3285,10 +3354,11 @@ class Orchestrator {
   handleUserMessage(channel: string, content: string, projectId: string, opts: { messageId?: string; fileIds?: string[] } = {}): void {
     const text = content.trim()
     if (!text && !opts.fileIds?.length) return
+    let saved: string | null = null
     if (text.length >= 20) {
       // Where it was said, readable for agents and the memory graph (not the channel's raw id).
       const where = channel === 'general' ? '#general' : channel.startsWith('agent:') ? `@${agentsRepo.get(channel.slice(6))?.name ?? '?'}` : channel
-      memoryEngine.remember(`User (${where}): ${text.slice(0, 600)}`, 'context', { importance: 0.5, source: 'chat', projectId })
+      saved = memoryEngine.remember(`User (${where}): ${text.slice(0, 600)}`, 'context', { importance: 0.5, source: 'chat', projectId }).id
     }
     let target: Agent | null = null
     if (channel === 'general') target = projectLead(projectId)
@@ -3308,13 +3378,15 @@ class Orchestrator {
       }
       return
     }
-    if (target && target.enabled) void this.reply(target, channel, text, projectId, opts)
+    // Answers to the lead's questions, addressed by their key ("Q-3: …"): tied here, by code, before the lead reads it.
+    const answered = target && target.id === projectLead(projectId)?.id ? this.directAnswers(text, projectId, channel, opts.messageId ?? null) : []
+    if (target && target.enabled) void this.reply(target, channel, text, projectId, { ...opts, answered, exclude: saved ? [saved] : [] })
     else if (channel === 'general') {
       this.post(channel, 'system', null, t('orchestrator:chat.noLead'), projectId)
     }
   }
 
-  private async reply(agent: Agent, channel: string, content: string, projectId: string, opts: { messageId?: string; fileIds?: string[] } = {}): Promise<void> {
+  private async reply(agent: Agent, channel: string, content: string, projectId: string, opts: { messageId?: string; fileIds?: string[]; answered?: Question[]; exclude?: string[] } = {}): Promise<void> {
     const wasIdle = agent.status === 'idle' && !this.busy.has(agent.id)
     if (wasIdle) this.setStatus(agent.id, 'working', t('orchestrator:status.typing'))
     const { provider, adapter, apiKey, model } = this.providerFor(agent)
@@ -3326,13 +3398,13 @@ class Orchestrator {
       const members = projectMembers(projectId)
       const isLeadHere = projectLead(projectId)?.id === agent.id
       const history = messagesRepo.list(channel, 24, projectId).slice(0, -1)
-      const memory = await memoryEngine.context({ agentId: agent.id, projectId, query: content, limit: 6 })
+      const memory = await memoryEngine.context({ agentId: agent.id, projectId, query: content, limit: 6, exclude: opts.exclude })
       const learning = settingsRepo.get().memoryLearn !== 'off'
       const team = members.some((m) => m.id === agent.id) ? members : [agent, ...members]
       let system =
         (isLeadHere
           ? leadSystem(agent, team, tasksRepo.listAll().filter((t) => t.projectId === projectId), memory.text, skillNamesFor) +
-            [this.interventionsContext(projectId), this.finishedWorkContext(projectId)].map((c) => (c ? '\n\n' + c : '')).join('')
+            [this.interventionsContext(projectId), this.finishedWorkContext(projectId), this.questionsContext(projectId, opts.answered ?? [])].map((c) => (c ? '\n\n' + c : '')).join('')
           : workerSystem(agent, permissionsRepo.get(agent.id), memory.text, this.workspace(project)) +
             '\n\nYou are chatting directly with the user. Answer briefly.') +
         (learning ? '\n\n' + learnInstructions() : '') +
@@ -3364,6 +3436,9 @@ class Orchestrator {
       if (chatConn) system += '\n\n' + chatConn
       const chatMemory = projectMemoryPrompt(projectId, { role: isLeadHere ? 'lead' : 'worker', tools: chatTools || provider.kind === 'claude-cli' || codexChatMcp })
       if (chatMemory) system += '\n\n' + chatMemory
+      // What the folder shows, for the lead's planning: only with its read permission; hints, never facts (P3).
+      const signals = isLeadHere && project?.rootPath && permissionsRepo.get(agent.id).fsRead ? projectSignals(project.rootPath) : null
+      if (signals) system += '\n\n' + signalsSection(signals)
       const chatPrompt = leadPrompt(history, this.names(), content) + (msgFiles.text ? '\n\n' + msgFiles.text : '')
       const chatCtx = { agentId: agent.id, projectId }
       let chatMcp: { configPath: string; server: { command: string; args: string[]; env: Record<string, string> }; dispose: () => void } | null = null
@@ -3455,6 +3530,7 @@ class Orchestrator {
         return members.find((m) => m.name.toLocaleLowerCase('tr') === n)?.id ?? null
       }
 
+      let createdRequest = null as UserRequest | null // set inside the transaction below
       if (planned.length) {
         // Files the lead may hand on: what it can read. By default the message's files go to every task.
         const leadReadable = new Map(readableFilesOf(agent.id, projectId).map((f) => [f.id, f]))
@@ -3471,6 +3547,8 @@ class Orchestrator {
         const defaultFiles = (opts.fileIds ?? []).filter((id) => leadReadable.has(id))
         let linkedFiles = 0
         const created: Task[] = []
+        // The tasks and the request they answer, together (ADR-039): the lead answers the request once they have ended.
+        getDb().transaction(() => {
         planned.forEach((p, i) => {
           // "after": earlier positions of this block (1-based) or existing task keys of this project; no cycles possible.
           const dependsOn = resolveAfter(p.after, i, created.map((c) => c.id), (key) => {
@@ -3494,14 +3572,30 @@ class Orchestrator {
           linkedFiles += ids.length
           created.push(task)
         })
+        createdRequest = requestsRepo.create({
+          projectId,
+          channel,
+          messageId: opts.messageId ?? null,
+          text: content,
+          leadId: agent.id,
+          tasks: created.map((c) => ({ id: c.id, key: c.key, title: c.title })),
+          fileNames: opts.fileIds?.length ? filesRepo.byIds(opts.fileIds).map((f) => f.name) : []
+        })
+        })()
         if (linkedFiles) emit({ type: 'files:changed' })
+        // The start, said once and plainly: who does what; the lead answers here when it is all done.
+        const nm0 = this.names()
+        const list = created.slice(0, 4).map((c) => t('orchestrator:request.startItem', { title: c.title, who: c.assigneeId ? nm0[c.assigneeId] ?? '?' : t('orchestrator:request.unassigned') }))
         this.post(
           channel,
           'system',
           null,
-          t('orchestrator:chat.tasksCreated', { count: created.length, keys: created.map((c) => c.key).join(', ') }) +
-            (linkedFiles ? ` · ${t('orchestrator:chat.filesLinked')}` : ''),
-          projectId
+          t('orchestrator:request.started', { count: created.length, lead: agent.name, list: list.join(', ') + (created.length > 4 ? t('orchestrator:request.startMore', { count: created.length - 4 }) : '') }) +
+            (linkedFiles ? ` ${t('orchestrator:chat.filesLinked')}.` : '') +
+            ` · ${created.map((c) => c.key).join(', ')}`,
+          projectId,
+          [],
+          { status: true }
         )
         const nm = this.names()
         this.log({
@@ -3518,6 +3612,10 @@ class Orchestrator {
       }
       // Only the project lead talks to the team; a ```message block from anyone else is ignored.
       if (isLeadHere) this.deliverLeadNotes(agent, parseLeadMessages(result.text), projectId, channel)
+      if (isLeadHere) {
+        this.tieAnswers(parseAnswered(result.text), content, projectId, channel, opts.messageId ?? null, (opts.answered ?? []).length > 0 || addressedKeys(content).length > 0)
+        this.askQuestions(agent, parseQuestions(result.text), projectId, channel, createdRequest?.id ?? null)
+      }
       for (const d of decisions) decisionsRepo.save({ ...d, status: 'proposed', decidedBy: agent.name, projectId })
       if (decisions.length) {
         this.post(channel, 'system', null, t('orchestrator:chat.decisionsAdded', { count: decisions.length }), projectId)
@@ -3533,6 +3631,466 @@ class Orchestrator {
       aux.end()
       if (wasIdle && agentsRepo.get(agent.id)?.status === 'working' && !this.busy.has(agent.id)) this.setStatus(agent.id, 'idle')
     }
+  }
+
+  /* ───────────────────────── the lead's questions (ADR-040) ───────────────────────── */
+
+  /** What the lead knows about its questions when the user writes: the open ones, and the ones this message answered. */
+  private questionsContext(projectId: string, answered: Question[]): string {
+    const open = questionsRepo.open(projectId)
+    const parts: string[] = []
+    if (answered.length)
+      parts.push(
+        `## The user's message answers your question(s) (tied by their key; the answer is in the message)\n${answered.map((q) => `- ${q.key}: ${q.text}`).join('\n')}`
+      )
+    if (open.length)
+      parts.push(
+        '## Your open questions to the user\n' +
+          open.map((q) => `- ${q.key}${q.taskId ? ` (task ${tasksRepo.get(q.taskId)?.key ?? '?'})` : ''}: ${q.text}`).join('\n') +
+          '\nIf the message clearly answers exactly one of them, add ```answered\n[{"question": "Q-…"}]\n```. If it could answer more than one or it is unclear, ' +
+          'tie nothing and ask the user which question they mean (they can start their message with its key, e.g. "Q-3: …"). Never treat an answer as an approval or a permission.'
+      )
+    return parts.join('\n\n')
+  }
+
+  /** "Q-3: …" lines of a message: each open question addressed by its key is answered by its part of the message. */
+  private directAnswers(text: string, projectId: string, channel: string, messageId: string | null): Question[] {
+    const keys = addressedKeys(text)
+    if (!keys.length) return []
+    const out: Question[] = []
+    const notOpen: string[] = []
+    for (const key of keys) {
+      const q = questionsRepo.byKey(projectId, key)
+      if (!q || q.status !== 'open') {
+        notOpen.push(key)
+        continue
+      }
+      if (this.answerQuestion(q, answerPart(text, key, keys.length > 1), messageId)) out.push(q)
+    }
+    if (notOpen.length) this.post(channel, 'system', null, t('orchestrator:question.notOpen', { keys: notOpen.join(', '), count: notOpen.length }), projectId, [], { status: true })
+    return out
+  }
+
+  /**
+   * The lead says this message answers an open question. Only one, and only when the user didn't address questions by
+   * key themselves: an answer that could fit several closes none (the user is asked to name the question).
+   */
+  private tieAnswers(tied: { question: string }[], content: string, projectId: string, channel: string, messageId: string | null, direct: boolean): void {
+    if (!tied.length || direct) return
+    const open = tied.map((x) => questionsRepo.byKey(projectId, x.question)).filter((q): q is Question => !!q && q.status === 'open')
+    if (open.length !== 1 || tied.length !== 1) {
+      if (open.length) this.post(channel, 'system', null, t('orchestrator:question.which', { keys: open.map((q) => q.key).join(', '), count: open.length }), projectId, [], { status: true })
+      return
+    }
+    this.answerQuestion(open[0], content.trim(), messageId, 'lead')
+  }
+
+  /** The lead's new questions: each gets a lasting key and a card in the chat it was asked in. */
+  private askQuestions(lead: Agent, asked: { text: string; task: string | null }[], projectId: string, channel: string, requestId: string | null): void {
+    for (const a of asked) {
+      const task = a.task ? tasksRepo.findByKey(a.task) : null
+      const q = questionsRepo.create({ projectId, channel, requestId, taskId: task && task.projectId === projectId ? task.id : null, text: a.text })
+      const m = this.post(channel, 'system', null, t('orchestrator:question.card', { lead: lead.name, key: q.key, text: q.text }), projectId, [], {
+        question: { id: q.id, key: q.key, status: 'open' }
+      })
+      questionsRepo.setAsked(q.id, m.id)
+    }
+    if (asked.length) emit({ type: 'orchestrator:changed' })
+  }
+
+  /**
+   * Closes an open question with the user's answer: the card says so, a task it is about gets the answer in its thread
+   * (and a running run after its current step). Never an approval of anything. False when it wasn't open any more.
+   */
+  private answerQuestion(q: Question, answer: string, messageId: string | null, by: 'user' | 'lead' = 'user'): boolean {
+    if (!questionsRepo.close(q.id, 'answered', answer.slice(0, 4000), messageId)) return false
+    this.questionCard(q, 'answered', answer)
+    const task = q.taskId ? tasksRepo.get(q.taskId) : null
+    if (task) {
+      // Tied by its key: the user's answer. Tied by the lead: passed on as the lead's reading of the user's message.
+      const lead = by === 'lead' ? projectLead(task.projectId) : null
+      const note = t(lead ? 'orchestrator:question.leadTiedNote' : 'orchestrator:question.answerNote', { key: q.key, question: q.text, answer: answer.slice(0, 4000) })
+      this.post(`task:${task.id}`, lead ? 'agent' : 'user', lead?.id ?? null, note, task.projectId)
+      const run = runsRepo.list({ activeOnly: true, taskId: task.id })[0]
+      if (run) {
+        instructionsRepo.create({ agentId: run.agentId, projectId: task.projectId, taskId: task.id, runId: run.id, text: note, mode: 'queue', status: 'queued', source: lead ? 'lead' : 'user', note: t('orchestrator:question.queued', { key: q.key }) })
+        emit({ type: 'instructions:changed' })
+      }
+    }
+    emit({ type: 'orchestrator:changed' })
+    return true
+  }
+
+  /** "Not needed any more" (the user): closed without an answer. */
+  dropQuestion(id: string): void {
+    const q = questionsRepo.get(id)
+    if (!q) throw new Error(t('orchestrator:question.notFound'))
+    if (!questionsRepo.close(q.id, 'dropped', null, null)) return
+    this.questionCard(q, 'dropped', '')
+    emit({ type: 'orchestrator:changed' })
+  }
+
+  private questionCard(q: Question, status: 'answered' | 'dropped', answer: string): void {
+    if (!q.askedMessageId) return
+    const m = messagesRepo.setMeta(q.askedMessageId, { question: { id: q.id, key: q.key, status, ...(answer ? { answer: answer.slice(0, 300) } : {}) } })
+    if (m) emit({ type: 'message:updated', message: m })
+  }
+
+  /* ───────────────────────── user requests (ADR-039) ───────────────────────── */
+
+  /** Looks at the requests again shortly (one look for a burst of events). */
+  private requestsSoon(delay = 300): void {
+    if (this.closing) return
+    // One pending look; a sooner one replaces a later one (a slow retry doesn't hold back the others).
+    const due = Date.now() + delay
+    if (this.requestTimer && this.requestDue <= due) return
+    if (this.requestTimer) clearTimeout(this.requestTimer)
+    this.requestDue = due
+    this.requestTimer = setTimeout(() => {
+      this.requestTimer = null
+      try {
+        this.requestsSweep()
+      } catch (e) {
+        console.warn('[agentbits] requests', e)
+      }
+    }, delay)
+    this.requestTimer.unref?.()
+  }
+
+  /** The request's tasks as created, and a race attempt started for one of them. */
+  private requestRefs(r: UserRequest): RequestTaskRef[] {
+    const out = [...r.tasks]
+    for (const ref of r.tasks) {
+      const c = tasksRepo.challengerOf(ref.id)
+      if (c && !out.some((x) => x.id === c.id)) out.push({ id: c.id, key: c.key, title: c.title })
+    }
+    return out
+  }
+
+  /** How a task of a request stands: ended, waiting for the user (or for work to start), or still moving. */
+  private requestOutcome(taskId: string): TaskOutcome {
+    const task = tasksRepo.get(taskId)
+    if (!task) return { kind: 'deleted' }
+    // Its run (or review) is still ending: what it leaves isn't settled yet.
+    if (this.reviewing.has(taskId) || this.finishing.has(taskId) || [...this.active.values()].some((r) => r.taskId === taskId)) return { kind: 'active' }
+    if (task.cancelledAt) return { kind: 'cancelled' }
+    // A race's losing attempt: closed, its work not used (the other attempt counts).
+    if (task.raceResult === 'lost') return { kind: 'superseded' }
+    if (task.status === 'done' && this.pendingMerge(taskId)) return { kind: 'waiting', why: 'user', reason: t('orchestrator:request.wait.merge') }
+    if (task.status === 'done') return { kind: 'done', by: task.completedBy }
+    if (this.recovery.get(taskId)?.episode) return { kind: 'active' }
+    const waiting = (why: 'user' | 'start', reason: string): TaskOutcome => ({ kind: 'waiting', why, reason })
+    const notStarted = !this.workStarted.has(task.projectId) || this.globalPaused
+    if (task.status === 'in_progress') {
+      const run = runsRepo.list({ activeOnly: true, taskId, limit: 1 })[0]
+      return run?.status === 'awaiting_approval' ? waiting('user', t('orchestrator:request.wait.approval')) : { kind: 'active' }
+    }
+    if (task.status === 'in_review') {
+      if (this.undecided.has(taskId)) return waiting('user', this.undecidedWhy.get(taskId) || t('orchestrator:request.wait.decide'))
+      if (!settingsRepo.get().reviewByLead || !projectLead(task.projectId)) return waiting('user', t('orchestrator:request.wait.decide'))
+      if (notStarted || this.deferredReviews.has(taskId)) return waiting('start', t('orchestrator:request.wait.notStarted'))
+      return { kind: 'active' }
+    }
+    if (this.blocked.has(taskId)) return waiting('user', this.heldWhy.get(taskId) || t('orchestrator:request.wait.held'))
+    if (task.dependsOn.some((id) => !tasksRepo.get(id) || tasksRepo.get(id)!.cancelledAt)) return waiting('user', t('orchestrator:request.wait.dependency'))
+    if (notStarted || !settingsRepo.get().autopilot) return waiting('start', t('orchestrator:request.wait.notStarted'))
+    const who = task.assigneeId ? agentsRepo.get(task.assigneeId) : null
+    if (task.assigneeId && !who?.enabled) return waiting('user', t('orchestrator:request.wait.agent'))
+    // Not assigned and nobody in the project who could take it: it would wait for ever.
+    if (!task.assigneeId && !projectMembers(task.projectId).some((a) => a.enabled && !a.isLead)) return waiting('user', t('orchestrator:request.wait.agent'))
+    return { kind: 'active' }
+  }
+
+  /**
+   * What an answer is for: each task's outcome and what decides it — status, who finished it, the lead's note, the race
+   * result, its latest run (and how it ended) and its latest report. A new run, review or report in the same status is
+   * a different state; editing a title, reordering a card or deleting a task after the answer is not (ADR-039).
+   */
+  private requestBasis(refs: RequestTaskRef[]): string {
+    return refs
+      .map((ref) => {
+        const task = tasksRepo.get(ref.id)
+        // A deleted task has nothing new to say (an answer written before it went already covers it; one after lists it).
+        if (!task) return ''
+        // Cancelled stays cancelled until it is reopened: what its runs did later changes nothing to say.
+        if (task.cancelledAt) return `${ref.id}:cancelled:${task.cancelledAt}`
+        const o = this.requestOutcome(ref.id)
+        const run = runsRepo.list({ taskId: ref.id, limit: 1 })[0]
+        const note = createHash('sha1').update(task.reviewNote ?? '').digest('hex').slice(0, 12)
+        const fields = [ref.id, o.kind, o.kind === 'waiting' ? o.why : '', task.status, task.completedBy ?? '', task.raceResult ?? '', note, run?.id ?? '', run?.status ?? '']
+        return [...fields, reportsRepo.latestForTask(ref.id)?.id ?? ''].join(':')
+      })
+      .filter(Boolean)
+      .join('|')
+  }
+
+  /** The same state, a deleted task aside: its earlier part of `before` is left out too (a deletion alone is no news). */
+  private sameBasis(refs: RequestTaskRef[], now: string, before: string | null): boolean {
+    if (before === null) return false
+    const gone = new Set(refs.filter((x) => !tasksRepo.get(x.id)).map((x) => x.id))
+    const kept = before.split('|').filter((part) => part && !gone.has(part.split(':')[0]))
+    return kept.join('|') === now
+  }
+
+  private requestViews(refs: RequestTaskRef[]): RequestTaskView[] {
+    const names = this.names()
+    return refs.map((ref) => {
+      const task = tasksRepo.get(ref.id)
+      const outcome = this.requestOutcome(ref.id)
+      return {
+        ref,
+        outcome,
+        assignee: task?.assigneeId ? names[task.assigneeId] ?? null : null,
+        changes: task && outcome.kind === 'done' ? recordedChanges(ref.id) : null,
+        reviewNote: task?.reviewNote || null,
+        report: task ? (reportsRepo.latestForTask(ref.id)?.bodyMd ?? null) : null
+      }
+    })
+  }
+
+  /**
+   * Answers the requests whose tasks have all ended (once per state), or says briefly what waits for the user. A model
+   * call only when the project's work has been started, for a state not answered yet, within the request's call budget;
+   * every other case is answered from the records, free.
+   */
+  private requestsSweep(): void {
+    if (this.closing || this.quiescing) return
+    // Questions about a task or request that is gone can't be answered any more: closed (they leave Needs you).
+    for (const q of questionsRepo.open()) {
+      if ((q.taskId && !tasksRepo.get(q.taskId)) || (q.requestId && !requestsRepo.get(q.requestId))) {
+        questionsRepo.close(q.id, 'dropped', null, null)
+        this.questionCard(q, 'dropped', '')
+      }
+    }
+    for (const r of requestsRepo.pending()) {
+      if (this.requestWraps.has(r.id)) continue
+      // "Wrapping" with no call in flight (writing its result failed): the call is over; said from the records.
+      if (r.state === 'wrapping') {
+        this.draftRequest(r, { kind: 'fallback', basis: r.wrapBasis ?? '', why: t('orchestrator:request.why.interrupted') })
+        continue
+      }
+      if (r.state === 'publishing') {
+        this.publishRequest(r.id)
+        continue
+      }
+      if (!getProject(r.projectId)) continue
+      const refs = this.requestRefs(r)
+      const outcomes = refs.map((x) => this.requestOutcome(x.id))
+      // Running, queued, being reviewed or recovering: nothing to say yet.
+      if (outcomes.some((o) => o.kind === 'active')) continue
+      const asked = questionsRepo.openForRequest(r.id, refs.map((x) => x.id)).map((q) => q.key)
+      const basis = this.requestBasis(refs) + (asked.length ? `|?${asked.join(',')}` : '')
+      if (this.sameBasis(refs, basis, r.answeredBasis)) {
+        // Its work moved but there is nothing new to say (a title, an order, a deletion): settled again, so it isn't
+        // looked at on every event from now on.
+        requestsRepo.update(r.id, { answeredBasis: basis })
+        continue
+      }
+      if (!outcomes.every(ended) || asked.length) {
+        // Something waits for the user (its card is in the chat): a short status, once per state, never a paid answer.
+        // Only for something the user can act on now (not for work that simply hasn't started yet).
+        const forUser = outcomes.some((o) => o.kind === 'waiting' && o.why === 'user')
+        if ((forUser || asked.length) && !this.sameBasis(refs, basis, r.statusBasis)) this.requestStatus(r, refs, basis, asked)
+        continue
+      }
+      if (!outcomes.some((o) => o.kind === 'done')) {
+        // Every task deleted (e.g. the board was cleared): nothing to tell, said nowhere.
+        if (outcomes.every((o) => o.kind === 'deleted')) requestsRepo.update(r.id, { answeredBasis: basis })
+        else this.draftRequest(r, { kind: 'none', basis })
+        continue
+      }
+      if (!this.workStarted.has(r.projectId)) continue // opening the app starts no paid work
+      if (r.calls >= MAX_WRAP_CALLS) {
+        // Said once per request; later changes after that are only recorded (no message, no report, no call).
+        const last = r.lastMessageId ? messagesRepo.get(r.lastMessageId) : null
+        if ((last?.meta?.request as { budget?: boolean } | undefined)?.budget) requestsRepo.update(r.id, { answeredBasis: basis })
+        else this.draftRequest(r, { kind: 'fallback', basis, why: t('orchestrator:request.why.budget', { max: MAX_WRAP_CALLS }), budget: true })
+        continue
+      }
+      void this.wrapRequest(r.id, basis)
+    }
+  }
+
+  private requestStatus(r: UserRequest, refs: RequestTaskRef[], basis: string, asked: string[] = []): void {
+    const views = this.requestViews(refs)
+    // What waits for the user: its tasks, and the lead's open questions about it (answered in the chat).
+    const waiting = [...views.filter((v) => v.outcome.kind === 'waiting' && v.outcome.why === 'user').map((v) => v.ref.key), ...asked]
+    const lead = projectLead(r.projectId)
+    const message = getDb().transaction(() => {
+      const m = messagesRepo.create(
+        r.channel,
+        'system',
+        null,
+        t('orchestrator:request.status', { request: requestLabel(r), facts: factsLine(views), keys: waiting.join(', '), lead: lead?.name ?? '' }),
+        r.projectId,
+        { status: true, request: { id: r.id } }
+      )
+      requestsRepo.update(r.id, { statusBasis: basis })
+      return m
+    })()
+    emit({ type: 'message:new', message })
+  }
+
+  private draftRequest(r: UserRequest, draft: RequestDraft): void {
+    requestsRepo.update(r.id, { draft, state: 'publishing' })
+    this.publishRequest(r.id)
+  }
+
+  /** One model call by the lead, made the way a review is made (same provider settings and limits). Counted at the start. */
+  private async wrapRequest(id: string, basis: string): Promise<void> {
+    const r = requestsRepo.get(id)
+    if (!r || r.state !== 'open' || this.requestWraps.has(id)) return
+    const lead = projectLead(r.projectId)
+    if (!lead || !lead.enabled) return this.draftRequest(r, { kind: 'fallback', basis, why: t('orchestrator:request.why.noLead') })
+    this.requestWraps.add(id)
+    requestsRepo.update(id, { calls: r.calls + 1, state: 'wrapping', wrapBasis: basis })
+    const ctx = { agentId: lead.id, projectId: r.projectId }
+    const wasIdle = lead.status === 'idle' && !this.busy.has(lead.id)
+    const aux = this.auxStart(r.projectId)
+    let draft: RequestDraft
+    // From here on everything ends in a draft (an error before the call too): nothing stays "wrapping" for the session.
+    let provider: Provider | null = null
+    try {
+      const views = this.requestViews(this.requestRefs(r))
+      const previous = r.results && r.lastMessageId ? (messagesRepo.get(r.lastMessageId)?.content ?? null) : null
+      const { prompt, visibility, requestCut } = wrapPrompt(r, views, previous, questionsRepo.forRequest(r.id))
+      const chosen = this.providerFor(lead)
+      provider = chosen.provider
+      const { adapter, apiKey, model } = chosen
+      const ui = currentLanguage()
+      const system = wrapSystem(lead, `${languageName(ui)} (${ui})`)
+      if (wasIdle) this.setStatus(lead.id, 'working', t('orchestrator:status.wrapping'))
+      this.log({ ...ctx, level: 'prompt', message: t('orchestrator:log.requestWrap', { request: requestLabel(r) }), meta: { from: 'system', prompt, system } })
+      const used = chosen.provider
+      const result = await adapter.run({
+        mode: 'review',
+        agent: lead,
+        permissions: permissionsRepo.get(lead.id),
+        provider: used,
+        model,
+        apiKey,
+        cwd: this.workspace(getProject(r.projectId)),
+        system,
+        prompt,
+        signal: aux.signal,
+        onText: () => undefined,
+        onLog: () => undefined,
+        onUsage: (d) => this.recordUsage(lead, used, model, 'review', ctx, d),
+        onProgress: () => undefined,
+        checkpoint: async () => undefined
+      })
+      if (aux.signal.aborted) throw new AbortedError()
+      const answer = parseWrap(result.text, views.map((v) => v.ref.key))
+      draft = answer ? { kind: 'answer', basis, answer, visibility, requestCut } : { kind: 'fallback', basis, why: t('orchestrator:request.why.unclear', { lead: lead.name }) }
+    } catch (e) {
+      // Not tried again on its own (any provider): the records' summary now; the user may ask again within the budget.
+      const msg = (e as Error).message || String(e)
+      const why = aux.signal.aborted ? t('orchestrator:request.why.stopped') : provider ? explainError(msg, provider).text : msg.slice(0, 200)
+      draft = { kind: 'fallback', basis, why }
+    } finally {
+      aux.end()
+      this.requestWraps.delete(id)
+      if (wasIdle && agentsRepo.get(lead.id)?.status === 'working' && !this.busy.has(lead.id)) this.setStatus(lead.id, 'idle')
+    }
+    if (this.closing) return // stays "wrapping": the next start turns it into the interrupted summary
+    try {
+      const now = requestsRepo.get(id)
+      if (!now) return
+      // Its tasks changed while it was written: not published as current; looked at again (the call stays counted).
+      const refsNow = this.requestRefs(now)
+      if (!this.sameBasis(refsNow, this.requestBasis(refsNow), basis)) {
+        requestsRepo.update(id, { state: 'open' })
+        this.log({ ...ctx, level: 'info', message: t('orchestrator:log.requestStale', { request: requestLabel(r) }) })
+        this.requestsSoon()
+        return
+      }
+      requestsRepo.update(id, { draft, state: 'publishing' })
+      this.publishRequest(id)
+    } catch (e) {
+      // Left "wrapping" with nothing in flight: the next look says it from the records (never a silent hang).
+      console.warn('[agentbits] request result not kept', e)
+      this.requestsSoon(30_000)
+    }
+  }
+
+  /**
+   * Writes the result: the report, the chat message and the request's new state in one transaction — all or nothing.
+   * If writing fails the draft stays and is written on a later look, without another model call; never twice.
+   */
+  private publishRequest(id: string): void {
+    let posted: { message: Message; report: boolean } | null = null
+    try {
+      posted = getDb().transaction(() => {
+        const r = requestsRepo.get(id)
+        if (!r || r.state !== 'publishing' || !r.draft) return null
+        const d = r.draft
+        const views = this.requestViews(this.requestRefs(r))
+        const lead = (r.leadId ? agentsRepo.get(r.leadId) : null) ?? projectLead(r.projectId)
+        const label = requestLabel(r)
+        let message: Message
+        let reportId: string | null = null
+        // An update only after an earlier answer by the lead (not after the records' summary or a status line).
+        const prev = r.lastMessageId ? messagesRepo.get(r.lastMessageId) : null
+        const update = !!prev && prev.senderType === 'agent'
+        if (d.kind === 'answer') {
+          reportId = reportsRepo.create({
+            title: t(update ? 'orchestrator:request.reportTitleUpdate' : 'orchestrator:request.reportTitle', { request: label }),
+            kind: 'custom',
+            bodyMd: answerReport(r, d.answer, views, lead?.name ?? '?', d.visibility, d.requestCut),
+            agentId: lead?.id ?? null,
+            taskId: null,
+            projectId: r.projectId
+          }).id
+          message = messagesRepo.create(r.channel, lead ? 'agent' : 'system', lead?.id ?? null, answerMessage(d.answer, views, update), r.projectId, { request: { id, reportId } })
+        } else if (d.kind === 'fallback') {
+          reportId = reportsRepo.create({
+            title: t('orchestrator:request.reportTitleRecords', { request: label }),
+            kind: 'custom',
+            bodyMd: fallbackReport(r, views),
+            agentId: null,
+            taskId: null,
+            projectId: r.projectId
+          }).id
+          const text = t('orchestrator:request.fallback', { request: label, facts: factsLine(views), lead: lead?.name ?? '?', why: d.why })
+          message = messagesRepo.create(r.channel, 'system', null, text, r.projectId, {
+            status: true,
+            request: { id, reportId, retry: r.calls < MAX_WRAP_CALLS, ...(d.budget ? { budget: true } : {}) }
+          })
+        } else {
+          message = messagesRepo.create(r.channel, 'system', null, t('orchestrator:request.nothingDone', { request: label, facts: factsLine(views) }), r.projectId, {
+            status: true,
+            request: { id }
+          })
+        }
+        requestsRepo.update(id, { draft: null, state: 'open', answeredBasis: d.basis, results: r.results + 1, lastMessageId: message.id, lastReportId: reportId ?? r.lastReportId })
+        return { message, report: !!reportId }
+      })()
+    } catch (e) {
+      console.warn('[agentbits] request result not written; tried again later', e)
+      this.requestsSoon(30_000)
+      return
+    }
+    if (!posted) return
+    emit({ type: 'message:new', message: posted.message })
+    if (posted.report) emit({ type: 'reports:changed' })
+  }
+
+  /** The user asks for the request's answer again (after the records' summary): the same budget and checks. */
+  summarizeRequest(id: string): 'started' {
+    const r = requestsRepo.get(id)
+    if (!r) throw new Error(t('orchestrator:request.errors.notFound'))
+    if (r.state !== 'open' || this.requestWraps.has(id)) throw new Error(t('orchestrator:request.errors.busy'))
+    if (r.calls >= MAX_WRAP_CALLS) throw new Error(t('orchestrator:request.why.budget', { max: MAX_WRAP_CALLS }))
+    // Only after the records' summary (the lead's answer couldn't be written), and for nothing newer that is due anyway.
+    const last = r.lastMessageId ? messagesRepo.get(r.lastMessageId) : null
+    if (!(last?.meta?.request as { retry?: boolean } | undefined)?.retry) throw new Error(t('orchestrator:request.errors.notNeeded'))
+    const refs = this.requestRefs(r)
+    if (questionsRepo.openForRequest(r.id, refs.map((x) => x.id)).length) throw new Error(t('orchestrator:request.errors.question'))
+    const outcomes = refs.map((x) => this.requestOutcome(x.id))
+    if (!outcomes.every(ended)) throw new Error(t('orchestrator:request.errors.notEnded'))
+    if (!outcomes.some((o) => o.kind === 'done')) throw new Error(t('orchestrator:request.errors.nothingDone'))
+    void this.wrapRequest(id, this.requestBasis(refs))
+    return 'started'
   }
 
   /* ───────────────────────── reports ───────────────────────── */

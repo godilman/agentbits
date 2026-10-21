@@ -88,7 +88,8 @@ import {
   setProjectShared,
   shareFiles
 } from './files/service'
-import { MAX_FILES_PER_SEND, SAFE_OPEN_EXT, safeFileName } from '@shared/files'
+import { MAX_FILES_PER_SEND, MAX_MESSAGE_CHARS, SAFE_OPEN_EXT, safeFileName } from '@shared/files'
+import { intlLocale } from '@shared/i18n'
 import type { FileShare } from '@shared/types'
 
 const focusedDialogWindow = (): BrowserWindow | undefined => BrowserWindow.getFocusedWindow() ?? BrowserWindow.getAllWindows()[0]
@@ -312,6 +313,8 @@ export const handlers: Handlers = {
     void orchestrator.startTask(id, undefined, { force: force === true })
   },
   'tasks:retryReview': (id) => orchestrator.retryReview(id),
+  'requests:summarize': (id) => orchestrator.summarizeRequest(id),
+  'questions:drop': (id) => orchestrator.dropQuestion(id),
   'tasks:cancelScope': (id) => orchestrator.cancelScope(id),
   'tasks:cancel': (id) => orchestrator.cancelTask(id),
   'tasks:reopen': (id) => orchestrator.reopenTask(id),
@@ -706,6 +709,11 @@ export const handlers: Handlers = {
 
   /* chat */
   'messages:list': (channel, limit, projectId) => messagesRepo.list(channel, limit, projectId),
+  'messages:from': (projectId, channel, messageId) => {
+    const out = messagesRepo.from(projectId, channel, messageId)
+    if (!out) throw new Error(t('main:errors.messageGone'))
+    return out
+  },
   'drafts:list': () => draftsRepo.list(),
   'drafts:save': (d) => {
     // Checked here (the renderer sends it): a known project, a channel name, bounded text and attachment list.
@@ -721,6 +729,7 @@ export const handlers: Handlers = {
     })
   },
   'messages:send': (channel, content, projectId, opts) => {
+    if (content.length > MAX_MESSAGE_CHARS) throw new Error(t('main:errors.messageTooLong', { max: MAX_MESSAGE_CHARS.toLocaleString(intlLocale(currentLanguage())), count: content.length }))
     const fileIds = [...new Set(opts?.fileIds ?? [])]
     if (fileIds.length > MAX_FILES_PER_SEND) throw new Error(t('main:files.errors.tooManyPerMessage', { max: MAX_FILES_PER_SEND }))
     const files = filesRepo.byIds(fileIds)

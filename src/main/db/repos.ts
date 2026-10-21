@@ -785,6 +785,25 @@ export const messagesRepo = {
     const r = getDb().prepare('SELECT * FROM messages WHERE id = ?').get(id) as Row | undefined
     return r ? mapMessage(r) : null
   },
+  /**
+   * A channel's messages from `id` (inclusive) to the newest, oldest first — to show an older message in its place.
+   * Null when that message isn't in this project's channel (deleted, cleared, or another project / channel).
+   */
+  from(projectId: string, channel: string, id: string, limit = 5000): Message[] | null {
+    const db = getDb()
+    const at = db.prepare('SELECT rowid AS n, created_at FROM messages WHERE id = ? AND project_id = ? AND channel = ?').get(id, projectId, channel) as
+      | { n: number; created_at: string }
+      | undefined
+    if (!at) return null
+    // ponytail: at most `limit` messages from it; a longer gap to the newest isn't filled.
+    const rows = db
+      .prepare(
+        `SELECT * FROM messages WHERE project_id = ? AND channel = ? AND (created_at > ? OR (created_at = ? AND rowid >= ?))
+          ORDER BY created_at, rowid LIMIT ?`
+      )
+      .all(projectId, channel, at.created_at, at.created_at, at.n, limit) as Row[]
+    return rows.map(mapMessage)
+  },
   /** Merges fields into a message's meta (a card's resolution); returns the updated message. */
   setMeta(id: string, patch: Record<string, unknown>): Message | null {
     const m = this.get(id)
@@ -1403,6 +1422,8 @@ export const projectsRepo = {
       db.prepare('DELETE FROM agent_logs WHERE project_id = ? OR task_id IN (SELECT id FROM tasks WHERE project_id = ?)').run(id, id)
       db.prepare('DELETE FROM agent_instructions WHERE project_id = ?').run(id)
       // token_usage is kept: it is the agents' consumption history (all-time totals stay correct).
+      db.prepare('DELETE FROM requests WHERE project_id = ?').run(id)
+      db.prepare('DELETE FROM questions WHERE project_id = ?').run(id)
       db.prepare('DELETE FROM tasks WHERE project_id = ?').run(id)
       db.prepare('DELETE FROM messages WHERE project_id = ?').run(id)
       db.prepare('DELETE FROM decisions WHERE project_id = ?').run(id)

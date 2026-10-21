@@ -129,7 +129,13 @@ export async function clearProject(
         projectId
       )
     }
-    if (want.has('messages')) run('DELETE FROM messages WHERE project_id = ?', projectId)
+    if (want.has('messages')) {
+      run('DELETE FROM messages WHERE project_id = ?', projectId)
+      // The requests were those messages: no answer goes into a chat that was cleared, and their text goes too.
+      run('DELETE FROM requests WHERE project_id = ?', projectId)
+      // Questions keep their row (their keys are never reused), not their words: open ones are closed.
+      run("UPDATE questions SET text = '', answer = NULL, status = CASE status WHEN 'open' THEN 'dropped' ELSE status END WHERE project_id = ?", projectId)
+    }
     if (want.has('reports')) run('DELETE FROM reports WHERE project_id = ?', projectId)
     if (want.has('decisions')) run('DELETE FROM decisions WHERE project_id = ?', projectId)
     if (want.has('logs') || want.has('tasks')) {
@@ -149,6 +155,7 @@ export async function clearProject(
     }
     if (want.has('tasks')) {
       run(`DELETE FROM messages WHERE project_id = ? AND channel LIKE 'task:%'`, projectId)
+      run('DELETE FROM requests WHERE project_id = ?', projectId) // their tasks go: no answer for removed history
       run('DELETE FROM tasks WHERE project_id = ?', projectId) // remaining runs cascade
     }
     // Attachments: rows (chunks, links, access cascade); originals go below unless a backup still needs them.
@@ -352,7 +359,7 @@ export async function factoryReset(mode: ResetMode): Promise<{ backup: BackupInf
     for (const t of tables) db.prepare(`DELETE FROM ${t}`).run()
   }
   db.transaction(() => {
-    wipe(['agent_logs', 'agent_instructions', 'token_usage', 'file_access', 'file_links', 'file_chunks', 'files', 'runs', 'messages', 'memory_suggestions', 'memories', 'memory_topics', 'decisions', 'reports', 'tasks'])
+    wipe(['agent_logs', 'agent_instructions', 'token_usage', 'file_access', 'file_links', 'file_chunks', 'files', 'runs', 'messages', 'memory_suggestions', 'memories', 'memory_topics', 'decisions', 'reports', 'requests', 'questions', 'tasks'])
     if (mode === 'work') {
       db.prepare("UPDATE agents SET status = CASE WHEN enabled = 1 THEN 'idle' ELSE 'offline' END, status_note = NULL").run()
     } else {

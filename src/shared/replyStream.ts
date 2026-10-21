@@ -5,7 +5,7 @@
  */
 
 /** Blocks of a reply that Agentbits acts on and never shows (tasks, decisions, notes to the team, learning). */
-export const HIDDEN_BLOCKS = ['tasks', 'decision', 'message', 'learn'] as const
+export const HIDDEN_BLOCKS = ['tasks', 'decision', 'message', 'learn', 'question', 'answered'] as const
 export type HiddenBlock = (typeof HIDDEN_BLOCKS)[number]
 
 /** One update per reply at most this often (ms). */

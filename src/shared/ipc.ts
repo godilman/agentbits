@@ -67,7 +67,8 @@ import type {
   FilePreview,
   FileRecord,
   FileSearchHit,
-  SendOptions
+  SendOptions,
+  OpenQuestion
 } from './types'
 
 /**
@@ -169,6 +170,8 @@ export interface Api {
   /** Keys of the unfinished tasks this one waits for (asked before a manual start). */
   /** Only the lead's review again (the worker is not run again); 'pending' when one is already queued or running. */
   'tasks:retryReview': (id: string) => 'queued' | 'pending'
+  /** The combined answer to a user's chat request, asked for again (ADR-039; same call budget as the automatic one). */
+  'requests:summarize': (id: string) => 'started'
   /** What cancelling covers (for the confirmation). */
   'tasks:cancelScope': (id: string) => CancelScope
   /** Cancels the task (and its race attempt); `stopped`: no run of it is still running (else only requested). */
@@ -255,6 +258,8 @@ export interface Api {
 
   // chat
   'messages:list': (channel?: string, limit?: number, projectId?: string) => Message[]
+  /** A channel's messages from one message to the newest (showing an older card in place); refused when it isn't there. */
+  'messages:from': (projectId: string, channel: string, messageId: string) => Message[]
   /** `opts.fileIds`: attachments uploaded with files:add; `opts.share` overrides who receives them (default: by channel). */
   'messages:send': (channel: string, content: string, projectId: string, opts?: SendOptions) => Message
   /** Unsent drafts (all projects); saving an empty one removes it. */
@@ -361,7 +366,11 @@ export interface Api {
     /** Card events of the waits that are still open (held, undecided, merge): a card whose event isn't here is over. */
     waitEvents: string[]
     recovering: Record<string, RecoveryInfo>
+    /** The lead's questions still waiting for the user's answer (ADR-040). */
+    questions: OpenQuestion[]
   }
+  /** "Not needed any more": closes an open question without an answer (ADR-040). */
+  'questions:drop': (id: string) => void
 }
 
 export type ApiMethod = keyof Api

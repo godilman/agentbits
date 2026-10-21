@@ -109,7 +109,7 @@ async function main(): Promise<void> {
     assert.equal(r.max, 2)
     assert.ok(r.at && Date.parse(r.at) - Date.now() > 50_000, 'about a minute later')
     assert.equal(captured.size, 1, 'one timer')
-    assert.match(general(p.id).at(-1)!.content, /review couldn't finish \(Demo \(simulation\): no answer in time\)\. The team will try only the review again in 1 min \(extra attempt 1 of 2\); the worker doesn't run again\. Nothing is needed from you/)
+    assert.match(general(p.id).at(-1)!.content, /review couldn't finish \(Demo \(simulation\): no answer in time\)\. The team will try only the review again in 1 min \(extra attempt 1 of 2\); the worker doesn't run again\. · TA-\d+$/)
     assert.doesNotMatch(general(p.id).at(-1)!.content, /Try again later/, "the provider's advice to the user isn't repeated here")
     assert.equal(r.waitsForStart, false)
     const works = workCalls

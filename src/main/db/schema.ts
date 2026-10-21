@@ -728,6 +728,74 @@ export const MIGRATIONS: { version: number; sql: string }[] = [
       -- and history stay; its extracted text is removed. Cleared when the file is found again (then read in anew).
       ALTER TABLE files ADD COLUMN missing_at TEXT;
     `
+  },
+  {
+    version: 25,
+    sql: `
+      -- A user's chat request and the tasks the lead created for it (ADR-039). When they have all ended, the lead answers
+      -- it once in the chat it came from, with one report. tasks: [{id, key, title}] as created (kept when a task is
+      -- deleted). The whole message stays in messages (message_id). calls: every model call for it, one counter.
+      -- *_basis: the state of its tasks (and their runs and reports) a call / an answer / a status line was for.
+      -- draft: a result waiting to be written (written again without a new model call if writing failed). A call cut off
+      -- by a quit becomes a free "interrupted" summary on the next start: nothing calls the model again for that state.
+      CREATE TABLE requests (
+        id              TEXT PRIMARY KEY,
+        project_id      TEXT NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
+        channel         TEXT NOT NULL,
+        message_id      TEXT,
+        text            TEXT NOT NULL,
+        lead_id         TEXT,
+        tasks           TEXT NOT NULL DEFAULT '[]',
+        file_names      TEXT NOT NULL DEFAULT '[]',
+        state           TEXT NOT NULL DEFAULT 'open' CHECK (state IN ('open','wrapping','publishing')),
+        calls           INTEGER NOT NULL DEFAULT 0,
+        wrap_basis      TEXT,
+        answered_basis  TEXT,
+        status_basis    TEXT,
+        draft           TEXT,
+        results         INTEGER NOT NULL DEFAULT 0,
+        last_message_id TEXT,
+        last_report_id  TEXT,
+        created_at      TEXT NOT NULL,
+        updated_at      TEXT NOT NULL
+      );
+      CREATE INDEX idx_requests_project ON requests(project_id, created_at);
+    `
+  },
+  {
+    version: 26,
+    sql: `
+      -- Questions the lead asks the user in the chat (ADR-040), with a lasting key per project (Q-<seq>). status:
+      -- open → answered (the user's message, tied directly by its key or by the lead) or dropped (the user said it isn't
+      -- needed). An answer never approves anything. request_id / task_id: what it is about (either may be NULL).
+      CREATE TABLE questions (
+        id                TEXT PRIMARY KEY,
+        project_id        TEXT NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
+        seq               INTEGER NOT NULL,
+        channel           TEXT NOT NULL,
+        request_id        TEXT,
+        task_id           TEXT,
+        text              TEXT NOT NULL,
+        status            TEXT NOT NULL DEFAULT 'open' CHECK (status IN ('open','answered','dropped')),
+        asked_message_id  TEXT,
+        answer            TEXT,
+        answer_message_id TEXT,
+        created_at        TEXT NOT NULL,
+        closed_at         TEXT,
+        UNIQUE (project_id, seq)
+      );
+      CREATE INDEX idx_questions_open ON questions(project_id, status);
+    `
+  },
+  {
+    version: 27,
+    sql: `
+      -- When a request's current state was last settled (answered, or its answer written; ADR-039). The requests looked at
+      -- are the unsettled ones and those whose tasks, runs or questions changed after this — all of them, at any age.
+      ALTER TABLE requests ADD COLUMN settled_at TEXT;
+      UPDATE requests SET settled_at = updated_at WHERE answered_basis IS NOT NULL;
+      CREATE INDEX idx_requests_state ON requests(state, settled_at);
+    `
   }
 ]
 

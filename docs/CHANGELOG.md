@@ -4,6 +4,179 @@
 > `## YYYY-MM-DD — kısa başlık`, ardından **Eklendi / Değişti / Düzeltildi / Kaldırıldı / Bilinen** maddeleri
 > ve ilgili dosyalar.
 
+## 2026-10-21 — v0.13.0: MCP SDK 1.32.1 ve Electron 44.9.3 (denetim D-01)
+
+### Değişti
+- **`@modelcontextprotocol/sdk` 1.31.0 → 1.32.1** (GHSA-6prh-2h8m-c8cw, orta): HTTP istemcileri (Streamable HTTP, SSE,
+  OAuth) yönlendirmeyi başka bir kökene de izliyordu; bizim ek başlıklarımız, `mcp-session-id` ve 307/308'de OAuth token
+  isteğinin gövdesi o kökene gidebiliyordu. 1.32.0'dan beri yalnız aynı kökene yönlendirme izlenir. Sonuç: başka bir
+  host'a yönlendiren MCP sunucusu artık bağlanmaz; adres son adres olarak girilmeli. `redirectPolicy: 'follow'` bilinçli
+  olarak kullanılmıyor.
+- Kurulu SDK 1.32.0'dan eskiyse OAuth girişi reddediliyor (`MIN_SDK`, `apps/client.ts`); uyarı metni EN/TR güncel.
+- **Electron 44.7.0 → 44.9.3** (aynı ana sürüm, Node ABI aynı; `better-sqlite3` ve `node-pty` yeniden derlenmedi).
+  Sürümler `package.json`'da tam sabit.
+
+### Doğrulama
+- Windows'ta `npm audit --omit=dev`, typecheck, `test:unit`, `test:e2e`, build ve `npm run dev` ile açılış.
+- Bilinen: güncellemede Electron'un binary indirmesi sessizce eksik kalabildi ("Electron uninstall"); çözüm
+  `node node_modules\electron\install.js`.
+
+## 2026-10-21 — v0.13.0: Denetim değerlendirmesinden hızlı düzeltmeler
+
+### Düzeltildi
+- **Veri zarfları (D-02):** Web sayfası, uygulama sonucu ve kaynağı, proje hafızası (bölüm, okuma aracı, rehber) ve dosya
+  zarflarında içerik ve başlık alanlarındaki `<<<` / `>>>` işaretleri benzer karakterlere çevriliyor; içerik zarfı
+  kapatamıyor (ortak `src/shared/untrusted.ts`). Denetimin karşı örneği, HTML entity ile yazılıp çözümlemeden sonra ortaya
+  çıkan kapanış işareti, testte. Bu, model kaynaklı prompt enjeksiyonunu bütünüyle çözmez.
+- **Onay beklerken kapanış (D-09):** Onay beklerken uygulama kapanan görev "yarıda kaldı, bir şeyleri değiştirmiş olabilir"
+  değil, "onayını beklerken kapandı; hiç başlamadı" diye bekletiliyor. Davranış aynı: görev bekletilir, açılış hiçbir şey
+  başlatmaz.
+- **Kendi mesajının hatırlanması (D-17):** Mesaj artık kendi cevabında "hatırlanan" olarak geri dönmüyor; sonraki
+  mesajlarda hatırlanmaya devam ediyor.
+- **Mesaj boyu (D-14):** Sohbet mesajı en fazla 20 000 karakter. Uzunsa nedeni söyleniyor, taslak kalıyor.
+- **Başarı oranı (D-20):** Yalnız başarılı ya da başarısız biten çalışmalar üzerinden hesaplanıyor; bekleyen ve iptal
+  edilenler paydaya girmiyor.
+- **Erişilebilirlik (D-06/D-07):**
+  - Görev kartı Tab ile odaklanıyor, Enter ya da Boşluk ile açılıyor.
+  - Gönder düğmesinin adı var.
+  - Bildirimler ekran okuyucuya duyuruluyor (hatalar hemen).
+- **Kılavuz ve metinler (D-05/D-12):**
+  - Kılavuzdaki "varsayılan yalnız okuma" ifadesi şablon ajanlarını da kapsıyordu; düzeltildi.
+  - Türkçede adın arkasına yapışık ek kaldırıldı ("Kaya için mesaj…").
+
+### Testler
+- Yeni `tests/untrusted.test.ts`.
+- `chatFlow.e2e.ts` 10 adıma çıktı: kendi mesajının hatırlanmaması, uzun mesajın reddi, onay beklerken kapanış.
+- Gerçek renderer'da görev kartı klavyeyle açıldı, gönder düğmesinin adı ve bildirim bölgesi doğrulandı.
+
+### Yapılmadı (bilinçli)
+- **D-01:** SDK ve Electron güncellemesi ayrı kayıtta yapıldı (yukarıda).
+- **D-10:** Asenkron kapatma uyarısı; kapanış akışı riskli, ayrı paket.
+- **D-15:** Silme onayları; birden çok ekran, ayrı paket.
+- **D-03/D-04/D-11/D-13/D-18/D-19/D-21/D-22:** Ürün kararı ya da daha büyük iş.
+
+## 2026-10-21 — v0.13.0: İstek takibinde sınır yok; sohbet kısayolu eski kartı getiriyor
+
+### Düzeltildi
+- **İstek takibi:** Toplu sonuç takibi en yeni 200 istekle sınırlıydı; daha eski bir isteğin işi bitince cevap
+  gelmiyordu, sonradan değişen sonucu da güncellenmiyordu.
+  - Artık her yaştan ve her projeden iş bekleyen bütün istekler izleniyor: yerleşmemiş olanlar ve son cevaptan sonra
+    görevi, çalışması ya da sorusu değişenler (migration **v27**, `requests.settled_at`).
+  - Yerleşmiş ve işi değişmemiş istekler her olayda yeniden hesaplanmıyor.
+- **Sohbet kısayolu:** "Bana ihtiyaç var"dan açılan soru kartı yüklü geçmişin dışındaysa artık getiriliyor, gösteriliyor
+  ve klavye odağı karta geçiyor (yeni IPC `messages:from`, aynı proje ve kanal denetimiyle). Yüklü geçmiş ve taslak
+  değişmiyor. Silinmiş kart için ne olduğu söyleniyor.
+
+### Testler
+- `requestWrap.e2e.ts` (17 adım): başka projede 205 yeni istek varken eski açık istek cevaplanıyor ve eski cevaplanmış
+  isteğin değişen sonucu güncelleniyor; geçmiş hiç ücret doğurmuyor ve yeniden yerleşiyor.
+- `chatFlow.e2e.ts` (8 adım): `messages:from` başka proje, başka kanal ve silinmiş mesajda reddediyor.
+- Yeni `tests/renderer/chatJump.test.ts`: eski açık soru, silinmiş hedef, başka proje, klavye odağı, taslak ve geçmişin
+  korunması.
+- Gerçek renderer'da TR ve EN denendi: 250 mesaj sonrası Q-1 kartı açıldı ve odaklandı, Tab ile "Cevapla"ya ulaşıldı,
+  silinmiş Q-2 kartı için ne olduğu söylendi, taslak korundu.
+
+## 2026-10-21 — v0.13.0: P2–P5: Sohbet merkezli kullanım (ADR-040)
+
+### Eklendi
+- **Lider soruları (P4):**
+  - Lider bir şeyi sana sorması gerektiğinde sohbette numaralı bir soru kartı açar (Q-1, Q-2…). Numaralar kalıcıdır,
+    yeniden kullanılmaz.
+  - Kart üzerinde "Cevapla" (mesajı numarayla başlatır) ve "Gerek yok" seçenekleri var. "Q-3: …" diye başlayan cevap o
+    soruya doğrudan bağlanır.
+  - Numarasız cevabı lider yalnız tek ve net bir soruya bağlayabilir; birden fazla soruya uyuyorsa hiçbiri kapanmaz ve
+    senden numara istenir.
+  - Görevle ilgili sorunun cevabı görev akışına gider; çalışma sürüyorsa bir sonraki adımdan sonra iletilir.
+  - Açık soru, isteğin toplu sonucunu bekletir.
+  - Cevap hiçbir onay ya da izin yerine geçmez.
+- **Projeye bakış (P3):**
+  - Lider, okuma izni varsa, proje klasörünün üst düzeyinden kısa ipuçları görür: dosyalar, manifest belirtileri,
+    README'nin başı.
+  - Bunlar ipucudur, kesin bilgi değildir; Astro bulunması "backend yok" demek değildir. Gizli dosyalar okunmaz, sembolik
+    bağlantılar izlenmez.
+  - Lider her role iş açmaz, yalnız projeye uyan işleri açar; çalışan uymayan işi "bu projede uygulanmıyor" diye bildirir.
+
+### Değişti
+- **Sade sohbet (P2):**
+  - #general'de kalanlar: işin kime bölündüğü, gerçek engeller (kartlar), kısa durum satırı ve toplu sonuç.
+  - İsteğe bağlı görevlerin rutin adımları görev akışında: incelemeye gitti, onaylandı, geri gönderildi, otomatik
+    toparlanma, birleştirildi.
+  - "Senden bir şey beklenmiyor" kalıbı sohbet satırlarından kaldırıldı.
+- **"Bana ihtiyaç var" (P5):** Artık ikincil bir kısayol. Bekleyen yoksa yalnız sessiz bir simge, varsa adı ve sayısı
+  görünür. Açık soruları da listeler ve tıklanınca sohbetteki karta götürür. Onay paneli aynı.
+- **P1 düzeltmeleri:**
+  - Bitmiş göreve yapılan küçük değişiklikler (başlık, açıklama, sıralama, cevaptan sonra silme) artık ücretli güncelleme
+    ya da yeni mesaj üretmiyor.
+  - Bütçe dolunca bunu söyleyen not bir kez yazılıyor.
+  - Yarışı kaybeden deneme "kullanılmadı" sayılıyor; birleştirme bekleyen görev "seni bekliyor".
+  - Sıfırlama ve sohbet temizliği istek kayıtlarını da siliyor.
+  - Takılı kalan "yazılıyor" durumu kayıttan özete dönüyor.
+  - "Özeti yeniden yaz" yalnız son sonuç kayıttan özet olduğunda çalışıyor.
+- Migration **v26**: `questions` tablosu. IPC `questions:drop`. Uygulama Markdown'ı tablo hücresindeki kaçışlı `\|`
+  işaretini tanıyor.
+
+### Testler
+- `tests/e2e/chatFlow.e2e.ts` (7 adım), `tests/questions.test.ts`, `tests/projectSignals.test.ts`.
+- `requestWrap.e2e.ts` 15 adıma çıktı.
+- Değişen metinlere göre güncellenen testler: `cancel`, `reviewLoop`, `reviewRecovery`, `workRecovery` ve `firstRun`
+  (canlı akışın her olayı bir kez gösterdiği artık doğrudan test ediliyor).
+- Gerçek renderer'da, izole Demo verisiyle TR ve EN uçtan uca yolculuk denendi.
+
+### Bilinen
+- Gerçek Claude Code / Codex ile denenmedi. İstek taramasının performansı ölçülmedi.
+
+## 2026-10-21 — v0.13.0: P1: İsteğe toplu sonuç (ADR-039)
+
+### Eklendi
+- **İsteğe toplu sonuç:** Lider sohbetten bir istek için görev açtığında bu görevler o isteğe bağlanır. Hepsi sona erince
+  lider, sen yeniden sormadan, aynı sohbette bir kez cevap verir ve tek bir rapor yazar.
+  - Cevap önemli bulgular, isteğe bağlı öneriler, tekrar ve çelişkiler, yapılamayan ya da doğrulanamayanlar olarak
+    ayrılır; her madde kaynak görevlerini gösterir.
+  - Altta, kayıttan uygulamanın yazdığı olgu satırı durur: görev sonuçları ve dosya değişikliği. Değişiklik "kayıtlı",
+    "kayıtta yazım yok" ya da "doğrulanamadı" diye yazılır; "yazım yok", hiçbir şeyin değişmediği anlamına gelmez.
+- **Bekleme:** Kullanıcıyı bekleyen bir görev varsa ücretli cevap yazılmaz; durum başına bir kez kısa bir durum satırı
+  yazılır. Kart zaten sohbettedir.
+- **Kısmen tamamlanan istek:** İptal ya da silinen görev olduğunda cevap "kısmen tamamlandı" diye başlar. İptal başarı
+  sayılmaz; silinen görev "silindi, artık raporlanamıyor" diye kalır.
+- **Sonraki değişiklik:** Örneğin yeniden yapılan bir görev tek bir güncelleme olarak gelir. Aynı durum iki kez
+  cevaplanmaz.
+- **Bütçe:** İstek başına en fazla 3 model çağrısı yapılır, kullanıcının "Özeti yeniden yaz"ı dahil.
+- **Başarısızlık:** Model çağrısı başarısız olursa hiçbir sağlayıcıda kendiliğinden yeniden denenmez. Kayıttan dürüst bir
+  özet ve görev raporlarını içeren bir rapor ücretsiz yazılır.
+- **Açılış:** Uygulamayı açmak hiçbir model çağrısı başlatmaz. Yarıda kalan cevap "yarıda kaldı" özetine döner.
+- **Sohbet:** Cevabın altında "Raporu aç" düğmesi var. Yalnız kayıttan özet geldiyse "Özeti yeniden yaz" da çıkar.
+
+### Değişti
+- Migration **v25**: `requests` tablosu.
+- Dosyalar:
+  - yeni `src/main/core/requests.ts`;
+  - `src/main/core/prompts.ts` (`wrapSystem`), `src/main/core/orchestrator.ts`;
+  - `src/main/db/schema.ts`, `src/main/db/repos.ts`, `src/main/core/maintenance.ts`;
+  - IPC `requests:summarize`;
+  - renderer `ChatView.tsx`, `ReportsView.tsx`, `useAppStore.ts`;
+  - locales `orchestrator` ve `chat` (en + tr).
+
+### Testler
+- `tests/e2e/requestWrap.e2e.ts`, 13 adım:
+  - tek cevap ve tek rapor; iş sürerken cevap yok;
+  - sonraki değişiklikte tek güncelleme;
+  - bekletilen ya da onay bekleyen görevde yalnız durum satırı; iptalde "kısmen";
+  - araya giren yeni istek;
+  - yazılırken değişen durum;
+  - yazma hatasında tek yayımlama;
+  - silinen görev;
+  - model hatası ya da okunamayan cevap → kayıttan özet, kendiliğinden tekrar yok, bütçe;
+  - kaynaksız maddeler;
+  - uzun istek;
+  - kayıt sınıfları;
+  - yeniden açılış;
+  - Claude Code lider.
+
+### Bilinen
+- Gerçek Claude Code ile ve elle denenmedi.
+- P2 (sohbet sadeliği), P3 (projeye bakış), P4 (soru-cevap) ve P5 ("Bana ihtiyaç var") henüz yok. Görev başına
+  "incelemeye gitti" ve "onaylandı" satırları hâlâ #general'de.
+
 ## 2026-10-21 — v0.12.0: Proje klasöründen kaybolan dosyalar kanıtta doğru (ADR-038)
 
 ### Düzeltildi

@@ -120,7 +120,7 @@
   "needsYou": {
     "button": "Bana ihtiyaç var",
     "title": "Bana ihtiyaç var",
-    "desc": "Açık projelerinde seni bekleyen her şey.",
+    "desc": "Kısayol: bunların her biri proje sohbetinde de var; oradan cevaplayabilirsin.",
     "empty": "Şu an seni bekleyen bir şey yok.",
     "approval": "{{agent}}, {{target}} kullanmak için izin istiyor",
     "runApproval": "{{agent}} başlamak için onayını bekliyor",
@@ -131,7 +131,10 @@
     "heldNoReason": "Bekletiliyor",
     "agentError": "{{agent}} bir hatayla durdu",
     "memory": "Hatırlanacak bir şey",
-    "reviewIssue": "Karar sende: {{reason}}"
+    "reviewIssue": "Karar sende: {{reason}}",
+    "question": "Lider sana soruyor ({{key}})",
+    "nothing": "Seni bekleyen bir şey yok",
+    "ariaCount": "Bana ihtiyaç var: {{count}} bekleyen"
   },
   "promptBuilder": {
     "button": "Prompt oluşturucu",

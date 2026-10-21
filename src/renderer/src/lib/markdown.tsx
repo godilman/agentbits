@@ -65,7 +65,8 @@ export function Markdown({ text, className = "" }: { text: string; className?: s
     if (/^\s*\|.*\|\s*$/.test(line)) {
       const rows: string[][] = []
       while (i < lines.length && /^\s*\|.*\|\s*$/.test(lines[i])) {
-        const cells = lines[i].trim().slice(1, -1).split('|').map((c) => c.trim())
+        // An escaped pipe (\|) belongs to the cell's text, not a cell border.
+        const cells = lines[i].trim().slice(1, -1).split(/(?<!\\)\|/).map((c) => c.trim().replace(/\\\|/g, '|'))
         if (!cells.every((c) => /^:?-{2,}:?$/.test(c))) rows.push(cells)
         i++
       }

@@ -305,7 +305,7 @@ async function main(): Promise<void> {
     await settle(t.id, () => tasksRepo.get(t.id)!.status === 'done', 'approved')
     const lines = since(n)
     assert.equal(lines[0].senderType, 'system', 'a status line by the app, not in the worker\'s name')
-    assert.match(lines[0].content, new RegExp(`^${ece.name} finished “Bildirimleri silme”; it has gone to the lead \\(${lead.name}\\) for review\\. Nothing needed from you\\. · ${t.key}$`))
+    assert.match(lines[0].content, new RegExp(`^${ece.name} finished “Bildirimleri silme”; ${lead.name} is checking it\\. · ${t.key}$`))
     const approved = lines.find((l) => /approved/.test(l.content))!
     assert.equal(approved.senderType, 'system')
     assert.equal(approved.content, `${lead.name} approved “Bildirimleri silme”. Silme düğmesi yalnız Genel sekmesinde. · ${t.key}`, "the lead's summary, not its technical note")

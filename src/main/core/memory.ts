@@ -129,9 +129,10 @@ export const memoryEngine = {
    * The memory part of a prompt: the profile, then the recalled memories, within MEMORY_BUDGET; `recalled` is what
    * actually went in (the "what did it remember" trace).
    */
-  async context(opts: { agentId?: string | null; taskId?: string | null; projectId?: string | null; query: string; limit?: number }): Promise<{ text: string; recalled: RecalledMemory[] }> {
+  async context(opts: { agentId?: string | null; taskId?: string | null; projectId?: string | null; query: string; limit?: number; exclude?: string[] }): Promise<{ text: string; recalled: RecalledMemory[] }> {
     const profile: Recalled[] = this.profile().map((m) => ({ ...m, via: 'profile' }))
-    const found = await this.recall(opts)
+    // `exclude`: what was just written from this very message — not "remembered" back in its own reply.
+    const found = (await this.recall(opts)).filter((m) => !opts.exclude?.includes(m.id))
     let left = MEMORY_BUDGET
     const fit = (list: Recalled[], line: (m: Recalled) => string): { m: Recalled; line: string }[] => {
       const out: { m: Recalled; line: string }[] = []

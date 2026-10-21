@@ -33,7 +33,7 @@ const MIGRATIONS: { version: number; sql: string }[] = [ { version: 1, sql: `...
 - `migrate(db)` önce `schema_migrations` tablosunu oluşturur, `MAX(version)`'dan büyük her migration'ı
   sırayla çalıştırıp sürümünü kaydeder; bekleyen adımların hepsi **tek transaction'dadır** (2026-10-20: hata olursa dosya
   eski şemasında kalır). Migration'da transaction içinde çalışmayan ifade (VACUUM, bazı PRAGMA'lar) kullanılmaz.
-- **Yalnızca ekleyin.** Uygulanmış bir migration'ı (bugün: v1–v24) asla düzenlemeyin, silmeyin, yeniden
+- **Yalnızca ekleyin.** Uygulanmış bir migration'ı (bugün: v1–v27) asla düzenlemeyin, silmeyin, yeniden
   numaralandırmayın — kullanıcı makinelerindeki DB'ler onu zaten çalıştırdı ve değişiklik oraya ulaşmaz.
 - Yeni değişiklik = dizinin sonuna `{ version: N+1, sql: ... }`. SQLite'ta tipik olarak
   `ALTER TABLE x ADD COLUMN y ... NOT NULL DEFAULT ...`; sütun silme/CHECK değiştirme için tabloyu yeniden
@@ -75,6 +75,9 @@ const MIGRATIONS: { version: number; sql: string }[] = [ { version: 1, sql: `...
 | 22 | 2026-10-19 | Mesaj taslakları (Paket 3): `message_drafts` (proje + kanal başına bir satır; metin ve yüklemesi bitmiş eklerin `{id, name, size}` listesi; proje silinince FK ile gider). Gerçek SQLite ile uçtan uca denendi |
 | 23 | 2026-10-20 | Görevi iptal etme (ADR-035): `tasks.cancelled_at TEXT` (NULL = iptal edilmedi). İptal edilen görev geçmişiyle kalır; bitmiş ya da silinmiş sayılmaz, hiçbir yol (otopilot, başlatma, geç sonuç, inceleme, birleştirme, açılış) onu ilerletmez; "Yeniden aç" NULL yazar |
 | 24 | 2026-10-21 | Proje klasöründen kaybolan dosyalar (ADR-038): `files.missing_at TEXT`. Diskte bulunamayan klasör dosyasının son denetim anı (NULL = bulundu). Kayıt ve bağlar kalır, çıkarılmış metin silinir; dosya yeniden bulununca NULL olur ve yeniden okunur. Kimin kaldırdığının kanıtı değildir |
+| 25 | 2026-10-21 | Kullanıcı isteği ve toplu sonuç (ADR-039): `requests` tablosu (aşağıda). Liderin sohbet cevabında oluşturduğu görevler bir istek kaydıyla birlikte oluşturulur; görevler bittiğinde lider o isteğe bir kez cevap ve tek rapor yazar |
+| 26 | 2026-10-21 | Liderin soruları (ADR-040): `questions` tablosu (aşağıda). Proje başına kalıcı anahtar `Q-<seq>` (UNIQUE project_id+seq), durum open → answered / dropped. Cevap hiçbir onay yerine geçmez |
+| 27 | 2026-10-21 | `requests.settled_at` + `idx_requests_state` (ADR-039 eki): isteğin şimdiki durumunun yerleştiği an. Tarama, yerleşmemiş istekleri ve görevi / çalışması / sorusu bundan sonra değişenleri seçer — yaş ya da sayı sınırı yok |
 
 ## 3. Tablolar
 
@@ -364,6 +367,43 @@ tutulur. `remove_diacritics 2` sayesinde "karar" / "kârar" gibi aksan farkları
 
 İndeks: `idx_decisions_project`. `accepted`'a geçişte `decisions:save` handler'ı karar metnini önem **1.0** ile
 kararın **projesinin** hafızasına yazar (`projectId` NULL ise organizasyon geneli).
+
+### `requests` *(v25, ADR-039)*
+Kullanıcının sohbet isteği ve lider onun için hangi görevleri açtıysa onlar. Görevler sona erince lider isteğe bir kez cevap verir.
+| Sütun | Tip | Not |
+|---|---|---|
+| `id` | TEXT PK | UUID |
+| `project_id` | TEXT NOT NULL FK → projects (CASCADE) | |
+| `channel`, `message_id` | TEXT | Cevabın yazılacağı sohbet; kullanıcının mesajı (tam metin `messages`'ta kalır) |
+| `text` | TEXT NOT NULL | Mesajın ilk 2000 karakteri (etiket; mesaj silinmişse modele bu verilir ve kesildiği söylenir) |
+| `lead_id` | TEXT | Görevleri açan lider |
+| `tasks` | TEXT (JSON) | `[{id, key, title}]` oluşturulduğu gibi; görev silinse de kalır ("silindi" diye raporlanır) |
+| `file_names` | TEXT (JSON) | Mesaja ekli dosyaların adları |
+| `state` | TEXT | CHECK `open, wrapping, publishing` |
+| `calls` | INTEGER | Bu istek için yapılan bütün model çağrıları (ilk, güncelleme, başarısız, kullanıcının); sınır 3 |
+| `wrap_basis`, `answered_basis`, `status_basis` | TEXT | Çağrının / yayımlanan cevabın / durum satırının ait olduğu durum (görev sonuçları, son çalışma, son rapor) |
+| `draft` | TEXT (JSON) | Yazılmayı bekleyen sonuç; yazma başarısız olursa model çağrılmadan yeniden yazılır |
+| `results`, `last_message_id`, `last_report_id` | INTEGER / TEXT | Yayımlanan sonuç sayısı ve sonuncusu |
+| `settled_at` | TEXT | *(v27)* `answered_basis` her yazıldığında güncellenir; tarama (`requestsRepo.pending`) bundan sonra değişen işleri arar |
+| `created_at`, `updated_at` | TEXT | |
+
+İndeks: `idx_requests_project (project_id, created_at)`. Görev temizliği ve proje silme istekleri de siler.
+
+### `questions` *(v26, ADR-040)*
+Liderin sohbette kullanıcıya sorduğu sorular.
+| Sütun | Tip | Not |
+|---|---|---|
+| `id` | TEXT PK | UUID |
+| `project_id` | TEXT NOT NULL FK → projects (CASCADE) | |
+| `seq` | INTEGER | Proje içinde sıra; anahtar `Q-<seq>`, hiç yeniden kullanılmaz (UNIQUE `project_id, seq`) |
+| `channel` | TEXT | Sorulduğu sohbet |
+| `request_id`, `task_id` | TEXT | İlgili istek / görev (NULL olabilir) |
+| `text` | TEXT | Soru (sohbet temizlenince boşaltılır, satır kalır) |
+| `status` | TEXT | CHECK `open, answered, dropped` |
+| `asked_message_id`, `answer`, `answer_message_id` | TEXT | Kart mesajı; cevap ve cevap mesajı |
+| `created_at`, `closed_at` | TEXT | |
+
+İndeks: `idx_questions_open (project_id, status)`. Görev temizliği/silinmesinde bağlı açık sorular `dropped` olur.
 
 ### `reports`
 | Sütun | Tip | Not |

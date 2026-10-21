@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { Brain, CircleAlert, Hash, Info, Send, Sparkles } from 'lucide-react'
+import { Brain, CircleAlert, Hash, HelpCircle, Info, Send, Sparkles } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { useResize } from '@/components/common/Resize'
 import type { I18nKey } from '@shared/i18n'
@@ -20,6 +20,7 @@ import { RecalledTrace, SuggestionRow } from '@/features/memory/parts'
 import { NeedsCard } from './NeedsCard'
 import { clearSent, draftSnapshot, setDraft as saveDraft, useDraft } from '@/lib/drafts'
 import { JumpToNew, useStickToBottom } from '@/components/common/Stick'
+import { jumpStep } from '@/lib/chatJump'
 
 type MessageFile = { id: string; name: string; kind?: FileKind; size?: number }
 const messageFiles = (m: Message): MessageFile[] => (Array.isArray(m.meta?.files) ? (m.meta!.files as MessageFile[]) : [])
@@ -66,6 +67,44 @@ export function ChatView() {
   const tasks = useMemo(() => allTasks.filter((t) => t.projectId === pid), [allTasks, pid])
   const dms = useMemo(() => members.filter((a) => a.id !== lead?.id), [members, lead])
   const messages = channels[channelKey(pid, channel)] ?? []
+  // "Show in chat" (Needs you): open the message's channel; if it is older than the loaded history, fetch its part (in
+  // this project's channel only) and add it; then scroll there, focus it and mark it for a moment. Drafts aren't touched.
+  const focusMessage = useAppStore((s) => s.focusMessage)
+  const addChannelMessages = useAppStore((s) => s.addChannelMessages)
+  const [flash, setFlash] = useState<string | null>(null)
+  const jumpLoaded = useRef<string | null>(null)
+  const loadedKey = pid ? channels[channelKey(pid, channel)] : undefined
+  useEffect(() => {
+    if (!focusMessage) return
+    let live = true
+    const env = {
+      activeProjectId: pid ?? null,
+      channel,
+      loaded: loadedKey,
+      setChannel,
+      addMessages: addChannelMessages,
+      element: (id: string) => document.getElementById(`msg-${id}`),
+      toast,
+      goneText: t('chat:jump.gone')
+    }
+    void jumpStep(focusMessage, env, jumpLoaded.current === focusMessage.id).then((step) => {
+      if (!live) return
+      if (step === 'loading') jumpLoaded.current = focusMessage.id
+      if (step === 'shown') setFlash(focusMessage.id)
+      if (step === 'shown' || step === 'gone') {
+        jumpLoaded.current = null
+        useAppStore.setState({ focusMessage: null })
+      }
+    })
+    return () => {
+      live = false
+    }
+  }, [focusMessage, pid, channel, loadedKey, setChannel, addChannelMessages, toast, t])
+  useEffect(() => {
+    if (!flash) return
+    const timer = window.setTimeout(() => setFlash(null), 2000)
+    return () => window.clearTimeout(timer)
+  }, [flash])
   const fileIds = useMemo(() => [...new Set(messages.flatMap((m) => messageFiles(m).map((f) => f.id)))], [messages])
   const fileRecords = useFileRecords(fileIds)
   // Teams of this project (assigned units and their sub-units) for "send files to a team".
@@ -205,7 +244,9 @@ export function ChatView() {
               messages.length === 0 && <div className="py-10 text-center text-[13px] text-zinc-400">{t('chat:empty')}</div>
             )}
             {messages.map((m, i) => (
-              <MessageRow key={m.id} m={m} prev={messages[i - 1]} files={fileRecords} />
+              <div key={m.id} id={`msg-${m.id}`} tabIndex={-1} className={cn('rounded-md outline-none transition-shadow', flash === m.id && 'ring-2 ring-accent/60')}>
+                <MessageRow m={m} prev={messages[i - 1]} files={fileRecords} />
+              </div>
             ))}
             {live.map((r) => (
               <LiveRow key={r.replyId} r={r} />
@@ -255,6 +296,7 @@ export function ChatView() {
             <div className="flex items-end gap-2 rounded-lg border border-line bg-surface-2 p-2 focus-within:border-accent-soft focus-within:ring-2 focus-within:ring-accent/10">
               <AttachButton onClick={() => void att.pick()} disabled={!pid} className="h-7 w-7" />
               <textarea
+                id="chat-composer"
                 rows={Math.min(6, Math.max(1, draft.split('\n').length))}
                 value={draft}
                 onChange={(e) => setText(e.target.value)}
@@ -268,7 +310,13 @@ export function ChatView() {
                 placeholder={target ? t('chat:placeholderAgent', { name: target.name }) : t('chat:placeholderNote')}
                 className="max-h-40 min-h-[22px] flex-1 resize-none bg-transparent px-1 text-[13px] leading-relaxed text-zinc-200 outline-none placeholder:text-zinc-400"
               />
-              <button className="btn-primary h-7 w-7 p-0" disabled={(!draft.trim() && !att.readyIds.length) || sending || att.uploading} onClick={() => void send()}>
+              <button
+                className="btn-primary h-7 w-7 p-0"
+                aria-label={t('actions.send')}
+                title={t('actions.send')}
+                disabled={(!draft.trim() && !att.readyIds.length) || sending || att.uploading}
+                onClick={() => void send()}
+              >
                 <Send size={13} />
               </button>
             </div>
@@ -302,6 +350,7 @@ function MessageRow({ m, prev, files }: { m: Message; prev?: Message; files: Map
   // A task's status by the app (finished, approved, sent back) and what waits for the user's decision: read like a
   // message, not a faint divider.
   if (m.senderType === 'system' && m.meta?.card) return <NeedsCard m={m} card={m.meta.card as NeedsCardData} />
+  if (m.senderType === 'system' && m.meta?.question) return <QuestionCard m={m} />
   if (m.senderType === 'system' && (m.meta?.needsYou || m.meta?.status)) {
     const decide = !!m.meta?.needsYou
     return (
@@ -313,7 +362,10 @@ function MessageRow({ m, prev, files }: { m: Message; prev?: Message; files: Map
         )}
       >
         {decide ? <CircleAlert size={14} className="mt-0.5 shrink-0 text-amber-300" /> : <Info size={14} className="mt-0.5 shrink-0 text-zinc-400" />}
-        <span className="min-w-0">{m.content}</span>
+        <div className="min-w-0">
+          <span>{m.content}</span>
+          <RequestActions m={m} />
+        </div>
       </div>
     )
   }
@@ -359,6 +411,7 @@ function MessageRow({ m, prev, files }: { m: Message; prev?: Message; files: Map
           <Markdown text={m.content} />
         </div>
         {chips}
+        {!isUser && <RequestActions m={m} />}
         {!isUser && <MessageMemory m={m} />}
       </div>
     </div>
@@ -390,6 +443,81 @@ function LiveRow({ r }: { r: LiveReply }) {
           !r.messageId && <span aria-hidden className="ml-0.5 inline-block h-3.5 w-1.5 animate-pulse bg-zinc-400 align-middle" />
         )}
       </div>
+    </div>
+  )
+}
+
+/**
+ * A question the lead asked (ADR-040): its lasting key, the question, and how to answer it — "Answer" starts the message
+ * with the key so it goes to this question; "Not needed" closes it. Answering approves nothing.
+ */
+function QuestionCard({ m }: { m: Message }) {
+  const { t } = useTranslation()
+  const toast = useAppStore((s) => s.toast)
+  const q = m.meta?.question as { id: string; key: string; status: 'open' | 'answered' | 'dropped'; answer?: string }
+  const answer = (): void => {
+    if (!m.projectId) return
+    // The key goes first; one already there (this question's or another's) is replaced, not stacked.
+    const rest = draftSnapshot(m.projectId, m.channel).text.replace(/^\s*Q-?\d{1,6}\s*[:.\-–—)]\s*/i, '')
+    saveDraft(m.projectId, m.channel, { text: `${q.key}: ${rest}` })
+    const box = document.getElementById('chat-composer') as HTMLTextAreaElement | null
+    box?.focus()
+  }
+  return (
+    <div data-testid="chat-question" className={cn('flex items-start gap-2 rounded-md border px-3 py-2 text-[13px] leading-relaxed', q.status === 'open' ? 'border-sky-500/30 bg-sky-500/[0.06] text-zinc-100' : 'border-line bg-white/[0.02] text-zinc-300')}>
+      <HelpCircle size={14} className={cn('mt-0.5 shrink-0', q.status === 'open' ? 'text-sky-300' : 'text-zinc-400')} />
+      <div className="min-w-0">
+        <span>{m.content}</span>
+        {q.status === 'open' ? (
+          <div className="mt-1.5 flex flex-wrap items-center gap-2">
+            <button className="btn-outline h-7" onClick={answer}>
+              {t('chat:question.answer')}
+            </button>
+            <button className="btn-ghost h-7" onClick={() => call('questions:drop', q.id).catch((e) => toast('error', apiError(e)))}>
+              {t('chat:question.drop')}
+            </button>
+            <span className="text-[12px] text-zinc-400">{t('chat:question.hint', { key: q.key })}</span>
+          </div>
+        ) : (
+          <div className="mt-1 text-[12px] text-zinc-400">{q.status === 'answered' ? t('chat:question.answered', { answer: q.answer ?? '' }) : t('chat:question.dropped')}</div>
+        )}
+      </div>
+    </div>
+  )
+}
+
+/** Under a request's result (ADR-039): open its combined report; ask for the summary again when only the records' one came. */
+function RequestActions({ m }: { m: Message }) {
+  const { t } = useTranslation()
+  const setTab = useAppStore((s) => s.setTab)
+  const toast = useAppStore((s) => s.toast)
+  const [asking, setAsking] = useState(false)
+  const req = m.meta?.request as { id: string; reportId?: string | null; retry?: boolean } | undefined
+  if (!req || (!req.reportId && !req.retry)) return null
+  const again = (): void => {
+    setAsking(true)
+    call('requests:summarize', req.id)
+      .then(() => toast('info', t('chat:request.asked')), (e) => toast('error', apiError(e)))
+      .finally(() => setAsking(false))
+  }
+  return (
+    <div className="mt-1.5 flex flex-wrap gap-2" data-testid="request-actions">
+      {req.reportId && (
+        <button
+          className="btn-outline h-7"
+          onClick={() => {
+            useAppStore.setState({ focusReport: req.reportId ?? null })
+            setTab('reports')
+          }}
+        >
+          {t('chat:request.openReport')}
+        </button>
+      )}
+      {req.retry && (
+        <button className="btn-ghost h-7" disabled={asking} onClick={again}>
+          {t('chat:request.retry')}
+        </button>
+      )}
     </div>
   )
 }

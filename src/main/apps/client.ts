@@ -34,9 +34,10 @@ let shuttingDown = false
 
 /**
  * The MCP SDK actually installed (not what package.json asks for): 1.30.x and older send stored OAuth credentials to
- * whatever authorization server an MCP server names (GHSA-6qxp-vccf-f47h). OAuth is refused on those.
+ * whatever authorization server an MCP server names (GHSA-6qxp-vccf-f47h); before 1.32.0 the HTTP clients follow
+ * redirects to any origin with our headers and OAuth token requests (GHSA-6prh-2h8m-c8cw). OAuth is refused on those.
  */
-const MIN_SDK = [1, 31, 0]
+const MIN_SDK = [1, 32, 0]
 let sdkVersionCache: number[] | null | undefined
 export function installedSdkVersion(): number[] | null {
   if (sdkVersionCache !== undefined) return sdkVersionCache

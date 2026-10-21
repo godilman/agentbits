@@ -564,6 +564,44 @@ transkriptleri de budar.
   ayrıca toplamlar ve `sessionStartedAt`); `usage:daily(days ≤ 365, projectId?)` → gün başına input/output/cache.
   `getStats` token sayıları artık `token_usage`'dan gelir.
 
+### 6.5d İstek ve toplu sonuç (ADR-039, `core/requests.ts`)
+- **Kayıt:** `reply()`, ```tasks bloğundaki görevleri bir `requests` kaydıyla aynı transaction'da oluşturur (kanal, mesaj,
+  görev listesi).
+- **Tetikleme:** `tasks:changed`, `orchestrator:changed`, `runs:changed` ve `approvals:changed` olaylarından sonra
+  `requestsSoon()` 300 ms içinde tek bir `requestsSweep()` çalıştırır.
+- **Her istek için:**
+  - Görevlerin durumu `requestOutcome` ile çıkar: `done` / `cancelled` / `deleted` / `waiting` (`user` ya da `start`) /
+    `active`. İncelenen ya da çalışması süren görev, iptal edilmiş olsa da `active` sayılır.
+  - Ardından `requestBasis` ile durumun parmak izi alınır.
+  - Kararlar:
+    - `active` varsa hiçbir şey yapılmaz;
+    - `answered_basis` ile aynıysa hiçbir şey yapılmaz;
+    - bekleyen varsa durum başına bir kez durum satırı yazılır (`status_basis`);
+    - hiçbiri tamamlanmadıysa kayıttan bir satır yazılır;
+    - aksi hâlde, proje çalışması başlatılmışsa ve `calls` < 3 ise `wrapRequest()` çalışır.
+- **`wrapRequest`:**
+  - Çağrıyı saydıktan sonra lider ile `mode: 'review'` çağrısı yapar (`wrapSystem` + `wrapPrompt`).
+  - `parseWrap` her maddenin kaynağını denetler.
+  - Durum değiştiyse sonuç yayımlanmaz.
+  - Sonuç `draft` olarak saklanır, `publishRequest` rapor + mesaj + durumu tek transaction'da yazar. Yazma başarısız
+    olursa `draft` kalır.
+- **`init()`:** `wrapping` durumundaki istek ücretsiz "yarıda kaldı" özetine döner; açılış model çağırmaz.
+
+### 6.5e Sohbet merkezli akış (ADR-040)
+- **P2:** `say()` → `THREAD_STEPS` ve `inRequest` (`requestsRepo.hasTask`). İsteğin rutin adımları görev akışına gider,
+  toparlanma ve "birleştirildi" satırları da öyle. #general'de `request.started`, kartlar, `request.status` ve sonuç kalır.
+- **P3:** `reply()` liderse ve `fsRead` izni varsa `projectSignals(root)` → `signalsSection` sistem prompt'una eklenir
+  (`core/projectSignals.ts`: yalnız üst düzey, `lstat` + `realpath`, `.env` yok, 64 KB, README 1500).
+- **P4, soru akışı:**
+  - `handleUserMessage` → `directAnswers` (`addressedKeys` / `answerPart`) cevabı kodla bağlar, lider ondan sonra okur.
+  - `reply()` sistem prompt'una `questionsContext` ekler.
+  - Cevaptan sonra `tieAnswers` (yalnız tek ve net soru) ve `askQuestions` (kart + `questions` satırı) çalışır.
+  - `answerQuestion` görev akışına yazar ve sürmekte olan çalışmaya talimat olarak kuyruğa koyar (doğrudan cevapta kaynak
+    `user`, liderin eşleştirdiğinde `lead`).
+  - `requestsSweep`, `openForRequest(id, görevler)` açıksa isteği bekletir; görevi ya da isteği gitmiş soru `dropped` olur.
+- **P5:** `state().questions` → renderer `orchestratorWaits.questions`. NeedsYou'daki soru satırı
+  `focusMessage` → ChatView kaydırır ve vurgular.
+
 ### 6.6 İnceleme kuyruğu — `queueReview()` / `review()`
 **2026-10-20 (ADR-033):** `review()` çalışanın ürettiği dosyalar `processing` iken `filesReady` ile en fazla `filesReadyMs`
 (30 sn) bekler; hazır değilse model çağrılmadan `needsUser(reviewIssue.filesNotReady)`. `parseReview` `unverifiable` ve
@@ -1317,8 +1355,8 @@ asla doğrudan bağlanmaz — her çağrı Agentbits'in yetki / onay / denetim k
 - **OAuth:** "Giriş yap" (`apps:signIn`) 127.0.0.1:33418 (doluysa rastgele port) üzerinde geri dönüş sunucusu açar, SDK'nın
   OAuthClientProvider'ı dinamik istemci kaydı + PKCE ile yetkilendirme sayfasını `shell.openExternal` ile tarayıcıda açar,
   kod gelince token alınır. İstemci kaydı, token'lar ve doğrulayıcı `oauth_enc`'te şifreli. Ajan çağrısı **asla** tarayıcı
-  açmaz: token yoksa/yenilenemiyorsa "giriş gerekli" hatası döner ve durum UI'da sarı görünür. SDK ≥ 1.31.0 şart
-  (GHSA-6qxp-vccf-f47h; `sdkPatched()` kurulu paketi okur, eskiyse OAuth reddedilir). Kayıt ve token'lar SDK'nın verdiği
+  açmaz: token yoksa/yenilenemiyorsa "giriş gerekli" hatası döner ve durum UI'da sarı görünür. SDK ≥ 1.32.0 şart
+  (GHSA-6qxp-vccf-f47h, GHSA-6prh-2h8m-c8cw; `sdkPatched()` kurulu paketi okur, eskiyse OAuth reddedilir). Kayıt ve token'lar SDK'nın verdiği
   `issuer` ile değiştirilmeden saklanır; `issuer`'sız eski kayıtlar her açılışta silinir ve "yeniden giriş" istenir
   (`dropUnboundOAuth`, `core/legacy.ts`).
 - **Sırlar:** ortam değişkeni ve başlık **değerleri** `safeStorage` ile şifreli (`env_enc`, `headers_enc`); renderer'a yalnızca

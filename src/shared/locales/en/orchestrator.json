@@ -20,7 +20,8 @@
     "coffeeBreak": "☕ Coffee break",
     "authInvalid": "Session / key invalid",
     "reviewing": "Review · {{key}}",
-    "typing": "Typing…"
+    "typing": "Typing…",
+    "wrapping": "writing the result of a request"
   },
   "caps": {
     "fsRead": "reading files",
@@ -88,7 +89,9 @@
     "workStarted": "Work started in this project for this session",
     "reviewUnverifiable": "❔ {{key}} couldn't be verified: {{note}}",
     "filesNotReadyAtStart": "⚠ Not ready yet when the work started (still being read in): {{names}}",
-    "filesDisappeared": "⚠ Present when the work started, not found in the project folder when it ended (the folder is shared: not known who removed them): {{names}}"
+    "filesDisappeared": "⚠ Present when the work started, not found in the project folder when it ended (the folder is shared: not known who removed them): {{names}}",
+    "requestWrap": "Combined result requested: “{{request}}”",
+    "requestStale": "The result written for “{{request}}” wasn't published: its tasks changed meanwhile."
   },
   "chat": {
     "taskStarted": "{{agent}} started the task.",
@@ -106,8 +109,6 @@
     "generalChat": "general chat",
     "directMessage": "direct message",
     "planFallback": "OK, I've created the plan.",
-    "tasksCreated_one": "📋 {{count}} task created: {{keys}}",
-    "tasksCreated_other": "📋 {{count}} tasks created: {{keys}}",
     "filesLinked": "📎 files attached to the tasks",
     "decisionsAdded_one": "🧭 {{count}} decision proposal added to the Decisions tab.",
     "decisionsAdded_other": "🧭 {{count}} decision proposals added to the Decisions tab.",
@@ -124,7 +125,8 @@
     "reviewNeedsYou": "⚠️ {{reason}}\nThe worker's report is kept and the task stays in review. You can retry just the review (the worker doesn't run again), or decide yourself: move it to Done, or back to To do with a note.",
     "workNotStarted": "The tasks are ready but won't start yet: work in this project hasn't been started in this session. Press “Start work in this project” at the top.",
     "reviewNoReport": "⚠️ {{reason}}\nThe task stays in review. Reviewing again won't help without a report: “Run the worker again” does the work from the start (nothing the earlier attempt did is undone), or decide yourself: move it to Done, or back to To do with a note.",
-    "reviewNoLead": "⚠️ {{reason}}\nThe task stays in review. Turn on or add a lead (or a member who can review), then press “Retry the review” on the task, or decide yourself: move it to Done, or back to To do with a note."
+    "reviewNoLead": "⚠️ {{reason}}\nThe task stays in review. Turn on or add a lead (or a member who can review), then press “Retry the review” on the task, or decide yourself: move it to Done, or back to To do with a note.",
+    "approvalClosedHeld": "The app closed while this task waited for your approval to start, so nothing ran and nothing was changed. Start it again when you want; your approval is asked again."
   },
   "errors": {
     "noFolder": "No folder selected for “{{project}}”. CLI agents can touch files, so choose a folder in the project settings.",
@@ -291,7 +293,8 @@
     "failed_other": "Failed {{count}} times: {{error}}",
     "capsChanged": "What the agent can use changed while it waited for your approval; start it again to see the current list",
     "cancelled": "Cancelled",
-    "reopened": "Reopened: waits until you start it"
+    "reopened": "Reopened: waits until you start it",
+    "approvalClosed": "The app closed while it waited for your approval; it never started"
   },
   "review": {
     "unmet": "Acceptance criteria not met: {{list}}"
@@ -323,12 +326,12 @@
     "manualDone": "✔ You marked it done, without the lead's review. Its changes are {{where}}."
   },
   "say": {
-    "sentForReview": "{{worker}} finished “{{title}}”; it has gone to the lead ({{lead}}) for review. Nothing needed from you. · {{key}}",
+    "sentForReview": "{{worker}} finished “{{title}}”; {{lead}} is checking it. · {{key}}",
     "doneNoReview": "{{worker}} finished “{{title}}”. Lead review is off, so it's your call: move it to Done or send it back to To do with a note. · {{key}}",
     "doneNoLead": "{{worker}} finished “{{title}}”. There's no lead to review it, so it's your call: move it to Done or send it back to To do with a note. · {{key}}",
     "commitFailed": "{{worker}} finished “{{title}}”, but the changes couldn't be committed in the task's copy, so the task stopped. The reason is on the task page; fix it, then press “{{retry}}”. · {{key}}",
     "approved": "{{lead}} approved “{{title}}”.{{summary}}{{changes}} · {{key}}",
-    "sentBack": "{{lead}} sent “{{title}}” back.{{summary}} It runs again when {{worker}} is free; nothing needed from you for now. · {{key}}",
+    "sentBack": "{{lead}} sent “{{title}}” back.{{summary}} {{worker}} picks it up again when free. · {{key}}",
     "sentBackWaits": "{{lead}} sent “{{title}}” back.{{summary}} It's in To do again and runs when you start it. · {{key}}",
     "unverifiable": "{{lead}} couldn't verify “{{title}}”.{{summary}} {{worker}} reported it done, but it hasn't been checked. Your call: press “{{retryReview}}”, move it to Done, or send it back to To do with a note. · {{key}}",
     "notMoving": "“{{title}}” isn't moving: the run after the send-back recorded no change and {{lead}} sent it back again. It won't restart on its own. Your call: check the lead's note on the task page, then press “{{retryReview}}” or “{{rerunWorker}}”, move it to Done, or send it back to To do with a note. · {{key}}",
@@ -340,16 +343,16 @@
     "limitStopped": "“{{title}}” stopped at a limit: {{reason}} It won't restart on its own. “{{retry}}” runs the work again; nothing the earlier attempt did is undone. · {{key}}",
     "isolation": "“{{title}}” couldn't start: {{reason}} It won't start on its own; fix it, then press “{{retry}}”. · {{key}}",
     "auth": "“{{title}}” stopped because of the provider sign-in: {{reason}} Fix the sign-in first, then press “{{retry}}”; nothing the earlier attempt did is undone. · {{key}}",
-    "recoveryRetry": "🔁 “{{title}}”: {{reason}} The team will try only the review again in {{minutes}} min (extra attempt {{attempt}} of {{max}}); the worker doesn't run again. Nothing is needed from you. · {{key}}",
-    "recoveryFiles": "⏳ “{{title}}”: the changed files are still being read in ({{files}}). The review starts on its own once their current content is there (at most {{minutes}} min); no model is called meanwhile. Nothing is needed from you. · {{key}}",
+    "recoveryRetry": "🔁 “{{title}}”: {{reason}} The team will try only the review again in {{minutes}} min (extra attempt {{attempt}} of {{max}}); the worker doesn't run again. · {{key}}",
+    "recoveryFiles": "⏳ “{{title}}”: the changed files are still being read in ({{files}}). The review starts on its own once their current content is there (at most {{minutes}} min); no model is called meanwhile. · {{key}}",
     "recoveryRetryLater": "🔁 “{{title}}”: {{reason}} The team will try only the review again once you start this project's work (extra attempt {{attempt}} of {{max}}); the worker doesn't run again. · {{key}}",
-    "recoveryWork": "🔁 “{{title}}”: {{reason}} The run changed nothing outside (at most it read Agentbits' own data); {{worker}} will run the work again on its own in {{minutes}} min (extra attempt {{attempt}} of {{max}}). Nothing is needed from you; you can cancel the task if you don't want that. · {{key}}",
+    "recoveryWork": "🔁 “{{title}}”: {{reason}} The run changed nothing outside (at most it read Agentbits' own data); {{worker}} will run the work again on its own in {{minutes}} min (extra attempt {{attempt}} of {{max}}). You can cancel the task if you don't want that. · {{key}}",
     "recoveryWorkLater": "🔁 “{{title}}”: {{reason}} The run changed nothing outside (at most it read Agentbits' own data); {{worker}} will run the work again once you start this project's work (extra attempt {{attempt}} of {{max}}). You can cancel the task if you don't want that. · {{key}}",
     "runApprovalRetry": "🔁 “{{title}}” is waiting for your approval for an automatic retry (extra attempt {{attempt}} of {{max}}). The last try stopped because: {{reason}} It is recorded as having changed nothing outside. If you approve, {{worker}} runs the work again from the start and will be able to use: {{caps}}. An earlier approval doesn't count; if you reject it, the work doesn't start and the task is held. · {{key}}"
   },
   "cancel": {
     "requested": "⏳ Cancel requested for “{{title}}”: its agent was asked to stop, and that it stopped isn't confirmed yet. Until then nothing new starts for it and whatever the run still sends is ignored; a note here confirms the cancel once the run has ended. · {{key}}",
-    "done": "🛑 “{{title}}” is cancelled: its agent's run has stopped. {{details}} This doesn't undo or stop operations it had already started elsewhere (connections, apps, commands that keep running on their own). Nothing is needed from you; the task and its history are kept, and you can reopen it. · {{key}}",
+    "done": "🛑 “{{title}}” is cancelled: its agent's run has stopped. {{details}} This doesn't undo or stop operations it had already started elsewhere (connections, apps, commands that keep running on their own). The task and its history are kept, and you can reopen it. · {{key}}",
     "neverRan": "It never ran.",
     "ran_one": "It ran once.",
     "ran_other": "It ran {{count}} times.",
@@ -414,5 +417,114 @@
       "used": "the task's automatic retries are used up ({{max}} of {{max}}).",
       "deps": "tasks it depends on aren't done yet ({{keys}})."
     }
+  },
+  "request": {
+    "facts": {
+      "line": "From the records: {{tasks}}{{changes}}",
+      "done_one": "{{count}} task done",
+      "done_other": "{{count}} tasks done",
+      "cancelled_one": "{{count}} cancelled",
+      "cancelled_other": "{{count}} cancelled",
+      "deleted_one": "{{count}} deleted",
+      "deleted_other": "{{count}} deleted",
+      "waiting_one": "{{count}} waiting for you",
+      "waiting_other": "{{count}} waiting for you",
+      "changed_one": "file changes recorded in {{count}} task",
+      "changed_other": "file changes recorded in {{count}} tasks",
+      "noWrites_one": "no file write in the record of {{count}} task",
+      "noWrites_other": "no file write in the records of {{count}} tasks",
+      "unverified_one": "changes can't be verified in {{count}} task",
+      "unverified_other": "changes can't be verified in {{count}} tasks",
+      "simulated_one": "{{count}} task was a Demo simulation",
+      "simulated_other": "{{count}} tasks were a Demo simulation",
+      "superseded_one": "{{count}} race attempt not used",
+      "superseded_other": "{{count}} race attempts not used"
+    },
+    "update": "Update:",
+    "partial": "Partly done.",
+    "sections": {
+      "important": "Important",
+      "optional": "Optional suggestions",
+      "conflicts": "Overlaps and contradictions",
+      "incomplete": "Not done or not verified",
+      "tasks": "Tasks",
+      "basis": "What this is based on"
+    },
+    "more": "(+{{count}} more in the report)",
+    "table": {
+      "task": "Task",
+      "who": "Who",
+      "outcome": "Outcome",
+      "changes": "Changes (from the record)"
+    },
+    "outcome": {
+      "done": "done, approved by the lead",
+      "doneUser": "done, moved by you (not reviewed)",
+      "doneOther": "done",
+      "cancelled": "cancelled (not done)",
+      "deleted": "deleted (can no longer be reported)",
+      "waiting": "waiting: {{reason}}",
+      "active": "in progress",
+      "superseded": "race attempt not used"
+    },
+    "changes": {
+      "noWrites": "no file write in the record (doesn't prove nothing changed)",
+      "unknown": "can't be verified",
+      "simulated": "Demo simulation",
+      "none": "no run recorded",
+      "partly": "other changes can't be verified"
+    },
+    "basis": "{{lead}} put this together from the team's reports and Agentbits' records. Each point names the tasks it comes from; the summary can be wrong, the evidence is on the task pages.",
+    "seen": "Report text seen (characters shown / total): {{list}}",
+    "requestCut": "The request was longer than what was given; only its start was seen.",
+    "dropped": "{{count}} point(s) left out: no source, or a task not in this request.",
+    "fallbackNote": "Written from the records only, without the lead's summary.",
+    "reviewNote": "Lead's note",
+    "reportCut": "(The report is longer; the first {{shown}} of {{total}} characters.)",
+    "reportTitle": "Result: {{request}}",
+    "reportTitleUpdate": "Update: {{request}}",
+    "reportTitleRecords": "From the records: {{request}}",
+    "status": "“{{request}}” — {{facts}}. Waiting: {{keys}}; their cards are in the chat. When they are settled, {{lead}} writes the combined result.",
+    "fallback": "“{{request}}” — {{facts}}. {{lead}} couldn't write the combined result; the tasks' reports are in the combined report. Why: {{why}}",
+    "nothingDone": "“{{request}}” — none of its tasks was completed ({{facts}}), so there is no combined result.",
+    "why": {
+      "interrupted": "the app closed while it was being written",
+      "budget": "the {{max}} summaries this request may use are used up",
+      "unclear": "{{lead}}'s answer couldn't be read",
+      "stopped": "it was stopped",
+      "noLead": "the project has no lead"
+    },
+    "wait": {
+      "approval": "waiting for your approval to start",
+      "decide": "waiting for your decision",
+      "notStarted": "not started yet",
+      "held": "held",
+      "dependency": "a task it needs was cancelled or deleted",
+      "agent": "its agent is turned off",
+      "merge": "waiting to be merged into the project"
+    },
+    "errors": {
+      "notFound": "This request no longer exists",
+      "busy": "Its result is being written right now",
+      "notEnded": "Some of its tasks haven't ended yet",
+      "nothingDone": "None of its tasks was completed",
+      "notNeeded": "There's nothing to write again: the combined result is there, or a newer one is on its way",
+      "question": "A question about this request is still open: answer it in the chat first"
+    },
+    "asked": "**Request:** “{{request}}”",
+    "started": "{{lead}} split the work into {{count}} task(s): {{list}}. The combined result comes here when they are done.",
+    "startItem": "“{{title}}” ({{who}})",
+    "startMore": " and {{count}} more",
+    "unassigned": "not assigned yet"
+  },
+  "question": {
+    "card": "{{lead}} asks ({{key}}): {{text}}",
+    "notOpen_one": "{{keys}} isn't an open question any more (answered, dropped or not asked), so this message answers nothing there.",
+    "notOpen_other": "{{keys}} aren't open questions any more (answered, dropped or not asked), so this message answers nothing there.",
+    "which": "I couldn't tell which question this answers ({{keys}}), so none is closed. Start your answer with the question's key, e.g. “Q-3: …”.",
+    "answerNote": "Answer to {{key}} (“{{question}}”): {{answer}}",
+    "queued": "the user's answer to {{key}}",
+    "notFound": "This question no longer exists",
+    "leadTiedNote": "The user's answer to {{key}} (“{{question}}”), as the lead read their message: {{answer}}"
   }
 }

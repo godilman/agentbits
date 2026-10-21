@@ -281,8 +281,17 @@ function TaskCard({ task, dragging, onDragStart, onDragEnd }: { task: Task; drag
       onDragStart={onDragStart}
       onDragEnd={onDragEnd}
       onClick={() => selectTask(task.id)}
+      // Keyboard: Tab reaches the card, Enter or Space opens it (moving it: the status in its details).
+      role="button"
+      tabIndex={0}
+      aria-label={`${task.key} · ${task.title}`}
+      onKeyDown={(e) => {
+        if (e.target !== e.currentTarget || (e.key !== 'Enter' && e.key !== ' ')) return
+        e.preventDefault()
+        selectTask(task.id)
+      }}
       className={cn(
-        'group cursor-pointer rounded-md border bg-surface-2 p-2.5 shadow-sm transition-all hover:border-zinc-600',
+        'group cursor-pointer rounded-md border bg-surface-2 p-2.5 shadow-sm outline-none transition-all hover:border-zinc-600 focus-visible:ring-2 focus-visible:ring-accent/60',
         selected ? 'border-indigo-500/50 ring-1 ring-indigo-500/30' : 'border-line',
         dragging && 'opacity-40'
       )}

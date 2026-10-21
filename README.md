@@ -12,7 +12,7 @@
   <a href="https://github.com/godilman/agentbits/actions/workflows/ci.yml"><img alt="CI" src="https://github.com/godilman/agentbits/actions/workflows/ci.yml/badge.svg"></a>
   <img alt="Platform: Windows" src="https://img.shields.io/badge/platform-Windows-0078D6?logo=windows&logoColor=white">
   <img alt="macOS: experimental" src="https://img.shields.io/badge/macOS-experimental-555?logo=apple&logoColor=white">
-  <img alt="Version 0.12.0" src="https://img.shields.io/badge/version-0.12.0-6366f1">
+  <img alt="Version 0.13.0" src="https://img.shields.io/badge/version-0.13.0-6366f1">
   <a href="LICENSE"><img alt="License: PolyForm Strict 1.0.0" src="https://img.shields.io/badge/license-PolyForm%20Strict%201.0.0-orange"></a>
   <a href="https://buymeacoffee.com/godilman"><img alt="Buy me a coffee" src="https://img.shields.io/badge/Buy%20me%20a%20coffee-%E2%98%95-FFDD00?logoColor=black"></a>
 </p>
@@ -283,7 +283,7 @@ Found a vulnerability? Please report it privately, see [SECURITY.md](SECURITY.md
 
 ## Current limitations
 
-Agentbits is an early release (**v0.12.0**). It does not:
+Agentbits is an early release (**v0.13.0**). It does not:
 
 - update itself: it checks for new versions and tells you, but you install them from the download page (over the
   old version; your data is kept, and backed up before an upgrade changes it);

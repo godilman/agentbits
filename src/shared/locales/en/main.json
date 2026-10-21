@@ -29,7 +29,9 @@
     "badRequest": "Invalid request",
     "untrustedSender": "This request did not come from the Agentbits window and was refused",
     "endpointInvalid": "The endpoint address is not valid (an http(s) URL without user, query or fragment).",
-    "endpointInsecure": "An API key may only be sent over HTTPS, or over http to this computer (localhost / 127.0.0.1)."
+    "endpointInsecure": "An API key may only be sent over HTTPS, or over http to this computer (localhost / 127.0.0.1).",
+    "messageGone": "That message is no longer in this chat (deleted, or the chat was cleared)",
+    "messageTooLong": "The message is too long ({{count}} characters; at most {{max}}). Attach long text as a file, or split it."
   },
   "dialogs": {
     "pickFile": "Choose a file",
@@ -395,7 +397,7 @@
       "nameRequired": "Give the app a name.",
       "nameTaken": "An app named \"{{name}}\" already exists.",
       "badUrl": "Enter a full http(s) address.",
-      "sdkOutdated": "The installed MCP library is out of date ({{version}}; needs 1.31.0 or newer for safe sign-in). Run \"npm ci\" in the Agentbits folder (or install the latest Agentbits) and start again.",
+      "sdkOutdated": "The installed MCP library is out of date ({{version}}; needs 1.32.0 or newer for safe sign-in). Run \"npm ci\" in the Agentbits folder (or install the latest Agentbits) and start again.",
       "shuttingDown": "The app connection was closed (edited, deleted or Agentbits is quitting). Try again.",
       "reSignIn": "Sign in again: the stored sign-in was not bound to its authorization server (security update)."
     },

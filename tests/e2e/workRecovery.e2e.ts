@@ -108,7 +108,7 @@ async function main(): Promise<void> {
     assert.equal(heldWhy(t1.id), null, 'not "needs you"')
     assert.equal(captured.size, 1, 'one timer')
     assert.equal(recState(t1.id)!.attempts, 0, 'nothing counted before the retry starts')
-    assert.match(general(p.id).at(-1)!.content, /changed nothing outside[\s\S]*will run the work again on its own in 1 min \(extra attempt 1 of 2\)[\s\S]*you can cancel the task/)
+    assert.match(general(p.id).at(-1)!.content, /changed nothing outside[\s\S]*will run the work again on its own in 1 min \(extra attempt 1 of 2\)[\s\S]*You can cancel the task/)
     // Autopilot doesn't take it meanwhile: only the recovery's timer starts it.
     settingsRepo.update({ autopilot: true })
     o.tick()

@@ -120,7 +120,7 @@ async function main(): Promise<void> {
     assert.equal(said(t1.id, p.id, /Cancel requested/), 1)
     assert.equal(said(t1.id, p.id, /is cancelled: its agent/), 1)
     // No usage record of the stopped run here: what it touched can't be told — said so, not guessed.
-    assert.match(thread(t1.id, p.id).at(-1)!.content, /isn't known[\s\S]*no connection or app operation[\s\S]*Nothing was undone[\s\S]*Nothing is needed from you/)
+    assert.match(thread(t1.id, p.id).at(-1)!.content, /isn't known[\s\S]*no connection or app operation[\s\S]*Nothing was undone[\s\S]*The task and its history are kept/)
     assert.equal(said(t1.id, p.id, /⏹ Stopped/), 0, 'no "stopped, start it again" note')
   })
 

@@ -1,7 +1,7 @@
 {
   "name": "agentbits",
   "productName": "Agentbits",
-  "version": "0.12.0",
+  "version": "0.13.0",
   "description": "You lead. Your AI team gets things done. Multi-agent orchestration desktop app with a pixel-art office.",
   "main": "./out/main/index.js",
   "author": "Gökhan Dilman",
@@ -25,13 +25,13 @@
     "dist:mac": "electron-vite build && electron-builder --mac --config electron-builder.config.js --publish never",
     "test:e2e": "node scripts/e2e.mjs",
     "test:renderer": "node scripts/renderer-tests.mjs",
-    "test:unit": "node --experimental-strip-types --no-warnings tests/connections.classify.test.ts && node --experimental-strip-types --no-warnings tests/connections.transport.test.ts && node --experimental-strip-types --no-warnings tests/connections.export.test.ts && node --experimental-strip-types --no-warnings tests/files.extract.test.ts && node --experimental-strip-types --no-warnings tests/files.legacy.test.ts && node --experimental-strip-types --no-warnings tests/ocr.test.ts && node --experimental-strip-types --no-warnings tests/skills.test.ts && node --experimental-strip-types --no-warnings tests/apps.test.ts && node --experimental-strip-types --no-warnings tests/review.test.ts && node --experimental-strip-types --no-warnings tests/demo.test.ts && node --experimental-strip-types --no-warnings tests/leadComms.test.ts && node --experimental-strip-types --no-warnings tests/settings.test.ts && node --experimental-strip-types --no-warnings tests/redact.test.ts && node --experimental-strip-types --no-warnings tests/cancel.test.ts && node --experimental-strip-types --no-warnings tests/ipcSchema.test.ts && node --experimental-strip-types --no-warnings tests/team.test.ts && node --experimental-strip-types --no-warnings tests/worktree.test.ts && node --experimental-strip-types --no-warnings tests/endpoints.test.ts && node --experimental-strip-types --no-warnings tests/web.test.ts && node --experimental-strip-types --no-warnings tests/webFetch.test.ts && node --experimental-strip-types --no-warnings tests/share.test.ts && node --experimental-strip-types --no-warnings tests/vectors.test.ts && node --experimental-strip-types --no-warnings tests/memoryGraph.test.ts && node --experimental-strip-types --no-warnings tests/projectMemory.test.ts && node --experimental-strip-types --no-warnings tests/replyStream.test.ts && node --experimental-strip-types --no-warnings tests/runErrors.test.ts && node --experimental-strip-types --no-warnings tests/promptBuilder.test.ts && node --experimental-strip-types --no-warnings tests/notify.test.ts && node --experimental-strip-types --no-warnings tests/update.test.ts && node --experimental-strip-types --no-warnings tests/i18n.test.ts",
+    "test:unit": "node --experimental-strip-types --no-warnings tests/connections.classify.test.ts && node --experimental-strip-types --no-warnings tests/connections.transport.test.ts && node --experimental-strip-types --no-warnings tests/connections.export.test.ts && node --experimental-strip-types --no-warnings tests/files.extract.test.ts && node --experimental-strip-types --no-warnings tests/files.legacy.test.ts && node --experimental-strip-types --no-warnings tests/ocr.test.ts && node --experimental-strip-types --no-warnings tests/skills.test.ts && node --experimental-strip-types --no-warnings tests/apps.test.ts && node --experimental-strip-types --no-warnings tests/review.test.ts && node --experimental-strip-types --no-warnings tests/demo.test.ts && node --experimental-strip-types --no-warnings tests/leadComms.test.ts && node --experimental-strip-types --no-warnings tests/settings.test.ts && node --experimental-strip-types --no-warnings tests/redact.test.ts && node --experimental-strip-types --no-warnings tests/cancel.test.ts && node --experimental-strip-types --no-warnings tests/ipcSchema.test.ts && node --experimental-strip-types --no-warnings tests/team.test.ts && node --experimental-strip-types --no-warnings tests/worktree.test.ts && node --experimental-strip-types --no-warnings tests/endpoints.test.ts && node --experimental-strip-types --no-warnings tests/web.test.ts && node --experimental-strip-types --no-warnings tests/webFetch.test.ts && node --experimental-strip-types --no-warnings tests/share.test.ts && node --experimental-strip-types --no-warnings tests/vectors.test.ts && node --experimental-strip-types --no-warnings tests/memoryGraph.test.ts && node --experimental-strip-types --no-warnings tests/projectMemory.test.ts && node --experimental-strip-types --no-warnings tests/replyStream.test.ts && node --experimental-strip-types --no-warnings tests/runErrors.test.ts && node --experimental-strip-types --no-warnings tests/promptBuilder.test.ts && node --experimental-strip-types --no-warnings tests/notify.test.ts && node --experimental-strip-types --no-warnings tests/update.test.ts && node --experimental-strip-types --no-warnings tests/untrusted.test.ts && node --experimental-strip-types --no-warnings tests/questions.test.ts && node --experimental-strip-types --no-warnings tests/projectSignals.test.ts && node --experimental-strip-types --no-warnings tests/i18n.test.ts",
     "i18n:check": "node --experimental-strip-types --no-warnings tests/i18n.test.ts --all",
     "notices": "node scripts/third-party-notices.mjs"
   },
   "dependencies": {
     "@lydell/node-pty": "1.2.0-beta.15",
-    "@modelcontextprotocol/sdk": "1.31.0",
+    "@modelcontextprotocol/sdk": "1.32.1",
     "@tesseract.js-data/eng": "1.0.0",
     "@tesseract.js-data/tur": "1.0.0",
     "better-sqlite3": "^13.0.3",
@@ -60,7 +60,7 @@
     "@xterm/addon-fit": "^0.10.0",
     "@xterm/xterm": "^5.5.0",
     "autoprefixer": "^10.4.21",
-    "electron": "^44.7.0",
+    "electron": "44.9.3",
     "electron-builder": "^26.15.3",
     "electron-vite": "^5.0.0",
     "lucide-react": "^0.577.0",

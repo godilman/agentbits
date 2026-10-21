@@ -838,3 +838,126 @@ Durum değerleri: *Kabul edildi*, *Önerildi*, *Yerini aldı*, *Geri alındı*.
   - Karşılaştırma projenin en yeni 2000 klasör kaydına bakar; daha eskisi yalnız bir sonraki okumada "bulunamadı" olur.
   - Diskte duran ama çalışma dışında değişmiş bir dosyanın eski metni bu paketin konusu değil.
   - Windows'ta taşımanın `ctime`'ı (NTFS ChangeTime) güncellediği gerçek ortamda doğrulanmadı.
+
+## ADR-039 — Kullanıcı isteği → görevler → tek toplu sonuç (P1, 2026-10-21)
+
+- **Bağlam:** Lider sohbetten işi dağıtıyor, her görevi ayrı onaylıyor, ama kullanıcının asıl isteğine dönmüyordu.
+  - ```tasks bloğu görevleri doğrudan oluşturuyordu; görev ile onu doğuran mesaj arasında bağ yoktu.
+  - Lider yalnız kullanıcı yazınca ya da tek tek görev incelemesinde çalışıyordu; "hepsi bitti mi?" diye bakan kod yoktu.
+  - Liderin "konsolide rapor vereceğim" demesinin arkasında hiçbir mekanizma yoktu.
+- **Karar (sahibin, 2026-10-21):**
+  - **Kayıt:** `reply()` görevleri bir istek kaydıyla (`requests`, migration v25) aynı transaction'da oluşturur. Kayıtta
+    sohbet kanalı, mesaj kimliği, görevlerin {id, key, title} listesi (görev silinse de kalır) ve ekli dosya adları durur.
+  - **Tetikleme:** Görev, çalışma, onay ve bekleme olaylarından sonra kısa gecikmeli tek bir tarama (`requestsSweep`)
+    çalışır; zamanlayıcı ve sabit aralıklı bir döngü yok.
+  - **Ne zaman ücretli cevap yazılır:**
+    - Çalışan, kuyruktaki, incelenen ya da toparlanan bir görev varsa hiçbir şey yazılmaz. Sonu gelmemiş bir çalışması ya
+      da incelemesi olan iptal edilmiş görev de bu sayılır.
+    - Kullanıcıyı bekleyen bir görev varsa (bekletilen, kararsız inceleme, onay bekleyen…) ücretli cevap yazılmaz.
+      Durum başına bir kez kısa, ücretsiz bir durum satırı yazılır; o görevin kartı zaten sohbettedir.
+    - Bütün görevler bittiğinde (tamamlandı, iptal ya da silindi) ve en az biri tamamlandıysa lider bir kez cevap yazar.
+      Görevlerden biri tamamlanmadıysa cevap "kısmen tamamlandı" diye başlar. İptal başarı sayılmaz.
+    - Hiçbir görev tamamlanmadıysa model çağrılmaz; kayıttan bir satır yazılır.
+  - **Parmak izi (basis):** Her görevin sonucu, satırının son değişikliği, son çalışması ve onun sonucu, son raporu.
+    İptal edilen görev yalnız iptal anıyla girer; yeniden açılmadıkça sonradan biten çalışması yeni durum sayılmaz.
+    Aynı durum ikinci kez cevaplanmaz. Cevap yazılırken durum değişirse eski cevap yayımlanmaz; çağrı sayılmış kalır ve
+    yeni durum yeniden değerlendirilir.
+  - **Tekil yayımlama:** Rapor, sohbet mesajı ve isteğin yeni durumu tek transaction'da yazılır. Yazma başarısız olursa
+    sonuç `draft` olarak kalır ve daha sonra, yeni model çağrısı olmadan, bir kez yazılır.
+  - **Bütçe:** İstek başına en fazla 3 model çağrısı; ilk cevap, güncelleme, başarısız çağrı ve kullanıcının "Özeti
+    yeniden yaz"ı aynı kalıcı sayaçtan düşer. Çağrı başlarken sayılır.
+  - **Başarısızlık:** Sağlayıcı hatası, okunamayan cevap, durdurma ya da kapanışta hiçbir sağlayıcıda kendiliğinden yeniden
+    deneme yoktur. Kayıttan dürüst bir özet ve görev raporlarını içeren bir rapor ücretsiz yazılır; kullanıcı bütçe
+    içinde yeniden isteyebilir.
+  - **Açılış:** Hiçbir model çağrısı başlatmaz. Yarıda kalan çağrı sayılmış kalır ve ücretsiz "yarıda kaldı" özetine
+    döner. Yeni bir durum, proje çalışması başlatılınca cevaplanır (mevcut kapı).
+  - **Çağrı:** Lider incelemesiyle aynı yoldan yapılır (`mode: 'review'`, aynı sağlayıcı ayarları ve sınırlar). Yeni bir
+    yalıtım iddiası yoktur.
+  - **Kaynak ve sınır:** Modelin her maddesi kaynak görev(ler)ini anahtarla gösterir. Kaynaksız ya da bu isteğe ait
+    olmayan madde kodda çıkarılır ve raporda bunun yapıldığı yazılır.
+  - **Olgu satırı (kod):** Görev sonuçları, kayda göre dosya değişikliği ("kayıtlı" / "kayıtta yazım yok" / "doğrulanamadı"
+    / "Demo"). "Yazım yok" hiçbir şeyin değişmediğinin kanıtı sayılmaz. Bu satır modelin üstte yanlış iddia yazmasını
+    engellemez; bunu raporda açıkça söyler.
+  - **Kesme:** İstek modele 6000 karaktere kadar verilir; kesilirse bu söylenir, mesajın tamamı kalır. Raporlar toplam
+    24 000 karakterlik bütçeyi paylaşır; her görevin ne kadarının görüldüğü raporda yazar.
+- **Elenen:**
+  - Prompt'a "sonunda özet yaz" eklemek (tetikleyici ve takip olmadan güvenilmez).
+  - Projedeki bütün görevleri beklemek.
+  - Bekleyen her durumda ücretli ara rapor.
+  - CLI'da kapanan çağrıyı kendiliğinden tekrarlamak.
+  - "Araçsız, dolayısıyla yan etkisiz" varsayımı.
+- **Sınır:**
+  - Yalnız en yeni 200 istek izlenir.
+  - Liderin sonradan başka bir mesajla açtığı görev yeni bir isteğe bağlanır, eskisine eklenmez.
+  - API'de çıktı inceleme gibi 2000 token ile sınırlı; çok uzun bir cevap okunamazsa kayıttan özete düşer.
+  - P2 (sohbet sadeliği), P3 (projeye bakış), P4 (sohbetten soru-cevap) ve P5 ("Bana ihtiyaç var") ayrı paketler.
+- **Ek (2026-10-21, P1 düzeltmeleri):**
+  - **Parmak izi:** Yalnız anlamlı alanlardan kurulur: durum, `completedBy`, liderin notu (özet), yarış sonucu, son çalışma ve sonucu, son rapor. Başlık düzeltmek, açıklama değiştirmek, kartı sıralamak ya da cevaptan sonra görev silmek yeni bir durum değildir.
+  - **Bütçe dolunca:** Bunu söyleyen not istek başına bir kez yazılır.
+  - **Yeni sonuç türleri:**
+    - yarışı kaybeden deneme "kullanılmadı" sayılır, ne başarı ne eksik;
+    - birleştirme bekleyen görev "seni bekliyor";
+    - birleştirmesi süren görev "sürüyor".
+  - **Takılı durum:** Model çağrısından sonra yazma hatası olursa `wrapping` durumu bir sonraki taramada kayıttan özete döner.
+  - **Temizlik:** "Yalnız işleri sıfırla" ve sohbet temizliği istekleri de siler.
+  - **"Özeti yeniden yaz":** Yalnız son sonuç kayıttan özet olduğunda ve açık soru yokken çalışır.
+
+## ADR-040 — Sohbet merkezli kullanım: sade sohbet, projeye bakış, kalıcı sorular, ikincil "Bana ihtiyaç var" (P2–P5, 2026-10-21)
+
+- **Bağlam:** Kullanıcı işi sohbetten anlatmalı, önemli gelişmeleri sohbetten anlamalı, gereken soruları sohbetten cevaplamalı
+  ve sonunda liderden birleşik sonuç almalı (ADR-039). "Bana ihtiyaç var" ana yol olmamalı.
+- **Karar (sahibin, 2026-10-21):**
+  - **P2 — #general'de ne kalır:** Başlangıç (lider işi kime böldü), gerçek engeller (mevcut kartlar), kısa durum satırı ve
+    nihai sonuç.
+    - Bir isteğin görevlerinin rutin adımları görev akışına gider: incelemeye gitti, onaylandı, geri gönderildi, otomatik
+      toparlanma, birleştirildi.
+    - "Senden bir şey beklenmiyor" kalıbı sohbet satırlarından çıkarıldı.
+    - Olay tekilleştirme korunur: rutin satır aynı `meta.event` ile görev akışında durur, canlı akış her olayı bir kez gösterir.
+  - **P3 — Projeye bakış:** Agentbits proje klasörünün üst düzeyinden deterministik ve sınırlı bir "projeye bakış" çıkarır
+    (`core/projectSignals.ts`) ve liderin sohbet prompt'una ekler.
+    - Kapsam: girişler, manifest belirtileri, README başı.
+    - Bunlar "ipucu, gerçek değil" olarak verilir: Astro bulunması "backend yok" demek değildir.
+    - Yalnız liderin okuma izni varsa eklenir. Symlink izlenmez, `realpath` kök içinde olmalı, `.env` okunmaz, boyut sınırlı.
+    - Lider kuralı: yalnız bu projeye uyan işleri aç, her role iş açma; belirsizse önce sor ya da küçük bir keşif görevi aç.
+    - Çalışan kuralı: uymayan işi "bu projede uygulanmıyor" diye bulgu olarak bildir, "yanlış depo" deme.
+  - **P4 — Sorular:** Lider ```question bloğuyla sorar; soru kalıcı bir anahtar alır (proje başına `Q-n`, migration v26,
+    `questions`) ve sohbette bir kart olarak görünür.
+    - **Doğrudan cevap:** "Q-3: …" diye başlayan satır o soruya kodla bağlanır.
+    - **Lider eşleştirmesi:** Numarasız bir cevabı lider ```answered ile yalnız tek bir açık soruya bağlayabilir; birden
+      fazlaysa hiçbiri kapanmaz ve kullanıcıdan numara istenir.
+    - **Görevle ilgili soru:** Cevap görev akışına gider; çalışan sürüyorsa bir sonraki adımdan sonra iletilir. Liderin
+      eşleştirdiği cevap lider notu olarak gider, kullanıcı talimatı olarak değil.
+    - **Toplu sonuç:** Bir isteğe ya da isteğin bir görevine ait açık soru, ücretli toplu sonucu bekletir; istek için kısa
+      bir durum satırı yazılır.
+    - **Güvenlik:** Cevap hiçbir çalışma, bağlantı, uygulama ya da riskli işlem onayı yerine geçmez; onaylar kendi
+      düğmeleriyle kalır.
+    - **Kapatma:** "Gerek yok" soruyu kapatır. Görevi ya da isteği silinen soru kendiliğinden kapanır. Anahtarlar hiçbir
+      zaman yeniden kullanılmaz; sohbet temizlenince satır kalır, metin silinir.
+  - **P5 — "Bana ihtiyaç var":** İkincil kısayoldur.
+    - Bekleyen yoksa yalnız sessiz bir simge görünür; varsa adı ve sayısıyla.
+    - Açık soruları listeler; tıklanınca sohbetteki soru kartına götürür.
+    - Onay paneli ve güvenlik onayları değişmedi.
+    - Tamamen kaldırma ayrı bir karar.
+- **Elenen:**
+  - Sohbetteki "tamam"ı onay saymak.
+  - Belirsiz cevabı tahminle bir soruya bağlamak.
+  - Liderin klasörü araçla taraması (izin genişletirdi).
+  - Manifestten kesin sınıflandırma.
+  - "Bana ihtiyaç var"ı şimdi kaldırmak.
+- **Sınır:**
+  - İstek taraması her olayda en yeni 200 isteği yeniden hesaplar; performansı ölçülmedi.
+  - Kart sohbetin yüklü kısmında değilse, kısayol yalnız "daha geride" der.
+  - Gerçek Claude Code / Codex ile denenmedi.
+- **Ek (2026-10-21, takip ve kısayol):**
+  - **Takipte sınır yok:** İstek taraması artık "en yeni 200" ile sınırlı değil. `requestsRepo.pending()` her yaştan ve her
+    projeden şu istekleri seçer:
+    - yazılmakta ya da yazılmayı bekleyen;
+    - henüz yerleşmemiş;
+    - görevi (yarış denemesi dahil), çalışması ya da sorusu `settled_at`'ten (v27) sonra değişen.
+  - **Haber olmayan değişiklik:** Böyle bir değişiklikte (başlık, sıra, silme) istek bir kez bakılıp yeniden yerleşir; her
+    olayda yeniden hesaplanmaz.
+  - **Sohbet kısayolu:** Hedef kart yüklü geçmişte yoksa `messages:from` IPC'si kartı getirir. Yalnız aynı proje ve kanalda
+    arar, aksi hâlde reddeder. Karttan en yeniye kadarki mesajlar, en fazla 5000, mevcut geçmişle kimliğe göre birleştirilir
+    (`lib/chatJump.ts` `mergeHistory`; yüklü kopya kazanır). Ardından kart kaydırılır ve klavye odağı karta geçer. Taslaklara
+    dokunulmaz. Silinmiş kart için ne olduğu söylenir; geçmiş değişmez.
+

@@ -29,7 +29,9 @@
     "badRequest": "Geçersiz istek",
     "untrustedSender": "Bu istek Agentbits penceresinden gelmediği için reddedildi",
     "endpointInvalid": "Uç nokta adresi geçerli değil (kullanıcı adı, sorgu ya da parça içermeyen bir http(s) adresi olmalı).",
-    "endpointInsecure": "API anahtarı yalnızca HTTPS ile ya da bu bilgisayara http ile (localhost / 127.0.0.1) gönderilebilir."
+    "endpointInsecure": "API anahtarı yalnızca HTTPS ile ya da bu bilgisayara http ile (localhost / 127.0.0.1) gönderilebilir.",
+    "messageGone": "Bu mesaj artık bu sohbette yok (silinmiş ya da sohbet temizlenmiş)",
+    "messageTooLong": "Mesaj çok uzun ({{count}} karakter; en fazla {{max}}). Uzun metni dosya olarak ekle ya da böl."
   },
   "dialogs": {
     "pickFile": "Dosya seç",
@@ -395,7 +397,7 @@
       "nameRequired": "Uygulamaya bir ad ver.",
       "nameTaken": "\"{{name}}\" adında bir uygulama zaten var.",
       "badUrl": "Tam bir http(s) adresi gir.",
-      "sdkOutdated": "Kurulu MCP kütüphanesi eski ({{version}}; güvenli giriş için 1.31.0 ya da üstü gerekli). Agentbits klasöründe \"npm ci\" çalıştır (ya da en yeni Agentbits'i kur) ve yeniden başlat.",
+      "sdkOutdated": "Kurulu MCP kütüphanesi eski ({{version}}; güvenli giriş için 1.32.0 ya da üstü gerekli). Agentbits klasöründe \"npm ci\" çalıştır (ya da en yeni Agentbits'i kur) ve yeniden başlat.",
       "shuttingDown": "Uygulama bağlantısı kapatıldı (düzenlendi, silindi ya da Agentbits kapanıyor). Yeniden dene.",
       "reSignIn": "Yeniden giriş yap: kayıtlı giriş, yetkilendirme sunucusuna bağlı değildi (güvenlik güncellemesi)."
     },

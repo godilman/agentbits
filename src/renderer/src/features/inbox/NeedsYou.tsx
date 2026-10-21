@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { AlertTriangle, BellRing, Brain, GitMerge, KeyRound, PauseCircle, ShieldAlert, UserCheck } from 'lucide-react'
+import { AlertTriangle, BellRing, Brain, GitMerge, HelpCircle, KeyRound, PauseCircle, ShieldAlert, UserCheck } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { cn } from '@/lib/format'
 import { useAppStore } from '@/store/useAppStore'
@@ -13,11 +13,15 @@ interface Item {
   detail: string
   taskId: string | null
   projectId: string | null
+  /** A chat card to show (a question): the row opens the chat there. */
+  message?: { channel: string; id: string }
 }
 
 /**
- * "Needs you": everything waiting for the user in one place — approvals, unmerged work, reviews the lead left open,
- * held tasks with their reason, agents stopped by an error. Each row jumps to the task.
+ * "Needs you": a secondary shortcut to what waits for the user — the chat says each of these where it happens (cards,
+ * questions); this lists them in one place. Approvals, unmerged work, reviews the lead left open, held tasks with their
+ * reason, the lead's open questions, agents stopped by an error. A row jumps to the task, or to the question in the chat.
+ * With nothing waiting it shrinks to a quiet icon.
  */
 export function NeedsYouButton() {
   const { t } = useTranslation()
@@ -91,6 +95,18 @@ export function NeedsYouButton() {
         projectId: null
       })
     }
+    for (const q of waits.questions) {
+      out.push({
+        id: `q-${q.id}`,
+        icon: HelpCircle,
+        tone: 'text-sky-300',
+        title: t('layout:needsYou.question', { key: q.key }),
+        detail: q.text,
+        taskId: null,
+        projectId: q.projectId,
+        message: q.askedMessageId ? { channel: q.channel, id: q.askedMessageId } : undefined
+      })
+    }
     for (const a of agents.filter((x) => x.enabled && x.status === 'error')) {
       out.push({ id: `ag-${a.id}`, icon: AlertTriangle, tone: 'text-rose-300', title: t('layout:needsYou.agentError', { agent: a.name }), detail: a.statusNote ?? '', taskId: null, projectId: null })
     }
@@ -100,7 +116,11 @@ export function NeedsYouButton() {
   const go = (it: Item): void => {
     const s = useAppStore.getState()
     setOpen(false)
-    if (it.taskId && it.projectId) {
+    if (it.message && it.projectId) {
+      s.openProject(it.projectId)
+      s.setTab('chat')
+      useAppStore.setState({ focusMessage: { projectId: it.projectId, ...it.message } })
+    } else if (it.taskId && it.projectId) {
       s.openProject(it.projectId)
       s.setTab('tasks')
       s.selectTask(it.taskId)
@@ -116,15 +136,17 @@ export function NeedsYouButton() {
       <button
         data-testid="needs-you"
         onClick={() => setOpen((v) => !v)}
-        title={t('layout:needsYou.title')}
+        title={items.length ? t('layout:needsYou.title') : t('layout:needsYou.nothing')}
+        aria-label={items.length ? t('layout:needsYou.ariaCount', { count: items.length }) : t('layout:needsYou.nothing')}
         aria-expanded={open}
         className={cn(
           'btn h-7 border',
-          items.length ? 'border-rose-500/30 bg-rose-500/10 text-rose-200 hover:bg-rose-500/15' : 'border-line bg-surface-2 text-zinc-400 hover:text-zinc-200'
+          items.length ? 'border-rose-500/30 bg-rose-500/10 text-rose-200 hover:bg-rose-500/15' : 'w-7 justify-center border-transparent bg-transparent px-0 text-zinc-500 hover:text-zinc-300'
         )}
       >
         <BellRing size={13} />
-        <span className="max-[1100px]:sr-only">{t('layout:needsYou.button')}</span>
+        {/* Nothing waiting: just the icon (a shortcut, not the way to work); something waiting: its name and count. */}
+        {items.length > 0 && <span className="max-[1100px]:sr-only">{t('layout:needsYou.button')}</span>}
         {items.length > 0 && <span className="rounded bg-rose-500/80 px-1 text-[10px] font-semibold text-white">{items.length}</span>}
       </button>
       {open && (

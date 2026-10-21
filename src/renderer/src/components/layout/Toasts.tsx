@@ -8,9 +8,10 @@ export function Toasts() {
   const dismiss = useAppStore((s) => s.dismissToast)
   const { t: tr } = useTranslation()
   return (
-    <div className="pointer-events-none fixed bottom-9 right-4 z-[60] flex w-80 flex-col gap-2">
+    // A live region: screen readers announce each message (errors at once, the rest when idle).
+    <div className="pointer-events-none fixed bottom-9 right-4 z-[60] flex w-80 flex-col gap-2" aria-live="polite" aria-relevant="additions">
       {toasts.map((t) => (
-        <div key={t.id} className="card shadow-pop pointer-events-auto flex items-start gap-2 px-3 py-2.5 animate-fade-in">
+        <div key={t.id} role={t.level === 'error' ? 'alert' : 'status'} className="card shadow-pop pointer-events-auto flex items-start gap-2 px-3 py-2.5 animate-fade-in">
           {t.level === 'success' ? (
             <CheckCircle2 size={15} className="mt-px text-emerald-400" />
           ) : t.level === 'error' ? (

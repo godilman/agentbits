@@ -5,6 +5,8 @@ import type { FileKind, FileOrigin, FileStatus } from './types'
 
 export const MAX_FILE_BYTES = 50 * 1024 * 1024
 export const MAX_FILES_PER_SEND = 20
+/** Longest chat message (characters); a longer one is refused with a reason, the draft stays. */
+export const MAX_MESSAGE_CHARS = 20_000
 /** Text an agent may save with `file_save`. */
 export const MAX_SAVE_BYTES = 2 * 1024 * 1024
 export const MAX_SAVES_PER_RUN = 20

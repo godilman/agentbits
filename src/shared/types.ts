@@ -181,6 +181,19 @@ export interface Run {
 }
 
 /** What the latest run of a task really did, from the tool record (not from the worker's report). */
+/** A question the lead asked the user that is still open (ADR-040): answered in the chat ("Q-3: …") or dropped. */
+export interface OpenQuestion {
+  id: string
+  /** Lasting key in its project, e.g. "Q-3". */
+  key: string
+  projectId: string
+  channel: string
+  text: string
+  taskId: string | null
+  /** The chat card that asked it. */
+  askedMessageId: string | null
+}
+
 export interface RunEvidence {
   runId: string
   status: RunStatus

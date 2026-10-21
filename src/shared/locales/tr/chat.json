@@ -11,7 +11,7 @@
   "taskThreads": "Görev akışları",
   "drop": {
     "general": "Dosyaları bırak — lidere (ya da seçtiğin ekibe) gönderilir",
-    "agent": "Dosyaları bırak — {{name}}'a gönderilir",
+    "agent": "Dosyaları bırak — {{name}} için gönderilir",
     "task": "Dosyaları bırak — göreve eklenir"
   },
   "generalSubtitle": "{{project}} · lider ile konuş: iş tarif et, görevlere bölünüp proje ekibine dağıtılsın",
@@ -36,7 +36,7 @@
   "shareProject": "Tüm proje ekibi",
   "shareUnit": "Takım: {{name}}",
   "shareHint": "Lider, görevlere eklediği dosyaları görevi yapanlara da açar.",
-  "placeholderAgent": "{{name}}'a mesaj… (Shift+Enter yeni satır)",
+  "placeholderAgent": "{{name}} için mesaj… (Shift+Enter yeni satır)",
   "placeholderNote": "Not ekle…",
   "uploading": "Dosyalar hâlâ yükleniyor",
   "youBadge": "SEN",
@@ -46,7 +46,9 @@
     "tasks": "görevleri hazırlıyor…",
     "decision": "karar önerisi yazıyor…",
     "message": "ekibe not yazıyor…",
-    "learn": "öğrendiğini not ediyor…"
+    "learn": "öğrendiğini not ediyor…",
+    "question": "bir soru yazıyor…",
+    "answered": "cevabını not ediyor…"
   },
   "card": {
     "openApproval": "Onay penceresinde aç",
@@ -70,5 +72,20 @@
       "allowed": "✓ Onaylandı — istenen işlem yapılabilir.",
       "cancelled": "Görev iptal edildi."
     }
+  },
+  "request": {
+    "openReport": "Raporu aç",
+    "retry": "Özeti yeniden yaz",
+    "asked": "Lider özeti yazıyor"
+  },
+  "question": {
+    "answer": "Cevapla",
+    "drop": "Gerek yok",
+    "hint": "ya da mesajına “{{key}}:” ile başla. Cevap hiçbir şeyi onaylamaz.",
+    "answered": "Cevaplandı: {{answer}}",
+    "dropped": "Kapatıldı: artık gerekmiyor"
+  },
+  "jump": {
+    "gone": "Bu kart artık bu sohbette yok (silinmiş ya da sohbet temizlenmiş)."
   }
 }

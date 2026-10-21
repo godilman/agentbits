@@ -20,7 +20,8 @@
     "coffeeBreak": "☕ Kahve molası",
     "authInvalid": "Oturum / anahtar geçersiz",
     "reviewing": "İnceleme · {{key}}",
-    "typing": "Yazıyor…"
+    "typing": "Yazıyor…",
+    "wrapping": "bir isteğin sonucunu yazıyor"
   },
   "caps": {
     "fsRead": "dosya okuma",
@@ -88,7 +89,9 @@
     "workStarted": "Bu oturumda bu projede çalışma başlatıldı",
     "reviewUnverifiable": "❔ {{key}} doğrulanamadı: {{note}}",
     "filesNotReadyAtStart": "⚠ İş başladığında henüz hazır değildi (hâlâ okunuyordu): {{names}}",
-    "filesDisappeared": "⚠ İş başladığında vardı, bittiğinde proje klasöründe bulunamadı (klasör paylaşılıyor: kimin kaldırdığı bilinmiyor): {{names}}"
+    "filesDisappeared": "⚠ İş başladığında vardı, bittiğinde proje klasöründe bulunamadı (klasör paylaşılıyor: kimin kaldırdığı bilinmiyor): {{names}}",
+    "requestWrap": "Toplu sonuç isteniyor: “{{request}}”",
+    "requestStale": "“{{request}}” için yazılan sonuç yayımlanmadı: görevleri bu arada değişti."
   },
   "chat": {
     "taskStarted": "{{agent}} göreve başladı.",
@@ -106,8 +109,6 @@
     "generalChat": "genel sohbet",
     "directMessage": "doğrudan mesaj",
     "planFallback": "Tamam, planı oluşturdum.",
-    "tasksCreated_one": "📋 {{count}} görev oluşturuldu: {{keys}}",
-    "tasksCreated_other": "📋 {{count}} görev oluşturuldu: {{keys}}",
     "filesLinked": "📎 dosyalar görevlere eklendi",
     "decisionsAdded_one": "🧭 {{count}} karar önerisi Kararlar sekmesine eklendi.",
     "decisionsAdded_other": "🧭 {{count}} karar önerisi Kararlar sekmesine eklendi.",
@@ -124,7 +125,8 @@
     "reviewNeedsYou": "⚠️ {{reason}}\nÇalışanın raporu duruyor ve görev incelemede kalıyor. Yalnız incelemeyi yeniden deneyebilirsin (çalışan yeniden çalışmaz) ya da kendin karar verebilirsin: Bitti'ye taşı ya da notla Yapılacak'a geri gönder.",
     "workNotStarted": "Görevler hazır ama henüz başlamayacak: bu oturumda bu projede çalışma başlatılmadı. Üstteki “Bu projede çalışmayı başlat”a bas.",
     "reviewNoReport": "⚠️ {{reason}}\nGörev incelemede kalıyor. Rapor olmadan yeniden incelemek işe yaramaz: “Çalışanı yeniden çalıştır” işi baştan yapar (önceki denemenin yaptıkları geri alınmaz) ya da kendin karar ver: Bitti'ye taşı ya da notla Yapılacak'a geri gönder.",
-    "reviewNoLead": "⚠️ {{reason}}\nGörev incelemede kalıyor. Bir lider aç ya da ekle (veya inceleyebilecek bir üye), sonra görevde “İncelemeyi yeniden dene”ye bas ya da kendin karar ver: Bitti'ye taşı ya da notla Yapılacak'a geri gönder."
+    "reviewNoLead": "⚠️ {{reason}}\nGörev incelemede kalıyor. Bir lider aç ya da ekle (veya inceleyebilecek bir üye), sonra görevde “İncelemeyi yeniden dene”ye bas ya da kendin karar ver: Bitti'ye taşı ya da notla Yapılacak'a geri gönder.",
+    "approvalClosedHeld": "Uygulama, bu görev başlamak için onayını beklerken kapandı; hiçbir şey çalışmadı, hiçbir şey değişmedi. İstediğinde yeniden başlat; onayın yeniden istenecek."
   },
   "errors": {
     "noFolder": "“{{project}}” için klasör seçilmedi. CLI ajanları dosyalara dokunabildiği için proje ayarlarından bir klasör seçin.",
@@ -291,7 +293,8 @@
     "failed_other": "{{count}} kez hata verdi: {{error}}",
     "capsChanged": "Onayını beklerken ajanın kullanabildikleri değişti; güncel listeyi görmek için yeniden başlat",
     "cancelled": "İptal edildi",
-    "reopened": "Yeniden açıldı: sen başlatana kadar bekler"
+    "reopened": "Yeniden açıldı: sen başlatana kadar bekler",
+    "approvalClosed": "Uygulama, onayını beklerken kapandı; hiç başlamadı"
   },
   "review": {
     "unmet": "Karşılanmayan kabul kriterleri: {{list}}"
@@ -323,12 +326,12 @@
     "manualDone": "✔ Görevi sen elle tamamladın, lider incelemesi olmadan. Değişiklikleri {{where}} duruyor."
   },
   "say": {
-    "sentForReview": "{{worker}} “{{title}}” işini bitirdi; iş kontrol için lidere ({{lead}}) gönderildi. Senden bir şey beklenmiyor. · {{key}}",
+    "sentForReview": "{{worker}} “{{title}}” işini bitirdi; {{lead}} kontrol ediyor. · {{key}}",
     "doneNoReview": "{{worker}} “{{title}}” işini bitirdi. Lider incelemesi kapalı, karar senin: Bitti'ye taşı ya da notla Yapılacak'a geri gönder. · {{key}}",
     "doneNoLead": "{{worker}} “{{title}}” işini bitirdi. Projede inceleyecek lider yok, karar senin: Bitti'ye taşı ya da notla Yapılacak'a geri gönder. · {{key}}",
     "commitFailed": "{{worker}} “{{title}}” işini bitirdi ama değişiklikler çalışma kopyasına kaydedilemedi, görev durdu. Nedeni görev sayfasında; düzeltip “{{retry}}” düğmesine bas. · {{key}}",
     "approved": "{{lead}} “{{title}}” işini onayladı.{{summary}}{{changes}} · {{key}}",
-    "sentBack": "{{lead}} “{{title}}” işini geri gönderdi.{{summary}} Çalışan ({{worker}}) boşalınca yeniden çalışacak; şimdilik senden bir şey beklenmiyor. · {{key}}",
+    "sentBack": "{{lead}} “{{title}}” işini geri gönderdi.{{summary}} {{worker}} boşalınca yeniden çalışacak. · {{key}}",
     "sentBackWaits": "{{lead}} “{{title}}” işini geri gönderdi.{{summary}} Görev yeniden Yapılacak'ta; sen başlattığında çalışacak. · {{key}}",
     "unverifiable": "{{lead}} “{{title}}” işini doğrulayamadı.{{summary}} Çalışan ({{worker}}) işi bitirdiğini bildirdi ama kontrol edilmedi. Karar senin: “{{retryReview}}” düğmesine bas, Bitti'ye taşı ya da notla Yapılacak'a geri gönder. · {{key}}",
     "notMoving": "“{{title}}” ilerlemiyor: geri gönderildikten sonraki çalışmada kayda geçen bir değişiklik yok ve {{lead}} yine geri gönderdi. Kendiliğinden yeniden başlatılmayacak. Karar senin: görev sayfasında liderin notuna bak; “{{retryReview}}” ya da “{{rerunWorker}}” düğmesine bas, Bitti'ye taşı ya da notla Yapılacak'a geri gönder. · {{key}}",
@@ -340,16 +343,16 @@
     "limitStopped": "“{{title}}” bir sınıra takılıp durdu: {{reason}} Kendiliğinden yeniden başlamayacak. “{{retry}}” işi yeniden çalıştırır; önceki denemenin yaptıkları geri alınmaz. · {{key}}",
     "isolation": "“{{title}}” başlatılamadı: {{reason}} Kendiliğinden başlamayacak; sorunu düzeltip “{{retry}}” düğmesine bas. · {{key}}",
     "auth": "“{{title}}” sağlayıcı oturumu yüzünden durdu: {{reason}} Önce oturumu düzelt, sonra “{{retry}}” düğmesine bas; önceki denemenin yaptıkları geri alınmaz. · {{key}}",
-    "recoveryRetry": "🔁 “{{title}}”: {{reason}} Ekip yalnız incelemeyi {{minutes}} dk sonra yeniden deneyecek (ek deneme {{attempt}}/{{max}}); çalışan yeniden çalışmaz. Senden bir şey gerekmiyor. · {{key}}",
-    "recoveryFiles": "⏳ “{{title}}”: değişen dosyalar henüz okunuyor ({{files}}). Güncel içerikleri hazır olunca inceleme kendiliğinden başlar (en fazla {{minutes}} dk); bu arada model çağrılmaz. Senden bir şey gerekmiyor. · {{key}}",
+    "recoveryRetry": "🔁 “{{title}}”: {{reason}} Ekip yalnız incelemeyi {{minutes}} dk sonra yeniden deneyecek (ek deneme {{attempt}}/{{max}}); çalışan yeniden çalışmaz. · {{key}}",
+    "recoveryFiles": "⏳ “{{title}}”: değişen dosyalar henüz okunuyor ({{files}}). Güncel içerikleri hazır olunca inceleme kendiliğinden başlar (en fazla {{minutes}} dk); bu arada model çağrılmaz. · {{key}}",
     "recoveryRetryLater": "🔁 “{{title}}”: {{reason}} Ekip yalnız incelemeyi, bu projede çalışmayı başlattığında yeniden deneyecek (ek deneme {{attempt}}/{{max}}); çalışan yeniden çalışmaz. · {{key}}",
-    "recoveryWork": "🔁 “{{title}}”: {{reason}} Çalışma dışarıda bir şey değiştirmedi (en fazla Agentbits'in kendi verilerini okudu); {{worker}} {{minutes}} dk sonra işi kendiliğinden yeniden çalıştıracak (ek deneme {{attempt}}/{{max}}). Senden bir şey gerekmiyor; istemezsen görevi iptal edebilirsin. · {{key}}",
+    "recoveryWork": "🔁 “{{title}}”: {{reason}} Çalışma dışarıda bir şey değiştirmedi (en fazla Agentbits'in kendi verilerini okudu); {{worker}} {{minutes}} dk sonra işi kendiliğinden yeniden çalıştıracak (ek deneme {{attempt}}/{{max}}). İstemezsen görevi iptal edebilirsin. · {{key}}",
     "recoveryWorkLater": "🔁 “{{title}}”: {{reason}} Çalışma dışarıda bir şey değiştirmedi (en fazla Agentbits'in kendi verilerini okudu); {{worker}} işi, bu projede çalışmayı başlattığında yeniden çalıştıracak (ek deneme {{attempt}}/{{max}}). İstemezsen görevi iptal edebilirsin. · {{key}}",
     "runApprovalRetry": "🔁 “{{title}}” otomatik yeniden deneme için onayını bekliyor (ek deneme {{attempt}}/{{max}}). Önceki deneme şu yüzden durdu: {{reason}} Dışarıda bir şey değiştirmediği kayıtlı. Onaylarsan {{worker}} işi baştan çalıştırır ve şunları kullanabilir: {{caps}}. Önceki onay geçerli değil; reddedersen iş başlamaz ve görev bekletilir. · {{key}}"
   },
   "cancel": {
     "requested": "⏳ “{{title}}” için iptal istendi: ajanından durması istendi, durduğu henüz doğrulanmadı. O zamana kadar görev için yeni bir şey başlamaz ve çalışmanın göndereceği sonuç yok sayılır; çalışma bitince iptal burada doğrulanır. · {{key}}",
-    "done": "🛑 “{{title}}” iptal edildi: ajanının çalışması durdu. {{details}} Bu, daha önce başka yerlerde başlattığı işlemlerin (bağlantılar, uygulamalar, kendi başına süren komutlar) geri alındığı ya da durduğu anlamına gelmez. Senden bir şey gerekmiyor; görev ve geçmişi duruyor, istersen yeniden açabilirsin. · {{key}}",
+    "done": "🛑 “{{title}}” iptal edildi: ajanının çalışması durdu. {{details}} Bu, daha önce başka yerlerde başlattığı işlemlerin (bağlantılar, uygulamalar, kendi başına süren komutlar) geri alındığı ya da durduğu anlamına gelmez. Görev ve geçmişi duruyor; istersen yeniden açabilirsin. · {{key}}",
     "neverRan": "Hiç çalışmadı.",
     "ran_one": "Bir kez çalıştı.",
     "ran_other": "{{count}} kez çalıştı.",
@@ -414,5 +417,114 @@
       "used": "görevin otomatik yeniden deneme hakkı kullanıldı ({{max}}/{{max}}).",
       "deps": "bağlı olduğu görevler henüz bitmedi ({{keys}})."
     }
+  },
+  "request": {
+    "facts": {
+      "line": "Kayıtlardan: {{tasks}}{{changes}}",
+      "done_one": "{{count}} görev bitti",
+      "done_other": "{{count}} görev bitti",
+      "cancelled_one": "{{count}} iptal edildi",
+      "cancelled_other": "{{count}} iptal edildi",
+      "deleted_one": "{{count}} silindi",
+      "deleted_other": "{{count}} silindi",
+      "waiting_one": "{{count}} seni bekliyor",
+      "waiting_other": "{{count}} seni bekliyor",
+      "changed_one": "{{count}} görevde dosya değişikliği kayıtlı",
+      "changed_other": "{{count}} görevde dosya değişikliği kayıtlı",
+      "noWrites_one": "{{count}} görevin kaydında dosya yazımı yok",
+      "noWrites_other": "{{count}} görevin kaydında dosya yazımı yok",
+      "unverified_one": "{{count}} görevde değişiklikler doğrulanamadı",
+      "unverified_other": "{{count}} görevde değişiklikler doğrulanamadı",
+      "simulated_one": "{{count}} görev Demo simülasyonuydu",
+      "simulated_other": "{{count}} görev Demo simülasyonuydu",
+      "superseded_one": "{{count}} yarış denemesi kullanılmadı",
+      "superseded_other": "{{count}} yarış denemesi kullanılmadı"
+    },
+    "update": "Güncelleme:",
+    "partial": "Kısmen tamamlandı.",
+    "sections": {
+      "important": "Önemli",
+      "optional": "İsteğe bağlı öneriler",
+      "conflicts": "Tekrarlar ve çelişkiler",
+      "incomplete": "Yapılamayan ya da doğrulanamayan",
+      "tasks": "Görevler",
+      "basis": "Bu sonuç neye dayanıyor"
+    },
+    "more": "(+{{count}} madde raporda)",
+    "table": {
+      "task": "Görev",
+      "who": "Kim",
+      "outcome": "Sonuç",
+      "changes": "Değişiklik (kayda göre)"
+    },
+    "outcome": {
+      "done": "bitti, lider onayladı",
+      "doneUser": "bitti, sen taşıdın (incelenmedi)",
+      "doneOther": "bitti",
+      "cancelled": "iptal edildi (yapılmadı)",
+      "deleted": "silindi (artık raporlanamıyor)",
+      "waiting": "bekliyor: {{reason}}",
+      "active": "sürüyor",
+      "superseded": "yarış denemesi, kullanılmadı"
+    },
+    "changes": {
+      "noWrites": "kayıtta dosya yazımı yok (hiçbir şeyin değişmediğini kanıtlamaz)",
+      "unknown": "doğrulanamadı",
+      "simulated": "Demo simülasyonu",
+      "none": "kayıtlı çalışma yok",
+      "partly": "başka değişiklikler doğrulanamadı"
+    },
+    "basis": "{{lead}} bunu ekibin raporlarından ve Agentbits kayıtlarından derledi. Her maddenin yanında dayandığı görevler yazıyor; özet yanlış olabilir, kanıt görev sayfalarında.",
+    "seen": "Görülen rapor metni (gösterilen / toplam karakter): {{list}}",
+    "requestCut": "İstek verilebilenden uzundu; yalnız başı görüldü.",
+    "dropped": "{{count}} madde çıkarıldı: kaynağı yok ya da bu isteğe ait olmayan bir görevi gösteriyor.",
+    "fallbackNote": "Liderin özeti olmadan, yalnız kayıtlardan yazıldı.",
+    "reviewNote": "Liderin notu",
+    "reportCut": "(Rapor daha uzun; ilk {{shown}} / {{total}} karakter.)",
+    "reportTitle": "Sonuç: {{request}}",
+    "reportTitleUpdate": "Güncelleme: {{request}}",
+    "reportTitleRecords": "Kayıtlardan: {{request}}",
+    "status": "“{{request}}” — {{facts}}. Bekleyenler: {{keys}}; kartları sohbette. Onlar sonuçlanınca {{lead}} toplu sonucu yazacak.",
+    "fallback": "“{{request}}” — {{facts}}. {{lead}} toplu sonucu yazamadı; görevlerin raporları birleşik raporda. Neden: {{why}}",
+    "nothingDone": "“{{request}}” — görevlerinin hiçbiri tamamlanmadı ({{facts}}), bu yüzden toplu sonuç yok.",
+    "why": {
+      "interrupted": "yazılırken uygulama kapandı",
+      "budget": "bu isteğin kullanabileceği {{max}} özet hakkı doldu",
+      "unclear": "liderin cevabı okunamadı ({{lead}})",
+      "stopped": "durduruldu",
+      "noLead": "projenin lideri yok"
+    },
+    "wait": {
+      "approval": "başlamak için onayını bekliyor",
+      "decide": "kararını bekliyor",
+      "notStarted": "henüz başlamadı",
+      "held": "bekletiliyor",
+      "dependency": "ihtiyaç duyduğu bir görev iptal edildi ya da silindi",
+      "agent": "ajanı kapalı",
+      "merge": "projeye birleştirilmeyi bekliyor"
+    },
+    "errors": {
+      "notFound": "Bu istek artık yok",
+      "busy": "Sonucu şu anda yazılıyor",
+      "notEnded": "Görevlerinin bazıları henüz sonuçlanmadı",
+      "nothingDone": "Görevlerinin hiçbiri tamamlanmadı",
+      "notNeeded": "Yeniden yazılacak bir şey yok: toplu sonuç zaten var ya da daha yenisi geliyor",
+      "question": "Bu istekle ilgili açık bir soru var: önce sohbette onu cevapla"
+    },
+    "asked": "**İstek:** “{{request}}”",
+    "started": "{{lead}} işi {{count}} göreve böldü: {{list}}. Hepsi bitince toplu sonuç buraya gelecek.",
+    "startItem": "“{{title}}” ({{who}})",
+    "startMore": " ve {{count}} görev daha",
+    "unassigned": "henüz atanmadı"
+  },
+  "question": {
+    "card": "{{lead}} soruyor ({{key}}): {{text}}",
+    "notOpen_one": "{{keys}} artık açık bir soru değil (cevaplandı, kapatıldı ya da hiç sorulmadı); bu mesaj orada bir şeyi cevaplamıyor.",
+    "notOpen_other": "{{keys}} artık açık sorular değil (cevaplandı, kapatıldı ya da hiç sorulmadı); bu mesaj orada bir şeyi cevaplamıyor.",
+    "which": "Bunun hangi soruya ({{keys}}) cevap olduğundan emin olamadım, bu yüzden hiçbiri kapanmadı. Cevabına sorunun numarasıyla başla, örneğin “Q-3: …”.",
+    "answerNote": "{{key}} sorusunun (“{{question}}”) cevabı: {{answer}}",
+    "queued": "kullanıcının {{key}} cevabı",
+    "notFound": "Bu soru artık yok",
+    "leadTiedNote": "Kullanıcının {{key}} (“{{question}}”) cevabı, liderin mesajı okuduğu şekliyle: {{answer}}"
   }
 }

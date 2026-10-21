@@ -4,6 +4,7 @@
 // handlers; the real Demo provider (only wrapped to watch what it calls).
 // Run: npm run test:e2e
 import assert from 'node:assert/strict'
+import { dedupeFeed } from '../../src/renderer/src/lib/feed'
 import { mkdtempSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
@@ -131,13 +132,17 @@ async function main(): Promise<void> {
     assert.ok(verdict.length > 0 || /^Simulated review/.test(note), 'the lead verdict says simulation')
     assert.ok(orchestrator.state().simulatedWork.includes(task.id), 'the card and the task details can say simulation')
     assert.ok(orchestrator.state().simulatedReview.includes(task.id))
-    // The finish and the verdict went to #general and to the thread as one event each (the live feed shows them once).
+    // The finish and the verdict carry one event each; a task made for a chat request keeps these routine steps in its
+    // thread (P2) — #general never shows one twice (the live feed shows each once).
     const ev = (m: { meta: Record<string, unknown> | null }): string | null => (typeof m.meta?.event === 'string' ? m.meta.event : null)
     const threadEvents = messagesRepo.list(`task:${task.id}`, 50, p1.id).map(ev).filter((x): x is string => !!x)
     const generalEvents = messagesRepo.list('general', 200, p1.id).map(ev).filter((x): x is string => !!x)
     assert.ok(threadEvents.length >= 2, `finish + verdict carry an event id (${threadEvents.length})`)
-    for (const e of threadEvents) assert.equal(generalEvents.filter((x) => x === e).length, 1, 'each has one #general copy')
-    assert.equal(new Set(threadEvents).size, threadEvents.length, 'a different event id per event')
+    for (const e of threadEvents) assert.ok(generalEvents.filter((x) => x === e).length <= 1, 'at most one #general copy')
+    // What the user sees in the live feed: each event once.
+    const shown = dedupeFeed([...messagesRepo.list(`task:${task.id}`, 50, p1.id), ...messagesRepo.list('general', 200, p1.id)]).map(ev).filter((x): x is string => !!x)
+    assert.equal(new Set(shown).size, shown.length, 'the live feed shows each event once')
+    assert.deepEqual(new Set(shown), new Set(threadEvents), 'and shows every one')
   })
 
   await step('short work orders through the real Demo lead become tasks; small talk and questions do not', async () => {

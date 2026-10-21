@@ -49,7 +49,7 @@
     },
     "perms": {
       "title": "İzinleri gözden geçir",
-      "why": "Ajanlar gerçek dosyalara, terminale ve sunuculara dokunabilir. Neye izin verdiğini sen seçersin; varsayılan olarak yalnızca okuma açıktır.",
+      "why": "Ajanlar gerçek dosyalara, terminale ve sunuculara dokunabilir. Neye izin verdiğini sen seçersin. Kendi eklediğin ajan yalnızca okuma izniyle başlar; hazır ekip şablonları ise her role uygun izinlerle gelir (bazıları dosya yazabilir, komut çalıştırabilir ya da ağa çıkabilir), o yüzden bunları gözden geçir.",
       "how": "<b>Ayarlar → İzin Matrisi</b>: ajan başına dosya okuma/yazma, terminal, ağ, tarayıcı ve \"her çalışmadan önce onay iste\". Sunucu ve veritabanı erişimi ayrıdır: <b>Organizasyon → Bağlantılar</b> (varsayılan: hiçbir ajan erişemez; Production'da değişiklik senin onayını bekler)."
     },
     "project": {

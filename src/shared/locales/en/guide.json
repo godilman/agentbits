@@ -49,7 +49,7 @@
     },
     "perms": {
       "title": "Review permissions",
-      "why": "Agents can touch real files, the terminal and servers. You choose what they're allowed to do; by default only reading is on.",
+      "why": "Agents can touch real files, the terminal and servers. You choose what they're allowed to do. An agent you add yourself starts with reading only; a ready-made team comes with permissions that fit each role (some can write files, run commands or use the network), so look them over.",
       "how": "<b>Settings → Permission Matrix</b>: per-agent file read/write, terminal, network, browser and \"ask for approval before every run\". Server and database access is separate: <b>Organization → Connections</b> (default: no agent has access; changes in Production wait for your approval)."
     },
     "project": {

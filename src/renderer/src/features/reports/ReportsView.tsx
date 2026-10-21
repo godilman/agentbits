@@ -23,6 +23,13 @@ export function ReportsView() {
   const toast = useAppStore((s) => s.toast)
   const { pid, project, teamIds } = useProjectScope()
   const [selected, setSelected] = useState<string | null>(null)
+  // "Open the report" under a request's result in the chat.
+  const focusReport = useAppStore((s) => s.focusReport)
+  useEffect(() => {
+    if (!focusReport) return
+    setSelected(focusReport)
+    useAppStore.setState({ focusReport: null })
+  }, [focusReport])
   const [generating, setGenerating] = useState(false)
   // Custom report: the lead writes it on request from the project's data.
   const [asking, setAsking] = useState(false)
@@ -53,7 +60,9 @@ export function ReportsView() {
   }, [refresh, pid])
 
   const total = stats ? Object.values(stats.tasksByStatus).reduce((a, b) => a + b, 0) : 0
-  const successRate = stats && stats.runsTotal ? Math.round((stats.runsSucceeded / stats.runsTotal) * 100) : 0
+  // Of the runs that ended as success or failure: waiting, running, cancelled or stopped ones are neither.
+  const finished = stats ? stats.runsSucceeded + stats.runsFailed : 0
+  const successRate = finished ? Math.round((stats!.runsSucceeded / finished) * 100) : 0
   const maxDone = Math.max(1, ...perAgent.map((p) => p.done))
 
   const generate = async (): Promise<void> => {

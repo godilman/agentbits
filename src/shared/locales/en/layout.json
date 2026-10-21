@@ -120,7 +120,7 @@
   "needsYou": {
     "button": "Needs you",
     "title": "Needs you",
-    "desc": "Everything waiting for you, across your open projects.",
+    "desc": "A shortcut: each of these is also in the project chat, where you can answer it.",
     "empty": "Nothing waits for you right now.",
     "approval": "{{agent}} asks to use {{target}}",
     "runApproval": "{{agent}} waits for your OK to start",
@@ -131,7 +131,10 @@
     "heldNoReason": "On hold",
     "agentError": "{{agent}} stopped with an error",
     "memory": "Something to remember",
-    "reviewIssue": "Your decision: {{reason}}"
+    "reviewIssue": "Your decision: {{reason}}",
+    "question": "The lead asks you ({{key}})",
+    "nothing": "Nothing is waiting for you",
+    "ariaCount": "Needs you: {{count}} waiting"
   },
   "promptBuilder": {
     "button": "Prompt builder",
